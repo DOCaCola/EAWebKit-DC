@@ -33,7 +33,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLAttachmentElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAttachmentElement>&& impl)
     {
-        JSHTMLAttachmentElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElement>(globalObject->vm().heap)) JSHTMLAttachmentElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAttachmentElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElement>(globalObject->vm().heap)) JSHTMLAttachmentElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAttachmentElement& impl() const
+    HTMLAttachmentElement& wrapped() const
     {
-        return static_cast<HTMLAttachmentElement&>(Base::impl());
+        return static_cast<HTMLAttachmentElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAttachmentElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAttachmentElement>&&);
+    JSHTMLAttachmentElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAttachmentElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

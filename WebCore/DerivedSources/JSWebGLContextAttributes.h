@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLContextAttributes : public JSDOMWrapper {
+class JSWebGLContextAttributes : public JSDOMWrapper<WebGLContextAttributes> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLContextAttributes> Base;
     static JSWebGLContextAttributes* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLContextAttributes>&& impl)
     {
-        JSWebGLContextAttributes* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextAttributes>(globalObject->vm().heap)) JSWebGLContextAttributes(structure, globalObject, WTF::move(impl));
+        JSWebGLContextAttributes* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextAttributes>(globalObject->vm().heap)) JSWebGLContextAttributes(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLContextAttributes* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLContextAttributes();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLContextAttributes& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLContextAttributes* m_impl;
 protected:
-    JSWebGLContextAttributes(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLContextAttributes>&&);
+    JSWebGLContextAttributes(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLContextAttributes>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLContextAttribut
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLContextAttributes*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLContextAttributes& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLContextAttributes& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLContextAttributes*);
 
 
 } // namespace WebCore

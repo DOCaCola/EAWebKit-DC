@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSMediaSession : public JSDOMWrapper {
+class WEBCORE_EXPORT JSMediaSession : public JSDOMWrapper<MediaSession> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaSession> Base;
     static JSMediaSession* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSession>&& impl)
     {
-        JSMediaSession* ptr = new (NotNull, JSC::allocateCell<JSMediaSession>(globalObject->vm().heap)) JSMediaSession(structure, globalObject, WTF::move(impl));
+        JSMediaSession* ptr = new (NotNull, JSC::allocateCell<JSMediaSession>(globalObject->vm().heap)) JSMediaSession(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaSession* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaSession();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaSession& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaSession* m_impl;
 protected:
-    JSMediaSession(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaSession>&&);
+    JSMediaSession(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaSession>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,11 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaSession*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSession*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaSession& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSession& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaSession*);
+
+// Custom constructor
+JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaSession(JSC::ExecState*);
 
 
 } // namespace WebCore

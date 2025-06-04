@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSProgressEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProgressEvent>&& impl)
     {
-        JSProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSProgressEvent>(globalObject->vm().heap)) JSProgressEvent(structure, globalObject, WTF::move(impl));
+        JSProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSProgressEvent>(globalObject->vm().heap)) JSProgressEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ProgressEvent& impl() const
+    ProgressEvent& wrapped() const
     {
-        return static_cast<ProgressEvent&>(Base::impl());
+        return static_cast<ProgressEvent&>(Base::wrapped());
     }
 protected:
-    JSProgressEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<ProgressEvent>&&);
+    JSProgressEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<ProgressEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -29,7 +29,6 @@
 #include "JSMediaTrackConstraintSet.h"
 #include "MediaTrackConstraint.h"
 #include "MediaTrackConstraintSet.h"
-#include "MediaTrackConstraints.h"
 #include <runtime/JSArray.h>
 #include <wtf/GetPtr.h>
 
@@ -71,8 +70,8 @@ private:
 
 static const HashTableValue JSMediaTrackConstraintsPrototypeTableValues[] =
 {
-    { "mandatory", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsMandatory), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "optional", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsOptional), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "mandatory", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsMandatory), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "optional", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaTrackConstraintsOptional), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSMediaTrackConstraintsPrototype::s_info = { "MediaTrackConstraintsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraintsPrototype) };
@@ -85,9 +84,8 @@ void JSMediaTrackConstraintsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaTrackConstraints::s_info = { "MediaTrackConstraints", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraints) };
 
-JSMediaTrackConstraints::JSMediaTrackConstraints(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaTrackConstraints>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaTrackConstraints::JSMediaTrackConstraints(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaTrackConstraints>&& impl)
+    : JSDOMWrapper<MediaTrackConstraints>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -107,47 +105,36 @@ void JSMediaTrackConstraints::destroy(JSC::JSCell* cell)
     thisObject->JSMediaTrackConstraints::~JSMediaTrackConstraints();
 }
 
-JSMediaTrackConstraints::~JSMediaTrackConstraints()
+EncodedJSValue jsMediaTrackConstraintsMandatory(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMediaTrackConstraintsMandatory(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaTrackConstraints* castedThis = jsDynamicCast<JSMediaTrackConstraints*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaTrackConstraintsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaTrackConstraints", "mandatory");
-        return throwGetterTypeError(*exec, "MediaTrackConstraints", "mandatory");
+            return reportDeprecatedGetterError(*state, "MediaTrackConstraints", "mandatory");
+        return throwGetterTypeError(*state, "MediaTrackConstraints", "mandatory");
     }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.mandatory(isNull)));
-    if (isNull)
-        return JSValue::encode(jsNull());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.mandatory()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaTrackConstraintsOptional(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaTrackConstraintsOptional(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaTrackConstraints* castedThis = jsDynamicCast<JSMediaTrackConstraints*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaTrackConstraintsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaTrackConstraints", "optional");
-        return throwGetterTypeError(*exec, "MediaTrackConstraints", "optional");
+            return reportDeprecatedGetterError(*state, "MediaTrackConstraints", "optional");
+        return throwGetterTypeError(*state, "MediaTrackConstraints", "optional");
     }
-    bool isNull = false;
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.optional(isNull));
-    if (isNull)
-        return JSValue::encode(jsNull());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.optional());
     return JSValue::encode(result);
 }
 
@@ -163,7 +150,7 @@ void JSMediaTrackConstraintsOwner::finalize(JSC::Handle<JSC::Unknown> handle, vo
 {
     auto* jsMediaTrackConstraints = jsCast<JSMediaTrackConstraints*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaTrackConstraints->impl(), jsMediaTrackConstraints);
+    uncacheWrapper(world, &jsMediaTrackConstraints->wrapped(), jsMediaTrackConstraints);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -174,6 +161,14 @@ extern "C" { extern void (*const __identifier("??_7MediaTrackConstraints@WebCore
 extern "C" { extern void* _ZTVN7WebCore21MediaTrackConstraintsE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackConstraints* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaTrackConstraints>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackConstraints* impl)
 {
     if (!impl)
@@ -205,7 +200,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackCo
 MediaTrackConstraints* JSMediaTrackConstraints::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaTrackConstraints*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

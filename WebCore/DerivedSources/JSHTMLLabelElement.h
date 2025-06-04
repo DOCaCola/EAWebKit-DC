@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLLabelElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLabelElement>&& impl)
     {
-        JSHTMLLabelElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLabelElement>(globalObject->vm().heap)) JSHTMLLabelElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLabelElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLabelElement>(globalObject->vm().heap)) JSHTMLLabelElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLLabelElement& impl() const
+    HTMLLabelElement& wrapped() const
     {
-        return static_cast<HTMLLabelElement&>(Base::impl());
+        return static_cast<HTMLLabelElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLLabelElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLabelElement>&&);
+    JSHTMLLabelElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLabelElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

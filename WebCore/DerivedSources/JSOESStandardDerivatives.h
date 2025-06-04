@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSOESStandardDerivatives : public JSDOMWrapper {
+class JSOESStandardDerivatives : public JSDOMWrapper<OESStandardDerivatives> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<OESStandardDerivatives> Base;
     static JSOESStandardDerivatives* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESStandardDerivatives>&& impl)
     {
-        JSOESStandardDerivatives* ptr = new (NotNull, JSC::allocateCell<JSOESStandardDerivatives>(globalObject->vm().heap)) JSOESStandardDerivatives(structure, globalObject, WTF::move(impl));
+        JSOESStandardDerivatives* ptr = new (NotNull, JSC::allocateCell<JSOESStandardDerivatives>(globalObject->vm().heap)) JSOESStandardDerivatives(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESStandardDerivatives* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESStandardDerivatives();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESStandardDerivatives& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESStandardDerivatives* m_impl;
 protected:
-    JSOESStandardDerivatives(JSC::Structure*, JSDOMGlobalObject*, Ref<OESStandardDerivatives>&&);
+    JSOESStandardDerivatives(JSC::Structure*, JSDOMGlobalObject&, Ref<OESStandardDerivatives>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESStandardDerivativ
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESStandardDerivatives*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESStandardDerivatives& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESStandardDerivatives& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OESStandardDerivatives*);
 
 
 } // namespace WebCore

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMapElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMapElement>&& impl)
     {
-        JSHTMLMapElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMapElement>(globalObject->vm().heap)) JSHTMLMapElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMapElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMapElement>(globalObject->vm().heap)) JSHTMLMapElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMapElement& impl() const
+    HTMLMapElement& wrapped() const
     {
-        return static_cast<HTMLMapElement&>(Base::impl());
+        return static_cast<HTMLMapElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMapElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMapElement>&&);
+    JSHTMLMapElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMapElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

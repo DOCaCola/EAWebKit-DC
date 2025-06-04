@@ -27,9 +27,9 @@
 #include "DocumentFragment.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDocumentFragment.h"
 #include "URL.h"
-#include "VTTCue.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -87,87 +87,52 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSVTTCueConstructor : public DOMConstructorObject {
-private:
-    JSVTTCueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSVTTCue> JSVTTCueConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSVTTCueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSVTTCueConstructor* ptr = new (NotNull, JSC::allocateCell<JSVTTCueConstructor>(vm.heap)) JSVTTCueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSVTTCue(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSVTTCueConstructor::constructJSVTTCue(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSVTTCueConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSVTTCueConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    double startTime = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* castedThis = jsCast<JSVTTCueConstructor*>(state->callee());
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    double startTime = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double endTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double endTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String text = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String text = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "VTTCue");
+        return throwConstructorDocumentUnavailableError(*state, "VTTCue");
     RefPtr<VTTCue> object = VTTCue::create(*context, startTime, endTime, text);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSVTTCueConstructor::s_info = { "VTTCueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTCueConstructor) };
-
-JSVTTCueConstructor::JSVTTCueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSVTTCueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSVTTCueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSVTTCue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSVTTCue::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("VTTCue"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(3), ReadOnly | DontEnum);
 }
 
-ConstructType JSVTTCueConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSVTTCue;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSVTTCueConstructor::s_info = { "VTTCueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTCueConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSVTTCuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "vertical", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueVertical), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueVertical) },
-    { "snapToLines", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueSnapToLines), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueSnapToLines) },
-    { "line", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueLine) },
-    { "position", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCuePosition), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCuePosition) },
-    { "size", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueSize) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueAlign) },
-    { "text", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueText) },
-    { "regionId", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueRegionId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueRegionId) },
-    { "getCueAsHTML", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsVTTCuePrototypeFunctionGetCueAsHTML), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "vertical", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueVertical), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueVertical) } },
+    { "snapToLines", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueSnapToLines), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueSnapToLines) } },
+    { "line", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueLine) } },
+    { "position", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCuePosition), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCuePosition) } },
+    { "size", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueSize) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueAlign) } },
+    { "text", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueText) } },
+    { "regionId", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVTTCueRegionId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVTTCueRegionId) } },
+    { "getCueAsHTML", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsVTTCuePrototypeFunctionGetCueAsHTML), (intptr_t) (0) } },
 };
 
 const ClassInfo JSVTTCuePrototype::s_info = { "VTTCuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTCuePrototype) };
@@ -180,7 +145,7 @@ void JSVTTCuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSVTTCue::s_info = { "VTTCue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVTTCue) };
 
-JSVTTCue::JSVTTCue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTCue>&& impl)
+JSVTTCue::JSVTTCue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<VTTCue>&& impl)
     : JSTextTrackCue(structure, globalObject, WTF::move(impl))
 {
 }
@@ -195,315 +160,315 @@ JSObject* JSVTTCue::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSVTTCue>(vm, globalObject);
 }
 
-EncodedJSValue jsVTTCueVertical(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueVertical(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "vertical");
-        return throwGetterTypeError(*exec, "VTTCue", "vertical");
+            return reportDeprecatedGetterError(*state, "VTTCue", "vertical");
+        return throwGetterTypeError(*state, "VTTCue", "vertical");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.vertical());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.vertical());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueSnapToLines(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueSnapToLines(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "snapToLines");
-        return throwGetterTypeError(*exec, "VTTCue", "snapToLines");
+            return reportDeprecatedGetterError(*state, "VTTCue", "snapToLines");
+        return throwGetterTypeError(*state, "VTTCue", "snapToLines");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.snapToLines());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueLine(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueLine(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "line");
-        return throwGetterTypeError(*exec, "VTTCue", "line");
+            return reportDeprecatedGetterError(*state, "VTTCue", "line");
+        return throwGetterTypeError(*state, "VTTCue", "line");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.line());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCuePosition(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCuePosition(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "position");
-        return throwGetterTypeError(*exec, "VTTCue", "position");
+            return reportDeprecatedGetterError(*state, "VTTCue", "position");
+        return throwGetterTypeError(*state, "VTTCue", "position");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.position());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueSize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "size");
-        return throwGetterTypeError(*exec, "VTTCue", "size");
+            return reportDeprecatedGetterError(*state, "VTTCue", "size");
+        return throwGetterTypeError(*state, "VTTCue", "size");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.size());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "align");
-        return throwGetterTypeError(*exec, "VTTCue", "align");
+            return reportDeprecatedGetterError(*state, "VTTCue", "align");
+        return throwGetterTypeError(*state, "VTTCue", "align");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.align());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.align());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "text");
-        return throwGetterTypeError(*exec, "VTTCue", "text");
+            return reportDeprecatedGetterError(*state, "VTTCue", "text");
+        return throwGetterTypeError(*state, "VTTCue", "text");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.text());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.text());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueRegionId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVTTCueRegionId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VTTCue", "regionId");
-        return throwGetterTypeError(*exec, "VTTCue", "regionId");
+            return reportDeprecatedGetterError(*state, "VTTCue", "regionId");
+        return throwGetterTypeError(*state, "VTTCue", "regionId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.regionId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.regionId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVTTCueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsVTTCueConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSVTTCuePrototype* domObject = jsDynamicCast<JSVTTCuePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSVTTCue::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSVTTCue::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSVTTCueVertical(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueVertical(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "vertical");
+            reportDeprecatedSetterError(*state, "VTTCue", "vertical");
         else
-            throwSetterTypeError(*exec, "VTTCue", "vertical");
+            throwSetterTypeError(*state, "VTTCue", "vertical");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setVertical(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSVTTCueSnapToLines(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueSnapToLines(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "snapToLines");
+            reportDeprecatedSetterError(*state, "VTTCue", "snapToLines");
         else
-            throwSetterTypeError(*exec, "VTTCue", "snapToLines");
+            throwSetterTypeError(*state, "VTTCue", "snapToLines");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSnapToLines(nativeValue);
 }
 
 
-void setJSVTTCueLine(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueLine(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "line");
+            reportDeprecatedSetterError(*state, "VTTCue", "line");
         else
-            throwSetterTypeError(*exec, "VTTCue", "line");
+            throwSetterTypeError(*state, "VTTCue", "line");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLine(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSVTTCuePosition(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCuePosition(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "position");
+            reportDeprecatedSetterError(*state, "VTTCue", "position");
         else
-            throwSetterTypeError(*exec, "VTTCue", "position");
+            throwSetterTypeError(*state, "VTTCue", "position");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPosition(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSVTTCueSize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueSize(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "size");
+            reportDeprecatedSetterError(*state, "VTTCue", "size");
         else
-            throwSetterTypeError(*exec, "VTTCue", "size");
+            throwSetterTypeError(*state, "VTTCue", "size");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSize(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSVTTCueAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "align");
+            reportDeprecatedSetterError(*state, "VTTCue", "align");
         else
-            throwSetterTypeError(*exec, "VTTCue", "align");
+            throwSetterTypeError(*state, "VTTCue", "align");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAlign(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSVTTCueText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueText(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "text");
+            reportDeprecatedSetterError(*state, "VTTCue", "text");
         else
-            throwSetterTypeError(*exec, "VTTCue", "text");
+            throwSetterTypeError(*state, "VTTCue", "text");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setText(nativeValue);
 }
 
 
-void setJSVTTCueRegionId(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVTTCueRegionId(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVTTCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VTTCue", "regionId");
+            reportDeprecatedSetterError(*state, "VTTCue", "regionId");
         else
-            throwSetterTypeError(*exec, "VTTCue", "regionId");
+            throwSetterTypeError(*state, "VTTCue", "regionId");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setRegionId(nativeValue);
 }
@@ -511,18 +476,18 @@ void setJSVTTCueRegionId(ExecState* exec, JSObject* baseObject, EncodedJSValue t
 
 JSValue JSVTTCue::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSVTTCueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSVTTCueConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsVTTCuePrototypeFunctionGetCueAsHTML(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsVTTCuePrototypeFunctionGetCueAsHTML(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSVTTCue* castedThis = jsDynamicCast<JSVTTCue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "VTTCue", "getCueAsHTML");
+        return throwThisTypeError(*state, "VTTCue", "getCueAsHTML");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSVTTCue::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getCueAsHTML()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getCueAsHTML()));
     return JSValue::encode(result);
 }
 
@@ -534,6 +499,14 @@ extern "C" { extern void (*const __identifier("??_7VTTCue@WebCore@@6B@")[])(); }
 extern "C" { extern void* _ZTVN7WebCore6VTTCueE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTCue* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSVTTCue>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTCue* impl)
 {
     if (!impl)
@@ -565,7 +538,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VTTCue* impl
 VTTCue* JSVTTCue::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSVTTCue*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

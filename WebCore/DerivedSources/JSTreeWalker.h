@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSTreeWalker : public JSDOMWrapper {
+class JSTreeWalker : public JSDOMWrapper<TreeWalker> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TreeWalker> Base;
     static JSTreeWalker* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TreeWalker>&& impl)
     {
-        JSTreeWalker* ptr = new (NotNull, JSC::allocateCell<JSTreeWalker>(globalObject->vm().heap)) JSTreeWalker(structure, globalObject, WTF::move(impl));
+        JSTreeWalker* ptr = new (NotNull, JSC::allocateCell<JSTreeWalker>(globalObject->vm().heap)) JSTreeWalker(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static TreeWalker* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTreeWalker();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    TreeWalker& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TreeWalker* m_impl;
 protected:
-    JSTreeWalker(JSC::Structure*, JSDOMGlobalObject*, Ref<TreeWalker>&&);
+    JSTreeWalker(JSC::Structure*, JSDOMGlobalObject&, Ref<TreeWalker>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TreeWalker*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TreeWalker*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TreeWalker& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TreeWalker& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TreeWalker*);
 
 
 } // namespace WebCore

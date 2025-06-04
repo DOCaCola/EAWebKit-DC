@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLShaderPrecisionFormat : public JSDOMWrapper {
+class JSWebGLShaderPrecisionFormat : public JSDOMWrapper<WebGLShaderPrecisionFormat> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLShaderPrecisionFormat> Base;
     static JSWebGLShaderPrecisionFormat* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLShaderPrecisionFormat>&& impl)
     {
-        JSWebGLShaderPrecisionFormat* ptr = new (NotNull, JSC::allocateCell<JSWebGLShaderPrecisionFormat>(globalObject->vm().heap)) JSWebGLShaderPrecisionFormat(structure, globalObject, WTF::move(impl));
+        JSWebGLShaderPrecisionFormat* ptr = new (NotNull, JSC::allocateCell<JSWebGLShaderPrecisionFormat>(globalObject->vm().heap)) JSWebGLShaderPrecisionFormat(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLShaderPrecisionFormat* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLShaderPrecisionFormat();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLShaderPrecisionFormat& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLShaderPrecisionFormat* m_impl;
 protected:
-    JSWebGLShaderPrecisionFormat(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLShaderPrecisionFormat>&&);
+    JSWebGLShaderPrecisionFormat(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLShaderPrecisionFormat>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLShaderPrecision
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLShaderPrecisionFormat*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLShaderPrecisionFormat& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLShaderPrecisionFormat& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLShaderPrecisionFormat*);
 
 
 } // namespace WebCore

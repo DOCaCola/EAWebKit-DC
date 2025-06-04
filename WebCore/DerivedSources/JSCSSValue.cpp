@@ -21,8 +21,9 @@
 #include "config.h"
 #include "JSCSSValue.h"
 
-#include "CSSValue.h"
+#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <wtf/GetPtr.h>
 
@@ -62,35 +63,16 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSValueConstructor : public DOMConstructorObject {
-private:
-    JSCSSValueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSValueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSValueConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSValueConstructor>(vm.heap)) JSCSSValueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSCSSValue> JSCSSValueConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSCSSValueConstructorTableValues[] =
 {
-    { "CSS_INHERIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CSS_PRIMITIVE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CSS_VALUE_LIST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "CSS_CUSTOM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "CSS_INHERIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CSS_PRIMITIVE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CSS_VALUE_LIST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "CSS_CUSTOM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 
@@ -99,34 +81,27 @@ COMPILE_ASSERT(1 == CSSValue::CSS_PRIMITIVE_VALUE, CSSValueEnumCSS_PRIMITIVE_VAL
 COMPILE_ASSERT(2 == CSSValue::CSS_VALUE_LIST, CSSValueEnumCSS_VALUE_LISTIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(3 == CSSValue::CSS_CUSTOM, CSSValueEnumCSS_CUSTOMIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSCSSValueConstructor::s_info = { "CSSValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSValueConstructor) };
-
-JSCSSValueConstructor::JSCSSValueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSValueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSValueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSValue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSValue::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSValue"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSCSSValueConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSCSSValueConstructor::s_info = { "CSSValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSValueConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSValuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cssText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSValueCssText) },
-    { "cssValueType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueCssValueType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "CSS_INHERIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CSS_PRIMITIVE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CSS_VALUE_LIST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "CSS_CUSTOM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cssText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSValueCssText) } },
+    { "cssValueType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSValueCssValueType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "CSS_INHERIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CSS_PRIMITIVE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CSS_VALUE_LIST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "CSS_CUSTOM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSCSSValuePrototype::s_info = { "CSSValuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSValuePrototype) };
@@ -139,9 +114,8 @@ void JSCSSValuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSValue::s_info = { "CSSValue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSValue) };
 
-JSCSSValue::JSCSSValue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSValue>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCSSValue::JSCSSValue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSValue>&& impl)
+    : JSDOMWrapper<CSSValue>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -161,84 +135,79 @@ void JSCSSValue::destroy(JSC::JSCell* cell)
     thisObject->JSCSSValue::~JSCSSValue();
 }
 
-JSCSSValue::~JSCSSValue()
+EncodedJSValue jsCSSValueCssText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsCSSValueCssText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSValue* castedThis = jsDynamicCast<JSCSSValue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSValuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSValue", "cssText");
-        return throwGetterTypeError(*exec, "CSSValue", "cssText");
+            return reportDeprecatedGetterError(*state, "CSSValue", "cssText");
+        return throwGetterTypeError(*state, "CSSValue", "cssText");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.cssText());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.cssText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSValueCssValueType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSValueCssValueType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSValue* castedThis = jsDynamicCast<JSCSSValue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSValuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSValue", "cssValueType");
-        return throwGetterTypeError(*exec, "CSSValue", "cssValueType");
+            return reportDeprecatedGetterError(*state, "CSSValue", "cssValueType");
+        return throwGetterTypeError(*state, "CSSValue", "cssValueType");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.cssValueType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSValueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSValueConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSValuePrototype* domObject = jsDynamicCast<JSCSSValuePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSValue::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSValue::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCSSValueCssText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCSSValueCssText(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCSSValue* castedThis = jsDynamicCast<JSCSSValue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSValuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSValue", "cssText");
+            reportDeprecatedSetterError(*state, "CSSValue", "cssText");
         else
-            throwSetterTypeError(*exec, "CSSValue", "cssText");
+            throwSetterTypeError(*state, "CSSValue", "cssText");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCssText(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSCSSValue::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSValueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSValueConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 CSSValue* JSCSSValue::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCSSValue*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

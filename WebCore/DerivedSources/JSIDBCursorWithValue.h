@@ -33,7 +33,7 @@ public:
     typedef JSIDBCursor Base;
     static JSIDBCursorWithValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBCursorWithValue>&& impl)
     {
-        JSIDBCursorWithValue* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorWithValue>(globalObject->vm().heap)) JSIDBCursorWithValue(structure, globalObject, WTF::move(impl));
+        JSIDBCursorWithValue* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorWithValue>(globalObject->vm().heap)) JSIDBCursorWithValue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBCursorWithValue& impl() const
+    IDBCursorWithValue& wrapped() const
     {
-        return static_cast<IDBCursorWithValue&>(Base::impl());
+        return static_cast<IDBCursorWithValue&>(Base::wrapped());
     }
 protected:
-    JSIDBCursorWithValue(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBCursorWithValue>&&);
+    JSIDBCursorWithValue(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBCursorWithValue>&&);
 
     void finishCreation(JSC::VM& vm)
     {

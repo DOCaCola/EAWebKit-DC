@@ -368,6 +368,14 @@ inline unsigned fastLog2(unsigned i)
     return log2;
 }
 
+inline unsigned fastLog2(uint64_t value)
+{
+    unsigned high = static_cast<unsigned>(value >> 32);
+    if (high)
+        return fastLog2(high) + 32;
+    return fastLog2(static_cast<unsigned>(value));
+}
+
 template <typename T>
 inline typename std::enable_if<std::is_floating_point<T>::value, T>::type safeFPDivision(T u, T v)
 {
@@ -398,6 +406,48 @@ inline typename std::enable_if<std::is_floating_point<T>::value, bool>::type are
 inline bool isIntegral(float value)
 {
     return static_cast<int>(value) == value;
+}
+
+template<typename T>
+inline void incrementWithSaturation(T& value)
+{
+    if (value != std::numeric_limits<T>::max())
+        value++;
+}
+
+template<typename T>
+inline T leftShiftWithSaturation(T value, unsigned shiftAmount, T max = std::numeric_limits<T>::max())
+{
+    T result = value << shiftAmount;
+    // We will have saturated if shifting right doesn't recover the original value.
+    if (result >> shiftAmount != value)
+        return max;
+    if (result > max)
+        return max;
+    return result;
+}
+
+// Pass ranges with the min being inclusive and the max being exclusive. For example, this should
+// return false:
+//
+//     rangesOverlap(0, 8, 8, 16)
+template<typename T>
+inline bool rangesOverlap(T leftMin, T leftMax, T rightMin, T rightMax)
+{
+    ASSERT(leftMin <= leftMax);
+    ASSERT(rightMin <= rightMax);
+    
+    // Empty ranges interfere with nothing.
+    if (leftMin == leftMax)
+        return false;
+    if (rightMin == rightMax)
+        return false;
+    
+    if (leftMin <= rightMin && leftMax > rightMin)
+        return true;
+    if (rightMin <= leftMin && rightMax > leftMin)
+        return true;
+    return false;
 }
 
 } // namespace WTF

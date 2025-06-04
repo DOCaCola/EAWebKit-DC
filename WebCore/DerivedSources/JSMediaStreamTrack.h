@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaStreamTrack : public JSDOMWrapper {
+class JSMediaStreamTrack : public JSDOMWrapper<MediaStreamTrack> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaStreamTrack> Base;
     static JSMediaStreamTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamTrack>&& impl)
     {
-        JSMediaStreamTrack* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrack>(globalObject->vm().heap)) JSMediaStreamTrack(structure, globalObject, WTF::move(impl));
+        JSMediaStreamTrack* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrack>(globalObject->vm().heap)) JSMediaStreamTrack(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaStreamTrack* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaStreamTrack();
 
     DECLARE_INFO;
 
@@ -55,13 +54,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaStreamTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
 
-private:
-    MediaStreamTrack* m_impl;
+    // Custom functions
+    JSC::JSValue getSettings(JSC::ExecState&);
+    JSC::JSValue getCapabilities(JSC::ExecState&);
 protected:
-    JSMediaStreamTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStreamTrack>&&);
+    JSMediaStreamTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStreamTrack>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +82,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaStreamTrack*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaStreamTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStreamTrack& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamTrack*);
 
 
 } // namespace WebCore

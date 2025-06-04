@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGGradientElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGGradientElement>&& impl)
     {
-        JSSVGGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGradientElement>(globalObject->vm().heap)) JSSVGGradientElement(structure, globalObject, WTF::move(impl));
+        JSSVGGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGradientElement>(globalObject->vm().heap)) JSSVGGradientElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGGradientElement& impl() const
+    SVGGradientElement& wrapped() const
     {
-        return static_cast<SVGGradientElement&>(Base::impl());
+        return static_cast<SVGGradientElement&>(Base::wrapped());
     }
 protected:
-    JSSVGGradientElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGGradientElement>&&);
+    JSSVGGradientElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGGradientElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

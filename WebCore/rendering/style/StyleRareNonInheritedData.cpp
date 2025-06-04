@@ -31,6 +31,8 @@
 #include "StyleImage.h"
 #include "StyleResolver.h"
 #include "StyleScrollSnapPoints.h"
+#include <wtf/PointerComparison.h>
+#include <wtf/RefPtr.h>
 
 namespace WebCore {
 
@@ -77,6 +79,9 @@ StyleRareNonInheritedData::StyleRareNonInheritedData()
     , m_justifyContent(RenderStyle::initialContentAlignment())
     , m_justifyItems(RenderStyle::initialSelfAlignment())
     , m_justifySelf(RenderStyle::initialSelfAlignment())
+#if ENABLE(TOUCH_EVENTS)
+    , m_touchAction(static_cast<unsigned>(RenderStyle::initialTouchAction()))
+#endif
 #if ENABLE(CSS_SCROLL_SNAP)
     , m_scrollSnapType(static_cast<unsigned>(RenderStyle::initialScrollSnapType()))
 #endif
@@ -166,6 +171,9 @@ inline StyleRareNonInheritedData::StyleRareNonInheritedData(const StyleRareNonIn
     , m_justifyContent(o.m_justifyContent)
     , m_justifyItems(o.m_justifyItems)
     , m_justifySelf(o.m_justifySelf)
+#if ENABLE(TOUCH_EVENTS)
+    , m_touchAction(o.m_touchAction)
+#endif
 #if ENABLE(CSS_SCROLL_SNAP)
     , m_scrollSnapType(o.m_scrollSnapType)
 #endif
@@ -233,21 +241,21 @@ bool StyleRareNonInheritedData::operator==(const StyleRareNonInheritedData& o) c
         && m_scrollSnapPoints == o.m_scrollSnapPoints
 #endif
         && contentDataEquivalent(o)
-        && counterDataEquivalent(o)
-        && shadowDataEquivalent(o)
-        && willChangeDataEquivalent(o)
-        && reflectionDataEquivalent(o)
-        && animationDataEquivalent(o)
-        && transitionDataEquivalent(o)
+        && arePointingToEqualData(m_counterDirectives, o.m_counterDirectives)
+        && arePointingToEqualData(m_boxShadow, o.m_boxShadow)
+        && arePointingToEqualData(m_willChange, o.m_willChange)
+        && arePointingToEqualData(m_boxReflect, o.m_boxReflect)
+        && arePointingToEqualData(m_animations, o.m_animations)
+        && arePointingToEqualData(m_transitions, o.m_transitions)
         && m_mask == o.m_mask
         && m_maskBoxImage == o.m_maskBoxImage
         && m_pageSize == o.m_pageSize
 #if ENABLE(CSS_SHAPES)
-        && m_shapeOutside == o.m_shapeOutside
+        && arePointingToEqualData(m_shapeOutside, o.m_shapeOutside)
         && m_shapeMargin == o.m_shapeMargin
         && m_shapeImageThreshold == o.m_shapeImageThreshold
 #endif
-        && m_clipPath == o.m_clipPath // FIXME: This needs to compare values.
+        && arePointingToEqualData(m_clipPath, o.m_clipPath)
         && m_textDecorationColor == o.m_textDecorationColor
         && m_visitedLinkTextDecorationColor == o.m_visitedLinkTextDecorationColor
         && m_visitedLinkBackgroundColor == o.m_visitedLinkBackgroundColor
@@ -280,6 +288,9 @@ bool StyleRareNonInheritedData::operator==(const StyleRareNonInheritedData& o) c
         && m_borderFit == o.m_borderFit
         && m_textCombine == o.m_textCombine
         && m_textDecorationStyle == o.m_textDecorationStyle
+#if ENABLE(TOUCH_EVENTS)
+        && m_touchAction == o.m_touchAction
+#endif
 #if ENABLE(CSS_SCROLL_SNAP)
         && m_scrollSnapType == o.m_scrollSnapType
 #endif
@@ -303,64 +314,6 @@ bool StyleRareNonInheritedData::contentDataEquivalent(const StyleRareNonInherite
     }
 
     return !a && !b;
-}
-
-bool StyleRareNonInheritedData::counterDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if (m_counterDirectives.get() == o.m_counterDirectives.get())
-        return true;
-        
-    if (m_counterDirectives && o.m_counterDirectives && *m_counterDirectives == *o.m_counterDirectives)
-        return true;
-
-    return false;
-}
-
-bool StyleRareNonInheritedData::shadowDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if ((!m_boxShadow && o.m_boxShadow) || (m_boxShadow && !o.m_boxShadow))
-        return false;
-    if (m_boxShadow && o.m_boxShadow && (*m_boxShadow != *o.m_boxShadow))
-        return false;
-    return true;
-}
-
-bool StyleRareNonInheritedData::willChangeDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if (m_willChange != o.m_willChange) {
-        if (!m_willChange || !o.m_willChange)
-            return false;
-        return *m_willChange == *o.m_willChange;
-    }
-    return true;
-}
-
-bool StyleRareNonInheritedData::reflectionDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if (m_boxReflect != o.m_boxReflect) {
-        if (!m_boxReflect || !o.m_boxReflect)
-            return false;
-        return *m_boxReflect == *o.m_boxReflect;
-    }
-    return true;
-}
-
-bool StyleRareNonInheritedData::animationDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if ((!m_animations && o.m_animations) || (m_animations && !o.m_animations))
-        return false;
-    if (m_animations && o.m_animations && (*m_animations != *o.m_animations))
-        return false;
-    return true;
-}
-
-bool StyleRareNonInheritedData::transitionDataEquivalent(const StyleRareNonInheritedData& o) const
-{
-    if ((!m_transitions && o.m_transitions) || (m_transitions && !o.m_transitions))
-        return false;
-    if (m_transitions && o.m_transitions && (*m_transitions != *o.m_transitions))
-        return false;
-    return true;
 }
 
 bool StyleRareNonInheritedData::hasFilters() const

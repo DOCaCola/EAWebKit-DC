@@ -37,7 +37,11 @@
 
 // FIXME: Enabling the StringView lifetime checking causes the MSVC build to fail. Figure out why.
 // FIXME: Enable StringView lifetime checking once the underlying assertions have been fixed.
+#if defined(NDEBUG) || COMPILER(MSVC) || 1
 #define CHECK_STRINGVIEW_LIFETIME 0
+#else
+#define CHECK_STRINGVIEW_LIFETIME 1
+#endif
 
 namespace WTF {
 
@@ -492,6 +496,8 @@ public:
     bool is8Bit() { return m_string.is8Bit(); }
     void writeTo(LChar* destination) { m_string.getCharactersWithUpconvert(destination); }
     void writeTo(UChar* destination) { m_string.getCharactersWithUpconvert(destination); }
+
+    String toString() const { return m_string.toString(); }
 
 private:
     StringView m_string;

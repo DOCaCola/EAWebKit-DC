@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSNotification : public JSDOMWrapper {
+class WEBCORE_EXPORT JSNotification : public JSDOMWrapper<Notification> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Notification> Base;
     static JSNotification* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Notification>&& impl)
     {
-        JSNotification* ptr = new (NotNull, JSC::allocateCell<JSNotification>(globalObject->vm().heap)) JSNotification(structure, globalObject, WTF::move(impl));
+        JSNotification* ptr = new (NotNull, JSC::allocateCell<JSNotification>(globalObject->vm().heap)) JSNotification(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Notification* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNotification();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    Notification& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Notification* m_impl;
 protected:
-    JSNotification(JSC::Structure*, JSDOMGlobalObject*, Ref<Notification>&&);
+    JSNotification(JSC::Structure*, JSDOMGlobalObject&, Ref<Notification>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Notification*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Notification*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Notification& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Notification& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Notification*);
 
 
 } // namespace WebCore

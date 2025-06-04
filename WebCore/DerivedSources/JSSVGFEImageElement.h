@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEImageElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEImageElement>&& impl)
     {
-        JSSVGFEImageElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEImageElement>(globalObject->vm().heap)) JSSVGFEImageElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEImageElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEImageElement>(globalObject->vm().heap)) JSSVGFEImageElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEImageElement& impl() const
+    SVGFEImageElement& wrapped() const
     {
-        return static_cast<SVGFEImageElement&>(Base::impl());
+        return static_cast<SVGFEImageElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEImageElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEImageElement>&&);
+    JSSVGFEImageElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEImageElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

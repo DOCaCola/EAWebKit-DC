@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSRect : public JSDOMWrapper {
+class JSRect : public JSDOMWrapper<Rect> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Rect> Base;
     static JSRect* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Rect>&& impl)
     {
-        JSRect* ptr = new (NotNull, JSC::allocateCell<JSRect>(globalObject->vm().heap)) JSRect(structure, globalObject, WTF::move(impl));
+        JSRect* ptr = new (NotNull, JSC::allocateCell<JSRect>(globalObject->vm().heap)) JSRect(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Rect* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRect();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Rect& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Rect* m_impl;
 protected:
-    JSRect(JSC::Structure*, JSDOMGlobalObject*, Ref<Rect>&&);
+    JSRect(JSC::Structure*, JSDOMGlobalObject&, Ref<Rect>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Rect*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Rect*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Rect& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Rect& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Rect*);
 
 
 } // namespace WebCore

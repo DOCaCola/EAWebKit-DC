@@ -22,8 +22,8 @@
 #include "JSHTMLPreElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLPreElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -63,50 +63,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLPreElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLPreElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLPreElement> JSHTMLPreElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLPreElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLPreElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLPreElementConstructor>(vm.heap)) JSHTMLPreElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLPreElementConstructor::s_info = { "HTMLPreElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLPreElementConstructor) };
-
-JSHTMLPreElementConstructor::JSHTMLPreElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLPreElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLPreElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLPreElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLPreElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLPreElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLPreElementConstructor::s_info = { "HTMLPreElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLPreElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLPreElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLPreElementWidth) },
-    { "wrap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLPreElementWrap) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLPreElementWidth) } },
+    { "wrap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLPreElementWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLPreElementWrap) } },
 };
 
 const ClassInfo JSHTMLPreElementPrototype::s_info = { "HTMLPreElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLPreElementPrototype) };
@@ -119,7 +93,7 @@ void JSHTMLPreElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLPreElement::s_info = { "HTMLPreElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLPreElement) };
 
-JSHTMLPreElement::JSHTMLPreElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLPreElement>&& impl)
+JSHTMLPreElement::JSHTMLPreElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLPreElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,83 +108,83 @@ JSObject* JSHTMLPreElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLPreElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLPreElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLPreElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLPreElement* castedThis = jsDynamicCast<JSHTMLPreElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLPreElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLPreElement", "width");
-        return throwGetterTypeError(*exec, "HTMLPreElement", "width");
+            return reportDeprecatedGetterError(*state, "HTMLPreElement", "width");
+        return throwGetterTypeError(*state, "HTMLPreElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.getIntegralAttribute(WebCore::HTMLNames::widthAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLPreElementWrap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLPreElementWrap(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLPreElement* castedThis = jsDynamicCast<JSHTMLPreElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLPreElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLPreElement", "wrap");
-        return throwGetterTypeError(*exec, "HTMLPreElement", "wrap");
+            return reportDeprecatedGetterError(*state, "HTMLPreElement", "wrap");
+        return throwGetterTypeError(*state, "HTMLPreElement", "wrap");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::wrapAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLPreElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLPreElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLPreElementPrototype* domObject = jsDynamicCast<JSHTMLPreElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLPreElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLPreElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLPreElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLPreElementWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLPreElement* castedThis = jsDynamicCast<JSHTMLPreElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLPreElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLPreElement", "width");
+            reportDeprecatedSetterError(*state, "HTMLPreElement", "width");
         else
-            throwSetterTypeError(*exec, "HTMLPreElement", "width");
+            throwSetterTypeError(*state, "HTMLPreElement", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setIntegralAttribute(WebCore::HTMLNames::widthAttr, nativeValue);
 }
 
 
-void setJSHTMLPreElementWrap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLPreElementWrap(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLPreElement* castedThis = jsDynamicCast<JSHTMLPreElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLPreElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLPreElement", "wrap");
+            reportDeprecatedSetterError(*state, "HTMLPreElement", "wrap");
         else
-            throwSetterTypeError(*exec, "HTMLPreElement", "wrap");
+            throwSetterTypeError(*state, "HTMLPreElement", "wrap");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::wrapAttr, nativeValue);
 }
@@ -218,7 +192,7 @@ void setJSHTMLPreElementWrap(ExecState* exec, JSObject* baseObject, EncodedJSVal
 
 JSValue JSHTMLPreElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLPreElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLPreElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

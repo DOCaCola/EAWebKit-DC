@@ -22,7 +22,7 @@
 #include "JSSVGPathSegMovetoAbs.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSegMovetoAbs.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -63,50 +63,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegMovetoAbsConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegMovetoAbsConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPathSegMovetoAbs> JSSVGPathSegMovetoAbsConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegMovetoAbsConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegMovetoAbsConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegMovetoAbsConstructor>(vm.heap)) JSSVGPathSegMovetoAbsConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathSegMovetoAbsConstructor::s_info = { "SVGPathSegMovetoAbsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegMovetoAbsConstructor) };
-
-JSSVGPathSegMovetoAbsConstructor::JSSVGPathSegMovetoAbsConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPathSegMovetoAbsConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPathSegMovetoAbsConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegMovetoAbs::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegMovetoAbs::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegMovetoAbs"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegMovetoAbsConstructor::s_info = { "SVGPathSegMovetoAbsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegMovetoAbsConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegMovetoAbsPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegMovetoAbsX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegMovetoAbsY) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegMovetoAbsX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegMovetoAbsY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegMovetoAbsY) } },
 };
 
 const ClassInfo JSSVGPathSegMovetoAbsPrototype::s_info = { "SVGPathSegMovetoAbsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegMovetoAbsPrototype) };
@@ -119,7 +93,7 @@ void JSSVGPathSegMovetoAbsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSegMovetoAbs::s_info = { "SVGPathSegMovetoAbs", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegMovetoAbs) };
 
-JSSVGPathSegMovetoAbs::JSSVGPathSegMovetoAbs(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegMovetoAbs>&& impl)
+JSSVGPathSegMovetoAbs::JSSVGPathSegMovetoAbs(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegMovetoAbs>&& impl)
     : JSSVGPathSeg(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,83 +108,83 @@ JSObject* JSSVGPathSegMovetoAbs::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSSVGPathSegMovetoAbs>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathSegMovetoAbsX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegMovetoAbsX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegMovetoAbs* castedThis = jsDynamicCast<JSSVGPathSegMovetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegMovetoAbsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegMovetoAbs", "x");
-        return throwGetterTypeError(*exec, "SVGPathSegMovetoAbs", "x");
+            return reportDeprecatedGetterError(*state, "SVGPathSegMovetoAbs", "x");
+        return throwGetterTypeError(*state, "SVGPathSegMovetoAbs", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegMovetoAbsY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegMovetoAbsY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegMovetoAbs* castedThis = jsDynamicCast<JSSVGPathSegMovetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegMovetoAbsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegMovetoAbs", "y");
-        return throwGetterTypeError(*exec, "SVGPathSegMovetoAbs", "y");
+            return reportDeprecatedGetterError(*state, "SVGPathSegMovetoAbs", "y");
+        return throwGetterTypeError(*state, "SVGPathSegMovetoAbs", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegMovetoAbsConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPathSegMovetoAbsConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPathSegMovetoAbsPrototype* domObject = jsDynamicCast<JSSVGPathSegMovetoAbsPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegMovetoAbs::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPathSegMovetoAbs::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGPathSegMovetoAbsX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegMovetoAbsX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegMovetoAbs* castedThis = jsDynamicCast<JSSVGPathSegMovetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegMovetoAbsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegMovetoAbs", "x");
+            reportDeprecatedSetterError(*state, "SVGPathSegMovetoAbs", "x");
         else
-            throwSetterTypeError(*exec, "SVGPathSegMovetoAbs", "x");
+            throwSetterTypeError(*state, "SVGPathSegMovetoAbs", "x");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setX(nativeValue);
 }
 
 
-void setJSSVGPathSegMovetoAbsY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegMovetoAbsY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegMovetoAbs* castedThis = jsDynamicCast<JSSVGPathSegMovetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegMovetoAbsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegMovetoAbs", "y");
+            reportDeprecatedSetterError(*state, "SVGPathSegMovetoAbs", "y");
         else
-            throwSetterTypeError(*exec, "SVGPathSegMovetoAbs", "y");
+            throwSetterTypeError(*state, "SVGPathSegMovetoAbs", "y");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setY(nativeValue);
 }
@@ -218,7 +192,7 @@ void setJSSVGPathSegMovetoAbsY(ExecState* exec, JSObject* baseObject, EncodedJSV
 
 JSValue JSSVGPathSegMovetoAbs::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPathSegMovetoAbsConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegMovetoAbsConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

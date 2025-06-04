@@ -22,11 +22,11 @@
 #include "JSSVGFEImageElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedPreserveAspectRatio.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEImageElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -70,56 +70,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEImageElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEImageElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEImageElement> JSSVGFEImageElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEImageElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEImageElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEImageElementConstructor>(vm.heap)) JSSVGFEImageElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEImageElementConstructor::s_info = { "SVGFEImageElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEImageElementConstructor) };
-
-JSSVGFEImageElementConstructor::JSSVGFEImageElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEImageElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEImageElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEImageElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEImageElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEImageElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEImageElementConstructor::s_info = { "SVGFEImageElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEImageElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEImageElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAspectRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAspectRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEImageElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEImageElementPrototype::s_info = { "SVGFEImageElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEImageElementPrototype) };
@@ -132,7 +106,7 @@ void JSSVGFEImageElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEImageElement::s_info = { "SVGFEImageElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEImageElement) };
 
-JSSVGFEImageElement::JSSVGFEImageElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEImageElement>&& impl)
+JSSVGFEImageElement::JSSVGFEImageElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEImageElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -147,161 +121,161 @@ JSObject* JSSVGFEImageElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSSVGFEImageElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEImageElementPreserveAspectRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementPreserveAspectRatio(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "preserveAspectRatio");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "preserveAspectRatio");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "preserveAspectRatio");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "preserveAspectRatio");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedPreserveAspectRatio> obj = impl.preserveAspectRatioAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "x");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "y");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "width");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "height");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementResult(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "result");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "result");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "result");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEImageElement* castedThis = jsDynamicCast<JSSVGFEImageElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEImageElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEImageElement", "href");
-        return throwGetterTypeError(*exec, "SVGFEImageElement", "href");
+            return reportDeprecatedGetterError(*state, "SVGFEImageElement", "href");
+        return throwGetterTypeError(*state, "SVGFEImageElement", "href");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEImageElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEImageElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEImageElementPrototype* domObject = jsDynamicCast<JSSVGFEImageElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEImageElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEImageElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEImageElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEImageElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEImageElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

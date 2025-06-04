@@ -27,10 +27,10 @@
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "JSTimeRanges.h"
-#include "MediaController.h"
 #include "TimeRanges.h"
 #include "URL.h"
 #include <runtime/Error.h>
@@ -95,84 +95,49 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaControllerConstructor : public DOMConstructorObject {
-private:
-    JSMediaControllerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSMediaController> JSMediaControllerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaControllerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaControllerConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaControllerConstructor>(vm.heap)) JSMediaControllerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMediaController(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSMediaControllerConstructor::constructJSMediaController(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMediaControllerConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSMediaControllerConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSMediaControllerConstructor*>(state->callee());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MediaController");
+        return throwConstructorDocumentUnavailableError(*state, "MediaController");
     RefPtr<MediaController> object = MediaController::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSMediaControllerConstructor::s_info = { "MediaControllerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaControllerConstructor) };
-
-JSMediaControllerConstructor::JSMediaControllerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMediaControllerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMediaControllerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaController::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaController::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaController"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSMediaControllerConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMediaController;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMediaControllerConstructor::s_info = { "MediaControllerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaControllerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaControllerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "buffered", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerBuffered), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "seekable", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerSeekable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "duration", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerDuration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "currentTime", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerCurrentTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerCurrentTime) },
-    { "paused", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPaused), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "played", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlayed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "playbackState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlaybackState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultPlaybackRate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerDefaultPlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerDefaultPlaybackRate) },
-    { "playbackRate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerPlaybackRate) },
-    { "volume", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerVolume), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerVolume) },
-    { "muted", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerMuted), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerMuted) },
-    { "play", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionPlay), (intptr_t) (0) },
-    { "pause", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionPause), (intptr_t) (0) },
-    { "unpause", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionUnpause), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "buffered", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerBuffered), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "seekable", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerSeekable), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "duration", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerDuration), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentTime", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerCurrentTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerCurrentTime) } },
+    { "paused", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPaused), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "played", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlayed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "playbackState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlaybackState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultPlaybackRate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerDefaultPlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerDefaultPlaybackRate) } },
+    { "playbackRate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerPlaybackRate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerPlaybackRate) } },
+    { "volume", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerVolume), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerVolume) } },
+    { "muted", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaControllerMuted), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaControllerMuted) } },
+    { "play", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionPlay), (intptr_t) (0) } },
+    { "pause", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionPause), (intptr_t) (0) } },
+    { "unpause", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionUnpause), (intptr_t) (0) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaControllerPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSMediaControllerPrototype::s_info = { "MediaControllerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaControllerPrototype) };
@@ -185,9 +150,8 @@ void JSMediaControllerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaController::s_info = { "MediaController", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaController) };
 
-JSMediaController::JSMediaController(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaController>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaController::JSMediaController(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaController>&& impl)
+    : JSDOMWrapper<MediaController>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -207,303 +171,298 @@ void JSMediaController::destroy(JSC::JSCell* cell)
     thisObject->JSMediaController::~JSMediaController();
 }
 
-JSMediaController::~JSMediaController()
+EncodedJSValue jsMediaControllerBuffered(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMediaControllerBuffered(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "buffered");
-        return throwGetterTypeError(*exec, "MediaController", "buffered");
+            return reportDeprecatedGetterError(*state, "MediaController", "buffered");
+        return throwGetterTypeError(*state, "MediaController", "buffered");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.buffered()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.buffered()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerSeekable(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerSeekable(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "seekable");
-        return throwGetterTypeError(*exec, "MediaController", "seekable");
+            return reportDeprecatedGetterError(*state, "MediaController", "seekable");
+        return throwGetterTypeError(*state, "MediaController", "seekable");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.seekable()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.seekable()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerDuration(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerDuration(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "duration");
-        return throwGetterTypeError(*exec, "MediaController", "duration");
+            return reportDeprecatedGetterError(*state, "MediaController", "duration");
+        return throwGetterTypeError(*state, "MediaController", "duration");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.duration());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerCurrentTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerCurrentTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "currentTime");
-        return throwGetterTypeError(*exec, "MediaController", "currentTime");
+            return reportDeprecatedGetterError(*state, "MediaController", "currentTime");
+        return throwGetterTypeError(*state, "MediaController", "currentTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.currentTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerPaused(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerPaused(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "paused");
-        return throwGetterTypeError(*exec, "MediaController", "paused");
+            return reportDeprecatedGetterError(*state, "MediaController", "paused");
+        return throwGetterTypeError(*state, "MediaController", "paused");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.paused());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerPlayed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerPlayed(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "played");
-        return throwGetterTypeError(*exec, "MediaController", "played");
+            return reportDeprecatedGetterError(*state, "MediaController", "played");
+        return throwGetterTypeError(*state, "MediaController", "played");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.played()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.played()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerPlaybackState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerPlaybackState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "playbackState");
-        return throwGetterTypeError(*exec, "MediaController", "playbackState");
+            return reportDeprecatedGetterError(*state, "MediaController", "playbackState");
+        return throwGetterTypeError(*state, "MediaController", "playbackState");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.playbackState());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.playbackState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerDefaultPlaybackRate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerDefaultPlaybackRate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "defaultPlaybackRate");
-        return throwGetterTypeError(*exec, "MediaController", "defaultPlaybackRate");
+            return reportDeprecatedGetterError(*state, "MediaController", "defaultPlaybackRate");
+        return throwGetterTypeError(*state, "MediaController", "defaultPlaybackRate");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.defaultPlaybackRate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerPlaybackRate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerPlaybackRate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "playbackRate");
-        return throwGetterTypeError(*exec, "MediaController", "playbackRate");
+            return reportDeprecatedGetterError(*state, "MediaController", "playbackRate");
+        return throwGetterTypeError(*state, "MediaController", "playbackRate");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.playbackRate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerVolume(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerVolume(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "volume");
-        return throwGetterTypeError(*exec, "MediaController", "volume");
+            return reportDeprecatedGetterError(*state, "MediaController", "volume");
+        return throwGetterTypeError(*state, "MediaController", "volume");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.volume());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerMuted(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaControllerMuted(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaController", "muted");
-        return throwGetterTypeError(*exec, "MediaController", "muted");
+            return reportDeprecatedGetterError(*state, "MediaController", "muted");
+        return throwGetterTypeError(*state, "MediaController", "muted");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.muted());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaControllerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMediaControllerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMediaControllerPrototype* domObject = jsDynamicCast<JSMediaControllerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaController::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMediaController::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSMediaControllerCurrentTime(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaControllerCurrentTime(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaController", "currentTime");
+            reportDeprecatedSetterError(*state, "MediaController", "currentTime");
         else
-            throwSetterTypeError(*exec, "MediaController", "currentTime");
+            throwSetterTypeError(*state, "MediaController", "currentTime");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCurrentTime(nativeValue);
 }
 
 
-void setJSMediaControllerDefaultPlaybackRate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaControllerDefaultPlaybackRate(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaController", "defaultPlaybackRate");
+            reportDeprecatedSetterError(*state, "MediaController", "defaultPlaybackRate");
         else
-            throwSetterTypeError(*exec, "MediaController", "defaultPlaybackRate");
+            throwSetterTypeError(*state, "MediaController", "defaultPlaybackRate");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setDefaultPlaybackRate(nativeValue);
 }
 
 
-void setJSMediaControllerPlaybackRate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaControllerPlaybackRate(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaController", "playbackRate");
+            reportDeprecatedSetterError(*state, "MediaController", "playbackRate");
         else
-            throwSetterTypeError(*exec, "MediaController", "playbackRate");
+            throwSetterTypeError(*state, "MediaController", "playbackRate");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPlaybackRate(nativeValue);
 }
 
 
-void setJSMediaControllerVolume(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaControllerVolume(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaController", "volume");
+            reportDeprecatedSetterError(*state, "MediaController", "volume");
         else
-            throwSetterTypeError(*exec, "MediaController", "volume");
+            throwSetterTypeError(*state, "MediaController", "volume");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setVolume(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSMediaControllerMuted(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaControllerMuted(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaControllerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaController", "muted");
+            reportDeprecatedSetterError(*state, "MediaController", "muted");
         else
-            throwSetterTypeError(*exec, "MediaController", "muted");
+            throwSetterTypeError(*state, "MediaController", "muted");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setMuted(nativeValue);
 }
@@ -511,92 +470,92 @@ void setJSMediaControllerMuted(ExecState* exec, JSObject* baseObject, EncodedJSV
 
 JSValue JSMediaController::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMediaControllerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMediaControllerConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionPlay(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionPlay(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "play");
+        return throwThisTypeError(*state, "MediaController", "play");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.play();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionPause(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionPause(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "pause");
+        return throwThisTypeError(*state, "MediaController", "pause");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.pause();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionUnpause(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionUnpause(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "unpause");
+        return throwThisTypeError(*state, "MediaController", "unpause");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.unpause();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "addEventListener");
+        return throwThisTypeError(*state, "MediaController", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "removeEventListener");
+        return throwThisTypeError(*state, "MediaController", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaControllerPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaController* castedThis = jsDynamicCast<JSMediaController*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaController", "dispatchEvent");
+        return throwThisTypeError(*state, "MediaController", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaController::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -605,13 +564,13 @@ void JSMediaController::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSMediaController*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSMediaControllerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsMediaController = jsCast<JSMediaController*>(handle.slot()->asCell());
-    if (jsMediaController->impl().isFiringEventListeners())
+    if (jsMediaController->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -621,7 +580,7 @@ void JSMediaControllerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsMediaController = jsCast<JSMediaController*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaController->impl(), jsMediaController);
+    uncacheWrapper(world, &jsMediaController->wrapped(), jsMediaController);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -632,6 +591,14 @@ extern "C" { extern void (*const __identifier("??_7MediaController@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15MediaControllerE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaController* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaController>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaController* impl)
 {
     if (!impl)
@@ -663,7 +630,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaControl
 MediaController* JSMediaController::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaController*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

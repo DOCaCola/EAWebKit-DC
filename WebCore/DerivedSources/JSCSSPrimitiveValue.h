@@ -31,7 +31,7 @@ public:
     typedef JSCSSValue Base;
     static JSCSSPrimitiveValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSPrimitiveValue>&& impl)
     {
-        JSCSSPrimitiveValue* ptr = new (NotNull, JSC::allocateCell<JSCSSPrimitiveValue>(globalObject->vm().heap)) JSCSSPrimitiveValue(structure, globalObject, WTF::move(impl));
+        JSCSSPrimitiveValue* ptr = new (NotNull, JSC::allocateCell<JSCSSPrimitiveValue>(globalObject->vm().heap)) JSCSSPrimitiveValue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSPrimitiveValue& impl() const
+    CSSPrimitiveValue& wrapped() const
     {
-        return static_cast<CSSPrimitiveValue&>(Base::impl());
+        return static_cast<CSSPrimitiveValue&>(Base::wrapped());
     }
 protected:
-    JSCSSPrimitiveValue(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSPrimitiveValue>&&);
+    JSCSSPrimitiveValue(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSPrimitiveValue>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -23,9 +23,9 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSStyleSheet.h"
 #include "StyleSheet.h"
-#include "StyleSheetList.h"
 #include "wtf/text/AtomicString.h"
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSStyleSheetListConstructor : public DOMConstructorObject {
-private:
-    JSStyleSheetListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSStyleSheetListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSStyleSheetListConstructor* ptr = new (NotNull, JSC::allocateCell<JSStyleSheetListConstructor>(vm.heap)) JSStyleSheetListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSStyleSheetList> JSStyleSheetListConstructor;
 
 /* Hash table */
 
@@ -103,32 +84,25 @@ static const struct CompactHashIndex JSStyleSheetListTableIndex[5] = {
 
 static const HashTableValue JSStyleSheetListTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleSheetListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleSheetListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleSheetListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStyleSheetListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSStyleSheetListTable = { 2, 3, true, JSStyleSheetListTableValues, 0, JSStyleSheetListTableIndex };
-const ClassInfo JSStyleSheetListConstructor::s_info = { "StyleSheetListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStyleSheetListConstructor) };
-
-JSStyleSheetListConstructor::JSStyleSheetListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSStyleSheetListTable = { 2, 3, true, JSStyleSheetListTableValues, JSStyleSheetListTableIndex };
+template<> void JSStyleSheetListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSStyleSheetListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSStyleSheetList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSStyleSheetList::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("StyleSheetList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSStyleSheetListConstructor::s_info = { "StyleSheetListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStyleSheetListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSStyleSheetListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStyleSheetListPrototypeFunctionItem), (intptr_t) (0) },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStyleSheetListPrototypeFunctionItem), (intptr_t) (0) } },
 };
 
 const ClassInfo JSStyleSheetListPrototype::s_info = { "StyleSheetListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStyleSheetListPrototype) };
@@ -141,9 +115,8 @@ void JSStyleSheetListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSStyleSheetList::s_info = { "StyleSheetList", &Base::s_info, &JSStyleSheetListTable, CREATE_METHOD_TABLE(JSStyleSheetList) };
 
-JSStyleSheetList::JSStyleSheetList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleSheetList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSStyleSheetList::JSStyleSheetList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<StyleSheetList>&& impl)
+    : JSDOMWrapper<StyleSheetList>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -163,104 +136,102 @@ void JSStyleSheetList::destroy(JSC::JSCell* cell)
     thisObject->JSStyleSheetList::~JSStyleSheetList();
 }
 
-JSStyleSheetList::~JSStyleSheetList()
-{
-    releaseImpl();
-}
-
-bool JSStyleSheetList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSStyleSheetList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSStyleSheetList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSStyleSheetList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
+    if (getStaticValueSlot<JSStyleSheetList, Base>(state, JSStyleSheetListTable, thisObject, propertyName, slot))
         return true;
+    JSValue proto = thisObject->prototype();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (!optionalIndex && thisObject->classInfo() == info()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly | DontDelete | DontEnum, value);
+            return true;
+        }
     }
-    return getStaticValueSlot<JSStyleSheetList, Base>(exec, JSStyleSheetListTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSStyleSheetList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSStyleSheetList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSStyleSheetList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsStyleSheetListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStyleSheetListLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSStyleSheetList*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStyleSheetListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStyleSheetListConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSStyleSheetList* domObject = jsDynamicCast<JSStyleSheetList*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSStyleSheetList::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSStyleSheetList::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSStyleSheetList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSStyleSheetList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSStyleSheetList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
 JSValue JSStyleSheetList::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSStyleSheetListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSStyleSheetListConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsStyleSheetListPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsStyleSheetListPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSStyleSheetList* castedThis = jsDynamicCast<JSStyleSheetList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "StyleSheetList", "item");
+        return throwThisTypeError(*state, "StyleSheetList", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSStyleSheetList::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
     return JSValue::encode(result);
 }
 
 bool JSStyleSheetListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsStyleSheetList = jsCast<JSStyleSheetList*>(handle.slot()->asCell());
-    Document* root = WTF::getPtr(jsStyleSheetList->impl().document());
+    Document* root = WTF::getPtr(jsStyleSheetList->wrapped().document());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -270,7 +241,14 @@ void JSStyleSheetListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsStyleSheetList = jsCast<JSStyleSheetList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsStyleSheetList->impl(), jsStyleSheetList);
+    uncacheWrapper(world, &jsStyleSheetList->wrapped(), jsStyleSheetList);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleSheetList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSStyleSheetList>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleSheetList* impl)
@@ -292,7 +270,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, StyleSheetLi
 StyleSheetList* JSStyleSheetList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSStyleSheetList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSRTCDTMFToneChangeEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
     {
-        JSRTCDTMFToneChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFToneChangeEvent>(globalObject->vm().heap)) JSRTCDTMFToneChangeEvent(structure, globalObject, WTF::move(impl));
+        JSRTCDTMFToneChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFToneChangeEvent>(globalObject->vm().heap)) JSRTCDTMFToneChangeEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCDTMFToneChangeEvent& impl() const
+    RTCDTMFToneChangeEvent& wrapped() const
     {
-        return static_cast<RTCDTMFToneChangeEvent&>(Base::impl());
+        return static_cast<RTCDTMFToneChangeEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCDTMFToneChangeEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDTMFToneChangeEvent>&&);
+    JSRTCDTMFToneChangeEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDTMFToneChangeEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

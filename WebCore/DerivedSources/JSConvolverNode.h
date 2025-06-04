@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSConvolverNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ConvolverNode>&& impl)
     {
-        JSConvolverNode* ptr = new (NotNull, JSC::allocateCell<JSConvolverNode>(globalObject->vm().heap)) JSConvolverNode(structure, globalObject, WTF::move(impl));
+        JSConvolverNode* ptr = new (NotNull, JSC::allocateCell<JSConvolverNode>(globalObject->vm().heap)) JSConvolverNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ConvolverNode& impl() const
+    ConvolverNode& wrapped() const
     {
-        return static_cast<ConvolverNode&>(Base::impl());
+        return static_cast<ConvolverNode&>(Base::wrapped());
     }
 protected:
-    JSConvolverNode(JSC::Structure*, JSDOMGlobalObject*, Ref<ConvolverNode>&&);
+    JSConvolverNode(JSC::Structure*, JSDOMGlobalObject&, Ref<ConvolverNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ConvolverNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ConvolverNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ConvolverNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ConvolverNode*);
 
 
 } // namespace WebCore

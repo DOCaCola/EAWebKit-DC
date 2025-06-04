@@ -23,6 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// @internal
+
 function toInteger(target)
 {
     "use strict";
@@ -54,4 +56,11 @@ function isObject(object)
     "use strict";
 
     return (object !== null && typeof object === "object") || typeof object === "function";
+}
+
+function isDictionary(object)
+{
+    "use strict";
+
+    return typeof object === "undefined" || object == null || typeof object === "object";
 }

@@ -47,7 +47,6 @@
 #include "WebGLFramebuffer.h"
 #include "WebGLProgram.h"
 #include "WebGLRenderbuffer.h"
-#include "WebGLRenderingContextBase.h"
 #include "WebGLShader.h"
 #include "WebGLShaderPrecisionFormat.h"
 #include "WebGLTexture.h"
@@ -233,442 +232,442 @@ private:
 
 static const HashTableValue JSWebGLRenderingContextBasePrototypeTableValues[] =
 {
-    { "drawingBufferWidth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextBaseDrawingBufferWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "drawingBufferHeight", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextBaseDrawingBufferHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "DEPTH_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000100), (intptr_t) (0) },
-    { "STENCIL_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000400), (intptr_t) (0) },
-    { "COLOR_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00004000), (intptr_t) (0) },
-    { "POINTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0000), (intptr_t) (0) },
-    { "LINES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0001), (intptr_t) (0) },
-    { "LINE_LOOP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0002), (intptr_t) (0) },
-    { "LINE_STRIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0003), (intptr_t) (0) },
-    { "TRIANGLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0004), (intptr_t) (0) },
-    { "TRIANGLE_STRIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0005), (intptr_t) (0) },
-    { "TRIANGLE_FAN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0006), (intptr_t) (0) },
-    { "ZERO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "ONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SRC_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0300), (intptr_t) (0) },
-    { "ONE_MINUS_SRC_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0301), (intptr_t) (0) },
-    { "SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0302), (intptr_t) (0) },
-    { "ONE_MINUS_SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0303), (intptr_t) (0) },
-    { "DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0304), (intptr_t) (0) },
-    { "ONE_MINUS_DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0305), (intptr_t) (0) },
-    { "DST_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0306), (intptr_t) (0) },
-    { "ONE_MINUS_DST_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0307), (intptr_t) (0) },
-    { "SRC_ALPHA_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0308), (intptr_t) (0) },
-    { "FUNC_ADD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8006), (intptr_t) (0) },
-    { "BLEND_EQUATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8009), (intptr_t) (0) },
-    { "BLEND_EQUATION_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8009), (intptr_t) (0) },
-    { "BLEND_EQUATION_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x883D), (intptr_t) (0) },
-    { "FUNC_SUBTRACT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x800A), (intptr_t) (0) },
-    { "FUNC_REVERSE_SUBTRACT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x800B), (intptr_t) (0) },
-    { "BLEND_DST_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80C8), (intptr_t) (0) },
-    { "BLEND_SRC_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80C9), (intptr_t) (0) },
-    { "BLEND_DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80CA), (intptr_t) (0) },
-    { "BLEND_SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80CB), (intptr_t) (0) },
-    { "CONSTANT_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8001), (intptr_t) (0) },
-    { "ONE_MINUS_CONSTANT_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8002), (intptr_t) (0) },
-    { "CONSTANT_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8003), (intptr_t) (0) },
-    { "ONE_MINUS_CONSTANT_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8004), (intptr_t) (0) },
-    { "BLEND_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8005), (intptr_t) (0) },
-    { "ARRAY_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8892), (intptr_t) (0) },
-    { "ELEMENT_ARRAY_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8893), (intptr_t) (0) },
-    { "ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8894), (intptr_t) (0) },
-    { "ELEMENT_ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8895), (intptr_t) (0) },
-    { "STREAM_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E0), (intptr_t) (0) },
-    { "STATIC_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E4), (intptr_t) (0) },
-    { "DYNAMIC_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E8), (intptr_t) (0) },
-    { "BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8764), (intptr_t) (0) },
-    { "BUFFER_USAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8765), (intptr_t) (0) },
-    { "CURRENT_VERTEX_ATTRIB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8626), (intptr_t) (0) },
-    { "FRONT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0404), (intptr_t) (0) },
-    { "BACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0405), (intptr_t) (0) },
-    { "FRONT_AND_BACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0408), (intptr_t) (0) },
-    { "TEXTURE_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0DE1), (intptr_t) (0) },
-    { "CULL_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B44), (intptr_t) (0) },
-    { "BLEND", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0BE2), (intptr_t) (0) },
-    { "DITHER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0BD0), (intptr_t) (0) },
-    { "STENCIL_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B90), (intptr_t) (0) },
-    { "DEPTH_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B71), (intptr_t) (0) },
-    { "SCISSOR_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C11), (intptr_t) (0) },
-    { "POLYGON_OFFSET_FILL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8037), (intptr_t) (0) },
-    { "SAMPLE_ALPHA_TO_COVERAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x809E), (intptr_t) (0) },
-    { "SAMPLE_COVERAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80A0), (intptr_t) (0) },
-    { "NO_ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "INVALID_ENUM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0500), (intptr_t) (0) },
-    { "INVALID_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0501), (intptr_t) (0) },
-    { "INVALID_OPERATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0502), (intptr_t) (0) },
-    { "OUT_OF_MEMORY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0505), (intptr_t) (0) },
-    { "CW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0900), (intptr_t) (0) },
-    { "CCW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0901), (intptr_t) (0) },
-    { "LINE_WIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B21), (intptr_t) (0) },
-    { "ALIASED_POINT_SIZE_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x846D), (intptr_t) (0) },
-    { "ALIASED_LINE_WIDTH_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x846E), (intptr_t) (0) },
-    { "CULL_FACE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B45), (intptr_t) (0) },
-    { "FRONT_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B46), (intptr_t) (0) },
-    { "DEPTH_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B70), (intptr_t) (0) },
-    { "DEPTH_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B72), (intptr_t) (0) },
-    { "DEPTH_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B73), (intptr_t) (0) },
-    { "DEPTH_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B74), (intptr_t) (0) },
-    { "STENCIL_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B91), (intptr_t) (0) },
-    { "STENCIL_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B92), (intptr_t) (0) },
-    { "STENCIL_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B94), (intptr_t) (0) },
-    { "STENCIL_PASS_DEPTH_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B95), (intptr_t) (0) },
-    { "STENCIL_PASS_DEPTH_PASS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B96), (intptr_t) (0) },
-    { "STENCIL_REF", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B97), (intptr_t) (0) },
-    { "STENCIL_VALUE_MASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B93), (intptr_t) (0) },
-    { "STENCIL_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0B98), (intptr_t) (0) },
-    { "STENCIL_BACK_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8800), (intptr_t) (0) },
-    { "STENCIL_BACK_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8801), (intptr_t) (0) },
-    { "STENCIL_BACK_PASS_DEPTH_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8802), (intptr_t) (0) },
-    { "STENCIL_BACK_PASS_DEPTH_PASS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8803), (intptr_t) (0) },
-    { "STENCIL_BACK_REF", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA3), (intptr_t) (0) },
-    { "STENCIL_BACK_VALUE_MASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA4), (intptr_t) (0) },
-    { "STENCIL_BACK_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA5), (intptr_t) (0) },
-    { "VIEWPORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0BA2), (intptr_t) (0) },
-    { "SCISSOR_BOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C10), (intptr_t) (0) },
-    { "COLOR_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C22), (intptr_t) (0) },
-    { "COLOR_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C23), (intptr_t) (0) },
-    { "UNPACK_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF5), (intptr_t) (0) },
-    { "PACK_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D05), (intptr_t) (0) },
-    { "MAX_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D33), (intptr_t) (0) },
-    { "MAX_VIEWPORT_DIMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D3A), (intptr_t) (0) },
-    { "SUBPIXEL_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D50), (intptr_t) (0) },
-    { "RED_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D52), (intptr_t) (0) },
-    { "GREEN_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D53), (intptr_t) (0) },
-    { "BLUE_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D54), (intptr_t) (0) },
-    { "ALPHA_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D55), (intptr_t) (0) },
-    { "DEPTH_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D56), (intptr_t) (0) },
-    { "STENCIL_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D57), (intptr_t) (0) },
-    { "POLYGON_OFFSET_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2A00), (intptr_t) (0) },
-    { "POLYGON_OFFSET_FACTOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8038), (intptr_t) (0) },
-    { "TEXTURE_BINDING_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8069), (intptr_t) (0) },
-    { "SAMPLE_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80A8), (intptr_t) (0) },
-    { "SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80A9), (intptr_t) (0) },
-    { "SAMPLE_COVERAGE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80AA), (intptr_t) (0) },
-    { "SAMPLE_COVERAGE_INVERT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80AB), (intptr_t) (0) },
-    { "COMPRESSED_TEXTURE_FORMATS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x86A3), (intptr_t) (0) },
-    { "DONT_CARE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1100), (intptr_t) (0) },
-    { "FASTEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1101), (intptr_t) (0) },
-    { "NICEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1102), (intptr_t) (0) },
-    { "GENERATE_MIPMAP_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8192), (intptr_t) (0) },
-    { "BYTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1400), (intptr_t) (0) },
-    { "UNSIGNED_BYTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1401), (intptr_t) (0) },
-    { "SHORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1402), (intptr_t) (0) },
-    { "UNSIGNED_SHORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1403), (intptr_t) (0) },
-    { "INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1404), (intptr_t) (0) },
-    { "UNSIGNED_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1405), (intptr_t) (0) },
-    { "FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1406), (intptr_t) (0) },
-    { "DEPTH_COMPONENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1902), (intptr_t) (0) },
-    { "ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1906), (intptr_t) (0) },
-    { "RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1907), (intptr_t) (0) },
-    { "RGBA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1908), (intptr_t) (0) },
-    { "LUMINANCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1909), (intptr_t) (0) },
-    { "LUMINANCE_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x190A), (intptr_t) (0) },
-    { "UNSIGNED_SHORT_4_4_4_4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8033), (intptr_t) (0) },
-    { "UNSIGNED_SHORT_5_5_5_1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8034), (intptr_t) (0) },
-    { "UNSIGNED_SHORT_5_6_5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8363), (intptr_t) (0) },
-    { "FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B30), (intptr_t) (0) },
-    { "VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B31), (intptr_t) (0) },
-    { "MAX_VERTEX_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8869), (intptr_t) (0) },
-    { "MAX_VERTEX_UNIFORM_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DFB), (intptr_t) (0) },
-    { "MAX_VARYING_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DFC), (intptr_t) (0) },
-    { "MAX_COMBINED_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4D), (intptr_t) (0) },
-    { "MAX_VERTEX_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4C), (intptr_t) (0) },
-    { "MAX_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8872), (intptr_t) (0) },
-    { "MAX_FRAGMENT_UNIFORM_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DFD), (intptr_t) (0) },
-    { "SHADER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4F), (intptr_t) (0) },
-    { "DELETE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B80), (intptr_t) (0) },
-    { "LINK_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B82), (intptr_t) (0) },
-    { "VALIDATE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B83), (intptr_t) (0) },
-    { "ATTACHED_SHADERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B85), (intptr_t) (0) },
-    { "ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B86), (intptr_t) (0) },
-    { "ACTIVE_ATTRIBUTES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B89), (intptr_t) (0) },
-    { "SHADING_LANGUAGE_VERSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B8C), (intptr_t) (0) },
-    { "CURRENT_PROGRAM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B8D), (intptr_t) (0) },
-    { "NEVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0200), (intptr_t) (0) },
-    { "LESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0201), (intptr_t) (0) },
-    { "EQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0202), (intptr_t) (0) },
-    { "LEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0203), (intptr_t) (0) },
-    { "GREATER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0204), (intptr_t) (0) },
-    { "NOTEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0205), (intptr_t) (0) },
-    { "GEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0206), (intptr_t) (0) },
-    { "ALWAYS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0207), (intptr_t) (0) },
-    { "KEEP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1E00), (intptr_t) (0) },
-    { "REPLACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1E01), (intptr_t) (0) },
-    { "INCR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1E02), (intptr_t) (0) },
-    { "DECR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1E03), (intptr_t) (0) },
-    { "INVERT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x150A), (intptr_t) (0) },
-    { "INCR_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8507), (intptr_t) (0) },
-    { "DECR_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8508), (intptr_t) (0) },
-    { "VENDOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1F00), (intptr_t) (0) },
-    { "RENDERER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1F01), (intptr_t) (0) },
-    { "VERSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1F02), (intptr_t) (0) },
-    { "NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2600), (intptr_t) (0) },
-    { "LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2601), (intptr_t) (0) },
-    { "NEAREST_MIPMAP_NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2700), (intptr_t) (0) },
-    { "LINEAR_MIPMAP_NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2701), (intptr_t) (0) },
-    { "NEAREST_MIPMAP_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2702), (intptr_t) (0) },
-    { "LINEAR_MIPMAP_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2703), (intptr_t) (0) },
-    { "TEXTURE_MAG_FILTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2800), (intptr_t) (0) },
-    { "TEXTURE_MIN_FILTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2801), (intptr_t) (0) },
-    { "TEXTURE_WRAP_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2802), (intptr_t) (0) },
-    { "TEXTURE_WRAP_T", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2803), (intptr_t) (0) },
-    { "TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1702), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8513), (intptr_t) (0) },
-    { "TEXTURE_BINDING_CUBE_MAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8514), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_POSITIVE_X", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8515), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_NEGATIVE_X", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8516), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_POSITIVE_Y", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8517), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_NEGATIVE_Y", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8518), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_POSITIVE_Z", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8519), (intptr_t) (0) },
-    { "TEXTURE_CUBE_MAP_NEGATIVE_Z", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x851A), (intptr_t) (0) },
-    { "MAX_CUBE_MAP_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x851C), (intptr_t) (0) },
-    { "TEXTURE0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C0), (intptr_t) (0) },
-    { "TEXTURE1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C1), (intptr_t) (0) },
-    { "TEXTURE2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C2), (intptr_t) (0) },
-    { "TEXTURE3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C3), (intptr_t) (0) },
-    { "TEXTURE4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C4), (intptr_t) (0) },
-    { "TEXTURE5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C5), (intptr_t) (0) },
-    { "TEXTURE6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C6), (intptr_t) (0) },
-    { "TEXTURE7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C7), (intptr_t) (0) },
-    { "TEXTURE8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C8), (intptr_t) (0) },
-    { "TEXTURE9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84C9), (intptr_t) (0) },
-    { "TEXTURE10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CA), (intptr_t) (0) },
-    { "TEXTURE11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CB), (intptr_t) (0) },
-    { "TEXTURE12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CC), (intptr_t) (0) },
-    { "TEXTURE13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CD), (intptr_t) (0) },
-    { "TEXTURE14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CE), (intptr_t) (0) },
-    { "TEXTURE15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84CF), (intptr_t) (0) },
-    { "TEXTURE16", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D0), (intptr_t) (0) },
-    { "TEXTURE17", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D1), (intptr_t) (0) },
-    { "TEXTURE18", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D2), (intptr_t) (0) },
-    { "TEXTURE19", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D3), (intptr_t) (0) },
-    { "TEXTURE20", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D4), (intptr_t) (0) },
-    { "TEXTURE21", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D5), (intptr_t) (0) },
-    { "TEXTURE22", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D6), (intptr_t) (0) },
-    { "TEXTURE23", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D7), (intptr_t) (0) },
-    { "TEXTURE24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D8), (intptr_t) (0) },
-    { "TEXTURE25", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84D9), (intptr_t) (0) },
-    { "TEXTURE26", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DA), (intptr_t) (0) },
-    { "TEXTURE27", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DB), (intptr_t) (0) },
-    { "TEXTURE28", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DC), (intptr_t) (0) },
-    { "TEXTURE29", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DD), (intptr_t) (0) },
-    { "TEXTURE30", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DE), (intptr_t) (0) },
-    { "TEXTURE31", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84DF), (intptr_t) (0) },
-    { "ACTIVE_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84E0), (intptr_t) (0) },
-    { "REPEAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x2901), (intptr_t) (0) },
-    { "CLAMP_TO_EDGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x812F), (intptr_t) (0) },
-    { "MIRRORED_REPEAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8370), (intptr_t) (0) },
-    { "FLOAT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B50), (intptr_t) (0) },
-    { "FLOAT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B51), (intptr_t) (0) },
-    { "FLOAT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B52), (intptr_t) (0) },
-    { "INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B53), (intptr_t) (0) },
-    { "INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B54), (intptr_t) (0) },
-    { "INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B55), (intptr_t) (0) },
-    { "BOOL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B56), (intptr_t) (0) },
-    { "BOOL_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B57), (intptr_t) (0) },
-    { "BOOL_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B58), (intptr_t) (0) },
-    { "BOOL_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B59), (intptr_t) (0) },
-    { "FLOAT_MAT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5A), (intptr_t) (0) },
-    { "FLOAT_MAT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5B), (intptr_t) (0) },
-    { "FLOAT_MAT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5C), (intptr_t) (0) },
-    { "SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5E), (intptr_t) (0) },
-    { "SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B60), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_ENABLED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8622), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8623), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8624), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8625), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x886A), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_POINTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8645), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x889F), (intptr_t) (0) },
-    { "IMPLEMENTATION_COLOR_READ_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B9A), (intptr_t) (0) },
-    { "IMPLEMENTATION_COLOR_READ_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B9B), (intptr_t) (0) },
-    { "COMPILE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B81), (intptr_t) (0) },
-    { "LOW_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF0), (intptr_t) (0) },
-    { "MEDIUM_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF1), (intptr_t) (0) },
-    { "HIGH_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF2), (intptr_t) (0) },
-    { "LOW_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF3), (intptr_t) (0) },
-    { "MEDIUM_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF4), (intptr_t) (0) },
-    { "HIGH_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DF5), (intptr_t) (0) },
-    { "FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D40), (intptr_t) (0) },
-    { "RENDERBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D41), (intptr_t) (0) },
-    { "RGBA4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8056), (intptr_t) (0) },
-    { "RGB5_A1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8057), (intptr_t) (0) },
-    { "RGB565", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D62), (intptr_t) (0) },
-    { "DEPTH_COMPONENT16", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x81A5), (intptr_t) (0) },
-    { "STENCIL_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1901), (intptr_t) (0) },
-    { "STENCIL_INDEX8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D48), (intptr_t) (0) },
-    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84F9), (intptr_t) (0) },
-    { "RENDERBUFFER_WIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D42), (intptr_t) (0) },
-    { "RENDERBUFFER_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D43), (intptr_t) (0) },
-    { "RENDERBUFFER_INTERNAL_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D44), (intptr_t) (0) },
-    { "RENDERBUFFER_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D50), (intptr_t) (0) },
-    { "RENDERBUFFER_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D51), (intptr_t) (0) },
-    { "RENDERBUFFER_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D52), (intptr_t) (0) },
-    { "RENDERBUFFER_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D53), (intptr_t) (0) },
-    { "RENDERBUFFER_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D54), (intptr_t) (0) },
-    { "RENDERBUFFER_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D55), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD0), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_OBJECT_NAME", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD1), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD2), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD3), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE0), (intptr_t) (0) },
-    { "DEPTH_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D00), (intptr_t) (0) },
-    { "STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D20), (intptr_t) (0) },
-    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x821A), (intptr_t) (0) },
-    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "FRAMEBUFFER_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD5), (intptr_t) (0) },
-    { "FRAMEBUFFER_INCOMPLETE_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD6), (intptr_t) (0) },
-    { "FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD7), (intptr_t) (0) },
-    { "FRAMEBUFFER_INCOMPLETE_DIMENSIONS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD9), (intptr_t) (0) },
-    { "FRAMEBUFFER_UNSUPPORTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CDD), (intptr_t) (0) },
-    { "FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA6), (intptr_t) (0) },
-    { "RENDERBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA7), (intptr_t) (0) },
-    { "MAX_RENDERBUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84E8), (intptr_t) (0) },
-    { "INVALID_FRAMEBUFFER_OPERATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0506), (intptr_t) (0) },
-    { "UNPACK_FLIP_Y_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9240), (intptr_t) (0) },
-    { "UNPACK_PREMULTIPLY_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9241), (intptr_t) (0) },
-    { "CONTEXT_LOST_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9242), (intptr_t) (0) },
-    { "UNPACK_COLORSPACE_CONVERSION_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9243), (intptr_t) (0) },
-    { "BROWSER_DEFAULT_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9244), (intptr_t) (0) },
-    { "activeTexture", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionActiveTexture), (intptr_t) (1) },
-    { "attachShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionAttachShader), (intptr_t) (2) },
-    { "bindAttribLocation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindAttribLocation), (intptr_t) (3) },
-    { "bindBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindBuffer), (intptr_t) (2) },
-    { "bindFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindFramebuffer), (intptr_t) (2) },
-    { "bindRenderbuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindRenderbuffer), (intptr_t) (2) },
-    { "bindTexture", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindTexture), (intptr_t) (2) },
-    { "blendColor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendColor), (intptr_t) (4) },
-    { "blendEquation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendEquation), (intptr_t) (1) },
-    { "blendEquationSeparate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendEquationSeparate), (intptr_t) (2) },
-    { "blendFunc", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendFunc), (intptr_t) (2) },
-    { "blendFuncSeparate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendFuncSeparate), (intptr_t) (4) },
-    { "bufferData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBufferData), (intptr_t) (3) },
-    { "bufferSubData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBufferSubData), (intptr_t) (3) },
-    { "checkFramebufferStatus", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCheckFramebufferStatus), (intptr_t) (1) },
-    { "clear", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClear), (intptr_t) (1) },
-    { "clearColor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearColor), (intptr_t) (4) },
-    { "clearDepth", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearDepth), (intptr_t) (1) },
-    { "clearStencil", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearStencil), (intptr_t) (1) },
-    { "colorMask", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionColorMask), (intptr_t) (4) },
-    { "compileShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompileShader), (intptr_t) (1) },
-    { "compressedTexImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompressedTexImage2D), (intptr_t) (7) },
-    { "compressedTexSubImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompressedTexSubImage2D), (intptr_t) (8) },
-    { "copyTexImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCopyTexImage2D), (intptr_t) (8) },
-    { "copyTexSubImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCopyTexSubImage2D), (intptr_t) (8) },
-    { "createBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateBuffer), (intptr_t) (0) },
-    { "createFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateFramebuffer), (intptr_t) (0) },
-    { "createProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateProgram), (intptr_t) (0) },
-    { "createRenderbuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateRenderbuffer), (intptr_t) (0) },
-    { "createShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateShader), (intptr_t) (1) },
-    { "createTexture", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateTexture), (intptr_t) (0) },
-    { "cullFace", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCullFace), (intptr_t) (1) },
-    { "deleteBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteBuffer), (intptr_t) (1) },
-    { "deleteFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteFramebuffer), (intptr_t) (1) },
-    { "deleteProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteProgram), (intptr_t) (1) },
-    { "deleteRenderbuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteRenderbuffer), (intptr_t) (1) },
-    { "deleteShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteShader), (intptr_t) (1) },
-    { "deleteTexture", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteTexture), (intptr_t) (1) },
-    { "depthFunc", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthFunc), (intptr_t) (1) },
-    { "depthMask", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthMask), (intptr_t) (1) },
-    { "depthRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthRange), (intptr_t) (2) },
-    { "detachShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDetachShader), (intptr_t) (2) },
-    { "disable", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDisable), (intptr_t) (1) },
-    { "disableVertexAttribArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDisableVertexAttribArray), (intptr_t) (1) },
-    { "drawArrays", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDrawArrays), (intptr_t) (3) },
-    { "drawElements", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDrawElements), (intptr_t) (4) },
-    { "enable", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionEnable), (intptr_t) (1) },
-    { "enableVertexAttribArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionEnableVertexAttribArray), (intptr_t) (1) },
-    { "finish", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFinish), (intptr_t) (0) },
-    { "flush", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFlush), (intptr_t) (0) },
-    { "framebufferRenderbuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFramebufferRenderbuffer), (intptr_t) (4) },
-    { "framebufferTexture2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFramebufferTexture2D), (intptr_t) (5) },
-    { "frontFace", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFrontFace), (intptr_t) (1) },
-    { "generateMipmap", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGenerateMipmap), (intptr_t) (1) },
-    { "getActiveAttrib", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetActiveAttrib), (intptr_t) (2) },
-    { "getActiveUniform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetActiveUniform), (intptr_t) (2) },
-    { "getAttachedShaders", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetAttachedShaders), (intptr_t) (1) },
-    { "getAttribLocation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetAttribLocation), (intptr_t) (2) },
-    { "getBufferParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetBufferParameter), (intptr_t) (2) },
-    { "getContextAttributes", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetContextAttributes), (intptr_t) (0) },
-    { "getError", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetError), (intptr_t) (0) },
-    { "getExtension", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetExtension), (intptr_t) (1) },
-    { "getFramebufferAttachmentParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetFramebufferAttachmentParameter), (intptr_t) (3) },
-    { "getParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetParameter), (intptr_t) (1) },
-    { "getProgramParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetProgramParameter), (intptr_t) (2) },
-    { "getProgramInfoLog", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetProgramInfoLog), (intptr_t) (1) },
-    { "getRenderbufferParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetRenderbufferParameter), (intptr_t) (2) },
-    { "getShaderParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderParameter), (intptr_t) (2) },
-    { "getShaderInfoLog", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderInfoLog), (intptr_t) (1) },
-    { "getShaderPrecisionFormat", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderPrecisionFormat), (intptr_t) (2) },
-    { "getShaderSource", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderSource), (intptr_t) (1) },
-    { "getSupportedExtensions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetSupportedExtensions), (intptr_t) (0) },
-    { "getTexParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetTexParameter), (intptr_t) (2) },
-    { "getUniform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetUniform), (intptr_t) (2) },
-    { "getUniformLocation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetUniformLocation), (intptr_t) (2) },
-    { "getVertexAttrib", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttrib), (intptr_t) (2) },
-    { "getVertexAttribOffset", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttribOffset), (intptr_t) (2) },
-    { "hint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionHint), (intptr_t) (2) },
-    { "isBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsBuffer), (intptr_t) (1) },
-    { "isContextLost", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsContextLost), (intptr_t) (0) },
-    { "isEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsEnabled), (intptr_t) (1) },
-    { "isFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsFramebuffer), (intptr_t) (1) },
-    { "isProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsProgram), (intptr_t) (1) },
-    { "isRenderbuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsRenderbuffer), (intptr_t) (1) },
-    { "isShader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsShader), (intptr_t) (1) },
-    { "isTexture", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsTexture), (intptr_t) (1) },
-    { "lineWidth", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionLineWidth), (intptr_t) (1) },
-    { "linkProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionLinkProgram), (intptr_t) (1) },
-    { "pixelStorei", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionPixelStorei), (intptr_t) (2) },
-    { "polygonOffset", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionPolygonOffset), (intptr_t) (2) },
-    { "readPixels", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionReadPixels), (intptr_t) (7) },
-    { "releaseShaderCompiler", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionReleaseShaderCompiler), (intptr_t) (0) },
-    { "renderbufferStorage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionRenderbufferStorage), (intptr_t) (4) },
-    { "sampleCoverage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionSampleCoverage), (intptr_t) (2) },
-    { "scissor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionScissor), (intptr_t) (4) },
-    { "shaderSource", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionShaderSource), (intptr_t) (2) },
-    { "stencilFunc", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilFunc), (intptr_t) (3) },
-    { "stencilFuncSeparate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilFuncSeparate), (intptr_t) (4) },
-    { "stencilMask", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilMask), (intptr_t) (1) },
-    { "stencilMaskSeparate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilMaskSeparate), (intptr_t) (2) },
-    { "stencilOp", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilOp), (intptr_t) (3) },
-    { "stencilOpSeparate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilOpSeparate), (intptr_t) (4) },
-    { "texParameterf", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexParameterf), (intptr_t) (3) },
-    { "texParameteri", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexParameteri), (intptr_t) (3) },
-    { "texImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexImage2D), (intptr_t) (9) },
-    { "texSubImage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D), (intptr_t) (9) },
-    { "uniform1f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1f), (intptr_t) (2) },
-    { "uniform1fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1fv), (intptr_t) (2) },
-    { "uniform1i", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1i), (intptr_t) (2) },
-    { "uniform1iv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1iv), (intptr_t) (2) },
-    { "uniform2f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2f), (intptr_t) (3) },
-    { "uniform2fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2fv), (intptr_t) (2) },
-    { "uniform2i", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2i), (intptr_t) (3) },
-    { "uniform2iv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2iv), (intptr_t) (2) },
-    { "uniform3f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3f), (intptr_t) (4) },
-    { "uniform3fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3fv), (intptr_t) (2) },
-    { "uniform3i", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3i), (intptr_t) (4) },
-    { "uniform3iv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3iv), (intptr_t) (2) },
-    { "uniform4f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4f), (intptr_t) (5) },
-    { "uniform4fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4fv), (intptr_t) (2) },
-    { "uniform4i", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4i), (intptr_t) (5) },
-    { "uniform4iv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4iv), (intptr_t) (2) },
-    { "uniformMatrix2fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix2fv), (intptr_t) (3) },
-    { "uniformMatrix3fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix3fv), (intptr_t) (3) },
-    { "uniformMatrix4fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix4fv), (intptr_t) (3) },
-    { "useProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUseProgram), (intptr_t) (1) },
-    { "validateProgram", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionValidateProgram), (intptr_t) (1) },
-    { "vertexAttrib1f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1f), (intptr_t) (2) },
-    { "vertexAttrib1fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1fv), (intptr_t) (2) },
-    { "vertexAttrib2f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2f), (intptr_t) (3) },
-    { "vertexAttrib2fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2fv), (intptr_t) (2) },
-    { "vertexAttrib3f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3f), (intptr_t) (4) },
-    { "vertexAttrib3fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3fv), (intptr_t) (2) },
-    { "vertexAttrib4f", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4f), (intptr_t) (5) },
-    { "vertexAttrib4fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4fv), (intptr_t) (2) },
-    { "vertexAttribPointer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttribPointer), (intptr_t) (6) },
-    { "viewport", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionViewport), (intptr_t) (4) },
+    { "drawingBufferWidth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextBaseDrawingBufferWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "drawingBufferHeight", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextBaseDrawingBufferHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "DEPTH_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000100) } },
+    { "STENCIL_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000400) } },
+    { "COLOR_BUFFER_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00004000) } },
+    { "POINTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0000) } },
+    { "LINES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0001) } },
+    { "LINE_LOOP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0002) } },
+    { "LINE_STRIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0003) } },
+    { "TRIANGLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0004) } },
+    { "TRIANGLE_STRIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0005) } },
+    { "TRIANGLE_FAN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0006) } },
+    { "ZERO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "ONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SRC_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0300) } },
+    { "ONE_MINUS_SRC_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0301) } },
+    { "SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0302) } },
+    { "ONE_MINUS_SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0303) } },
+    { "DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0304) } },
+    { "ONE_MINUS_DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0305) } },
+    { "DST_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0306) } },
+    { "ONE_MINUS_DST_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0307) } },
+    { "SRC_ALPHA_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0308) } },
+    { "FUNC_ADD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8006) } },
+    { "BLEND_EQUATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8009) } },
+    { "BLEND_EQUATION_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8009) } },
+    { "BLEND_EQUATION_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x883D) } },
+    { "FUNC_SUBTRACT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x800A) } },
+    { "FUNC_REVERSE_SUBTRACT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x800B) } },
+    { "BLEND_DST_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80C8) } },
+    { "BLEND_SRC_RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80C9) } },
+    { "BLEND_DST_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80CA) } },
+    { "BLEND_SRC_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80CB) } },
+    { "CONSTANT_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8001) } },
+    { "ONE_MINUS_CONSTANT_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8002) } },
+    { "CONSTANT_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8003) } },
+    { "ONE_MINUS_CONSTANT_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8004) } },
+    { "BLEND_COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8005) } },
+    { "ARRAY_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8892) } },
+    { "ELEMENT_ARRAY_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8893) } },
+    { "ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8894) } },
+    { "ELEMENT_ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8895) } },
+    { "STREAM_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E0) } },
+    { "STATIC_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E4) } },
+    { "DYNAMIC_DRAW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E8) } },
+    { "BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8764) } },
+    { "BUFFER_USAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8765) } },
+    { "CURRENT_VERTEX_ATTRIB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8626) } },
+    { "FRONT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0404) } },
+    { "BACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0405) } },
+    { "FRONT_AND_BACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0408) } },
+    { "TEXTURE_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0DE1) } },
+    { "CULL_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B44) } },
+    { "BLEND", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0BE2) } },
+    { "DITHER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0BD0) } },
+    { "STENCIL_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B90) } },
+    { "DEPTH_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B71) } },
+    { "SCISSOR_TEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C11) } },
+    { "POLYGON_OFFSET_FILL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8037) } },
+    { "SAMPLE_ALPHA_TO_COVERAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x809E) } },
+    { "SAMPLE_COVERAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80A0) } },
+    { "NO_ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "INVALID_ENUM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0500) } },
+    { "INVALID_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0501) } },
+    { "INVALID_OPERATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0502) } },
+    { "OUT_OF_MEMORY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0505) } },
+    { "CW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0900) } },
+    { "CCW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0901) } },
+    { "LINE_WIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B21) } },
+    { "ALIASED_POINT_SIZE_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x846D) } },
+    { "ALIASED_LINE_WIDTH_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x846E) } },
+    { "CULL_FACE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B45) } },
+    { "FRONT_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B46) } },
+    { "DEPTH_RANGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B70) } },
+    { "DEPTH_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B72) } },
+    { "DEPTH_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B73) } },
+    { "DEPTH_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B74) } },
+    { "STENCIL_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B91) } },
+    { "STENCIL_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B92) } },
+    { "STENCIL_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B94) } },
+    { "STENCIL_PASS_DEPTH_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B95) } },
+    { "STENCIL_PASS_DEPTH_PASS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B96) } },
+    { "STENCIL_REF", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B97) } },
+    { "STENCIL_VALUE_MASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B93) } },
+    { "STENCIL_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0B98) } },
+    { "STENCIL_BACK_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8800) } },
+    { "STENCIL_BACK_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8801) } },
+    { "STENCIL_BACK_PASS_DEPTH_FAIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8802) } },
+    { "STENCIL_BACK_PASS_DEPTH_PASS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8803) } },
+    { "STENCIL_BACK_REF", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA3) } },
+    { "STENCIL_BACK_VALUE_MASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA4) } },
+    { "STENCIL_BACK_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA5) } },
+    { "VIEWPORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0BA2) } },
+    { "SCISSOR_BOX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C10) } },
+    { "COLOR_CLEAR_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C22) } },
+    { "COLOR_WRITEMASK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C23) } },
+    { "UNPACK_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF5) } },
+    { "PACK_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D05) } },
+    { "MAX_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D33) } },
+    { "MAX_VIEWPORT_DIMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D3A) } },
+    { "SUBPIXEL_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D50) } },
+    { "RED_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D52) } },
+    { "GREEN_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D53) } },
+    { "BLUE_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D54) } },
+    { "ALPHA_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D55) } },
+    { "DEPTH_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D56) } },
+    { "STENCIL_BITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D57) } },
+    { "POLYGON_OFFSET_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2A00) } },
+    { "POLYGON_OFFSET_FACTOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8038) } },
+    { "TEXTURE_BINDING_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8069) } },
+    { "SAMPLE_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80A8) } },
+    { "SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80A9) } },
+    { "SAMPLE_COVERAGE_VALUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80AA) } },
+    { "SAMPLE_COVERAGE_INVERT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80AB) } },
+    { "COMPRESSED_TEXTURE_FORMATS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x86A3) } },
+    { "DONT_CARE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1100) } },
+    { "FASTEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1101) } },
+    { "NICEST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1102) } },
+    { "GENERATE_MIPMAP_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8192) } },
+    { "BYTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1400) } },
+    { "UNSIGNED_BYTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1401) } },
+    { "SHORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1402) } },
+    { "UNSIGNED_SHORT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1403) } },
+    { "INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1404) } },
+    { "UNSIGNED_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1405) } },
+    { "FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1406) } },
+    { "DEPTH_COMPONENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1902) } },
+    { "ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1906) } },
+    { "RGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1907) } },
+    { "RGBA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1908) } },
+    { "LUMINANCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1909) } },
+    { "LUMINANCE_ALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x190A) } },
+    { "UNSIGNED_SHORT_4_4_4_4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8033) } },
+    { "UNSIGNED_SHORT_5_5_5_1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8034) } },
+    { "UNSIGNED_SHORT_5_6_5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8363) } },
+    { "FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B30) } },
+    { "VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B31) } },
+    { "MAX_VERTEX_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8869) } },
+    { "MAX_VERTEX_UNIFORM_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DFB) } },
+    { "MAX_VARYING_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DFC) } },
+    { "MAX_COMBINED_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4D) } },
+    { "MAX_VERTEX_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4C) } },
+    { "MAX_TEXTURE_IMAGE_UNITS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8872) } },
+    { "MAX_FRAGMENT_UNIFORM_VECTORS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DFD) } },
+    { "SHADER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4F) } },
+    { "DELETE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B80) } },
+    { "LINK_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B82) } },
+    { "VALIDATE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B83) } },
+    { "ATTACHED_SHADERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B85) } },
+    { "ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B86) } },
+    { "ACTIVE_ATTRIBUTES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B89) } },
+    { "SHADING_LANGUAGE_VERSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B8C) } },
+    { "CURRENT_PROGRAM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B8D) } },
+    { "NEVER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0200) } },
+    { "LESS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0201) } },
+    { "EQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0202) } },
+    { "LEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0203) } },
+    { "GREATER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0204) } },
+    { "NOTEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0205) } },
+    { "GEQUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0206) } },
+    { "ALWAYS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0207) } },
+    { "KEEP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1E00) } },
+    { "REPLACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1E01) } },
+    { "INCR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1E02) } },
+    { "DECR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1E03) } },
+    { "INVERT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x150A) } },
+    { "INCR_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8507) } },
+    { "DECR_WRAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8508) } },
+    { "VENDOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1F00) } },
+    { "RENDERER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1F01) } },
+    { "VERSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1F02) } },
+    { "NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2600) } },
+    { "LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2601) } },
+    { "NEAREST_MIPMAP_NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2700) } },
+    { "LINEAR_MIPMAP_NEAREST", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2701) } },
+    { "NEAREST_MIPMAP_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2702) } },
+    { "LINEAR_MIPMAP_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2703) } },
+    { "TEXTURE_MAG_FILTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2800) } },
+    { "TEXTURE_MIN_FILTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2801) } },
+    { "TEXTURE_WRAP_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2802) } },
+    { "TEXTURE_WRAP_T", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2803) } },
+    { "TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1702) } },
+    { "TEXTURE_CUBE_MAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8513) } },
+    { "TEXTURE_BINDING_CUBE_MAP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8514) } },
+    { "TEXTURE_CUBE_MAP_POSITIVE_X", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8515) } },
+    { "TEXTURE_CUBE_MAP_NEGATIVE_X", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8516) } },
+    { "TEXTURE_CUBE_MAP_POSITIVE_Y", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8517) } },
+    { "TEXTURE_CUBE_MAP_NEGATIVE_Y", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8518) } },
+    { "TEXTURE_CUBE_MAP_POSITIVE_Z", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8519) } },
+    { "TEXTURE_CUBE_MAP_NEGATIVE_Z", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x851A) } },
+    { "MAX_CUBE_MAP_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x851C) } },
+    { "TEXTURE0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C0) } },
+    { "TEXTURE1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C1) } },
+    { "TEXTURE2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C2) } },
+    { "TEXTURE3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C3) } },
+    { "TEXTURE4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C4) } },
+    { "TEXTURE5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C5) } },
+    { "TEXTURE6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C6) } },
+    { "TEXTURE7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C7) } },
+    { "TEXTURE8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C8) } },
+    { "TEXTURE9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84C9) } },
+    { "TEXTURE10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CA) } },
+    { "TEXTURE11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CB) } },
+    { "TEXTURE12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CC) } },
+    { "TEXTURE13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CD) } },
+    { "TEXTURE14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CE) } },
+    { "TEXTURE15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84CF) } },
+    { "TEXTURE16", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D0) } },
+    { "TEXTURE17", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D1) } },
+    { "TEXTURE18", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D2) } },
+    { "TEXTURE19", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D3) } },
+    { "TEXTURE20", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D4) } },
+    { "TEXTURE21", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D5) } },
+    { "TEXTURE22", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D6) } },
+    { "TEXTURE23", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D7) } },
+    { "TEXTURE24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D8) } },
+    { "TEXTURE25", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84D9) } },
+    { "TEXTURE26", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DA) } },
+    { "TEXTURE27", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DB) } },
+    { "TEXTURE28", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DC) } },
+    { "TEXTURE29", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DD) } },
+    { "TEXTURE30", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DE) } },
+    { "TEXTURE31", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84DF) } },
+    { "ACTIVE_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84E0) } },
+    { "REPEAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x2901) } },
+    { "CLAMP_TO_EDGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x812F) } },
+    { "MIRRORED_REPEAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8370) } },
+    { "FLOAT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B50) } },
+    { "FLOAT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B51) } },
+    { "FLOAT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B52) } },
+    { "INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B53) } },
+    { "INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B54) } },
+    { "INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B55) } },
+    { "BOOL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B56) } },
+    { "BOOL_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B57) } },
+    { "BOOL_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B58) } },
+    { "BOOL_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B59) } },
+    { "FLOAT_MAT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5A) } },
+    { "FLOAT_MAT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5B) } },
+    { "FLOAT_MAT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5C) } },
+    { "SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5E) } },
+    { "SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B60) } },
+    { "VERTEX_ATTRIB_ARRAY_ENABLED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8622) } },
+    { "VERTEX_ATTRIB_ARRAY_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8623) } },
+    { "VERTEX_ATTRIB_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8624) } },
+    { "VERTEX_ATTRIB_ARRAY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8625) } },
+    { "VERTEX_ATTRIB_ARRAY_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x886A) } },
+    { "VERTEX_ATTRIB_ARRAY_POINTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8645) } },
+    { "VERTEX_ATTRIB_ARRAY_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x889F) } },
+    { "IMPLEMENTATION_COLOR_READ_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B9A) } },
+    { "IMPLEMENTATION_COLOR_READ_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B9B) } },
+    { "COMPILE_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B81) } },
+    { "LOW_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF0) } },
+    { "MEDIUM_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF1) } },
+    { "HIGH_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF2) } },
+    { "LOW_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF3) } },
+    { "MEDIUM_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF4) } },
+    { "HIGH_INT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DF5) } },
+    { "FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D40) } },
+    { "RENDERBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D41) } },
+    { "RGBA4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8056) } },
+    { "RGB5_A1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8057) } },
+    { "RGB565", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D62) } },
+    { "DEPTH_COMPONENT16", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x81A5) } },
+    { "STENCIL_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1901) } },
+    { "STENCIL_INDEX8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D48) } },
+    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84F9) } },
+    { "RENDERBUFFER_WIDTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D42) } },
+    { "RENDERBUFFER_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D43) } },
+    { "RENDERBUFFER_INTERNAL_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D44) } },
+    { "RENDERBUFFER_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D50) } },
+    { "RENDERBUFFER_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D51) } },
+    { "RENDERBUFFER_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D52) } },
+    { "RENDERBUFFER_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D53) } },
+    { "RENDERBUFFER_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D54) } },
+    { "RENDERBUFFER_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D55) } },
+    { "FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD0) } },
+    { "FRAMEBUFFER_ATTACHMENT_OBJECT_NAME", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD1) } },
+    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD2) } },
+    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD3) } },
+    { "COLOR_ATTACHMENT0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE0) } },
+    { "DEPTH_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D00) } },
+    { "STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D20) } },
+    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x821A) } },
+    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "FRAMEBUFFER_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD5) } },
+    { "FRAMEBUFFER_INCOMPLETE_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD6) } },
+    { "FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD7) } },
+    { "FRAMEBUFFER_INCOMPLETE_DIMENSIONS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD9) } },
+    { "FRAMEBUFFER_UNSUPPORTED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CDD) } },
+    { "FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA6) } },
+    { "RENDERBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA7) } },
+    { "MAX_RENDERBUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84E8) } },
+    { "INVALID_FRAMEBUFFER_OPERATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0506) } },
+    { "UNPACK_FLIP_Y_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9240) } },
+    { "UNPACK_PREMULTIPLY_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9241) } },
+    { "CONTEXT_LOST_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9242) } },
+    { "UNPACK_COLORSPACE_CONVERSION_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9243) } },
+    { "BROWSER_DEFAULT_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9244) } },
+    { "activeTexture", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionActiveTexture), (intptr_t) (1) } },
+    { "attachShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionAttachShader), (intptr_t) (2) } },
+    { "bindAttribLocation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindAttribLocation), (intptr_t) (3) } },
+    { "bindBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindBuffer), (intptr_t) (2) } },
+    { "bindFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindFramebuffer), (intptr_t) (2) } },
+    { "bindRenderbuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindRenderbuffer), (intptr_t) (2) } },
+    { "bindTexture", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBindTexture), (intptr_t) (2) } },
+    { "blendColor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendColor), (intptr_t) (4) } },
+    { "blendEquation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendEquation), (intptr_t) (1) } },
+    { "blendEquationSeparate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendEquationSeparate), (intptr_t) (2) } },
+    { "blendFunc", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendFunc), (intptr_t) (2) } },
+    { "blendFuncSeparate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBlendFuncSeparate), (intptr_t) (4) } },
+    { "bufferData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBufferData), (intptr_t) (3) } },
+    { "bufferSubData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionBufferSubData), (intptr_t) (3) } },
+    { "checkFramebufferStatus", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCheckFramebufferStatus), (intptr_t) (1) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClear), (intptr_t) (1) } },
+    { "clearColor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearColor), (intptr_t) (4) } },
+    { "clearDepth", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearDepth), (intptr_t) (1) } },
+    { "clearStencil", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionClearStencil), (intptr_t) (1) } },
+    { "colorMask", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionColorMask), (intptr_t) (4) } },
+    { "compileShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompileShader), (intptr_t) (1) } },
+    { "compressedTexImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompressedTexImage2D), (intptr_t) (7) } },
+    { "compressedTexSubImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCompressedTexSubImage2D), (intptr_t) (8) } },
+    { "copyTexImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCopyTexImage2D), (intptr_t) (8) } },
+    { "copyTexSubImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCopyTexSubImage2D), (intptr_t) (8) } },
+    { "createBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateBuffer), (intptr_t) (0) } },
+    { "createFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateFramebuffer), (intptr_t) (0) } },
+    { "createProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateProgram), (intptr_t) (0) } },
+    { "createRenderbuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateRenderbuffer), (intptr_t) (0) } },
+    { "createShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateShader), (intptr_t) (1) } },
+    { "createTexture", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCreateTexture), (intptr_t) (0) } },
+    { "cullFace", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionCullFace), (intptr_t) (1) } },
+    { "deleteBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteBuffer), (intptr_t) (1) } },
+    { "deleteFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteFramebuffer), (intptr_t) (1) } },
+    { "deleteProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteProgram), (intptr_t) (1) } },
+    { "deleteRenderbuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteRenderbuffer), (intptr_t) (1) } },
+    { "deleteShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteShader), (intptr_t) (1) } },
+    { "deleteTexture", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDeleteTexture), (intptr_t) (1) } },
+    { "depthFunc", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthFunc), (intptr_t) (1) } },
+    { "depthMask", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthMask), (intptr_t) (1) } },
+    { "depthRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDepthRange), (intptr_t) (2) } },
+    { "detachShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDetachShader), (intptr_t) (2) } },
+    { "disable", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDisable), (intptr_t) (1) } },
+    { "disableVertexAttribArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDisableVertexAttribArray), (intptr_t) (1) } },
+    { "drawArrays", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDrawArrays), (intptr_t) (3) } },
+    { "drawElements", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionDrawElements), (intptr_t) (4) } },
+    { "enable", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionEnable), (intptr_t) (1) } },
+    { "enableVertexAttribArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionEnableVertexAttribArray), (intptr_t) (1) } },
+    { "finish", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFinish), (intptr_t) (0) } },
+    { "flush", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFlush), (intptr_t) (0) } },
+    { "framebufferRenderbuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFramebufferRenderbuffer), (intptr_t) (4) } },
+    { "framebufferTexture2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFramebufferTexture2D), (intptr_t) (5) } },
+    { "frontFace", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionFrontFace), (intptr_t) (1) } },
+    { "generateMipmap", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGenerateMipmap), (intptr_t) (1) } },
+    { "getActiveAttrib", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetActiveAttrib), (intptr_t) (2) } },
+    { "getActiveUniform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetActiveUniform), (intptr_t) (2) } },
+    { "getAttachedShaders", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetAttachedShaders), (intptr_t) (1) } },
+    { "getAttribLocation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetAttribLocation), (intptr_t) (2) } },
+    { "getBufferParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetBufferParameter), (intptr_t) (2) } },
+    { "getContextAttributes", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetContextAttributes), (intptr_t) (0) } },
+    { "getError", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetError), (intptr_t) (0) } },
+    { "getExtension", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetExtension), (intptr_t) (1) } },
+    { "getFramebufferAttachmentParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetFramebufferAttachmentParameter), (intptr_t) (3) } },
+    { "getParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetParameter), (intptr_t) (1) } },
+    { "getProgramParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetProgramParameter), (intptr_t) (2) } },
+    { "getProgramInfoLog", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetProgramInfoLog), (intptr_t) (1) } },
+    { "getRenderbufferParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetRenderbufferParameter), (intptr_t) (2) } },
+    { "getShaderParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderParameter), (intptr_t) (2) } },
+    { "getShaderInfoLog", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderInfoLog), (intptr_t) (1) } },
+    { "getShaderPrecisionFormat", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderPrecisionFormat), (intptr_t) (2) } },
+    { "getShaderSource", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetShaderSource), (intptr_t) (1) } },
+    { "getSupportedExtensions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetSupportedExtensions), (intptr_t) (0) } },
+    { "getTexParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetTexParameter), (intptr_t) (2) } },
+    { "getUniform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetUniform), (intptr_t) (2) } },
+    { "getUniformLocation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetUniformLocation), (intptr_t) (2) } },
+    { "getVertexAttrib", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttrib), (intptr_t) (2) } },
+    { "getVertexAttribOffset", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttribOffset), (intptr_t) (2) } },
+    { "hint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionHint), (intptr_t) (2) } },
+    { "isBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsBuffer), (intptr_t) (1) } },
+    { "isContextLost", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsContextLost), (intptr_t) (0) } },
+    { "isEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsEnabled), (intptr_t) (1) } },
+    { "isFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsFramebuffer), (intptr_t) (1) } },
+    { "isProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsProgram), (intptr_t) (1) } },
+    { "isRenderbuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsRenderbuffer), (intptr_t) (1) } },
+    { "isShader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsShader), (intptr_t) (1) } },
+    { "isTexture", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionIsTexture), (intptr_t) (1) } },
+    { "lineWidth", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionLineWidth), (intptr_t) (1) } },
+    { "linkProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionLinkProgram), (intptr_t) (1) } },
+    { "pixelStorei", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionPixelStorei), (intptr_t) (2) } },
+    { "polygonOffset", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionPolygonOffset), (intptr_t) (2) } },
+    { "readPixels", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionReadPixels), (intptr_t) (7) } },
+    { "releaseShaderCompiler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionReleaseShaderCompiler), (intptr_t) (0) } },
+    { "renderbufferStorage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionRenderbufferStorage), (intptr_t) (4) } },
+    { "sampleCoverage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionSampleCoverage), (intptr_t) (2) } },
+    { "scissor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionScissor), (intptr_t) (4) } },
+    { "shaderSource", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionShaderSource), (intptr_t) (2) } },
+    { "stencilFunc", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilFunc), (intptr_t) (3) } },
+    { "stencilFuncSeparate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilFuncSeparate), (intptr_t) (4) } },
+    { "stencilMask", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilMask), (intptr_t) (1) } },
+    { "stencilMaskSeparate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilMaskSeparate), (intptr_t) (2) } },
+    { "stencilOp", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilOp), (intptr_t) (3) } },
+    { "stencilOpSeparate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionStencilOpSeparate), (intptr_t) (4) } },
+    { "texParameterf", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexParameterf), (intptr_t) (3) } },
+    { "texParameteri", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexParameteri), (intptr_t) (3) } },
+    { "texImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexImage2D), (intptr_t) (9) } },
+    { "texSubImage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D), (intptr_t) (9) } },
+    { "uniform1f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1f), (intptr_t) (2) } },
+    { "uniform1fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1fv), (intptr_t) (2) } },
+    { "uniform1i", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1i), (intptr_t) (2) } },
+    { "uniform1iv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform1iv), (intptr_t) (2) } },
+    { "uniform2f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2f), (intptr_t) (3) } },
+    { "uniform2fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2fv), (intptr_t) (2) } },
+    { "uniform2i", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2i), (intptr_t) (3) } },
+    { "uniform2iv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform2iv), (intptr_t) (2) } },
+    { "uniform3f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3f), (intptr_t) (4) } },
+    { "uniform3fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3fv), (intptr_t) (2) } },
+    { "uniform3i", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3i), (intptr_t) (4) } },
+    { "uniform3iv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform3iv), (intptr_t) (2) } },
+    { "uniform4f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4f), (intptr_t) (5) } },
+    { "uniform4fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4fv), (intptr_t) (2) } },
+    { "uniform4i", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4i), (intptr_t) (5) } },
+    { "uniform4iv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniform4iv), (intptr_t) (2) } },
+    { "uniformMatrix2fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix2fv), (intptr_t) (3) } },
+    { "uniformMatrix3fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix3fv), (intptr_t) (3) } },
+    { "uniformMatrix4fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix4fv), (intptr_t) (3) } },
+    { "useProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionUseProgram), (intptr_t) (1) } },
+    { "validateProgram", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionValidateProgram), (intptr_t) (1) } },
+    { "vertexAttrib1f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1f), (intptr_t) (2) } },
+    { "vertexAttrib1fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1fv), (intptr_t) (2) } },
+    { "vertexAttrib2f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2f), (intptr_t) (3) } },
+    { "vertexAttrib2fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2fv), (intptr_t) (2) } },
+    { "vertexAttrib3f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3f), (intptr_t) (4) } },
+    { "vertexAttrib3fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3fv), (intptr_t) (2) } },
+    { "vertexAttrib4f", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4f), (intptr_t) (5) } },
+    { "vertexAttrib4fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4fv), (intptr_t) (2) } },
+    { "vertexAttribPointer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionVertexAttribPointer), (intptr_t) (6) } },
+    { "viewport", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLRenderingContextBasePrototypeFunctionViewport), (intptr_t) (4) } },
 };
 
 const ClassInfo JSWebGLRenderingContextBasePrototype::s_info = { "WebGLRenderingContextBasePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContextBasePrototype) };
@@ -681,7 +680,7 @@ void JSWebGLRenderingContextBasePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLRenderingContextBase::s_info = { "WebGLRenderingContextBase", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContextBase) };
 
-JSWebGLRenderingContextBase::JSWebGLRenderingContextBase(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderingContextBase>&& impl)
+JSWebGLRenderingContextBase::JSWebGLRenderingContextBase(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLRenderingContextBase>&& impl)
     : JSCanvasRenderingContext(structure, globalObject, WTF::move(impl))
 {
 }
@@ -696,3213 +695,3213 @@ JSObject* JSWebGLRenderingContextBase::getPrototype(VM& vm, JSGlobalObject* glob
     return getDOMPrototype<JSWebGLRenderingContextBase>(vm, globalObject);
 }
 
-EncodedJSValue jsWebGLRenderingContextBaseDrawingBufferWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebGLRenderingContextBaseDrawingBufferWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebGLRenderingContextBasePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebGLRenderingContextBase", "drawingBufferWidth");
-        return throwGetterTypeError(*exec, "WebGLRenderingContextBase", "drawingBufferWidth");
+            return reportDeprecatedGetterError(*state, "WebGLRenderingContextBase", "drawingBufferWidth");
+        return throwGetterTypeError(*state, "WebGLRenderingContextBase", "drawingBufferWidth");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.drawingBufferWidth());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebGLRenderingContextBaseDrawingBufferHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebGLRenderingContextBaseDrawingBufferHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebGLRenderingContextBasePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebGLRenderingContextBase", "drawingBufferHeight");
-        return throwGetterTypeError(*exec, "WebGLRenderingContextBase", "drawingBufferHeight");
+            return reportDeprecatedGetterError(*state, "WebGLRenderingContextBase", "drawingBufferHeight");
+        return throwGetterTypeError(*state, "WebGLRenderingContextBase", "drawingBufferHeight");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.drawingBufferHeight());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionActiveTexture(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionActiveTexture(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "activeTexture");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "activeTexture");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned texture = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned texture = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.activeTexture(texture, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionAttachShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionAttachShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "attachShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "attachShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "attachShader", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "attachShader", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 1, "shader", "WebGLRenderingContextBase", "attachShader", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 1, "shader", "WebGLRenderingContextBase", "attachShader", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.attachShader(program, shader, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindAttribLocation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindAttribLocation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bindAttribLocation");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bindAttribLocation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "bindAttribLocation", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "bindAttribLocation", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String name = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindAttribLocation(program, index, name, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bindBuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bindBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLBuffer::info()))
-        return throwArgumentTypeError(*exec, 1, "buffer", "WebGLRenderingContextBase", "bindBuffer", "WebGLBuffer");
-    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLBuffer::info()))
+        return throwArgumentTypeError(*state, 1, "buffer", "WebGLRenderingContextBase", "bindBuffer", "WebGLBuffer");
+    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindBuffer(target, buffer, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bindFramebuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bindFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLFramebuffer::info()))
-        return throwArgumentTypeError(*exec, 1, "framebuffer", "WebGLRenderingContextBase", "bindFramebuffer", "WebGLFramebuffer");
-    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLFramebuffer::info()))
+        return throwArgumentTypeError(*state, 1, "framebuffer", "WebGLRenderingContextBase", "bindFramebuffer", "WebGLFramebuffer");
+    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindFramebuffer(target, framebuffer, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindRenderbuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindRenderbuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bindRenderbuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bindRenderbuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLRenderbuffer::info()))
-        return throwArgumentTypeError(*exec, 1, "renderbuffer", "WebGLRenderingContextBase", "bindRenderbuffer", "WebGLRenderbuffer");
-    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLRenderbuffer::info()))
+        return throwArgumentTypeError(*state, 1, "renderbuffer", "WebGLRenderingContextBase", "bindRenderbuffer", "WebGLRenderbuffer");
+    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindRenderbuffer(target, renderbuffer, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindTexture(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBindTexture(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bindTexture");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bindTexture");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLTexture::info()))
-        return throwArgumentTypeError(*exec, 1, "texture", "WebGLRenderingContextBase", "bindTexture", "WebGLTexture");
-    WebGLTexture* texture = JSWebGLTexture::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLTexture::info()))
+        return throwArgumentTypeError(*state, 1, "texture", "WebGLRenderingContextBase", "bindTexture", "WebGLTexture");
+    WebGLTexture* texture = JSWebGLTexture::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindTexture(target, texture, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendColor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendColor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "blendColor");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "blendColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float red = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float red = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float green = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float green = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blue = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blue = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float alpha = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blendColor(red, green, blue, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendEquation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendEquation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "blendEquation");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "blendEquation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blendEquation(mode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendEquationSeparate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendEquationSeparate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "blendEquationSeparate");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "blendEquationSeparate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned modeRGB = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned modeRGB = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned modeAlpha = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned modeAlpha = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blendEquationSeparate(modeRGB, modeAlpha);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendFunc(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendFunc(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "blendFunc");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "blendFunc");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned sfactor = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned sfactor = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned dfactor = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned dfactor = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blendFunc(sfactor, dfactor);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendFuncSeparate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBlendFuncSeparate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "blendFuncSeparate");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "blendFuncSeparate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned srcRGB = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned srcRGB = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned dstRGB = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned dstRGB = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned srcAlpha = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned srcAlpha = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned dstAlpha = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned dstAlpha = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bufferData");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bufferData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    ArrayBuffer* data = toArrayBuffer(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    ArrayBuffer* data = toArrayBuffer(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned usage = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned usage = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bufferData(target, data, usage, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bufferData");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bufferData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned usage = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned usage = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bufferData(target, data.get(), usage, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bufferData");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bufferData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long size = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long size = toInt64(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned usage = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned usage = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bufferData(target, size, usage, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferData(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(3, exec->argumentCount());
-    JSValue arg1(exec->argument(1));
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    JSValue arg1(state->argument(1));
     if ((argsCount == 3 && (arg1.isNull() || (arg1.isObject() && asObject(arg1)->inherits(JSArrayBuffer::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionBufferData1(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionBufferData1(state);
     if ((argsCount == 3 && (arg1.isNull() || (arg1.isObject() && asObject(arg1)->inherits(JSArrayBufferView::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionBufferData2(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionBufferData2(state);
     if (argsCount == 3)
-        return jsWebGLRenderingContextBasePrototypeFunctionBufferData3(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionBufferData3(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bufferSubData");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bufferSubData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    ArrayBuffer* data = toArrayBuffer(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    ArrayBuffer* data = toArrayBuffer(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bufferSubData(target, offset, data, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "bufferSubData");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "bufferSubData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bufferSubData(target, offset, data.get(), ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionBufferSubData(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(3, exec->argumentCount());
-    JSValue arg2(exec->argument(2));
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    JSValue arg2(state->argument(2));
     if ((argsCount == 3 && (arg2.isNull() || (arg2.isObject() && asObject(arg2)->inherits(JSArrayBuffer::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionBufferSubData1(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionBufferSubData1(state);
     if ((argsCount == 3 && (arg2.isNull() || (arg2.isObject() && asObject(arg2)->inherits(JSArrayBufferView::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionBufferSubData2(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionBufferSubData2(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCheckFramebufferStatus(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCheckFramebufferStatus(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "checkFramebufferStatus");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "checkFramebufferStatus");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.checkFramebufferStatus(target));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClear(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClear(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "clear");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "clear");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mask = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mask = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clear(mask);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearColor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearColor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "clearColor");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "clearColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float red = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float red = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float green = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float green = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blue = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blue = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float alpha = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearColor(red, green, blue, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearDepth(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearDepth(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "clearDepth");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "clearDepth");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float depth = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float depth = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearDepth(depth);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearStencil(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionClearStencil(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "clearStencil");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "clearStencil");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int s = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int s = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearStencil(s);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionColorMask(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionColorMask(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "colorMask");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "colorMask");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool red = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool red = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool green = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool green = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool blue = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool blue = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool alpha = exec->argument(3).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool alpha = state->argument(3).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.colorMask(red, green, blue, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompileShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompileShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "compileShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "compileShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "compileShader", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "compileShader", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.compileShader(shader, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompressedTexImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompressedTexImage2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "compressedTexImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "compressedTexImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int border = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int border = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.compressedTexImage2D(target, level, internalformat, width, height, border, data.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompressedTexSubImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCompressedTexSubImage2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "compressedTexSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "compressedTexSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCopyTexImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCopyTexImage2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "copyTexImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "copyTexImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int border = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int border = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.copyTexImage2D(target, level, internalformat, x, y, width, height, border);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCopyTexSubImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCopyTexSubImage2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "copyTexSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "copyTexSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createBuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createBuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createBuffer()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createFramebuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createFramebuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createFramebuffer()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createProgram()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createProgram()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateRenderbuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateRenderbuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createRenderbuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createRenderbuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createRenderbuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createRenderbuffer()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned type = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createShader(type, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createShader(type, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateTexture(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCreateTexture(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "createTexture");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "createTexture");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createTexture()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createTexture()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCullFace(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionCullFace(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "cullFace");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "cullFace");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.cullFace(mode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteBuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLBuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "buffer", "WebGLRenderingContextBase", "deleteBuffer", "WebGLBuffer");
-    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLBuffer::info()))
+        return throwArgumentTypeError(*state, 0, "buffer", "WebGLRenderingContextBase", "deleteBuffer", "WebGLBuffer");
+    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteBuffer(buffer);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteFramebuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLFramebuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "framebuffer", "WebGLRenderingContextBase", "deleteFramebuffer", "WebGLFramebuffer");
-    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLFramebuffer::info()))
+        return throwArgumentTypeError(*state, 0, "framebuffer", "WebGLRenderingContextBase", "deleteFramebuffer", "WebGLFramebuffer");
+    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteFramebuffer(framebuffer);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "deleteProgram", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "deleteProgram", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteProgram(program);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteRenderbuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteRenderbuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteRenderbuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteRenderbuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLRenderbuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "renderbuffer", "WebGLRenderingContextBase", "deleteRenderbuffer", "WebGLRenderbuffer");
-    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLRenderbuffer::info()))
+        return throwArgumentTypeError(*state, 0, "renderbuffer", "WebGLRenderingContextBase", "deleteRenderbuffer", "WebGLRenderbuffer");
+    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteRenderbuffer(renderbuffer);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "deleteShader", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "deleteShader", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteShader(shader);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteTexture(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDeleteTexture(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "deleteTexture");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "deleteTexture");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLTexture::info()))
-        return throwArgumentTypeError(*exec, 0, "texture", "WebGLRenderingContextBase", "deleteTexture", "WebGLTexture");
-    WebGLTexture* texture = JSWebGLTexture::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLTexture::info()))
+        return throwArgumentTypeError(*state, 0, "texture", "WebGLRenderingContextBase", "deleteTexture", "WebGLTexture");
+    WebGLTexture* texture = JSWebGLTexture::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteTexture(texture);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthFunc(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthFunc(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "depthFunc");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "depthFunc");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned func = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned func = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.depthFunc(func);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthMask(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthMask(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "depthMask");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "depthMask");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool flag = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool flag = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.depthMask(flag);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDepthRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "depthRange");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "depthRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float zNear = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float zNear = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float zFar = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float zFar = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.depthRange(zNear, zFar);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDetachShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDetachShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "detachShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "detachShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "detachShader", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "detachShader", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 1, "shader", "WebGLRenderingContextBase", "detachShader", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 1, "shader", "WebGLRenderingContextBase", "detachShader", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.detachShader(program, shader, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDisable(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDisable(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "disable");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "disable");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned cap = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned cap = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.disable(cap);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDisableVertexAttribArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDisableVertexAttribArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "disableVertexAttribArray");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "disableVertexAttribArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.disableVertexAttribArray(index, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDrawArrays(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDrawArrays(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "drawArrays");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "drawArrays");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int first = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int first = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawArrays(mode, first, count, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDrawElements(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionDrawElements(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "drawElements");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "drawElements");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawElements(mode, count, type, offset, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionEnable(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionEnable(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "enable");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "enable");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned cap = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned cap = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.enable(cap);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionEnableVertexAttribArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionEnableVertexAttribArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "enableVertexAttribArray");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "enableVertexAttribArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.enableVertexAttribArray(index, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFinish(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFinish(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "finish");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "finish");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.finish();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFlush(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFlush(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "flush");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "flush");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.flush();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFramebufferRenderbuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFramebufferRenderbuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "framebufferRenderbuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "framebufferRenderbuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned attachment = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned attachment = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned renderbuffertarget = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned renderbuffertarget = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(3).isUndefinedOrNull() && !exec->argument(3).inherits(JSWebGLRenderbuffer::info()))
-        return throwArgumentTypeError(*exec, 3, "renderbuffer", "WebGLRenderingContextBase", "framebufferRenderbuffer", "WebGLRenderbuffer");
-    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(exec->argument(3));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(3).isUndefinedOrNull() && !state->argument(3).inherits(JSWebGLRenderbuffer::info()))
+        return throwArgumentTypeError(*state, 3, "renderbuffer", "WebGLRenderingContextBase", "framebufferRenderbuffer", "WebGLRenderbuffer");
+    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(state->argument(3));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFramebufferTexture2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFramebufferTexture2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "framebufferTexture2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "framebufferTexture2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned attachment = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned attachment = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned textarget = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned textarget = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(3).isUndefinedOrNull() && !exec->argument(3).inherits(JSWebGLTexture::info()))
-        return throwArgumentTypeError(*exec, 3, "texture", "WebGLRenderingContextBase", "framebufferTexture2D", "WebGLTexture");
-    WebGLTexture* texture = JSWebGLTexture::toWrapped(exec->argument(3));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(3).isUndefinedOrNull() && !state->argument(3).inherits(JSWebGLTexture::info()))
+        return throwArgumentTypeError(*state, 3, "texture", "WebGLRenderingContextBase", "framebufferTexture2D", "WebGLTexture");
+    WebGLTexture* texture = JSWebGLTexture::toWrapped(state->argument(3));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.framebufferTexture2D(target, attachment, textarget, texture, level, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFrontFace(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionFrontFace(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "frontFace");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "frontFace");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.frontFace(mode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGenerateMipmap(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGenerateMipmap(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "generateMipmap");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "generateMipmap");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.generateMipmap(target);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetActiveAttrib(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetActiveAttrib(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getActiveAttrib");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getActiveAttrib");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "getActiveAttrib", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "getActiveAttrib", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getActiveAttrib(program, index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getActiveAttrib(program, index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetActiveUniform(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetActiveUniform(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getActiveUniform");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getActiveUniform");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "getActiveUniform", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "getActiveUniform", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getActiveUniform(program, index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getActiveUniform(program, index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetAttachedShaders(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetAttachedShaders(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getAttachedShaders");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getAttachedShaders");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getAttachedShaders(exec));
+    return JSValue::encode(castedThis->getAttachedShaders(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetAttribLocation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetAttribLocation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getAttribLocation");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getAttribLocation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "getAttribLocation", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "getAttribLocation", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String name = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.getAttribLocation(program, name));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetBufferParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetBufferParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getBufferParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getBufferParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getBufferParameter(exec));
+    return JSValue::encode(castedThis->getBufferParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetContextAttributes(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetContextAttributes(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getContextAttributes");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getContextAttributes");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getContextAttributes()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getContextAttributes()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetError(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetError(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getError");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getError");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.getError());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetExtension(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetExtension(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getExtension");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getExtension");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getExtension(exec));
+    return JSValue::encode(castedThis->getExtension(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetFramebufferAttachmentParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetFramebufferAttachmentParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getFramebufferAttachmentParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getFramebufferAttachmentParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getFramebufferAttachmentParameter(exec));
+    return JSValue::encode(castedThis->getFramebufferAttachmentParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getParameter(exec));
+    return JSValue::encode(castedThis->getParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetProgramParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetProgramParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getProgramParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getProgramParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getProgramParameter(exec));
+    return JSValue::encode(castedThis->getProgramParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetProgramInfoLog(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetProgramInfoLog(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getProgramInfoLog");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getProgramInfoLog");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "getProgramInfoLog", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "getProgramInfoLog", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getProgramInfoLog(program, ec));
+    JSValue result = jsStringOrNull(state, impl.getProgramInfoLog(program, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetRenderbufferParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetRenderbufferParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getRenderbufferParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getRenderbufferParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getRenderbufferParameter(exec));
+    return JSValue::encode(castedThis->getRenderbufferParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getShaderParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getShaderParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getShaderParameter(exec));
+    return JSValue::encode(castedThis->getShaderParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderInfoLog(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderInfoLog(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getShaderInfoLog");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getShaderInfoLog");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "getShaderInfoLog", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "getShaderInfoLog", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getShaderInfoLog(shader, ec));
+    JSValue result = jsStringOrNull(state, impl.getShaderInfoLog(shader, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderPrecisionFormat(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderPrecisionFormat(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getShaderPrecisionFormat");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getShaderPrecisionFormat");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned shadertype = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned shadertype = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned precisiontype = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned precisiontype = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getShaderPrecisionFormat(shadertype, precisiontype, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getShaderPrecisionFormat(shadertype, precisiontype, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderSource(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetShaderSource(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getShaderSource");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getShaderSource");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "getShaderSource", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "getShaderSource", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getShaderSource(shader, ec));
+    JSValue result = jsStringOrNull(state, impl.getShaderSource(shader, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetSupportedExtensions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetSupportedExtensions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getSupportedExtensions");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getSupportedExtensions");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getSupportedExtensions(exec));
+    return JSValue::encode(castedThis->getSupportedExtensions(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetTexParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetTexParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getTexParameter");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getTexParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getTexParameter(exec));
+    return JSValue::encode(castedThis->getTexParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetUniform(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetUniform(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getUniform");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getUniform");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getUniform(exec));
+    return JSValue::encode(castedThis->getUniform(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetUniformLocation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetUniformLocation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getUniformLocation");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getUniformLocation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "getUniformLocation", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "getUniformLocation", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String name = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getUniformLocation(program, name, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getUniformLocation(program, name, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttrib(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttrib(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getVertexAttrib");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getVertexAttrib");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->getVertexAttrib(exec));
+    return JSValue::encode(castedThis->getVertexAttrib(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttribOffset(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionGetVertexAttribOffset(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "getVertexAttribOffset");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "getVertexAttribOffset");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.getVertexAttribOffset(index, pname));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionHint(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionHint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "hint");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "hint");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned mode = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mode = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.hint(target, mode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isBuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLBuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "buffer", "WebGLRenderingContextBase", "isBuffer", "WebGLBuffer");
-    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLBuffer::info()))
+        return throwArgumentTypeError(*state, 0, "buffer", "WebGLRenderingContextBase", "isBuffer", "WebGLBuffer");
+    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isBuffer(buffer));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsContextLost(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsContextLost(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isContextLost");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isContextLost");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.isContextLost());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isEnabled");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned cap = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned cap = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isEnabled(cap));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isFramebuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLFramebuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "framebuffer", "WebGLRenderingContextBase", "isFramebuffer", "WebGLFramebuffer");
-    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLFramebuffer::info()))
+        return throwArgumentTypeError(*state, 0, "framebuffer", "WebGLRenderingContextBase", "isFramebuffer", "WebGLFramebuffer");
+    WebGLFramebuffer* framebuffer = JSWebGLFramebuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isFramebuffer(framebuffer));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "isProgram", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "isProgram", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isProgram(program));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsRenderbuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsRenderbuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isRenderbuffer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isRenderbuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLRenderbuffer::info()))
-        return throwArgumentTypeError(*exec, 0, "renderbuffer", "WebGLRenderingContextBase", "isRenderbuffer", "WebGLRenderbuffer");
-    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLRenderbuffer::info()))
+        return throwArgumentTypeError(*state, 0, "renderbuffer", "WebGLRenderingContextBase", "isRenderbuffer", "WebGLRenderbuffer");
+    WebGLRenderbuffer* renderbuffer = JSWebGLRenderbuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isRenderbuffer(renderbuffer));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsShader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsShader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isShader");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isShader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "isShader", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "isShader", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isShader(shader));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsTexture(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionIsTexture(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "isTexture");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "isTexture");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLTexture::info()))
-        return throwArgumentTypeError(*exec, 0, "texture", "WebGLRenderingContextBase", "isTexture", "WebGLTexture");
-    WebGLTexture* texture = JSWebGLTexture::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLTexture::info()))
+        return throwArgumentTypeError(*state, 0, "texture", "WebGLRenderingContextBase", "isTexture", "WebGLTexture");
+    WebGLTexture* texture = JSWebGLTexture::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isTexture(texture));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionLineWidth(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionLineWidth(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "lineWidth");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "lineWidth");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.lineWidth(width);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionLinkProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionLinkProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "linkProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "linkProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "linkProgram", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "linkProgram", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.linkProgram(program, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionPixelStorei(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionPixelStorei(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "pixelStorei");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "pixelStorei");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned pname = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned pname = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int param = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int param = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.pixelStorei(pname, param);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionPolygonOffset(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionPolygonOffset(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "polygonOffset");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "polygonOffset");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float factor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float factor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float units = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float units = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.polygonOffset(factor, units);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionReadPixels(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionReadPixels(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "readPixels");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "readPixels");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> pixels = toArrayBufferView(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> pixels = toArrayBufferView(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.readPixels(x, y, width, height, format, type, pixels.get(), ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionReleaseShaderCompiler(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionReleaseShaderCompiler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "releaseShaderCompiler");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "releaseShaderCompiler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.releaseShaderCompiler();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionRenderbufferStorage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionRenderbufferStorage(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "renderbufferStorage");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "renderbufferStorage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.renderbufferStorage(target, internalformat, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionSampleCoverage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionSampleCoverage(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "sampleCoverage");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "sampleCoverage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float value = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float value = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool invert = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool invert = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.sampleCoverage(value, invert);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionScissor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionScissor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "scissor");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "scissor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.scissor(x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionShaderSource(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionShaderSource(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "shaderSource");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "shaderSource");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLShader::info()))
-        return throwArgumentTypeError(*exec, 0, "shader", "WebGLRenderingContextBase", "shaderSource", "WebGLShader");
-    WebGLShader* shader = JSWebGLShader::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLShader::info()))
+        return throwArgumentTypeError(*state, 0, "shader", "WebGLRenderingContextBase", "shaderSource", "WebGLShader");
+    WebGLShader* shader = JSWebGLShader::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String string = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String string = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.shaderSource(shader, string, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilFunc(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilFunc(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilFunc");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilFunc");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned func = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned func = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int ref = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int ref = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned mask = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mask = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilFunc(func, ref, mask);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilFuncSeparate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilFuncSeparate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilFuncSeparate");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilFuncSeparate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned face = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned face = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned func = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned func = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int ref = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int ref = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned mask = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mask = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilFuncSeparate(face, func, ref, mask);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilMask(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilMask(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilMask");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilMask");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mask = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mask = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilMask(mask);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilMaskSeparate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilMaskSeparate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilMaskSeparate");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilMaskSeparate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned face = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned face = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned mask = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mask = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilMaskSeparate(face, mask);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilOp(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilOp(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilOp");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilOp");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned fail = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned fail = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned zfail = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned zfail = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned zpass = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned zpass = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilOp(fail, zfail, zpass);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilOpSeparate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionStencilOpSeparate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "stencilOpSeparate");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "stencilOpSeparate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned face = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned face = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned fail = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned fail = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned zfail = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned zfail = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned zpass = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned zpass = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stencilOpSeparate(face, fail, zfail, zpass);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexParameterf(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexParameterf(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texParameterf");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texParameterf");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float param = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float param = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texParameterf(target, pname, param);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexParameteri(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexParameteri(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texParameteri");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texParameteri");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int param = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int param = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texParameteri(target, pname, param);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int border = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int border = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> pixels = toArrayBufferView(exec->argument(8));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> pixels = toArrayBufferView(state->argument(8));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage2D(target, level, internalformat, width, height, border, format, type, pixels.get(), ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(5).isUndefinedOrNull() && !exec->argument(5).inherits(JSImageData::info()))
-        return throwArgumentTypeError(*exec, 5, "pixels", "WebGLRenderingContextBase", "texImage2D", "ImageData");
-    ImageData* pixels = JSImageData::toWrapped(exec->argument(5));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(5).isUndefinedOrNull() && !state->argument(5).inherits(JSImageData::info()))
+        return throwArgumentTypeError(*state, 5, "pixels", "WebGLRenderingContextBase", "texImage2D", "ImageData");
+    ImageData* pixels = JSImageData::toWrapped(state->argument(5));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage2D(target, level, internalformat, format, type, pixels, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(5).isUndefinedOrNull() && !exec->argument(5).inherits(JSHTMLImageElement::info()))
-        return throwArgumentTypeError(*exec, 5, "image", "WebGLRenderingContextBase", "texImage2D", "HTMLImageElement");
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(5));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(5).isUndefinedOrNull() && !state->argument(5).inherits(JSHTMLImageElement::info()))
+        return throwArgumentTypeError(*state, 5, "image", "WebGLRenderingContextBase", "texImage2D", "HTMLImageElement");
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(5));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage2D(target, level, internalformat, format, type, image, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(5).isUndefinedOrNull() && !exec->argument(5).inherits(JSHTMLCanvasElement::info()))
-        return throwArgumentTypeError(*exec, 5, "canvas", "WebGLRenderingContextBase", "texImage2D", "HTMLCanvasElement");
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(5));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(5).isUndefinedOrNull() && !state->argument(5).inherits(JSHTMLCanvasElement::info()))
+        return throwArgumentTypeError(*state, 5, "canvas", "WebGLRenderingContextBase", "texImage2D", "HTMLCanvasElement");
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(5));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage2D(target, level, internalformat, format, type, canvas, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D5(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D5(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(5).isUndefinedOrNull() && !exec->argument(5).inherits(JSHTMLVideoElement::info()))
-        return throwArgumentTypeError(*exec, 5, "video", "WebGLRenderingContextBase", "texImage2D", "HTMLVideoElement");
-    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(exec->argument(5));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(5).isUndefinedOrNull() && !state->argument(5).inherits(JSHTMLVideoElement::info()))
+        return throwArgumentTypeError(*state, 5, "video", "WebGLRenderingContextBase", "texImage2D", "HTMLVideoElement");
+    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(state->argument(5));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage2D(target, level, internalformat, format, type, video, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexImage2D(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(9, exec->argumentCount());
-    JSValue arg8(exec->argument(8));
+    size_t argsCount = std::min<size_t>(9, state->argumentCount());
+    JSValue arg8(state->argument(8));
     if ((argsCount == 9 && (arg8.isNull() || (arg8.isObject() && asObject(arg8)->inherits(JSArrayBufferView::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D1(exec);
-    JSValue arg5(exec->argument(5));
+        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D1(state);
+    JSValue arg5(state->argument(5));
     if ((argsCount == 6 && (arg5.isNull() || (arg5.isObject() && asObject(arg5)->inherits(JSImageData::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D2(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D2(state);
     if ((argsCount == 6 && (arg5.isNull() || (arg5.isObject() && asObject(arg5)->inherits(JSHTMLImageElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D3(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D3(state);
     if ((argsCount == 6 && (arg5.isNull() || (arg5.isObject() && asObject(arg5)->inherits(JSHTMLCanvasElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D4(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D4(state);
     if ((argsCount == 6 && (arg5.isNull() || (arg5.isObject() && asObject(arg5)->inherits(JSHTMLVideoElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D5(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexImage2D5(state);
     if (argsCount < 6)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> pixels = toArrayBufferView(exec->argument(8));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> pixels = toArrayBufferView(state->argument(8));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels.get(), ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(6).isUndefinedOrNull() && !exec->argument(6).inherits(JSImageData::info()))
-        return throwArgumentTypeError(*exec, 6, "pixels", "WebGLRenderingContextBase", "texSubImage2D", "ImageData");
-    ImageData* pixels = JSImageData::toWrapped(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(6).isUndefinedOrNull() && !state->argument(6).inherits(JSImageData::info()))
+        return throwArgumentTypeError(*state, 6, "pixels", "WebGLRenderingContextBase", "texSubImage2D", "ImageData");
+    ImageData* pixels = JSImageData::toWrapped(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage2D(target, level, xoffset, yoffset, format, type, pixels, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(6).isUndefinedOrNull() && !exec->argument(6).inherits(JSHTMLImageElement::info()))
-        return throwArgumentTypeError(*exec, 6, "image", "WebGLRenderingContextBase", "texSubImage2D", "HTMLImageElement");
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(6).isUndefinedOrNull() && !state->argument(6).inherits(JSHTMLImageElement::info()))
+        return throwArgumentTypeError(*state, 6, "image", "WebGLRenderingContextBase", "texSubImage2D", "HTMLImageElement");
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage2D(target, level, xoffset, yoffset, format, type, image, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(6).isUndefinedOrNull() && !exec->argument(6).inherits(JSHTMLCanvasElement::info()))
-        return throwArgumentTypeError(*exec, 6, "canvas", "WebGLRenderingContextBase", "texSubImage2D", "HTMLCanvasElement");
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(6).isUndefinedOrNull() && !state->argument(6).inherits(JSHTMLCanvasElement::info()))
+        return throwArgumentTypeError(*state, 6, "canvas", "WebGLRenderingContextBase", "texSubImage2D", "HTMLCanvasElement");
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage2D(target, level, xoffset, yoffset, format, type, canvas, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D5(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D5(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "texSubImage2D");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "texSubImage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(6).isUndefinedOrNull() && !exec->argument(6).inherits(JSHTMLVideoElement::info()))
-        return throwArgumentTypeError(*exec, 6, "video", "WebGLRenderingContextBase", "texSubImage2D", "HTMLVideoElement");
-    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(exec->argument(6));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(6).isUndefinedOrNull() && !state->argument(6).inherits(JSHTMLVideoElement::info()))
+        return throwArgumentTypeError(*state, 6, "video", "WebGLRenderingContextBase", "texSubImage2D", "HTMLVideoElement");
+    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(state->argument(6));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage2D(target, level, xoffset, yoffset, format, type, video, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(9, exec->argumentCount());
-    JSValue arg8(exec->argument(8));
+    size_t argsCount = std::min<size_t>(9, state->argumentCount());
+    JSValue arg8(state->argument(8));
     if ((argsCount == 9 && (arg8.isNull() || (arg8.isObject() && asObject(arg8)->inherits(JSArrayBufferView::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D1(exec);
-    JSValue arg6(exec->argument(6));
+        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D1(state);
+    JSValue arg6(state->argument(6));
     if ((argsCount == 7 && (arg6.isNull() || (arg6.isObject() && asObject(arg6)->inherits(JSImageData::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D2(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D2(state);
     if ((argsCount == 7 && (arg6.isNull() || (arg6.isObject() && asObject(arg6)->inherits(JSHTMLImageElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D3(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D3(state);
     if ((argsCount == 7 && (arg6.isNull() || (arg6.isObject() && asObject(arg6)->inherits(JSHTMLCanvasElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D4(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D4(state);
     if ((argsCount == 7 && (arg6.isNull() || (arg6.isObject() && asObject(arg6)->inherits(JSHTMLVideoElement::info())))))
-        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D5(exec);
+        return jsWebGLRenderingContextBasePrototypeFunctionTexSubImage2D5(state);
     if (argsCount < 7)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform1f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform1f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform1f", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform1f", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform1f(location, x, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform1fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform1fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform1fv(exec));
+    return JSValue::encode(castedThis->uniform1fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1i(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1i(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform1i");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform1i");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform1i", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform1i", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform1i(location, x, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1iv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform1iv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform1iv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform1iv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform1iv(exec));
+    return JSValue::encode(castedThis->uniform1iv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform2f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform2f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform2f", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform2f", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform2f(location, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform2fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform2fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform2fv(exec));
+    return JSValue::encode(castedThis->uniform2fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2i(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2i(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform2i");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform2i");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform2i", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform2i", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform2i(location, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2iv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform2iv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform2iv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform2iv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform2iv(exec));
+    return JSValue::encode(castedThis->uniform2iv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform3f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform3f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform3f", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform3f", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float z = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float z = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform3f(location, x, y, z, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform3fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform3fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform3fv(exec));
+    return JSValue::encode(castedThis->uniform3fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3i(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3i(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform3i");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform3i");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform3i", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform3i", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int z = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int z = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform3i(location, x, y, z, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3iv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform3iv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform3iv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform3iv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform3iv(exec));
+    return JSValue::encode(castedThis->uniform3iv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform4f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform4f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform4f", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform4f", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float z = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float z = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float w = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float w = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform4f(location, x, y, z, w, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform4fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform4fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform4fv(exec));
+    return JSValue::encode(castedThis->uniform4fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4i(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4i(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform4i");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform4i");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGLRenderingContextBase", "uniform4i", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGLRenderingContextBase", "uniform4i", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int z = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int z = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int w = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int w = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform4i(location, x, y, z, w, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4iv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniform4iv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniform4iv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniform4iv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniform4iv(exec));
+    return JSValue::encode(castedThis->uniform4iv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix2fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix2fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniformMatrix2fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniformMatrix2fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniformMatrix2fv(exec));
+    return JSValue::encode(castedThis->uniformMatrix2fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix3fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix3fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniformMatrix3fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniformMatrix3fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniformMatrix3fv(exec));
+    return JSValue::encode(castedThis->uniformMatrix3fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix4fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUniformMatrix4fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "uniformMatrix4fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "uniformMatrix4fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->uniformMatrix4fv(exec));
+    return JSValue::encode(castedThis->uniformMatrix4fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUseProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionUseProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "useProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "useProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "useProgram", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "useProgram", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.useProgram(program, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionValidateProgram(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionValidateProgram(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "validateProgram");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "validateProgram");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGLRenderingContextBase", "validateProgram", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGLRenderingContextBase", "validateProgram", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.validateProgram(program, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib1f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib1f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned indx = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned indx = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttrib1f(indx, x);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib1fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib1fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib1fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->vertexAttrib1fv(exec));
+    return JSValue::encode(castedThis->vertexAttrib1fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib2f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib2f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned indx = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned indx = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttrib2f(indx, x, y);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib2fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib2fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib2fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->vertexAttrib2fv(exec));
+    return JSValue::encode(castedThis->vertexAttrib2fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib3f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib3f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned indx = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned indx = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float z = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float z = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttrib3f(indx, x, y, z);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib3fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib3fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib3fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->vertexAttrib3fv(exec));
+    return JSValue::encode(castedThis->vertexAttrib3fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4f(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4f(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib4f");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib4f");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned indx = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned indx = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float z = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float z = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float w = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float w = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttrib4f(indx, x, y, z, w);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttrib4fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttrib4fv");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttrib4fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    return JSValue::encode(castedThis->vertexAttrib4fv(exec));
+    return JSValue::encode(castedThis->vertexAttrib4fv(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttribPointer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionVertexAttribPointer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "vertexAttribPointer");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "vertexAttribPointer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned indx = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned indx = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int size = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int size = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool normalized = exec->argument(3).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool normalized = state->argument(3).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int stride = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int stride = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribPointer(indx, size, type, normalized, stride, offset, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionViewport(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLRenderingContextBasePrototypeFunctionViewport(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLRenderingContextBase* castedThis = jsDynamicCast<JSWebGLRenderingContextBase*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLRenderingContextBase", "viewport");
+        return throwThisTypeError(*state, "WebGLRenderingContextBase", "viewport");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLRenderingContextBase::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.viewport(x, y, width, height);
     return JSValue::encode(jsUndefined());

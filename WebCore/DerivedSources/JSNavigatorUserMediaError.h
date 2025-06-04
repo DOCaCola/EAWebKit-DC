@@ -33,7 +33,7 @@ public:
     typedef JSDOMError Base;
     static JSNavigatorUserMediaError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NavigatorUserMediaError>&& impl)
     {
-        JSNavigatorUserMediaError* ptr = new (NotNull, JSC::allocateCell<JSNavigatorUserMediaError>(globalObject->vm().heap)) JSNavigatorUserMediaError(structure, globalObject, WTF::move(impl));
+        JSNavigatorUserMediaError* ptr = new (NotNull, JSC::allocateCell<JSNavigatorUserMediaError>(globalObject->vm().heap)) JSNavigatorUserMediaError(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,14 +49,14 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    NavigatorUserMediaError& impl() const
+    NavigatorUserMediaError& wrapped() const
     {
-        return static_cast<NavigatorUserMediaError&>(Base::impl());
+        return static_cast<NavigatorUserMediaError&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSNavigatorUserMediaError(JSC::Structure*, JSDOMGlobalObject*, Ref<NavigatorUserMediaError>&&);
+    JSNavigatorUserMediaError(JSC::Structure*, JSDOMGlobalObject&, Ref<NavigatorUserMediaError>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -67,7 +67,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NavigatorUserMediaError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NavigatorUserMediaError& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NavigatorUserMediaError& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, NavigatorUserMediaError*);
 
 
 } // namespace WebCore

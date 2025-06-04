@@ -21,7 +21,7 @@
 #ifndef JSVTTRegion_h
 #define JSVTTRegion_h
 
-#if ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#if ENABLE(VIDEO_TRACK)
 
 #include "JSDOMWrapper.h"
 #include "VTTRegion.h"
@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSVTTRegion : public JSDOMWrapper {
+class JSVTTRegion : public JSDOMWrapper<VTTRegion> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<VTTRegion> Base;
     static JSVTTRegion* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTRegion>&& impl)
     {
-        JSVTTRegion* ptr = new (NotNull, JSC::allocateCell<JSVTTRegion>(globalObject->vm().heap)) JSVTTRegion(structure, globalObject, WTF::move(impl));
+        JSVTTRegion* ptr = new (NotNull, JSC::allocateCell<JSVTTRegion>(globalObject->vm().heap)) JSVTTRegion(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static VTTRegion* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSVTTRegion();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    VTTRegion& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VTTRegion* m_impl;
 protected:
-    JSVTTRegion(JSC::Structure*, JSDOMGlobalObject*, Ref<VTTRegion>&&);
+    JSVTTRegion(JSC::Structure*, JSDOMGlobalObject&, Ref<VTTRegion>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,11 +76,12 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VTTRegion*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VTTRegion*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VTTRegion& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTRegion& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, VTTRegion*);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#endif // ENABLE(VIDEO_TRACK)
 
 #endif

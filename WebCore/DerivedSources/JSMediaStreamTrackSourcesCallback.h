@@ -40,6 +40,7 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSMediaStreamTrackSourcesCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(Vector<RefPtr<SourceInfo>> sources);
@@ -47,8 +48,11 @@ public:
 private:
     JSMediaStreamTrackSourcesCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamTrackSourcesCallback*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStreamTrackSourcesCallback& impl) { return toJS(state, globalObject, &impl); }
 
 } // namespace WebCore
 

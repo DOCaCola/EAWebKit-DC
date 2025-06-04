@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSPopStateEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PopStateEvent>&& impl)
     {
-        JSPopStateEvent* ptr = new (NotNull, JSC::allocateCell<JSPopStateEvent>(globalObject->vm().heap)) JSPopStateEvent(structure, globalObject, WTF::move(impl));
+        JSPopStateEvent* ptr = new (NotNull, JSC::allocateCell<JSPopStateEvent>(globalObject->vm().heap)) JSPopStateEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,20 +50,20 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_state;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_state;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue state(JSC::ExecState*) const;
-    PopStateEvent& impl() const
+    JSC::JSValue state(JSC::ExecState&) const;
+    PopStateEvent& wrapped() const
     {
-        return static_cast<PopStateEvent&>(Base::impl());
+        return static_cast<PopStateEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPopStateEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<PopStateEvent>&&);
+    JSPopStateEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<PopStateEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

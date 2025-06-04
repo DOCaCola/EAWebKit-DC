@@ -38,7 +38,7 @@ namespace WebCore {
 class PasteboardStrategy;
 }
 
-class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy, private WebCore::LoaderStrategy, private WebCore::PluginStrategy {
+class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy, private WebCore::PluginStrategy {
 public:
     static void initialize();
 
@@ -50,6 +50,7 @@ private:
     virtual WebCore::LoaderStrategy* createLoaderStrategy() override;
     virtual WebCore::PasteboardStrategy* createPasteboardStrategy() override;
     virtual WebCore::PluginStrategy* createPluginStrategy() override;
+    WebCore::BlobRegistry* createBlobRegistry() override;
     
     // WebCore::CookiesStrategy
     virtual String cookiesForDOM(const WebCore::NetworkStorageSession&, const WebCore::URL& firstParty, const WebCore::URL&) override;

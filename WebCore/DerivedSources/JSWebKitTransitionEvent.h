@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSWebKitTransitionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitTransitionEvent>&& impl)
     {
-        JSWebKitTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitTransitionEvent>(globalObject->vm().heap)) JSWebKitTransitionEvent(structure, globalObject, WTF::move(impl));
+        JSWebKitTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitTransitionEvent>(globalObject->vm().heap)) JSWebKitTransitionEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitTransitionEvent& impl() const
+    WebKitTransitionEvent& wrapped() const
     {
-        return static_cast<WebKitTransitionEvent&>(Base::impl());
+        return static_cast<WebKitTransitionEvent&>(Base::wrapped());
     }
 protected:
-    JSWebKitTransitionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitTransitionEvent>&&);
+    JSWebKitTransitionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitTransitionEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

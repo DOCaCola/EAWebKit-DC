@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedAngle : public JSDOMWrapper {
+class JSSVGAnimatedAngle : public JSDOMWrapper<SVGAnimatedAngle> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedAngle> Base;
     static JSSVGAnimatedAngle* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedAngle>&& impl)
     {
-        JSSVGAnimatedAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedAngle>(globalObject->vm().heap)) JSSVGAnimatedAngle(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedAngle>(globalObject->vm().heap)) JSSVGAnimatedAngle(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedAngle* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedAngle();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedAngle& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedAngle* m_impl;
 protected:
-    JSSVGAnimatedAngle(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedAngle>&&);
+    JSSVGAnimatedAngle(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedAngle>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedAngle*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedAngle*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedAngle& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedAngle& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedAngle*);
 
 
 } // namespace WebCore

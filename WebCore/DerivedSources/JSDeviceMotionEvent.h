@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSDeviceMotionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DeviceMotionEvent>&& impl)
     {
-        JSDeviceMotionEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEvent>(globalObject->vm().heap)) JSDeviceMotionEvent(structure, globalObject, WTF::move(impl));
+        JSDeviceMotionEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceMotionEvent>(globalObject->vm().heap)) JSDeviceMotionEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,21 +52,21 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue acceleration(JSC::ExecState*) const;
-    JSC::JSValue accelerationIncludingGravity(JSC::ExecState*) const;
-    JSC::JSValue rotationRate(JSC::ExecState*) const;
-    JSC::JSValue interval(JSC::ExecState*) const;
+    JSC::JSValue acceleration(JSC::ExecState&) const;
+    JSC::JSValue accelerationIncludingGravity(JSC::ExecState&) const;
+    JSC::JSValue rotationRate(JSC::ExecState&) const;
+    JSC::JSValue interval(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue initDeviceMotionEvent(JSC::ExecState*);
-    DeviceMotionEvent& impl() const
+    JSC::JSValue initDeviceMotionEvent(JSC::ExecState&);
+    DeviceMotionEvent& wrapped() const
     {
-        return static_cast<DeviceMotionEvent&>(Base::impl());
+        return static_cast<DeviceMotionEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDeviceMotionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<DeviceMotionEvent>&&);
+    JSDeviceMotionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<DeviceMotionEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

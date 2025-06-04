@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSXPathNSResolver : public JSDOMWrapper {
+class JSXPathNSResolver : public JSDOMWrapper<XPathNSResolver> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XPathNSResolver> Base;
     static JSXPathNSResolver* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathNSResolver>&& impl)
     {
-        JSXPathNSResolver* ptr = new (NotNull, JSC::allocateCell<JSXPathNSResolver>(globalObject->vm().heap)) JSXPathNSResolver(structure, globalObject, WTF::move(impl));
+        JSXPathNSResolver* ptr = new (NotNull, JSC::allocateCell<JSXPathNSResolver>(globalObject->vm().heap)) JSXPathNSResolver(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XPathNSResolver* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathNSResolver();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    XPathNSResolver& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathNSResolver* m_impl;
 protected:
-    JSXPathNSResolver(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathNSResolver>&&);
+    JSXPathNSResolver(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathNSResolver>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathNSResolver*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathNSResolver*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathNSResolver& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathNSResolver& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XPathNSResolver*);
 
 
 } // namespace WebCore

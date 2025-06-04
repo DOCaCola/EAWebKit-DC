@@ -26,8 +26,8 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "SerializedScriptValue.h"
-#include "UserMessageHandler.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -68,49 +68,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSUserMessageHandlerConstructor : public DOMConstructorObject {
-private:
-    JSUserMessageHandlerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSUserMessageHandler> JSUserMessageHandlerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSUserMessageHandlerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSUserMessageHandlerConstructor* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandlerConstructor>(vm.heap)) JSUserMessageHandlerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSUserMessageHandlerConstructor::s_info = { "UserMessageHandlerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlerConstructor) };
-
-JSUserMessageHandlerConstructor::JSUserMessageHandlerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSUserMessageHandlerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSUserMessageHandlerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSUserMessageHandler::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSUserMessageHandler::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("UserMessageHandler"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSUserMessageHandlerConstructor::s_info = { "UserMessageHandlerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSUserMessageHandlerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUserMessageHandlerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "postMessage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsUserMessageHandlerPrototypeFunctionPostMessage), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUserMessageHandlerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "postMessage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsUserMessageHandlerPrototypeFunctionPostMessage), (intptr_t) (1) } },
 };
 
 const ClassInfo JSUserMessageHandlerPrototype::s_info = { "UserMessageHandlerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlerPrototype) };
@@ -123,9 +97,8 @@ void JSUserMessageHandlerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSUserMessageHandler::s_info = { "UserMessageHandler", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandler) };
 
-JSUserMessageHandler::JSUserMessageHandler(Structure* structure, JSDOMGlobalObject* globalObject, Ref<UserMessageHandler>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSUserMessageHandler::JSUserMessageHandler(Structure* structure, JSDOMGlobalObject& globalObject, Ref<UserMessageHandler>&& impl)
+    : JSDOMWrapper<UserMessageHandler>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -145,40 +118,35 @@ void JSUserMessageHandler::destroy(JSC::JSCell* cell)
     thisObject->JSUserMessageHandler::~JSUserMessageHandler();
 }
 
-JSUserMessageHandler::~JSUserMessageHandler()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsUserMessageHandlerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsUserMessageHandlerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSUserMessageHandlerPrototype* domObject = jsDynamicCast<JSUserMessageHandlerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSUserMessageHandler::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSUserMessageHandler::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSUserMessageHandler::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSUserMessageHandlerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSUserMessageHandlerConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsUserMessageHandlerPrototypeFunctionPostMessage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsUserMessageHandlerPrototypeFunctionPostMessage(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSUserMessageHandler* castedThis = jsDynamicCast<JSUserMessageHandler*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "UserMessageHandler", "postMessage");
+        return throwThisTypeError(*state, "UserMessageHandler", "postMessage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSUserMessageHandler::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    RefPtr<SerializedScriptValue> message = SerializedScriptValue::create(exec, exec->argument(0), 0, 0);
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<SerializedScriptValue> message = SerializedScriptValue::create(state, state->argument(0), 0, 0);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.postMessage(message, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
@@ -193,7 +161,7 @@ void JSUserMessageHandlerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void*
 {
     auto* jsUserMessageHandler = jsCast<JSUserMessageHandler*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsUserMessageHandler->impl(), jsUserMessageHandler);
+    uncacheWrapper(world, &jsUserMessageHandler->wrapped(), jsUserMessageHandler);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -204,6 +172,14 @@ extern "C" { extern void (*const __identifier("??_7UserMessageHandler@WebCore@@6
 extern "C" { extern void* _ZTVN7WebCore18UserMessageHandlerE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageHandler* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSUserMessageHandler>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageHandler* impl)
 {
     if (!impl)
@@ -235,7 +211,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageH
 UserMessageHandler* JSUserMessageHandler::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSUserMessageHandler*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

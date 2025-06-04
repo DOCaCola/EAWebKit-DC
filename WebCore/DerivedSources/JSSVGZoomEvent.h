@@ -32,7 +32,7 @@ public:
     typedef JSUIEvent Base;
     static JSSVGZoomEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGZoomEvent>&& impl)
     {
-        JSSVGZoomEvent* ptr = new (NotNull, JSC::allocateCell<JSSVGZoomEvent>(globalObject->vm().heap)) JSSVGZoomEvent(structure, globalObject, WTF::move(impl));
+        JSSVGZoomEvent* ptr = new (NotNull, JSC::allocateCell<JSSVGZoomEvent>(globalObject->vm().heap)) JSSVGZoomEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGZoomEvent& impl() const
+    SVGZoomEvent& wrapped() const
     {
-        return static_cast<SVGZoomEvent&>(Base::impl());
+        return static_cast<SVGZoomEvent&>(Base::wrapped());
     }
 protected:
-    JSSVGZoomEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGZoomEvent>&&);
+    JSSVGZoomEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGZoomEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

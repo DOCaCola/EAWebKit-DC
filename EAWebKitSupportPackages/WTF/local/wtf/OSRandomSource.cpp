@@ -41,6 +41,10 @@
 #include <wincrypt.h> // windows.h must be included before wincrypt.h.
 #endif
 
+#if OS(DARWIN)
+#include "CommonCryptoSPI.h"
+#endif
+
 //+EAWebKitChange
 //2/28/2014
 #if PLATFORM(EA)
@@ -49,6 +53,7 @@ namespace EA { namespace WebKit {
 }}
 #endif
 //-EAWebKitChange
+
 
 namespace WTF {
 
@@ -67,7 +72,7 @@ NEVER_INLINE NO_RETURN_DUE_TO_CRASH static void crashUnableToReadFromURandom()
 void cryptographicallyRandomValuesFromOS(unsigned char* buffer, size_t length)
 {
 #if OS(DARWIN)
-    return arc4random_buf(buffer, length);
+    RELEASE_ASSERT(!CCRandomCopyBytes(kCCRandomDefault, buffer, length));
 //+EAWebKitChange
 //2/28/2014
 //5/04/2015

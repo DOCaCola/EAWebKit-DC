@@ -77,7 +77,7 @@ public:
     virtual float maxTimeSeekable() const override;
     virtual std::unique_ptr<PlatformTimeRanges> buffered() const override; 
     virtual void setSize(const IntSize& ) override;
-    virtual void paint(GraphicsContext*, const FloatRect&) override;
+    virtual void paint(GraphicsContext&, const FloatRect&) override;
 
     // Ignore these for now as unclear if needed.
     virtual void prepareToPlay() override { }

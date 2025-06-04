@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSAudioTrack : public JSDOMWrapper {
+class JSAudioTrack : public JSDOMWrapper<AudioTrack> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<AudioTrack> Base;
     static JSAudioTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioTrack>&& impl)
     {
-        JSAudioTrack* ptr = new (NotNull, JSC::allocateCell<JSAudioTrack>(globalObject->vm().heap)) JSAudioTrack(structure, globalObject, WTF::move(impl));
+        JSAudioTrack* ptr = new (NotNull, JSC::allocateCell<JSAudioTrack>(globalObject->vm().heap)) JSAudioTrack(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static AudioTrack* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSAudioTrack();
 
     DECLARE_INFO;
 
@@ -58,17 +57,12 @@ public:
 
 
     // Custom attributes
-    void setKind(JSC::ExecState*, JSC::JSValue);
-    void setLanguage(JSC::ExecState*, JSC::JSValue);
-    AudioTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioTrack* m_impl;
+    void setKind(JSC::ExecState&, JSC::JSValue);
+    void setLanguage(JSC::ExecState&, JSC::JSValue);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSAudioTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioTrack>&&);
+    JSAudioTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioTrack>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -91,7 +85,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioTrack*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioTrack& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioTrack*);
 
 
 } // namespace WebCore

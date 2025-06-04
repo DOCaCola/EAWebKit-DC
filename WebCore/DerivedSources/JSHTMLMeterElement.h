@@ -33,7 +33,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMeterElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMeterElement>&& impl)
     {
-        JSHTMLMeterElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElement>(globalObject->vm().heap)) JSHTMLMeterElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMeterElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMeterElement>(globalObject->vm().heap)) JSHTMLMeterElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMeterElement& impl() const
+    HTMLMeterElement& wrapped() const
     {
-        return static_cast<HTMLMeterElement&>(Base::impl());
+        return static_cast<HTMLMeterElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMeterElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMeterElement>&&);
+    JSHTMLMeterElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMeterElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

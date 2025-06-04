@@ -27,7 +27,7 @@
 #include "AudioBuffer.h"
 #include "JSAudioBuffer.h"
 #include "JSDOMBinding.h"
-#include "OfflineAudioCompletionEvent.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -64,49 +64,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSOfflineAudioCompletionEventConstructor : public DOMConstructorObject {
-private:
-    JSOfflineAudioCompletionEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSOfflineAudioCompletionEvent> JSOfflineAudioCompletionEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSOfflineAudioCompletionEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSOfflineAudioCompletionEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioCompletionEventConstructor>(vm.heap)) JSOfflineAudioCompletionEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSOfflineAudioCompletionEventConstructor::s_info = { "OfflineAudioCompletionEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioCompletionEventConstructor) };
-
-JSOfflineAudioCompletionEventConstructor::JSOfflineAudioCompletionEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSOfflineAudioCompletionEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSOfflineAudioCompletionEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSOfflineAudioCompletionEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSOfflineAudioCompletionEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("OfflineAudioCompletionEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSOfflineAudioCompletionEventConstructor::s_info = { "OfflineAudioCompletionEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioCompletionEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSOfflineAudioCompletionEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioCompletionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "renderedBuffer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioCompletionEventRenderedBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioCompletionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "renderedBuffer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsOfflineAudioCompletionEventRenderedBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSOfflineAudioCompletionEventPrototype::s_info = { "OfflineAudioCompletionEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioCompletionEventPrototype) };
@@ -119,7 +93,7 @@ void JSOfflineAudioCompletionEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSOfflineAudioCompletionEvent::s_info = { "OfflineAudioCompletionEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOfflineAudioCompletionEvent) };
 
-JSOfflineAudioCompletionEvent::JSOfflineAudioCompletionEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OfflineAudioCompletionEvent>&& impl)
+JSOfflineAudioCompletionEvent::JSOfflineAudioCompletionEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OfflineAudioCompletionEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,34 +108,34 @@ JSObject* JSOfflineAudioCompletionEvent::getPrototype(VM& vm, JSGlobalObject* gl
     return getDOMPrototype<JSOfflineAudioCompletionEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsOfflineAudioCompletionEventRenderedBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsOfflineAudioCompletionEventRenderedBuffer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSOfflineAudioCompletionEvent* castedThis = jsDynamicCast<JSOfflineAudioCompletionEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSOfflineAudioCompletionEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "OfflineAudioCompletionEvent", "renderedBuffer");
-        return throwGetterTypeError(*exec, "OfflineAudioCompletionEvent", "renderedBuffer");
+            return reportDeprecatedGetterError(*state, "OfflineAudioCompletionEvent", "renderedBuffer");
+        return throwGetterTypeError(*state, "OfflineAudioCompletionEvent", "renderedBuffer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.renderedBuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.renderedBuffer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsOfflineAudioCompletionEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsOfflineAudioCompletionEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSOfflineAudioCompletionEventPrototype* domObject = jsDynamicCast<JSOfflineAudioCompletionEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSOfflineAudioCompletionEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSOfflineAudioCompletionEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSOfflineAudioCompletionEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSOfflineAudioCompletionEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSOfflineAudioCompletionEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -172,6 +146,14 @@ extern "C" { extern void (*const __identifier("??_7OfflineAudioCompletionEvent@W
 extern "C" { extern void* _ZTVN7WebCore27OfflineAudioCompletionEventE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, OfflineAudioCompletionEvent* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSOfflineAudioCompletionEvent>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OfflineAudioCompletionEvent* impl)
 {
     if (!impl)

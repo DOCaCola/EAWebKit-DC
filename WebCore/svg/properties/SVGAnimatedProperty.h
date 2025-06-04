@@ -48,27 +48,22 @@ public:
     virtual ~SVGAnimatedProperty();
 
     template<typename OwnerType, typename TearOffType, typename PropertyType>
-    static Ref<TearOffType> lookupOrCreateWrapper(OwnerType* element, const SVGPropertyInfo* info, PropertyType& property)
+    static TearOffType& lookupOrCreateWrapper(OwnerType* element, const SVGPropertyInfo* info, PropertyType& property)
     {
         ASSERT(info);
         SVGAnimatedPropertyDescription key(element, info->propertyIdentifier);
-
-        auto result = animatedPropertyCache()->add(key, nullptr);
-        if (!result.isNewEntry)
-            return static_cast<TearOffType&>(*result.iterator->value);
-
-        Ref<SVGAnimatedProperty> wrapper = TearOffType::create(element, info->attributeName, info->animatedPropertyType, property);
-        if (info->animatedPropertyState == PropertyIsReadOnly)
-            wrapper->setIsReadOnly();
-
-        // Cache the raw pointer but return a Ref<>. This will break the cyclic reference
-        // between SVGAnimatedProperty and SVGElement once the property pointer is not needed.
-        result.iterator->value = wrapper.ptr();
-        return static_reference_cast<TearOffType>(wrapper);
+        auto& slot = animatedPropertyCache()->add(key, nullptr).iterator->value;
+        if (!slot) {
+            Ref<SVGAnimatedProperty> wrapper = TearOffType::create(element, info->attributeName, info->animatedPropertyType, property);
+            if (info->animatedPropertyState == PropertyIsReadOnly)
+                wrapper->setIsReadOnly();
+            slot = &wrapper.leakRef();
+        }
+        return static_cast<TearOffType&>(*slot);
     }
 
     template<typename OwnerType, typename TearOffType>
-    static RefPtr<TearOffType> lookupWrapper(OwnerType* element, const SVGPropertyInfo* info)
+    static TearOffType* lookupWrapper(OwnerType* element, const SVGPropertyInfo* info)
     {
         ASSERT(info);
         SVGAnimatedPropertyDescription key(element, info->propertyIdentifier);
@@ -76,7 +71,7 @@ public:
     }
 
     template<typename OwnerType, typename TearOffType>
-    static RefPtr<TearOffType> lookupWrapper(const OwnerType* element, const SVGPropertyInfo* info)
+    static TearOffType* lookupWrapper(const OwnerType* element, const SVGPropertyInfo* info)
     {
         return lookupWrapper<OwnerType, TearOffType>(const_cast<OwnerType*>(element), info);
     }

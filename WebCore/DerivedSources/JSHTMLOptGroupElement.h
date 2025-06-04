@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLOptGroupElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptGroupElement>&& impl)
     {
-        JSHTMLOptGroupElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElement>(globalObject->vm().heap)) JSHTMLOptGroupElement(structure, globalObject, WTF::move(impl));
+        JSHTMLOptGroupElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptGroupElement>(globalObject->vm().heap)) JSHTMLOptGroupElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLOptGroupElement& impl() const
+    HTMLOptGroupElement& wrapped() const
     {
-        return static_cast<HTMLOptGroupElement&>(Base::impl());
+        return static_cast<HTMLOptGroupElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLOptGroupElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptGroupElement>&&);
+    JSHTMLOptGroupElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptGroupElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

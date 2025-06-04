@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSGeolocation : public JSDOMWrapper {
+class JSGeolocation : public JSDOMWrapper<Geolocation> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Geolocation> Base;
     static JSGeolocation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Geolocation>&& impl)
     {
-        JSGeolocation* ptr = new (NotNull, JSC::allocateCell<JSGeolocation>(globalObject->vm().heap)) JSGeolocation(structure, globalObject, WTF::move(impl));
+        JSGeolocation* ptr = new (NotNull, JSC::allocateCell<JSGeolocation>(globalObject->vm().heap)) JSGeolocation(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Geolocation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSGeolocation();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
 
     // Custom functions
-    JSC::JSValue getCurrentPosition(JSC::ExecState*);
-    JSC::JSValue watchPosition(JSC::ExecState*);
-    Geolocation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Geolocation* m_impl;
+    JSC::JSValue getCurrentPosition(JSC::ExecState&);
+    JSC::JSValue watchPosition(JSC::ExecState&);
 protected:
-    JSGeolocation(JSC::Structure*, JSDOMGlobalObject*, Ref<Geolocation>&&);
+    JSGeolocation(JSC::Structure*, JSDOMGlobalObject&, Ref<Geolocation>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Geolocation*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Geolocation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Geolocation& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Geolocation& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Geolocation*);
 
 
 } // namespace WebCore

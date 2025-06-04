@@ -27,11 +27,11 @@
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "JSTextTrack.h"
 #include "TextTrack.h"
-#include "TextTrackCue.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -89,88 +89,53 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTextTrackCueConstructor : public DOMConstructorObject {
-private:
-    JSTextTrackCueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSTextTrackCue> JSTextTrackCueConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTextTrackCueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTextTrackCueConstructor* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCueConstructor>(vm.heap)) JSTextTrackCueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSTextTrackCue(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSTextTrackCueConstructor::constructJSTextTrackCue(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSTextTrackCueConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSTextTrackCueConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    double startTime = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* castedThis = jsCast<JSTextTrackCueConstructor*>(state->callee());
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    double startTime = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double endTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double endTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String text = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String text = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "TextTrackCue");
+        return throwConstructorDocumentUnavailableError(*state, "TextTrackCue");
     RefPtr<TextTrackCue> object = TextTrackCue::create(*context, startTime, endTime, text);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSTextTrackCueConstructor::s_info = { "TextTrackCueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackCueConstructor) };
-
-JSTextTrackCueConstructor::JSTextTrackCueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSTextTrackCueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTextTrackCueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTextTrackCue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTextTrackCue::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TextTrackCue"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(3), ReadOnly | DontEnum);
 }
 
-ConstructType JSTextTrackCueConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSTextTrackCue;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSTextTrackCueConstructor::s_info = { "TextTrackCueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackCueConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTextTrackCuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "track", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "id", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueId) },
-    { "startTime", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueStartTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueStartTime) },
-    { "endTime", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueEndTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueEndTime) },
-    { "pauseOnExit", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCuePauseOnExit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCuePauseOnExit) },
-    { "onenter", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueOnenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueOnenter) },
-    { "onexit", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueOnexit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueOnexit) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "track", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "id", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueId) } },
+    { "startTime", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueStartTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueStartTime) } },
+    { "endTime", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueEndTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueEndTime) } },
+    { "pauseOnExit", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCuePauseOnExit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCuePauseOnExit) } },
+    { "onenter", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueOnenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueOnenter) } },
+    { "onexit", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextTrackCueOnexit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTextTrackCueOnexit) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextTrackCuePrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSTextTrackCuePrototype::s_info = { "TextTrackCuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackCuePrototype) };
@@ -183,9 +148,8 @@ void JSTextTrackCuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTextTrackCue::s_info = { "TextTrackCue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextTrackCue) };
 
-JSTextTrackCue::JSTextTrackCue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackCue>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTextTrackCue::JSTextTrackCue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TextTrackCue>&& impl)
+    : JSDOMWrapper<TextTrackCue>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -205,304 +169,299 @@ void JSTextTrackCue::destroy(JSC::JSCell* cell)
     thisObject->JSTextTrackCue::~JSTextTrackCue();
 }
 
-JSTextTrackCue::~JSTextTrackCue()
+EncodedJSValue jsTextTrackCueTrack(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsTextTrackCueTrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "track");
-        return throwGetterTypeError(*exec, "TextTrackCue", "track");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "track");
+        return throwGetterTypeError(*state, "TextTrackCue", "track");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.track()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.track()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextTrackCueId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCueId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "id");
-        return throwGetterTypeError(*exec, "TextTrackCue", "id");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "id");
+        return throwGetterTypeError(*state, "TextTrackCue", "id");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.id());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextTrackCueStartTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCueStartTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "startTime");
-        return throwGetterTypeError(*exec, "TextTrackCue", "startTime");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "startTime");
+        return throwGetterTypeError(*state, "TextTrackCue", "startTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.startTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextTrackCueEndTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCueEndTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "endTime");
-        return throwGetterTypeError(*exec, "TextTrackCue", "endTime");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "endTime");
+        return throwGetterTypeError(*state, "TextTrackCue", "endTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.endTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextTrackCuePauseOnExit(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCuePauseOnExit(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "pauseOnExit");
-        return throwGetterTypeError(*exec, "TextTrackCue", "pauseOnExit");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "pauseOnExit");
+        return throwGetterTypeError(*state, "TextTrackCue", "pauseOnExit");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.pauseOnExit());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextTrackCueOnenter(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCueOnenter(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "onenter");
-        return throwGetterTypeError(*exec, "TextTrackCue", "onenter");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "onenter");
+        return throwGetterTypeError(*state, "TextTrackCue", "onenter");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().enterEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().enterEvent));
 }
 
 
-EncodedJSValue jsTextTrackCueOnexit(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextTrackCueOnexit(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TextTrackCue", "onexit");
-        return throwGetterTypeError(*exec, "TextTrackCue", "onexit");
+            return reportDeprecatedGetterError(*state, "TextTrackCue", "onexit");
+        return throwGetterTypeError(*state, "TextTrackCue", "onexit");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().exitEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().exitEvent));
 }
 
 
-EncodedJSValue jsTextTrackCueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTextTrackCueConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTextTrackCuePrototype* domObject = jsDynamicCast<JSTextTrackCuePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTextTrackCue::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSTextTrackCue::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSTextTrackCueId(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCueId(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "id");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "id");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "id");
+            throwSetterTypeError(*state, "TextTrackCue", "id");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setId(nativeValue);
 }
 
 
-void setJSTextTrackCueStartTime(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCueStartTime(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "startTime");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "startTime");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "startTime");
+            throwSetterTypeError(*state, "TextTrackCue", "startTime");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setStartTime(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSTextTrackCueEndTime(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCueEndTime(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "endTime");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "endTime");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "endTime");
+            throwSetterTypeError(*state, "TextTrackCue", "endTime");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setEndTime(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSTextTrackCuePauseOnExit(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCuePauseOnExit(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "pauseOnExit");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "pauseOnExit");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "pauseOnExit");
+            throwSetterTypeError(*state, "TextTrackCue", "pauseOnExit");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPauseOnExit(nativeValue);
 }
 
 
-void setJSTextTrackCueOnenter(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCueOnenter(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "onenter");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "onenter");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "onenter");
+            throwSetterTypeError(*state, "TextTrackCue", "onenter");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().enterEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().enterEvent, value);
 }
 
 
-void setJSTextTrackCueOnexit(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTextTrackCueOnexit(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextTrackCuePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TextTrackCue", "onexit");
+            reportDeprecatedSetterError(*state, "TextTrackCue", "onexit");
         else
-            throwSetterTypeError(*exec, "TextTrackCue", "onexit");
+            throwSetterTypeError(*state, "TextTrackCue", "onexit");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().exitEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().exitEvent, value);
 }
 
 
 JSValue JSTextTrackCue::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTextTrackCueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTextTrackCueConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackCue", "addEventListener");
+        return throwThisTypeError(*state, "TextTrackCue", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackCue::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackCue", "removeEventListener");
+        return throwThisTypeError(*state, "TextTrackCue", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackCue::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTextTrackCuePrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTextTrackCue* castedThis = jsDynamicCast<JSTextTrackCue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TextTrackCue", "dispatchEvent");
+        return throwThisTypeError(*state, "TextTrackCue", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTextTrackCue::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -511,7 +470,7 @@ void JSTextTrackCue::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSTextTrackCue*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
     thisObject->visitAdditionalChildren(visitor);
 }
 
@@ -519,13 +478,13 @@ void JSTextTrackCueOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsTextTrackCue = jsCast<JSTextTrackCue*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTextTrackCue->impl(), jsTextTrackCue);
+    uncacheWrapper(world, &jsTextTrackCue->wrapped(), jsTextTrackCue);
 }
 
 TextTrackCue* JSTextTrackCue::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSTextTrackCue*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

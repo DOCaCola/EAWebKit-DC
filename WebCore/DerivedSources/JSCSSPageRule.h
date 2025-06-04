@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSPageRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSPageRule>&& impl)
     {
-        JSCSSPageRule* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRule>(globalObject->vm().heap)) JSCSSPageRule(structure, globalObject, WTF::move(impl));
+        JSCSSPageRule* ptr = new (NotNull, JSC::allocateCell<JSCSSPageRule>(globalObject->vm().heap)) JSCSSPageRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSPageRule& impl() const
+    CSSPageRule& wrapped() const
     {
-        return static_cast<CSSPageRule&>(Base::impl());
+        return static_cast<CSSPageRule&>(Base::wrapped());
     }
 protected:
-    JSCSSPageRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSPageRule>&&);
+    JSCSSPageRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSPageRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

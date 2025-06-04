@@ -23,7 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "SVGPaint.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -69,41 +69,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPaintConstructor : public DOMConstructorObject {
-private:
-    JSSVGPaintConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPaintConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPaintConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPaintConstructor>(vm.heap)) JSSVGPaintConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGPaint> JSSVGPaintConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGPaintConstructorTableValues[] =
 {
-    { "SVG_PAINTTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(101), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(102), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(103), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(104), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(105), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(106), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(107), (intptr_t) (0) },
+    { "SVG_PAINTTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_PAINTTYPE_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_PAINTTYPE_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_PAINTTYPE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(101) } },
+    { "SVG_PAINTTYPE_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(102) } },
+    { "SVG_PAINTTYPE_URI_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(103) } },
+    { "SVG_PAINTTYPE_URI_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(104) } },
+    { "SVG_PAINTTYPE_URI_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(105) } },
+    { "SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(106) } },
+    { "SVG_PAINTTYPE_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(107) } },
 };
 
 
@@ -118,42 +99,35 @@ COMPILE_ASSERT(105 == SVGPaint::SVG_PAINTTYPE_URI_RGBCOLOR, SVGPaintEnumSVG_PAIN
 COMPILE_ASSERT(106 == SVGPaint::SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR, SVGPaintEnumSVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLORIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(107 == SVGPaint::SVG_PAINTTYPE_URI, SVGPaintEnumSVG_PAINTTYPE_URIIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSSVGPaintConstructor::s_info = { "SVGPaintConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPaintConstructor) };
-
-JSSVGPaintConstructor::JSSVGPaintConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPaintConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPaintConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPaint::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPaint::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPaint"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGPaintConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGPaintConstructor::s_info = { "SVGPaintConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPaintConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPaintPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "paintType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintPaintType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "uri", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintUri), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_PAINTTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(101), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(102), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(103), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(104), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(105), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(106), (intptr_t) (0) },
-    { "SVG_PAINTTYPE_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(107), (intptr_t) (0) },
-    { "setUri", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPaintPrototypeFunctionSetUri), (intptr_t) (1) },
-    { "setPaint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPaintPrototypeFunctionSetPaint), (intptr_t) (4) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "paintType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintPaintType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "uri", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPaintUri), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_PAINTTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_PAINTTYPE_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_PAINTTYPE_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_PAINTTYPE_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(101) } },
+    { "SVG_PAINTTYPE_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(102) } },
+    { "SVG_PAINTTYPE_URI_NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(103) } },
+    { "SVG_PAINTTYPE_URI_CURRENTCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(104) } },
+    { "SVG_PAINTTYPE_URI_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(105) } },
+    { "SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(106) } },
+    { "SVG_PAINTTYPE_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(107) } },
+    { "setUri", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPaintPrototypeFunctionSetUri), (intptr_t) (1) } },
+    { "setPaint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPaintPrototypeFunctionSetPaint), (intptr_t) (4) } },
 };
 
 const ClassInfo JSSVGPaintPrototype::s_info = { "SVGPaintPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPaintPrototype) };
@@ -166,7 +140,7 @@ void JSSVGPaintPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPaint::s_info = { "SVGPaint", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPaint) };
 
-JSSVGPaint::JSSVGPaint(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPaint>&& impl)
+JSSVGPaint::JSSVGPaint(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPaint>&& impl)
     : JSSVGColor(structure, globalObject, WTF::move(impl))
 {
 }
@@ -181,95 +155,95 @@ JSObject* JSSVGPaint::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGPaint>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPaintPaintType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPaintPaintType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPaint* castedThis = jsDynamicCast<JSSVGPaint*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPaintPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPaint", "paintType");
-        return throwGetterTypeError(*exec, "SVGPaint", "paintType");
+            return reportDeprecatedGetterError(*state, "SVGPaint", "paintType");
+        return throwGetterTypeError(*state, "SVGPaint", "paintType");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.paintType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPaintUri(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPaintUri(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPaint* castedThis = jsDynamicCast<JSSVGPaint*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPaintPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPaint", "uri");
-        return throwGetterTypeError(*exec, "SVGPaint", "uri");
+            return reportDeprecatedGetterError(*state, "SVGPaint", "uri");
+        return throwGetterTypeError(*state, "SVGPaint", "uri");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.uri());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.uri());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPaintConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPaintConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPaintPrototype* domObject = jsDynamicCast<JSSVGPaintPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPaint::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPaint::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGPaint::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPaintConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPaintConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPaintPrototypeFunctionSetUri(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGPaintPrototypeFunctionSetUri(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGPaint* castedThis = jsDynamicCast<JSSVGPaint*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPaint", "setUri");
+        return throwThisTypeError(*state, "SVGPaint", "setUri");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPaint::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String uri = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String uri = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUri(uri);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPaintPrototypeFunctionSetPaint(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGPaintPrototypeFunctionSetPaint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGPaint* castedThis = jsDynamicCast<JSSVGPaint*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPaint", "setPaint");
+        return throwThisTypeError(*state, "SVGPaint", "setPaint");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPaint::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    uint16_t paintType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t paintType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String uri = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String uri = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String rgbColor = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String rgbColor = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String iccColor = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String iccColor = state->argument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPaint(paintType, uri, rgbColor, iccColor, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 

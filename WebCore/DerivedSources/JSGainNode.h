@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSGainNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<GainNode>&& impl)
     {
-        JSGainNode* ptr = new (NotNull, JSC::allocateCell<JSGainNode>(globalObject->vm().heap)) JSGainNode(structure, globalObject, WTF::move(impl));
+        JSGainNode* ptr = new (NotNull, JSC::allocateCell<JSGainNode>(globalObject->vm().heap)) JSGainNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    GainNode& impl() const
+    GainNode& wrapped() const
     {
-        return static_cast<GainNode&>(Base::impl());
+        return static_cast<GainNode&>(Base::wrapped());
     }
 protected:
-    JSGainNode(JSC::Structure*, JSDOMGlobalObject*, Ref<GainNode>&&);
+    JSGainNode(JSC::Structure*, JSDOMGlobalObject&, Ref<GainNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, GainNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, GainNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, GainNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, GainNode*);
 
 
 } // namespace WebCore

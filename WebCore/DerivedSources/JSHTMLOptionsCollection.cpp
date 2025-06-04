@@ -23,12 +23,13 @@
 
 #include "Element.h"
 #include "ExceptionCode.h"
-#include "HTMLOptionsCollection.h"
+#include "HTMLOptionElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLElement.h"
-#include "JSNode.h"
+#include "JSHTMLOptionElement.h"
 #include "JSNodeCustom.h"
-#include "Node.h"
+#include "wtf/text/AtomicString.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -75,66 +76,47 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLOptionsCollectionConstructor : public DOMConstructorObject {
-private:
-    JSHTMLOptionsCollectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLOptionsCollectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLOptionsCollectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionsCollectionConstructor>(vm.heap)) JSHTMLOptionsCollectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLOptionsCollection> JSHTMLOptionsCollectionConstructor;
 
 /* Hash table */
 
-static const struct CompactHashIndex JSHTMLOptionsCollectionTableIndex[2] = {
+static const struct CompactHashIndex JSHTMLOptionsCollectionTableIndex[9] = {
     { -1, -1 },
-    { 0, -1 },
+    { 0, 8 },
+    { -1, -1 },
+    { 1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 2, -1 },
 };
 
 
 static const HashTableValue JSHTMLOptionsCollectionTableValues[] =
 {
-    { "length", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptionsCollectionLength) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectedIndex", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionSelectedIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptionsCollectionSelectedIndex) } },
+    { "length", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptionsCollectionLength) } },
 };
 
-static const HashTable JSHTMLOptionsCollectionTable = { 1, 1, true, JSHTMLOptionsCollectionTableValues, 0, JSHTMLOptionsCollectionTableIndex };
-const ClassInfo JSHTMLOptionsCollectionConstructor::s_info = { "HTMLOptionsCollectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptionsCollectionConstructor) };
-
-JSHTMLOptionsCollectionConstructor::JSHTMLOptionsCollectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHTMLOptionsCollectionTable = { 3, 7, true, JSHTMLOptionsCollectionTableValues, JSHTMLOptionsCollectionTableIndex };
+template<> void JSHTMLOptionsCollectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLOptionsCollectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLOptionsCollection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLOptionsCollection::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLOptionsCollection"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLOptionsCollectionConstructor::s_info = { "HTMLOptionsCollectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptionsCollectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLOptionsCollectionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectedIndex", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLOptionsCollectionSelectedIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLOptionsCollectionSelectedIndex) },
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionNamedItem), (intptr_t) (0) },
-    { "add", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionAdd), (intptr_t) (1) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionRemove), (intptr_t) (0) },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionNamedItem), (intptr_t) (0) } },
+    { "add", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionAdd), (intptr_t) (1) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLOptionsCollectionPrototypeFunctionRemove), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLOptionsCollectionPrototype::s_info = { "HTMLOptionsCollectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLOptionsCollectionPrototype) };
@@ -147,7 +129,7 @@ void JSHTMLOptionsCollectionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLOptionsCollection::s_info = { "HTMLOptionsCollection", &Base::s_info, &JSHTMLOptionsCollectionTable, CREATE_METHOD_TABLE(JSHTMLOptionsCollection) };
 
-JSHTMLOptionsCollection::JSHTMLOptionsCollection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptionsCollection>&& impl)
+JSHTMLOptionsCollection::JSHTMLOptionsCollection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLOptionsCollection>&& impl)
     : JSHTMLCollection(structure, globalObject, WTF::move(impl))
 {
 }
@@ -162,200 +144,226 @@ JSObject* JSHTMLOptionsCollection::getPrototype(VM& vm, JSGlobalObject* globalOb
     return getDOMPrototype<JSHTMLOptionsCollection>(vm, globalObject);
 }
 
-bool JSHTMLOptionsCollection::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLOptionsCollection::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLOptionsCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    if (getStaticValueSlot<JSHTMLOptionsCollection, Base>(state, JSHTMLOptionsCollectionTable, thisObject, propertyName, slot))
+        return true;
     JSValue proto = thisObject->prototype();
-    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(exec, propertyName))
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
         return false;
 
-    return getStaticValueSlot<JSHTMLOptionsCollection, Base>(exec, JSHTMLOptionsCollectionTable, thisObject, propertyName, slot);
+    if (thisObject->classInfo() == info()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly | DontDelete | DontEnum, value);
+            return true;
+        }
+    }
+    return false;
 }
 
-EncodedJSValue jsHTMLOptionsCollectionSelectedIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+bool JSHTMLOptionsCollection::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
-    UNUSED_PARAM(exec);
+    auto* thisObject = jsCast<JSHTMLOptionsCollection*>(object);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->classInfo() == info()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly | DontDelete | DontEnum, value);
+            return true;
+        }
+    }
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
+}
+
+EncodedJSValue jsHTMLOptionsCollectionSelectedIndex(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptionsCollectionPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLOptionsCollection", "selectedIndex");
-        return throwGetterTypeError(*exec, "HTMLOptionsCollection", "selectedIndex");
-    }
-    auto& impl = castedThis->impl();
+    auto* castedThis = jsCast<JSHTMLOptionsCollection*>(slotBase);
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.selectedIndex());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLOptionsCollectionLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLOptionsCollectionLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHTMLOptionsCollection*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLOptionsCollectionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLOptionsCollectionConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
-    JSHTMLOptionsCollectionPrototype* domObject = jsDynamicCast<JSHTMLOptionsCollectionPrototype*>(baseValue);
+    JSHTMLOptionsCollection* domObject = jsDynamicCast<JSHTMLOptionsCollection*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLOptionsCollection::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLOptionsCollection::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHTMLOptionsCollection::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSHTMLOptionsCollection::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLOptionsCollection*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     if (Optional<uint32_t> index = parseIndex(propertyName)) {
-        thisObject->indexSetter(exec, index.value(), value);
+        thisObject->indexSetter(state, index.value(), value);
         return;
     }
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSHTMLOptionsCollection::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSHTMLOptionsCollection::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSHTMLOptionsCollection*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     if (index <= MAX_ARRAY_INDEX) {
-        thisObject->indexSetter(exec, index, value);
+        thisObject->indexSetter(state, index, value);
         return;
     }
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSHTMLOptionsCollectionSelectedIndex(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSHTMLOptionsCollectionPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLOptionsCollection", "selectedIndex");
-        else
-            throwSetterTypeError(*exec, "HTMLOptionsCollection", "selectedIndex");
-        return;
-    }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return;
-    impl.setSelectedIndex(nativeValue);
-}
-
-
-void setJSHTMLOptionsCollectionLength(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLOptionsCollectionSelectedIndex(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHTMLOptionsCollection*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setLength(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setSelectedIndex(nativeValue);
 }
 
+
+void setJSHTMLOptionsCollectionLength(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = jsCast<JSHTMLOptionsCollection*>(baseObject);
+    UNUSED_PARAM(thisValue);
+    UNUSED_PARAM(state);
+    castedThis->setLength(*state, value);
+}
+
+
+void JSHTMLOptionsCollection::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
+{
+    auto* thisObject = jsCast<JSHTMLOptionsCollection*>(object);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
+}
 
 JSValue JSHTMLOptionsCollection::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLOptionsCollectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLOptionsCollectionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionNamedItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionNamedItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOptionsCollection", "namedItem");
+        return throwThisTypeError(*state, "HTMLOptionsCollection", "namedItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOptionsCollection::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String name = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOptionsCollection", "add");
+        return throwThisTypeError(*state, "HTMLOptionsCollection", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOptionsCollection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLElement* element = JSHTMLElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* element = JSHTMLElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    HTMLElement* before = JSHTMLElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* before = JSHTMLElement::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(element, before, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOptionsCollection", "add");
+        return throwThisTypeError(*state, "HTMLOptionsCollection", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOptionsCollection::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLElement* element = JSHTMLElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* element = JSHTMLElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int index = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int index = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(element, index, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionAdd(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    JSValue arg1(exec->argument(1));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
+    JSValue arg1(state->argument(1));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info()))) && (arg1.isUndefined() || arg1.isNull() || (arg1.isObject() && asObject(arg1)->inherits(JSHTMLElement::info())))))
-        return jsHTMLOptionsCollectionPrototypeFunctionAdd1(exec);
+        return jsHTMLOptionsCollectionPrototypeFunctionAdd1(state);
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))))
-        return jsHTMLOptionsCollectionPrototypeFunctionAdd2(exec);
+        return jsHTMLOptionsCollectionPrototypeFunctionAdd2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionRemove(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLOptionsCollectionPrototypeFunctionRemove(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLOptionsCollection* castedThis = jsDynamicCast<JSHTMLOptionsCollection*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLOptionsCollection", "remove");
+        return throwThisTypeError(*state, "HTMLOptionsCollection", "remove");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLOptionsCollection::info());
-    return JSValue::encode(castedThis->remove(exec));
+    return JSValue::encode(castedThis->remove(*state));
 }
 
 bool JSHTMLOptionsCollectionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsHTMLOptionsCollection = jsCast<JSHTMLOptionsCollection*>(handle.slot()->asCell());
-    void* root = WebCore::root(jsHTMLOptionsCollection->impl().ownerNode());
+    void* root = WebCore::root(jsHTMLOptionsCollection->wrapped().ownerNode());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -363,13 +371,13 @@ void JSHTMLOptionsCollectionOwner::finalize(JSC::Handle<JSC::Unknown> handle, vo
 {
     auto* jsHTMLOptionsCollection = jsCast<JSHTMLOptionsCollection*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsHTMLOptionsCollection->impl(), jsHTMLOptionsCollection);
+    uncacheWrapper(world, &jsHTMLOptionsCollection->wrapped(), jsHTMLOptionsCollection);
 }
 
 HTMLOptionsCollection* JSHTMLOptionsCollection::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSHTMLOptionsCollection*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

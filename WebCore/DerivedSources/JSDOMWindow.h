@@ -70,30 +70,30 @@ public:
 
 
     // Custom attributes
-    void setLocation(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue event(JSC::ExecState*) const;
-    JSC::JSValue image(JSC::ExecState*) const;
+    void setLocation(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue event(JSC::ExecState&) const;
+    JSC::JSValue image(JSC::ExecState&) const;
 #if ENABLE(IOS_TOUCH_EVENTS)
-    JSC::JSValue touch(JSC::ExecState*) const;
+    JSC::JSValue touch(JSC::ExecState&) const;
 #endif
 #if ENABLE(IOS_TOUCH_EVENTS)
-    JSC::JSValue touchList(JSC::ExecState*) const;
+    JSC::JSValue touchList(JSC::ExecState&) const;
 #endif
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue showModalDialog(JSC::ExecState*);
-    JSC::JSValue postMessage(JSC::ExecState*);
-    JSC::JSValue addEventListener(JSC::ExecState*);
-    JSC::JSValue removeEventListener(JSC::ExecState*);
-    JSC::JSValue setTimeout(JSC::ExecState*);
-    JSC::JSValue setInterval(JSC::ExecState*);
-    DOMWindow& impl() const
+    JSC::JSValue open(JSC::ExecState&);
+    JSC::JSValue showModalDialog(JSC::ExecState&);
+    JSC::JSValue postMessage(JSC::ExecState&);
+    JSC::JSValue addEventListener(JSC::ExecState&);
+    JSC::JSValue removeEventListener(JSC::ExecState&);
+    JSC::JSValue setTimeout(JSC::ExecState&);
+    JSC::JSValue setInterval(JSC::ExecState&);
+    DOMWindow& wrapped() const
     {
-        return static_cast<DOMWindow&>(Base::impl());
+        return static_cast<DOMWindow&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::ImplementsHasInstance | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::ImplementsHasInstance | JSC::ImplementsDefaultHasInstance | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
     JSDOMWindow(JSC::VM&, JSC::Structure*, Ref<DOMWindow>&&, JSDOMWindowShell*);
 };

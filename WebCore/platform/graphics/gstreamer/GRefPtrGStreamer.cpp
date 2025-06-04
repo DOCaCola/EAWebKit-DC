@@ -183,6 +183,25 @@ template<> void derefGPtr<GstBuffer>(GstBuffer* ptr)
         gst_buffer_unref(ptr);
 }
 
+template<> GRefPtr<GstBufferList> adoptGRef(GstBufferList* ptr)
+{
+    return GRefPtr<GstBufferList>(ptr, GRefPtrAdopt);
+}
+
+template<> GstBufferList* refGPtr<GstBufferList>(GstBufferList* ptr)
+{
+    if (ptr)
+        gst_buffer_list_ref(ptr);
+
+    return ptr;
+}
+
+template<> void derefGPtr<GstBufferList>(GstBufferList* ptr)
+{
+    if (ptr)
+        gst_buffer_list_unref(ptr);
+}
+
 template<> GRefPtr<GstSample> adoptGRef(GstSample* ptr)
 {
     return GRefPtr<GstSample>(ptr, GRefPtrAdopt);
@@ -258,5 +277,66 @@ template<> void derefGPtr<GstToc>(GstToc* ptr)
     if (ptr)
         gst_toc_unref(ptr);
 }
+
+template<> GRefPtr<GstMessage> adoptGRef(GstMessage* ptr)
+{
+    return GRefPtr<GstMessage>(ptr, GRefPtrAdopt);
 }
+
+template<> GstMessage* refGPtr<GstMessage>(GstMessage* ptr)
+{
+    if (ptr)
+        return gst_message_ref(ptr);
+
+    return ptr;
+}
+
+template<> void derefGPtr<GstMessage>(GstMessage* ptr)
+{
+    if (ptr)
+        gst_message_unref(ptr);
+}
+
+template <> GRefPtr<WebKitVideoSink> adoptGRef(WebKitVideoSink* ptr)
+{
+    ASSERT(!ptr || !g_object_is_floating(G_OBJECT(ptr)));
+    return GRefPtr<WebKitVideoSink>(ptr, GRefPtrAdopt);
+}
+
+template <> WebKitVideoSink* refGPtr<WebKitVideoSink>(WebKitVideoSink* ptr)
+{
+    if (ptr)
+        gst_object_ref_sink(GST_OBJECT(ptr));
+
+    return ptr;
+}
+
+template <> void derefGPtr<WebKitVideoSink>(WebKitVideoSink* ptr)
+{
+    if (ptr)
+        gst_object_unref(GST_OBJECT(ptr));
+}
+
+template <> GRefPtr<WebKitWebSrc> adoptGRef(WebKitWebSrc* ptr)
+{
+    ASSERT(!ptr || !g_object_is_floating(G_OBJECT(ptr)));
+    return GRefPtr<WebKitWebSrc>(ptr, GRefPtrAdopt);
+}
+
+template <> WebKitWebSrc* refGPtr<WebKitWebSrc>(WebKitWebSrc* ptr)
+{
+    if (ptr)
+        gst_object_ref_sink(GST_OBJECT(ptr));
+
+    return ptr;
+}
+
+template <> void derefGPtr<WebKitWebSrc>(WebKitWebSrc* ptr)
+{
+    if (ptr)
+        gst_object_unref(GST_OBJECT(ptr));
+}
+
+} // namespace WTF
+
 #endif // USE(GSTREAMER)

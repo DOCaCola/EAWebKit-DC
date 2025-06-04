@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEFloodElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEFloodElement>&& impl)
     {
-        JSSVGFEFloodElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFloodElement>(globalObject->vm().heap)) JSSVGFEFloodElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEFloodElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFloodElement>(globalObject->vm().heap)) JSSVGFEFloodElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEFloodElement& impl() const
+    SVGFEFloodElement& wrapped() const
     {
-        return static_cast<SVGFEFloodElement&>(Base::impl());
+        return static_cast<SVGFEFloodElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEFloodElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEFloodElement>&&);
+    JSSVGFEFloodElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEFloodElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

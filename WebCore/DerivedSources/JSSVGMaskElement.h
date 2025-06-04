@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGMaskElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMaskElement>&& impl)
     {
-        JSSVGMaskElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMaskElement>(globalObject->vm().heap)) JSSVGMaskElement(structure, globalObject, WTF::move(impl));
+        JSSVGMaskElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMaskElement>(globalObject->vm().heap)) JSSVGMaskElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMaskElement& impl() const
+    SVGMaskElement& wrapped() const
     {
-        return static_cast<SVGMaskElement&>(Base::impl());
+        return static_cast<SVGMaskElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMaskElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMaskElement>&&);
+    JSSVGMaskElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMaskElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGTransformList : public JSDOMWrapper {
+class JSSVGTransformList : public JSDOMWrapper<SVGTransformListPropertyTearOff> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGTransformListPropertyTearOff> Base;
     static JSSVGTransformList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTransformListPropertyTearOff>&& impl)
     {
-        JSSVGTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGTransformList>(globalObject->vm().heap)) JSSVGTransformList(structure, globalObject, WTF::move(impl));
+        JSSVGTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGTransformList>(globalObject->vm().heap)) JSSVGTransformList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static SVGTransformListPropertyTearOff* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGTransformList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTransformListPropertyTearOff& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGTransformListPropertyTearOff* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSVGTransformList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTransformListPropertyTearOff>&&);
+    JSSVGTransformList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTransformListPropertyTearOff>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGTransformListProp
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGTransformListPropertyTearOff*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGTransformListPropertyTearOff& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGTransformListPropertyTearOff& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGTransformListPropertyTearOff*);
 
 
 } // namespace WebCore

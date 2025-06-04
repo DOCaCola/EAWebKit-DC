@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSIDBObjectStore : public JSDOMWrapper {
+class JSIDBObjectStore : public JSDOMWrapper<IDBObjectStore> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<IDBObjectStore> Base;
     static JSIDBObjectStore* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBObjectStore>&& impl)
     {
-        JSIDBObjectStore* ptr = new (NotNull, JSC::allocateCell<JSIDBObjectStore>(globalObject->vm().heap)) JSIDBObjectStore(structure, globalObject, WTF::move(impl));
+        JSIDBObjectStore* ptr = new (NotNull, JSC::allocateCell<JSIDBObjectStore>(globalObject->vm().heap)) JSIDBObjectStore(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBObjectStore* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBObjectStore();
 
     DECLARE_INFO;
 
@@ -55,14 +54,11 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue createIndex(JSC::ExecState*);
-    IDBObjectStore& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBObjectStore* m_impl;
+    JSC::JSValue putFunction(JSC::ExecState&);
+    JSC::JSValue add(JSC::ExecState&);
+    JSC::JSValue createIndex(JSC::ExecState&);
 protected:
-    JSIDBObjectStore(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBObjectStore>&&);
+    JSIDBObjectStore(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBObjectStore>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBObjectStore*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBObjectStore*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBObjectStore& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBObjectStore& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBObjectStore*);
 
 
 } // namespace WebCore

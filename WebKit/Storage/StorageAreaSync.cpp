@@ -176,7 +176,7 @@ void StorageAreaSync::syncTimerFired()
 
     bool partialSync = false;
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
 
         // Do not schedule another sync if we're still trying to complete the
         // previous one. But, if we're shutting down, schedule it anyway.
@@ -364,9 +364,9 @@ void StorageAreaSync::performImport()
 
 void StorageAreaSync::markImported()
 {
-    MutexLocker locker(m_importLock);
+    LockHolder locker(m_importLock);
     m_importComplete = true;
-    m_importCondition.signal();
+    m_importCondition.notifyOne();
 }
 
 // FIXME: In the future, we should allow use of StorageAreas while it's importing (when safe to do so).
@@ -390,7 +390,7 @@ void StorageAreaSync::blockUntilImportComplete()
 		return;
 	//-EAWebKitChange
 
-    MutexLocker locker(m_importLock);
+    LockHolder locker(m_importLock);
     while (!m_importComplete)
         m_importCondition.wait(m_importLock);
     m_storageArea = nullptr;
@@ -485,7 +485,7 @@ void StorageAreaSync::performSync()
     bool clearItems;
     HashMap<String, String> items;
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
 
         ASSERT(m_syncScheduled);
 
@@ -500,7 +500,7 @@ void StorageAreaSync::performSync()
     sync(clearItems, items);
 
     {
-        MutexLocker locker(m_syncLock);
+        LockHolder locker(m_syncLock);
         m_syncInProgress = false;
     }
 

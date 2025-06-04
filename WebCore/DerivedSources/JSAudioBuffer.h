@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSAudioBuffer : public JSDOMWrapper {
+class JSAudioBuffer : public JSDOMWrapper<AudioBuffer> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<AudioBuffer> Base;
     static JSAudioBuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioBuffer>&& impl)
     {
-        JSAudioBuffer* ptr = new (NotNull, JSC::allocateCell<JSAudioBuffer>(globalObject->vm().heap)) JSAudioBuffer(structure, globalObject, WTF::move(impl));
+        JSAudioBuffer* ptr = new (NotNull, JSC::allocateCell<JSAudioBuffer>(globalObject->vm().heap)) JSAudioBuffer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static AudioBuffer* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSAudioBuffer();
 
     DECLARE_INFO;
 
@@ -56,15 +55,10 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    AudioBuffer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioBuffer* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSAudioBuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioBuffer>&&);
+    JSAudioBuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioBuffer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -87,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioBuffer*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioBuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioBuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioBuffer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioBuffer*);
 
 
 } // namespace WebCore

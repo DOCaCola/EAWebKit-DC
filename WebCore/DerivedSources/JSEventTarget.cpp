@@ -22,9 +22,9 @@
 #include "JSEventTarget.h"
 
 #include "Event.h"
-#include "EventTarget.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include <runtime/Error.h>
@@ -39,6 +39,10 @@ namespace WebCore {
 JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(JSC::ExecState*);
+
+// Attributes
+
+JSC::EncodedJSValue jsEventTargetConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSEventTargetPrototype : public JSC::JSNonFinalObject {
 public:
@@ -65,13 +69,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
+typedef JSDOMConstructorNotConstructable<JSEventTarget> JSEventTargetConstructor;
+
+template<> void JSEventTargetConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
+{
+    putDirect(vm, vm.propertyNames->prototype, JSEventTarget::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("EventTarget"))), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
+}
+
+template<> const ClassInfo JSEventTargetConstructor::s_info = { "EventTargetConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTargetConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSEventTargetPrototypeTableValues[] =
 {
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsEventTargetConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsEventTargetPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSEventTargetPrototype::s_info = { "EventTargetPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTargetPrototype) };
@@ -84,9 +100,8 @@ void JSEventTargetPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEventTarget::s_info = { "EventTarget", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEventTarget) };
 
-JSEventTarget::JSEventTarget(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EventTarget>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEventTarget::JSEventTarget(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EventTarget>&& impl)
+    : JSDOMWrapper<EventTarget>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -106,58 +121,66 @@ void JSEventTarget::destroy(JSC::JSCell* cell)
     thisObject->JSEventTarget::~JSEventTarget();
 }
 
-JSEventTarget::~JSEventTarget()
+EncodedJSValue jsEventTargetConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
-    releaseImpl();
+    JSEventTargetPrototype* domObject = jsDynamicCast<JSEventTargetPrototype*>(baseValue);
+    if (!domObject)
+        return throwVMTypeError(state);
+    return JSValue::encode(JSEventTarget::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener(ExecState* exec)
+JSValue JSEventTarget::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
+    return getDOMConstructor<JSEventTargetConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
+}
+
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionAddEventListener(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
     JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "addEventListener");
+        return throwThisTypeError(*state, "EventTarget", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "removeEventListener");
+        return throwThisTypeError(*state, "EventTarget", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsEventTargetPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSEventTarget* castedThis = jsDynamicCast<JSEventTarget*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "EventTarget", "dispatchEvent");
+        return throwThisTypeError(*state, "EventTarget", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSEventTarget::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -166,13 +189,13 @@ void JSEventTarget::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSEventTarget*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSEventTargetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEventTarget = jsCast<JSEventTarget*>(handle.slot()->asCell());
-    if (jsEventTarget->impl().isFiringEventListeners())
+    if (jsEventTarget->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -182,7 +205,7 @@ void JSEventTargetOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsEventTarget = jsCast<JSEventTarget*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEventTarget->impl(), jsEventTarget);
+    uncacheWrapper(world, &jsEventTarget->wrapped(), jsEventTarget);
 }
 
 

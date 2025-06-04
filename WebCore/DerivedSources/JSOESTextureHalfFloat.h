@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSOESTextureHalfFloat : public JSDOMWrapper {
+class JSOESTextureHalfFloat : public JSDOMWrapper<OESTextureHalfFloat> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<OESTextureHalfFloat> Base;
     static JSOESTextureHalfFloat* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureHalfFloat>&& impl)
     {
-        JSOESTextureHalfFloat* ptr = new (NotNull, JSC::allocateCell<JSOESTextureHalfFloat>(globalObject->vm().heap)) JSOESTextureHalfFloat(structure, globalObject, WTF::move(impl));
+        JSOESTextureHalfFloat* ptr = new (NotNull, JSC::allocateCell<JSOESTextureHalfFloat>(globalObject->vm().heap)) JSOESTextureHalfFloat(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESTextureHalfFloat* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESTextureHalfFloat();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESTextureHalfFloat& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESTextureHalfFloat* m_impl;
 protected:
-    JSOESTextureHalfFloat(JSC::Structure*, JSDOMGlobalObject*, Ref<OESTextureHalfFloat>&&);
+    JSOESTextureHalfFloat(JSC::Structure*, JSDOMGlobalObject&, Ref<OESTextureHalfFloat>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESTextureHalfFloat*
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESTextureHalfFloat*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESTextureHalfFloat& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESTextureHalfFloat& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OESTextureHalfFloat*);
 
 
 } // namespace WebCore

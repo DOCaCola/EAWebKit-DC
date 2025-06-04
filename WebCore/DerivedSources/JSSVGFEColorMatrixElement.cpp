@@ -22,11 +22,11 @@
 #include "JSSVGFEColorMatrixElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumberList.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEColorMatrixElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -70,73 +70,47 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEColorMatrixElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEColorMatrixElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEColorMatrixElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEColorMatrixElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEColorMatrixElementConstructor>(vm.heap)) JSSVGFEColorMatrixElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGFEColorMatrixElement> JSSVGFEColorMatrixElementConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGFEColorMatrixElementConstructorTableValues[] =
 {
-    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
-const ClassInfo JSSVGFEColorMatrixElementConstructor::s_info = { "SVGFEColorMatrixElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEColorMatrixElementConstructor) };
-
-JSSVGFEColorMatrixElementConstructor::JSSVGFEColorMatrixElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEColorMatrixElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEColorMatrixElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEColorMatrixElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEColorMatrixElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEColorMatrixElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGFEColorMatrixElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGFEColorMatrixElementConstructor::s_info = { "SVGFEColorMatrixElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEColorMatrixElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEColorMatrixElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "values", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementValues), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "values", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementValues), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEColorMatrixElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
 const ClassInfo JSSVGFEColorMatrixElementPrototype::s_info = { "SVGFEColorMatrixElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEColorMatrixElementPrototype) };
@@ -149,7 +123,7 @@ void JSSVGFEColorMatrixElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEColorMatrixElement::s_info = { "SVGFEColorMatrixElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEColorMatrixElement) };
 
-JSSVGFEColorMatrixElement::JSSVGFEColorMatrixElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEColorMatrixElement>&& impl)
+JSSVGFEColorMatrixElement::JSSVGFEColorMatrixElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEColorMatrixElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -164,161 +138,161 @@ JSObject* JSSVGFEColorMatrixElement::getPrototype(VM& vm, JSGlobalObject* global
     return getDOMPrototype<JSSVGFEColorMatrixElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEColorMatrixElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementIn1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "in1");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "in1");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "in1");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "type");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "type");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "type");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "type");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.typeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementValues(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementValues(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "values");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "values");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "values");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "values");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumberList> obj = impl.valuesAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "x");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "y");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "width");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "height");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementResult(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEColorMatrixElement* castedThis = jsDynamicCast<JSSVGFEColorMatrixElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEColorMatrixElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEColorMatrixElement", "result");
+            return reportDeprecatedGetterError(*state, "SVGFEColorMatrixElement", "result");
+        return throwGetterTypeError(*state, "SVGFEColorMatrixElement", "result");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEColorMatrixElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEColorMatrixElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEColorMatrixElementPrototype* domObject = jsDynamicCast<JSSVGFEColorMatrixElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEColorMatrixElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEColorMatrixElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEColorMatrixElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEColorMatrixElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEColorMatrixElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

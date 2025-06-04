@@ -25,7 +25,7 @@
 #include "JSWebGLQuery.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLQuery.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLQueryConstructor : public DOMConstructorObject {
-private:
-    JSWebGLQueryConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLQuery> JSWebGLQueryConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLQueryConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLQueryConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLQueryConstructor>(vm.heap)) JSWebGLQueryConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLQueryConstructor::s_info = { "WebGLQueryConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLQueryConstructor) };
-
-JSWebGLQueryConstructor::JSWebGLQueryConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLQueryConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLQueryConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLQuery::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLQuery::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLQuery"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLQueryConstructor::s_info = { "WebGLQueryConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLQueryConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLQueryPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLQueryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLQueryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLQueryPrototype::s_info = { "WebGLQueryPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLQueryPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLQueryPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLQuery::s_info = { "WebGLQuery", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLQuery) };
 
-JSWebGLQuery::JSWebGLQuery(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLQuery>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLQuery::JSWebGLQuery(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLQuery>&& impl)
+    : JSDOMWrapper<WebGLQuery>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLQuery::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLQuery::~JSWebGLQuery();
 }
 
-JSWebGLQuery::~JSWebGLQuery()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLQueryConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLQueryConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLQueryPrototype* domObject = jsDynamicCast<JSWebGLQueryPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLQuery::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLQuery::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLQuery::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLQueryConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLQueryConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLQueryOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLQueryOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context
 {
     auto* jsWebGLQuery = jsCast<JSWebGLQuery*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLQuery->impl(), jsWebGLQuery);
+    uncacheWrapper(world, &jsWebGLQuery->wrapped(), jsWebGLQuery);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLQuery@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10WebGLQueryE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLQuery* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLQuery>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLQuery* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLQuery* 
 WebGLQuery* JSWebGLQuery::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLQuery*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

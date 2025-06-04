@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLLIElement.h"
 
-#include "HTMLLIElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -65,50 +65,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLLIElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLLIElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLLIElement> JSHTMLLIElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLLIElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLLIElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLLIElementConstructor>(vm.heap)) JSHTMLLIElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLLIElementConstructor::s_info = { "HTMLLIElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLIElementConstructor) };
-
-JSHTMLLIElementConstructor::JSHTMLLIElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLLIElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLLIElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLLIElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLLIElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLLIElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLLIElementConstructor::s_info = { "HTMLLIElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLIElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLLIElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLIElementType) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLIElementValue) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLIElementType) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLIElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLIElementValue) } },
 };
 
 const ClassInfo JSHTMLLIElementPrototype::s_info = { "HTMLLIElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLIElementPrototype) };
@@ -121,7 +95,7 @@ void JSHTMLLIElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLLIElement::s_info = { "HTMLLIElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLIElement) };
 
-JSHTMLLIElement::JSHTMLLIElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLIElement>&& impl)
+JSHTMLLIElement::JSHTMLLIElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLLIElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,83 +110,83 @@ JSObject* JSHTMLLIElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLLIElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLLIElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLIElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLIElement* castedThis = jsDynamicCast<JSHTMLLIElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLIElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLIElement", "type");
-        return throwGetterTypeError(*exec, "HTMLLIElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLLIElement", "type");
+        return throwGetterTypeError(*state, "HTMLLIElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLIElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLIElementValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLIElement* castedThis = jsDynamicCast<JSHTMLLIElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLIElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLIElement", "value");
-        return throwGetterTypeError(*exec, "HTMLLIElement", "value");
+            return reportDeprecatedGetterError(*state, "HTMLLIElement", "value");
+        return throwGetterTypeError(*state, "HTMLLIElement", "value");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.getIntegralAttribute(WebCore::HTMLNames::valueAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLIElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLLIElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLLIElementPrototype* domObject = jsDynamicCast<JSHTMLLIElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLLIElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLLIElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLLIElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLLIElementType(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLLIElement* castedThis = jsDynamicCast<JSHTMLLIElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLIElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLIElement", "type");
+            reportDeprecatedSetterError(*state, "HTMLLIElement", "type");
         else
-            throwSetterTypeError(*exec, "HTMLLIElement", "type");
+            throwSetterTypeError(*state, "HTMLLIElement", "type");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, nativeValue);
 }
 
 
-void setJSHTMLLIElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLLIElementValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLLIElement* castedThis = jsDynamicCast<JSHTMLLIElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLIElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLIElement", "value");
+            reportDeprecatedSetterError(*state, "HTMLLIElement", "value");
         else
-            throwSetterTypeError(*exec, "HTMLLIElement", "value");
+            throwSetterTypeError(*state, "HTMLLIElement", "value");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setIntegralAttribute(WebCore::HTMLNames::valueAttr, nativeValue);
 }
@@ -220,7 +194,7 @@ void setJSHTMLLIElementValue(ExecState* exec, JSObject* baseObject, EncodedJSVal
 
 JSValue JSHTMLLIElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLLIElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLLIElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

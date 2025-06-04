@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSPannerNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PannerNode>&& impl)
     {
-        JSPannerNode* ptr = new (NotNull, JSC::allocateCell<JSPannerNode>(globalObject->vm().heap)) JSPannerNode(structure, globalObject, WTF::move(impl));
+        JSPannerNode* ptr = new (NotNull, JSC::allocateCell<JSPannerNode>(globalObject->vm().heap)) JSPannerNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,16 +52,16 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setPanningModel(JSC::ExecState*, JSC::JSValue);
-    void setDistanceModel(JSC::ExecState*, JSC::JSValue);
-    PannerNode& impl() const
+    void setPanningModel(JSC::ExecState&, JSC::JSValue);
+    void setDistanceModel(JSC::ExecState&, JSC::JSValue);
+    PannerNode& wrapped() const
     {
-        return static_cast<PannerNode&>(Base::impl());
+        return static_cast<PannerNode&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPannerNode(JSC::Structure*, JSDOMGlobalObject*, Ref<PannerNode>&&);
+    JSPannerNode(JSC::Structure*, JSDOMGlobalObject&, Ref<PannerNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -72,7 +72,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PannerNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PannerNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PannerNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, PannerNode*);
 
 
 } // namespace WebCore

@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSCharsetRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSCharsetRule>&& impl)
     {
-        JSCSSCharsetRule* ptr = new (NotNull, JSC::allocateCell<JSCSSCharsetRule>(globalObject->vm().heap)) JSCSSCharsetRule(structure, globalObject, WTF::move(impl));
+        JSCSSCharsetRule* ptr = new (NotNull, JSC::allocateCell<JSCSSCharsetRule>(globalObject->vm().heap)) JSCSSCharsetRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSCharsetRule& impl() const
+    CSSCharsetRule& wrapped() const
     {
-        return static_cast<CSSCharsetRule&>(Base::impl());
+        return static_cast<CSSCharsetRule&>(Base::wrapped());
     }
 protected:
-    JSCSSCharsetRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSCharsetRule>&&);
+    JSCSSCharsetRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSCharsetRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

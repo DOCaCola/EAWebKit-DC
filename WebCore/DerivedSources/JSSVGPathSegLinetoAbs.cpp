@@ -22,7 +22,7 @@
 #include "JSSVGPathSegLinetoAbs.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSegLinetoAbs.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -63,50 +63,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegLinetoAbsConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegLinetoAbsConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPathSegLinetoAbs> JSSVGPathSegLinetoAbsConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegLinetoAbsConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegLinetoAbsConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoAbsConstructor>(vm.heap)) JSSVGPathSegLinetoAbsConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathSegLinetoAbsConstructor::s_info = { "SVGPathSegLinetoAbsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoAbsConstructor) };
-
-JSSVGPathSegLinetoAbsConstructor::JSSVGPathSegLinetoAbsConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPathSegLinetoAbsConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPathSegLinetoAbsConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegLinetoAbs::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegLinetoAbs::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegLinetoAbs"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegLinetoAbsConstructor::s_info = { "SVGPathSegLinetoAbsConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoAbsConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegLinetoAbsPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoAbsX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoAbsY) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoAbsX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoAbsY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoAbsY) } },
 };
 
 const ClassInfo JSSVGPathSegLinetoAbsPrototype::s_info = { "SVGPathSegLinetoAbsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoAbsPrototype) };
@@ -119,7 +93,7 @@ void JSSVGPathSegLinetoAbsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSegLinetoAbs::s_info = { "SVGPathSegLinetoAbs", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoAbs) };
 
-JSSVGPathSegLinetoAbs::JSSVGPathSegLinetoAbs(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoAbs>&& impl)
+JSSVGPathSegLinetoAbs::JSSVGPathSegLinetoAbs(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegLinetoAbs>&& impl)
     : JSSVGPathSeg(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,83 +108,83 @@ JSObject* JSSVGPathSegLinetoAbs::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSSVGPathSegLinetoAbs>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathSegLinetoAbsX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoAbsX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegLinetoAbs* castedThis = jsDynamicCast<JSSVGPathSegLinetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoAbsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegLinetoAbs", "x");
-        return throwGetterTypeError(*exec, "SVGPathSegLinetoAbs", "x");
+            return reportDeprecatedGetterError(*state, "SVGPathSegLinetoAbs", "x");
+        return throwGetterTypeError(*state, "SVGPathSegLinetoAbs", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegLinetoAbsY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoAbsY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegLinetoAbs* castedThis = jsDynamicCast<JSSVGPathSegLinetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoAbsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegLinetoAbs", "y");
-        return throwGetterTypeError(*exec, "SVGPathSegLinetoAbs", "y");
+            return reportDeprecatedGetterError(*state, "SVGPathSegLinetoAbs", "y");
+        return throwGetterTypeError(*state, "SVGPathSegLinetoAbs", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegLinetoAbsConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoAbsConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPathSegLinetoAbsPrototype* domObject = jsDynamicCast<JSSVGPathSegLinetoAbsPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegLinetoAbs::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPathSegLinetoAbs::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGPathSegLinetoAbsX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegLinetoAbsX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegLinetoAbs* castedThis = jsDynamicCast<JSSVGPathSegLinetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoAbsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegLinetoAbs", "x");
+            reportDeprecatedSetterError(*state, "SVGPathSegLinetoAbs", "x");
         else
-            throwSetterTypeError(*exec, "SVGPathSegLinetoAbs", "x");
+            throwSetterTypeError(*state, "SVGPathSegLinetoAbs", "x");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setX(nativeValue);
 }
 
 
-void setJSSVGPathSegLinetoAbsY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegLinetoAbsY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegLinetoAbs* castedThis = jsDynamicCast<JSSVGPathSegLinetoAbs*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoAbsPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegLinetoAbs", "y");
+            reportDeprecatedSetterError(*state, "SVGPathSegLinetoAbs", "y");
         else
-            throwSetterTypeError(*exec, "SVGPathSegLinetoAbs", "y");
+            throwSetterTypeError(*state, "SVGPathSegLinetoAbs", "y");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setY(nativeValue);
 }
@@ -218,7 +192,7 @@ void setJSSVGPathSegLinetoAbsY(ExecState* exec, JSObject* baseObject, EncodedJSV
 
 JSValue JSSVGPathSegLinetoAbs::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPathSegLinetoAbsConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegLinetoAbsConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

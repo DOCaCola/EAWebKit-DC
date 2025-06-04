@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSErrorEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ErrorEvent>&& impl)
     {
-        JSErrorEvent* ptr = new (NotNull, JSC::allocateCell<JSErrorEvent>(globalObject->vm().heap)) JSErrorEvent(structure, globalObject, WTF::move(impl));
+        JSErrorEvent* ptr = new (NotNull, JSC::allocateCell<JSErrorEvent>(globalObject->vm().heap)) JSErrorEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ErrorEvent& impl() const
+    ErrorEvent& wrapped() const
     {
-        return static_cast<ErrorEvent&>(Base::impl());
+        return static_cast<ErrorEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSErrorEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<ErrorEvent>&&);
+    JSErrorEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<ErrorEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

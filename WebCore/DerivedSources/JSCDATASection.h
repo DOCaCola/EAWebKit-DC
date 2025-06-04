@@ -31,7 +31,7 @@ public:
     typedef JSText Base;
     static JSCDATASection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CDATASection>&& impl)
     {
-        JSCDATASection* ptr = new (NotNull, JSC::allocateCell<JSCDATASection>(globalObject->vm().heap)) JSCDATASection(structure, globalObject, WTF::move(impl));
+        JSCDATASection* ptr = new (NotNull, JSC::allocateCell<JSCDATASection>(globalObject->vm().heap)) JSCDATASection(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CDATASection& impl() const
+    CDATASection& wrapped() const
     {
-        return static_cast<CDATASection&>(Base::impl());
+        return static_cast<CDATASection&>(Base::wrapped());
     }
 protected:
-    JSCDATASection(JSC::Structure*, JSDOMGlobalObject*, Ref<CDATASection>&&);
+    JSCDATASection(JSC::Structure*, JSDOMGlobalObject&, Ref<CDATASection>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -62,6 +62,8 @@ protected:
 
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CDATASection*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CDATASection& impl) { return toJS(state, globalObject, &impl); }
 JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CDATASection*);
 
 

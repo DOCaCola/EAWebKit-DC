@@ -1,10 +1,10 @@
 list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${DERIVED_SOURCES_DIR}/ForwardingHeaders/JavaScriptCore"
     "${DirectX_INCLUDE_DIRS}"
-    "$ENV{WEBKIT_LIBRARIES}/include"
-    "$ENV{WEBKIT_LIBRARIES}/include/cairo"
-    "$ENV{WEBKIT_LIBRARIES}/include/SQLite"
-    "$ENV{WEBKIT_LIBRARIES}/include/zlib"
+    "${WEBKIT_LIBRARIES_DIR}/include"
+    "${WEBKIT_LIBRARIES_DIR}/include/cairo"
+    "${WEBKIT_LIBRARIES_DIR}/include/SQLite"
+    "${WEBKIT_LIBRARIES_DIR}/include/zlib"
     "${JAVASCRIPTCORE_DIR}/wtf/text"
     "${WEBCORE_DIR}/loader/archive/cf"
     "${WEBCORE_DIR}/platform/cf"
@@ -138,15 +138,9 @@ list(APPEND WebCore_SOURCES
     platform/win/LoggingWin.cpp
     platform/win/PEImage.cpp
     platform/win/PathWalker.cpp
-    platform/win/ScrollbarThemeSafari.cpp
     platform/win/WebCoreBundleWin.cpp
     platform/win/WebCoreTextRenderer.cpp
     platform/win/WindowMessageBroadcaster.cpp
-
-    rendering/RenderLayerBacking.cpp
-    rendering/RenderLayerCompositor.cpp
-    rendering/RenderThemeSafari.cpp
-    rendering/RenderThemeWin.cpp
 )
 
 list(APPEND WebCore_LIBRARIES

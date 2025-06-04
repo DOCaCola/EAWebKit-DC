@@ -31,7 +31,7 @@ public:
     typedef JSCharacterData Base;
     static JSText* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Text>&& impl)
     {
-        JSText* ptr = new (NotNull, JSC::allocateCell<JSText>(globalObject->vm().heap)) JSText(structure, globalObject, WTF::move(impl));
+        JSText* ptr = new (NotNull, JSC::allocateCell<JSText>(globalObject->vm().heap)) JSText(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Text& impl() const
+    Text& wrapped() const
     {
-        return static_cast<Text&>(Base::impl());
+        return static_cast<Text&>(Base::wrapped());
     }
 protected:
-    JSText(JSC::Structure*, JSDOMGlobalObject*, Ref<Text>&&);
+    JSText(JSC::Structure*, JSDOMGlobalObject&, Ref<Text>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -62,7 +62,6 @@ protected:
 
 };
 
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Text*);
 
 
 } // namespace WebCore

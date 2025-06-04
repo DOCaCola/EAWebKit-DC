@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFESpotLightElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFESpotLightElement>&& impl)
     {
-        JSSVGFESpotLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFESpotLightElement>(globalObject->vm().heap)) JSSVGFESpotLightElement(structure, globalObject, WTF::move(impl));
+        JSSVGFESpotLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFESpotLightElement>(globalObject->vm().heap)) JSSVGFESpotLightElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFESpotLightElement& impl() const
+    SVGFESpotLightElement& wrapped() const
     {
-        return static_cast<SVGFESpotLightElement&>(Base::impl());
+        return static_cast<SVGFESpotLightElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFESpotLightElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFESpotLightElement>&&);
+    JSSVGFESpotLightElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFESpotLightElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

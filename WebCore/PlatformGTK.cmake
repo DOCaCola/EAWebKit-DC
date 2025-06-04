@@ -1,6 +1,27 @@
 set(WebCore_OUTPUT_NAME WebCoreGTK)
 
 list(APPEND WebCore_INCLUDE_DIRECTORIES
+    "${DERIVED_SOURCES_JAVASCRIPTCORE_DIR}"
+    "${DERIVED_SOURCES_JAVASCRIPTCORE_DIR}/inspector"
+    "${JAVASCRIPTCORE_DIR}"
+    "${JAVASCRIPTCORE_DIR}/ForwardingHeaders"
+    "${JAVASCRIPTCORE_DIR}/API"
+    "${JAVASCRIPTCORE_DIR}/assembler"
+    "${JAVASCRIPTCORE_DIR}/bytecode"
+    "${JAVASCRIPTCORE_DIR}/bytecompiler"
+    "${JAVASCRIPTCORE_DIR}/dfg"
+    "${JAVASCRIPTCORE_DIR}/disassembler"
+    "${JAVASCRIPTCORE_DIR}/heap"
+    "${JAVASCRIPTCORE_DIR}/debugger"
+    "${JAVASCRIPTCORE_DIR}/interpreter"
+    "${JAVASCRIPTCORE_DIR}/jit"
+    "${JAVASCRIPTCORE_DIR}/llint"
+    "${JAVASCRIPTCORE_DIR}/parser"
+    "${JAVASCRIPTCORE_DIR}/profiler"
+    "${JAVASCRIPTCORE_DIR}/runtime"
+    "${JAVASCRIPTCORE_DIR}/yarr"
+    "${THIRDPARTY_DIR}/ANGLE/"
+    "${THIRDPARTY_DIR}/ANGLE/include/KHR"
     "${WEBCORE_DIR}/accessibility/atk"
     "${WEBCORE_DIR}/editing/atk"
     "${WEBCORE_DIR}/page/gtk"
@@ -24,6 +45,7 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/network/gtk"
     "${WEBCORE_DIR}/platform/network/soup"
     "${WEBCORE_DIR}/platform/text/gtk"
+    "${WTF_DIR}"
 )
 
 list(APPEND WebCore_SOURCES
@@ -52,7 +74,10 @@ list(APPEND WebCore_SOURCES
     loader/soup/CachedRawResourceSoup.cpp
     loader/soup/SubresourceLoaderSoup.cpp
 
+    platform/KillRingNone.cpp
     platform/PlatformStrategies.cpp
+
+    platform/audio/glib/AudioBusGLib.cpp
 
     platform/audio/gstreamer/AudioDestinationGStreamer.cpp
     platform/audio/gstreamer/AudioFileReaderGStreamer.cpp
@@ -60,13 +85,12 @@ list(APPEND WebCore_SOURCES
     platform/audio/gstreamer/FFTFrameGStreamer.cpp
     platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp
 
-    platform/audio/gtk/AudioBusGtk.cpp
-
     platform/geoclue/GeolocationProviderGeoclue1.cpp
     platform/geoclue/GeolocationProviderGeoclue2.cpp
 
     platform/glib/KeyedDecoderGlib.cpp
     platform/glib/KeyedEncoderGlib.cpp
+    platform/glib/MainThreadSharedTimerGLib.cpp
 
     platform/graphics/GLContext.cpp
     platform/graphics/GraphicsContext3DPrivate.cpp
@@ -140,7 +164,6 @@ list(APPEND WebCore_SOURCES
     platform/gtk/LoggingGtk.cpp
     platform/gtk/MIMETypeRegistryGtk.cpp
     platform/gtk/SharedBufferGtk.cpp
-    platform/gtk/SharedTimerGtk.cpp
     platform/gtk/TemporaryLinkStubs.cpp
     platform/gtk/UserAgentGtk.cpp
 
@@ -192,6 +215,7 @@ list(APPEND WebCore_SOURCES
     platform/soup/SharedBufferSoup.cpp
     platform/soup/URLSoup.cpp
 
+    platform/text/Hyphenation.cpp
     platform/text/LocaleICU.cpp
 
     platform/text/enchant/TextCheckerEnchant.cpp
@@ -217,8 +241,6 @@ list(APPEND WebCorePlatformGTK_SOURCES
     platform/graphics/gtk/ImageBufferGtk.cpp
     platform/graphics/gtk/ImageGtk.cpp
 
-    platform/gtk/ContextMenuGtk.cpp
-    platform/gtk/ContextMenuItemGtk.cpp
     platform/gtk/CursorGtk.cpp
     platform/gtk/DataObjectGtk.cpp
     platform/gtk/DragDataGtk.cpp
@@ -392,12 +414,17 @@ if (USE_TEXTURE_MAPPER)
     )
     list(APPEND WebCore_SOURCES
         platform/graphics/texmap/BitmapTexture.cpp
-        platform/graphics/texmap/BitmapTextureGL.cpp
         platform/graphics/texmap/BitmapTexturePool.cpp
         platform/graphics/texmap/GraphicsLayerTextureMapper.cpp
-        platform/graphics/texmap/TextureMapperGL.cpp
-        platform/graphics/texmap/TextureMapperShaderProgram.cpp
     )
+
+    if (USE_TEXTURE_MAPPER_GL)
+        list(APPEND WebCore_SOURCES
+            platform/graphics/texmap/BitmapTextureGL.cpp
+            platform/graphics/texmap/TextureMapperGL.cpp
+            platform/graphics/texmap/TextureMapperShaderProgram.cpp
+        )
+    endif ()
 endif ()
 
 if (ENABLE_THREADED_COMPOSITOR)
@@ -414,8 +441,9 @@ if (ENABLE_THREADED_COMPOSITOR)
 
         page/scrolling/coordinatedgraphics/ScrollingCoordinatorCoordinatedGraphics.cpp
         page/scrolling/coordinatedgraphics/ScrollingStateNodeCoordinatedGraphics.cpp
-        page/scrolling/coordinatedgraphics/ScrollingStateScrollingNodeCoordinatedGraphics.cpp
 
+        platform/graphics/texmap/TextureMapperPlatformLayerBuffer.cpp
+        platform/graphics/texmap/TextureMapperPlatformLayerProxy.cpp
         platform/graphics/texmap/coordinated/AreaAllocator.cpp
         platform/graphics/texmap/coordinated/CompositingCoordinator.cpp
         platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp
@@ -538,6 +566,8 @@ list(APPEND GObjectDOMBindings_SOURCES
     bindings/gobject/WebKitDOMObject.cpp
     bindings/gobject/WebKitDOMPrivate.cpp
     bindings/gobject/WebKitDOMXPathNSResolver.cpp
+    ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups.h
+    ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups-unstable.h
     ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomdefines.h
     ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomdefines-unstable.h
     ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdom.h
@@ -562,7 +592,6 @@ list(APPEND GObjectDOMBindingsStable_IDL_FILES
     dom/DocumentFragment.idl
     dom/DocumentType.idl
     dom/Element.idl
-    dom/EntityReference.idl
     dom/Event.idl
     dom/KeyboardEvent.idl
     dom/MouseEvent.idl
@@ -586,7 +615,6 @@ list(APPEND GObjectDOMBindingsStable_IDL_FILES
     html/HTMLAreaElement.idl
     html/HTMLBRElement.idl
     html/HTMLBaseElement.idl
-    html/HTMLBaseFontElement.idl
     html/HTMLBodyElement.idl
     html/HTMLButtonElement.idl
     html/HTMLCanvasElement.idl
@@ -658,6 +686,7 @@ list(APPEND GObjectDOMBindingsUnstable_IDL_FILES
 
     Modules/mediastream/MediaDevices.idl
     Modules/mediastream/NavigatorMediaDevices.idl
+    Modules/mediastream/MediaTrackSupportedConstraints.idl
 
     Modules/quota/StorageInfo.idl
     Modules/quota/StorageQuota.idl
@@ -754,6 +783,7 @@ set(GObjectDOMBindings_STATIC_CLASS_LIST Custom Deprecated EventTarget NodeFilte
 
 set(GObjectDOMBindingsStable_CLASS_LIST ${GObjectDOMBindings_STATIC_CLASS_LIST})
 set(GObjectDOMBindingsStable_INSTALLED_HEADERS
+     ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups.h
      ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomdefines.h
      ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdom.h
      ${WEBCORE_DIR}/bindings/gobject/WebKitDOMCustom.h
@@ -765,6 +795,7 @@ set(GObjectDOMBindingsStable_INSTALLED_HEADERS
 )
 
 set(GObjectDOMBindingsUnstable_INSTALLED_HEADERS
+     ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups-unstable.h
      ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomdefines-unstable.h
      ${WEBCORE_DIR}/bindings/gobject/WebKitDOMCustomUnstable.h
 )
@@ -804,6 +835,18 @@ add_custom_command(
     OUTPUT ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdom.h
     DEPENDS ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl
     COMMAND echo ${GObjectDOMBindingsStable_CLASS_LIST} | ${PERL_EXECUTABLE} ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl gdom > ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdom.h
+)
+
+add_custom_command(
+    OUTPUT ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups.h
+    DEPENDS ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl
+    COMMAND echo ${GObjectDOMBindingsStable_CLASS_LIST} | ${PERL_EXECUTABLE} ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl autocleanups > ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups.h
+)
+
+add_custom_command(
+    OUTPUT ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups-unstable.h
+    DEPENDS ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl
+    COMMAND echo ${GObjectDOMBindingsUnstable_CLASS_LIST} | ${PERL_EXECUTABLE} ${WEBCORE_DIR}/bindings/scripts/gobject-generate-headers.pl autocleanups > ${DERIVED_SOURCES_GOBJECT_DOM_BINDINGS_DIR}/webkitdomautocleanups-unstable.h
 )
 
 # Some of the static headers are included by generated public headers with include <webkitdom/WebKitDOMFoo.h>.
@@ -888,6 +931,12 @@ list(REMOVE_ITEM GObjectDOMBindings_GIR_HEADERS
 
 # Propagate this variable to the parent scope, so that it can be used in other parts of the build.
 set(GObjectDOMBindings_GIR_HEADERS ${GObjectDOMBindings_GIR_HEADERS} PARENT_SCOPE)
+
+if (ENABLE_SMOOTH_SCROLLING)
+    list(APPEND WebCore_SOURCES
+        platform/ScrollAnimatorNone.cpp
+    )
+endif ()
 
 if (ENABLE_SUBTLE_CRYPTO)
     list(APPEND WebCore_SOURCES

@@ -64,6 +64,11 @@ struct BasicBlock;
 struct StorageAccessData {
     PropertyOffset offset;
     unsigned identifierNumber;
+
+    // This needs to know the inferred type. For puts, this is necessary because we need to remember
+    // what check is needed. For gets, this is necessary because otherwise AI might forget what type is
+    // guaranteed.
+    InferredType::Descriptor inferredType;
 };
 
 struct MultiPutByOffsetData {
@@ -580,8 +585,18 @@ struct Node {
 
     void convertToPhantomNewFunction()
     {
-        ASSERT(m_op == NewFunction);
+        ASSERT(m_op == NewFunction || m_op == NewArrowFunction || m_op == NewGeneratorFunction);
         m_op = PhantomNewFunction;
+        m_flags |= NodeMustGenerate;
+        m_opInfo = 0;
+        m_opInfo2 = 0;
+        children = AdjacencyList();
+    }
+
+    void convertToPhantomNewGeneratorFunction()
+    {
+        ASSERT(m_op == NewGeneratorFunction);
+        m_op = PhantomNewGeneratorFunction;
         m_flags |= NodeMustGenerate;
         m_opInfo = 0;
         m_opInfo2 = 0;
@@ -690,7 +705,12 @@ struct Node {
     {
         return constant()->value().asBoolean();
     }
-     
+
+    bool isUndefinedOrNullConstant()
+    {
+        return isConstant() && constant()->value().isUndefinedOrNull();
+    }
+
     bool isCellConstant()
     {
         return isConstant() && constant()->value() && constant()->value().isCell();
@@ -843,6 +863,9 @@ struct Node {
         case PutById:
         case PutByIdFlush:
         case PutByIdDirect:
+        case PutGetterById:
+        case PutSetterById:
+        case PutGetterSetterById:
             return true;
         default:
             return false;
@@ -853,6 +876,37 @@ struct Node {
     {
         ASSERT(hasIdentifier());
         return m_opInfo;
+    }
+
+    bool hasAccessorAttributes()
+    {
+        switch (op()) {
+        case PutGetterById:
+        case PutSetterById:
+        case PutGetterSetterById:
+        case PutGetterByVal:
+        case PutSetterByVal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    int32_t accessorAttributes()
+    {
+        ASSERT(hasAccessorAttributes());
+        switch (op()) {
+        case PutGetterById:
+        case PutSetterById:
+        case PutGetterSetterById:
+            return m_opInfo2;
+        case PutGetterByVal:
+        case PutSetterByVal:
+            return m_opInfo;
+        default:
+            RELEASE_ASSERT_NOT_REACHED();
+            return 0;
+        }
     }
     
     bool hasPromotedLocationDescriptor()
@@ -905,7 +959,15 @@ struct Node {
             return false;
         }
     }
-    
+
+    // Return the indexing type that an array allocation *wants* to use. It may end up using a different
+    // type if we're having a bad time. You can determine the actual indexing type by asking the global
+    // object:
+    //
+    //     m_graph.globalObjectFor(node->origin.semantic)->arrayStructureForIndexingTypeDuringAllocation(node->indexingType())
+    //
+    // This will give you a Structure*, and that will have some indexing type that may be different from
+    // the this one.
     IndexingType indexingType()
     {
         ASSERT(hasIndexingType());
@@ -984,7 +1046,7 @@ struct Node {
     
     bool hasRegisterPointer()
     {
-        return op() == GetGlobalVar || op() == PutGlobalVar;
+        return op() == GetGlobalVar || op() == GetGlobalLexicalVariable || op() == PutGlobalVariable;
     }
     
     WriteBarrier<Unknown>* variablePointer()
@@ -997,6 +1059,10 @@ struct Node {
         switch (op()) {
         case CallVarargs:
         case CallForwardVarargs:
+        case TailCallVarargs:
+        case TailCallForwardVarargs:
+        case TailCallVarargsInlinedCaller:
+        case TailCallForwardVarargsInlinedCaller:
         case ConstructVarargs:
         case ConstructForwardVarargs:
             return true;
@@ -1094,11 +1160,22 @@ struct Node {
         case Branch:
         case Switch:
         case Return:
+        case TailCall:
+        case TailCallVarargs:
+        case TailCallForwardVarargs:
         case Unreachable:
             return true;
         default:
             return false;
         }
+    }
+
+    bool isFunctionTerminal()
+    {
+        if (isTerminal() && !numSuccessors())
+            return true;
+
+        return false;
     }
 
     unsigned targetBytecodeOffsetDuringParsing()
@@ -1220,6 +1297,10 @@ struct Node {
         {
             return iterator(m_terminal, m_terminal->numSuccessors());
         }
+
+        size_t size() const { return m_terminal->numSuccessors(); }
+        BasicBlock* at(size_t index) const { return m_terminal->successor(index); }
+        BasicBlock* operator[](size_t index) const { return at(index); }
         
     private:
         Node* m_terminal;
@@ -1244,10 +1325,13 @@ struct Node {
         case GetByIdFlush:
         case GetByVal:
         case Call:
+        case TailCallInlinedCaller:
         case Construct:
         case CallVarargs:
+        case TailCallVarargsInlinedCaller:
         case ConstructVarargs:
         case CallForwardVarargs:
+        case TailCallForwardVarargsInlinedCaller:
         case GetByOffset:
         case MultiGetByOffset:
         case GetClosureVar:
@@ -1257,6 +1341,7 @@ struct Node {
         case RegExpExec:
         case RegExpTest:
         case GetGlobalVar:
+        case GetGlobalLexicalVariable:
             return true;
         default:
             return false;
@@ -1279,7 +1364,10 @@ struct Node {
     {
         switch (op()) {
         case CheckCell:
+        case OverridesHasInstance:
         case NewFunction:
+        case NewArrowFunction:
+        case NewGeneratorFunction:
         case CreateActivation:
         case MaterializeCreateActivation:
             return true;
@@ -1337,6 +1425,17 @@ struct Node {
     {
         ASSERT(hasUidOperand());
         return reinterpret_cast<UniquedStringImpl*>(m_opInfo);
+    }
+
+    bool hasTypeInfoOperand()
+    {
+        return op() == CheckTypeInfoFlags;
+    }
+
+    unsigned typeInfoOperand()
+    {
+        ASSERT(hasTypeInfoOperand() && m_opInfo <= UCHAR_MAX);
+        return static_cast<unsigned>(m_opInfo);
     }
 
     bool hasTransition()
@@ -1496,7 +1595,9 @@ struct Node {
     bool isFunctionAllocation()
     {
         switch (op()) {
+        case NewArrowFunction:
         case NewFunction:
+        case NewGeneratorFunction:
             return true;
         default:
             return false;
@@ -1507,6 +1608,7 @@ struct Node {
     {
         switch (op()) {
         case PhantomNewFunction:
+        case PhantomNewGeneratorFunction:
             return true;
         default:
             return false;
@@ -1520,6 +1622,7 @@ struct Node {
         case PhantomDirectArguments:
         case PhantomClonedArguments:
         case PhantomNewFunction:
+        case PhantomNewGeneratorFunction:
         case PhantomCreateActivation:
             return true;
         default:
@@ -1845,6 +1948,11 @@ struct Node {
     {
         return isStringOrStringObjectSpeculation(prediction());
     }
+
+    bool shouldSpeculateSymbol()
+    {
+        return isSymbolSpeculation(prediction());
+    }
     
     bool shouldSpeculateFinalObject()
     {
@@ -1941,6 +2049,26 @@ struct Node {
         return isNotCellSpeculation(prediction());
     }
     
+    bool shouldSpeculateUntypedForArithmetic()
+    {
+        return isUntypedSpeculationForArithmetic(prediction());
+    }
+
+    static bool shouldSpeculateUntypedForArithmetic(Node* op1, Node* op2)
+    {
+        return op1->shouldSpeculateUntypedForArithmetic() || op2->shouldSpeculateUntypedForArithmetic();
+    }
+    
+    bool shouldSpeculateUntypedForBitOps()
+    {
+        return isUntypedSpeculationForBitOps(prediction());
+    }
+    
+    static bool shouldSpeculateUntypedForBitOps(Node* op1, Node* op2)
+    {
+        return op1->shouldSpeculateUntypedForBitOps() || op2->shouldSpeculateUntypedForBitOps();
+    }
+    
     static bool shouldSpeculateBoolean(Node* op1, Node* op2)
     {
         return op1->shouldSpeculateBoolean() && op2->shouldSpeculateBoolean();
@@ -1989,6 +2117,11 @@ struct Node {
     {
         return op1->shouldSpeculateNumberOrBooleanExpectingDefined()
             && op2->shouldSpeculateNumberOrBooleanExpectingDefined();
+    }
+
+    static bool shouldSpeculateSymbol(Node* op1, Node* op2)
+    {
+        return op1->shouldSpeculateSymbol() && op2->shouldSpeculateSymbol();
     }
     
     static bool shouldSpeculateFinalObject(Node* op1, Node* op2)
@@ -2069,7 +2202,13 @@ struct Node {
     {
         m_misc.epoch = epoch.toUnsigned();
     }
-    
+
+    unsigned numberOfArgumentsToSkip()
+    {
+        ASSERT(op() == CopyRest || op() == GetRestLength);
+        return static_cast<unsigned>(m_opInfo);
+    }
+
     void dumpChildren(PrintStream& out)
     {
         if (!child1())

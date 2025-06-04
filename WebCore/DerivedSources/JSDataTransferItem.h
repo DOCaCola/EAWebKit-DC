@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSDataTransferItem : public JSDOMWrapper {
+class JSDataTransferItem : public JSDOMWrapper<DataTransferItem> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DataTransferItem> Base;
     static JSDataTransferItem* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataTransferItem>&& impl)
     {
-        JSDataTransferItem* ptr = new (NotNull, JSC::allocateCell<JSDataTransferItem>(globalObject->vm().heap)) JSDataTransferItem(structure, globalObject, WTF::move(impl));
+        JSDataTransferItem* ptr = new (NotNull, JSC::allocateCell<JSDataTransferItem>(globalObject->vm().heap)) JSDataTransferItem(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DataTransferItem* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDataTransferItem();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    DataTransferItem& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DataTransferItem* m_impl;
 protected:
-    JSDataTransferItem(JSC::Structure*, JSDOMGlobalObject*, Ref<DataTransferItem>&&);
+    JSDataTransferItem(JSC::Structure*, JSDOMGlobalObject&, Ref<DataTransferItem>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DataTransferItem*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DataTransferItem*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DataTransferItem& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataTransferItem& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DataTransferItem*);
 
 
 } // namespace WebCore

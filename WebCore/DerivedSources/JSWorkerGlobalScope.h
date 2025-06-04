@@ -57,12 +57,12 @@ public:
 
 
     // Custom functions
-    JSC::JSValue importScripts(JSC::ExecState*);
-    JSC::JSValue setTimeout(JSC::ExecState*);
-    JSC::JSValue setInterval(JSC::ExecState*);
-    WorkerGlobalScope& impl() const
+    JSC::JSValue importScripts(JSC::ExecState&);
+    JSC::JSValue setTimeout(JSC::ExecState&);
+    JSC::JSValue setInterval(JSC::ExecState&);
+    WorkerGlobalScope& wrapped() const
     {
-        return static_cast<WorkerGlobalScope&>(Base::impl());
+        return static_cast<WorkerGlobalScope&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;

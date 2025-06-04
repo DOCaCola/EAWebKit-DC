@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMMimeTypeArray : public JSDOMWrapper {
+class JSDOMMimeTypeArray : public JSDOMWrapper<DOMMimeTypeArray> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMMimeTypeArray> Base;
     static JSDOMMimeTypeArray* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMMimeTypeArray>&& impl)
     {
-        JSDOMMimeTypeArray* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypeArray>(globalObject->vm().heap)) JSDOMMimeTypeArray(structure, globalObject, WTF::move(impl));
+        JSDOMMimeTypeArray* ptr = new (NotNull, JSC::allocateCell<JSDOMMimeTypeArray>(globalObject->vm().heap)) JSDOMMimeTypeArray(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMMimeTypeArray();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMMimeTypeArray& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMMimeTypeArray* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMMimeTypeArray(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMMimeTypeArray>&&);
+    JSDOMMimeTypeArray(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMMimeTypeArray>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,8 +65,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMMimeTypeArray*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSDOMMimeTypeArrayOwner : public JSC::WeakHandleOwner {
@@ -88,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMMimeTypeArray*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeTypeArray*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMMimeTypeArray& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMMimeTypeArray& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMMimeTypeArray*);
 
 
 } // namespace WebCore

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCrypto : public JSDOMWrapper {
+class JSCrypto : public JSDOMWrapper<Crypto> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Crypto> Base;
     static JSCrypto* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Crypto>&& impl)
     {
-        JSCrypto* ptr = new (NotNull, JSC::allocateCell<JSCrypto>(globalObject->vm().heap)) JSCrypto(structure, globalObject, WTF::move(impl));
+        JSCrypto* ptr = new (NotNull, JSC::allocateCell<JSCrypto>(globalObject->vm().heap)) JSCrypto(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Crypto* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCrypto();
 
     DECLARE_INFO;
 
@@ -52,14 +51,9 @@ public:
 
 
     // Custom functions
-    JSC::JSValue getRandomValues(JSC::ExecState*);
-    Crypto& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Crypto* m_impl;
+    JSC::JSValue getRandomValues(JSC::ExecState&);
 protected:
-    JSCrypto(JSC::Structure*, JSDOMGlobalObject*, Ref<Crypto>&&);
+    JSCrypto(JSC::Structure*, JSDOMGlobalObject&, Ref<Crypto>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Crypto*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Crypto*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Crypto& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Crypto& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Crypto*);
 
 
 } // namespace WebCore

@@ -131,20 +131,6 @@ private:
 }
 
 namespace WebCore {
-class HTMLBaseFontElement;
-}
-namespace WTF {
-template <typename ArgType>
-class TypeCastTraits<const WebCore::HTMLBaseFontElement, ArgType, false /* isBaseType */> {
-public:
-    static bool isOfType(ArgType& node) { return checkTagName(node); }
-private:
-    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::basefontTag); }
-    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::basefontTag); }
-};
-}
-
-namespace WebCore {
 class HTMLBodyElement;
 }
 namespace WTF {
@@ -663,6 +649,20 @@ private:
 }
 
 namespace WebCore {
+class HTMLPictureElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLPictureElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::pictureTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::pictureTag); }
+};
+}
+
+namespace WebCore {
 class HTMLProgressElement;
 }
 namespace WTF {
@@ -705,6 +705,20 @@ private:
 }
 
 namespace WebCore {
+class HTMLSlotElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLSlotElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::slotTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::slotTag); }
+};
+}
+
+namespace WebCore {
 class HTMLSourceElement;
 }
 namespace WTF {
@@ -713,8 +727,8 @@ class TypeCastTraits<const WebCore::HTMLSourceElement, ArgType, false /* isBaseT
 public:
     static bool isOfType(ArgType& node) { return checkTagName(node); }
 private:
-    static bool checkTagName(const WebCore::HTMLElement& element) { return !element.isHTMLUnknownElement() && element.hasTagName(WebCore::HTMLNames::sourceTag); }
-    static bool checkTagName(const WebCore::Node& node) { return is<WebCore::HTMLElement>(node) && checkTagName(downcast<WebCore::HTMLElement>(node)); }
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::sourceTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::sourceTag); }
 };
 }
 
@@ -775,6 +789,20 @@ private:
 }
 
 namespace WebCore {
+class HTMLTableDataCellElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLTableDataCellElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::tdTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::tdTag); }
+};
+}
+
+namespace WebCore {
 class HTMLTableElement;
 }
 namespace WTF {
@@ -785,6 +813,20 @@ public:
 private:
     static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::tableTag); }
     static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::tableTag); }
+};
+}
+
+namespace WebCore {
+class HTMLTableHeaderCellElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLTableHeaderCellElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::thTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::thTag); }
 };
 }
 
@@ -827,6 +869,20 @@ public:
 private:
     static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::textareaTag); }
     static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::textareaTag); }
+};
+}
+
+namespace WebCore {
+class HTMLTimeElement;
+}
+namespace WTF {
+template <typename ArgType>
+class TypeCastTraits<const WebCore::HTMLTimeElement, ArgType, false /* isBaseType */> {
+public:
+    static bool isOfType(ArgType& node) { return checkTagName(node); }
+private:
+    static bool checkTagName(const WebCore::HTMLElement& element) { return element.hasTagName(WebCore::HTMLNames::timeTag); }
+    static bool checkTagName(const WebCore::Node& node) { return node.hasTagName(WebCore::HTMLNames::timeTag); }
 };
 }
 

@@ -22,9 +22,9 @@
 #include "JSCSSStyleRule.h"
 
 #include "CSSStyleDeclaration.h"
-#include "CSSStyleRule.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "StyleProperties.h"
 #include "URL.h"
 #include <wtf/GetPtr.h>
@@ -65,50 +65,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSStyleRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSStyleRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCSSStyleRule> JSCSSStyleRuleConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSStyleRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSStyleRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleRuleConstructor>(vm.heap)) JSCSSStyleRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSStyleRuleConstructor::s_info = { "CSSStyleRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleRuleConstructor) };
-
-JSCSSStyleRuleConstructor::JSCSSStyleRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSStyleRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSStyleRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSStyleRule::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSStyleRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSStyleRuleConstructor::s_info = { "CSSStyleRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSStyleRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectorText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleSelectorText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleRuleSelectorText) },
-    { "style", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectorText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleSelectorText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSStyleRuleSelectorText) } },
+    { "style", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSStyleRuleStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSStyleRulePrototype::s_info = { "CSSStyleRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleRulePrototype) };
@@ -121,7 +95,7 @@ void JSCSSStyleRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSStyleRule::s_info = { "CSSStyleRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSStyleRule) };
 
-JSCSSStyleRule::JSCSSStyleRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleRule>&& impl)
+JSCSSStyleRule::JSCSSStyleRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSStyleRule>&& impl)
     : JSCSSRule(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,63 +110,63 @@ JSObject* JSCSSStyleRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCSSStyleRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSStyleRuleSelectorText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSStyleRuleSelectorText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSStyleRule* castedThis = jsDynamicCast<JSCSSStyleRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSStyleRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleRule", "selectorText");
-        return throwGetterTypeError(*exec, "CSSStyleRule", "selectorText");
+            return reportDeprecatedGetterError(*state, "CSSStyleRule", "selectorText");
+        return throwGetterTypeError(*state, "CSSStyleRule", "selectorText");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.selectorText());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.selectorText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSStyleRuleStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSStyleRuleStyle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSStyleRule* castedThis = jsDynamicCast<JSCSSStyleRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSStyleRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSStyleRule", "style");
-        return throwGetterTypeError(*exec, "CSSStyleRule", "style");
+            return reportDeprecatedGetterError(*state, "CSSStyleRule", "style");
+        return throwGetterTypeError(*state, "CSSStyleRule", "style");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.style()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.style()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSStyleRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSStyleRuleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSStyleRulePrototype* domObject = jsDynamicCast<JSCSSStyleRulePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSStyleRule::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSStyleRule::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCSSStyleRuleSelectorText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCSSStyleRuleSelectorText(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCSSStyleRule* castedThis = jsDynamicCast<JSCSSStyleRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSStyleRulePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSStyleRule", "selectorText");
+            reportDeprecatedSetterError(*state, "CSSStyleRule", "selectorText");
         else
-            throwSetterTypeError(*exec, "CSSStyleRule", "selectorText");
+            throwSetterTypeError(*state, "CSSStyleRule", "selectorText");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectorText(nativeValue);
 }
@@ -200,7 +174,7 @@ void setJSCSSStyleRuleSelectorText(ExecState* exec, JSObject* baseObject, Encode
 
 JSValue JSCSSStyleRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSStyleRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSStyleRuleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -134,7 +134,7 @@ public:
     /* This function performs a layout only if one is needed. */
     void layoutIfNeeded() { if (needsLayout()) layout(); }
 
-    // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
+    // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isDocumentElementRenderer() is true.
     RenderElement& rendererForRootBackground();
 
     // Used only by Element::pseudoStyleCacheIsInvalid to get a first line style based off of a
@@ -152,7 +152,7 @@ public:
     bool mayCauseRepaintInsideViewport(const IntRect* visibleRect = nullptr) const;
 
     // Returns true if this renderer requires a new stacking context.
-    bool createsGroup() const { return isTransparent() || hasMask() || hasFilter() || hasBackdropFilter() || hasBlendMode(); }
+    bool createsGroup() const { return isTransparent() || hasMask() || hasClipPath() || hasFilter() || hasBackdropFilter() || hasBlendMode(); }
 
     bool isTransparent() const { return style().opacity() < 1.0f; }
     float opacity() const { return style().opacity(); }
@@ -193,6 +193,10 @@ public:
     bool hasShapeOutside() const { return false; }
 #endif
 
+    void registerForVisibleInViewportCallback();
+    void unregisterForVisibleInViewportCallback();
+    void visibleInViewportStateChanged(VisibleInViewportState);
+
     bool repaintForPausedImageAnimationsIfNeeded(const IntRect& visibleRect);
     bool hasPausedImageAnimations() const { return m_hasPausedImageAnimations; }
     void setHasPausedImageAnimations(bool b) { m_hasPausedImageAnimations = b; }
@@ -211,18 +215,22 @@ public:
     const RenderElement* enclosingRendererWithTextDecoration(TextDecoration, bool firstLine) const;
     void drawLineForBoxSide(GraphicsContext&, const FloatRect&, BoxSide, Color, EBorderStyle, float adjacentWidth1, float adjacentWidth2, bool antialias = false) const;
 
-protected:
-    enum BaseTypeFlags {
-        RenderLayerModelObjectFlag = 1 << 0,
-        RenderBoxModelObjectFlag = 1 << 1,
-        RenderInlineFlag = 1 << 2,
-        RenderReplacedFlag = 1 << 3,
-        RenderBlockFlag = 1 << 4,
-        RenderBlockFlowFlag = 1 << 5,
-    };
+    bool childRequiresTable(const RenderObject& child) const;
 
-    RenderElement(Element&, Ref<RenderStyle>&&, unsigned baseTypeFlags);
-    RenderElement(Document&, Ref<RenderStyle>&&, unsigned baseTypeFlags);
+protected:
+    enum BaseTypeFlag {
+        RenderLayerModelObjectFlag  = 1 << 0,
+        RenderBoxModelObjectFlag    = 1 << 1,
+        RenderInlineFlag            = 1 << 2,
+        RenderReplacedFlag          = 1 << 3,
+        RenderBlockFlag             = 1 << 4,
+        RenderBlockFlowFlag         = 1 << 5,
+    };
+    
+    typedef unsigned BaseTypeFlags;
+
+    RenderElement(Element&, Ref<RenderStyle>&&, BaseTypeFlags);
+    RenderElement(Document&, Ref<RenderStyle>&&, BaseTypeFlags);
 
     bool layerCreationAllowedForSubtree() const;
 
@@ -270,7 +278,7 @@ protected:
     void paintOutline(PaintInfo&, const LayoutRect&);
 
 private:
-    RenderElement(ContainerNode&, Ref<RenderStyle>&&, unsigned baseTypeFlags);
+    RenderElement(ContainerNode&, Ref<RenderStyle>&&, BaseTypeFlags);
     void node() const = delete;
     void nonPseudoNode() const = delete;
     void generatingNode() const = delete;
@@ -304,6 +312,10 @@ private:
     bool getTrailingCorner(FloatPoint& output) const;
 
     void clearLayoutRootIfNeeded() const;
+    
+    bool shouldWillChangeCreateStackingContext() const;
+
+    void computeMaxOutlineSize(const RenderStyle&) const;
 
     unsigned m_baseTypeFlags : 6;
     unsigned m_ancestorLineBoxDirty : 1;
@@ -321,6 +333,8 @@ private:
     unsigned m_renderBlockHasBorderOrPaddingLogicalWidthChanged : 1;
     unsigned m_renderBlockFlowHasMarkupTruncation : 1;
     unsigned m_renderBlockFlowLineLayoutPath : 2;
+
+    VisibleInViewportState m_visibleInViewportState { VisibilityUnknown };
 
     RenderObject* m_firstChild;
     RenderObject* m_lastChild;
@@ -340,11 +354,6 @@ inline void RenderElement::setAnimatableStyle(Ref<RenderStyle>&& style, StyleDif
         minimalStyleDifference = std::max(minimalStyleDifference, StyleDifferenceRecompositeLayer);
     
     setStyle(WTF::move(animatedStyle), minimalStyleDifference);
-}
-
-inline RenderStyle& RenderElement::firstLineStyle() const
-{
-    return document().styleSheetCollection().usesFirstLineRules() ? *cachedFirstLineStyle() : style();
 }
 
 inline void RenderElement::setAncestorLineBoxDirty(bool f)

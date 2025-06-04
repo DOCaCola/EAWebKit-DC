@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGMatrix : public JSDOMWrapper {
+class JSSVGMatrix : public JSDOMWrapper<SVGPropertyTearOff<SVGMatrix>> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPropertyTearOff<SVGMatrix>> Base;
     static JSSVGMatrix* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGMatrix>>&& impl)
     {
-        JSSVGMatrix* ptr = new (NotNull, JSC::allocateCell<JSSVGMatrix>(globalObject->vm().heap)) JSSVGMatrix(structure, globalObject, WTF::move(impl));
+        JSSVGMatrix* ptr = new (NotNull, JSC::allocateCell<JSSVGMatrix>(globalObject->vm().heap)) JSSVGMatrix(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGPropertyTearOff<SVGMatrix>* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGMatrix();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGMatrix>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGMatrix>* m_impl;
 protected:
-    JSSVGMatrix(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGMatrix>>&&);
+    JSSVGMatrix(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPropertyTearOff<SVGMatrix>>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<S
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGMatrix>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGMatrix>& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGMatrix>& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGMatrix>*);
 
 
 } // namespace WebCore

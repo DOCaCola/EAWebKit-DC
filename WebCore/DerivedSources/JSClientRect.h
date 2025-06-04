@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSClientRect : public JSDOMWrapper {
+class WEBCORE_EXPORT JSClientRect : public JSDOMWrapper<ClientRect> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<ClientRect> Base;
     static JSClientRect* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ClientRect>&& impl)
     {
-        JSClientRect* ptr = new (NotNull, JSC::allocateCell<JSClientRect>(globalObject->vm().heap)) JSClientRect(structure, globalObject, WTF::move(impl));
+        JSClientRect* ptr = new (NotNull, JSC::allocateCell<JSClientRect>(globalObject->vm().heap)) JSClientRect(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static ClientRect* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSClientRect();
 
     DECLARE_INFO;
 
@@ -52,15 +51,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ClientRect& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ClientRect* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSClientRect(JSC::Structure*, JSDOMGlobalObject*, Ref<ClientRect>&&);
+    JSClientRect(JSC::Structure*, JSDOMGlobalObject&, Ref<ClientRect>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ClientRect*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRect*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ClientRect& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ClientRect& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ClientRect*);
 
 
 } // namespace WebCore

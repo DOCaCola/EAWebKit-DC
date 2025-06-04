@@ -32,7 +32,7 @@ public:
     typedef JSDocument Base;
     static JSSVGDocument* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGDocument>&& impl)
     {
-        JSSVGDocument* ptr = new (NotNull, JSC::allocateCell<JSSVGDocument>(globalObject->vm().heap)) JSSVGDocument(structure, globalObject, WTF::move(impl));
+        JSSVGDocument* ptr = new (NotNull, JSC::allocateCell<JSSVGDocument>(globalObject->vm().heap)) JSSVGDocument(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGDocument& impl() const
+    SVGDocument& wrapped() const
     {
-        return static_cast<SVGDocument&>(Base::impl());
+        return static_cast<SVGDocument&>(Base::wrapped());
     }
 protected:
-    JSSVGDocument(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGDocument>&&);
+    JSSVGDocument(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGDocument>&&);
 
     void finishCreation(JSC::VM& vm)
     {

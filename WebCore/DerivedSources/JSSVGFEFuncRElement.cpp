@@ -22,7 +22,7 @@
 #include "JSSVGFEFuncRElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGFEFuncRElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEFuncRElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEFuncRElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEFuncRElement> JSSVGFEFuncRElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEFuncRElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEFuncRElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFuncRElementConstructor>(vm.heap)) JSSVGFEFuncRElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEFuncRElementConstructor::s_info = { "SVGFEFuncRElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFuncRElementConstructor) };
-
-JSSVGFEFuncRElementConstructor::JSSVGFEFuncRElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEFuncRElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEFuncRElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEFuncRElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEFuncRElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEFuncRElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEFuncRElementConstructor::s_info = { "SVGFEFuncRElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFuncRElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEFuncRElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFuncRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEFuncRElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEFuncRElementPrototype::s_info = { "SVGFEFuncRElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFuncRElementPrototype) };
@@ -112,7 +86,7 @@ void JSSVGFEFuncRElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEFuncRElement::s_info = { "SVGFEFuncRElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEFuncRElement) };
 
-JSSVGFEFuncRElement::JSSVGFEFuncRElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEFuncRElement>&& impl)
+JSSVGFEFuncRElement::JSSVGFEFuncRElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEFuncRElement>&& impl)
     : JSSVGComponentTransferFunctionElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,17 @@ JSObject* JSSVGFEFuncRElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSSVGFEFuncRElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEFuncRElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEFuncRElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEFuncRElementPrototype* domObject = jsDynamicCast<JSSVGFEFuncRElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEFuncRElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEFuncRElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEFuncRElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEFuncRElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEFuncRElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

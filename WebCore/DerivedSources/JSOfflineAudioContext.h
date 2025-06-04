@@ -34,7 +34,7 @@ public:
     typedef JSAudioContext Base;
     static JSOfflineAudioContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OfflineAudioContext>&& impl)
     {
-        JSOfflineAudioContext* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContext>(globalObject->vm().heap)) JSOfflineAudioContext(structure, globalObject, WTF::move(impl));
+        JSOfflineAudioContext* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioContext>(globalObject->vm().heap)) JSOfflineAudioContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,12 +52,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    OfflineAudioContext& impl() const
+    OfflineAudioContext& wrapped() const
     {
-        return static_cast<OfflineAudioContext&>(Base::impl());
+        return static_cast<OfflineAudioContext&>(Base::wrapped());
     }
 protected:
-    JSOfflineAudioContext(JSC::Structure*, JSDOMGlobalObject*, Ref<OfflineAudioContext>&&);
+    JSOfflineAudioContext(JSC::Structure*, JSDOMGlobalObject&, Ref<OfflineAudioContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OfflineAudioContext*
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OfflineAudioContext& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OfflineAudioContext& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioContext*);
 
 
 } // namespace WebCore

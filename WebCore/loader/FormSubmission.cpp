@@ -151,14 +151,14 @@ static TextEncoding encodingFromAcceptCharset(const String& acceptCharset, Docum
             return encoding;
     }
 
-    return document.inputEncoding();
+    return document.textEncoding();
 }
 
 Ref<FormSubmission> FormSubmission::create(HTMLFormElement* form, const Attributes& attributes, PassRefPtr<Event> event, LockHistory lockHistory, FormSubmissionTrigger trigger)
 {
     ASSERT(form);
 
-    HTMLFormControlElement* submitButton = 0;
+    HTMLFormControlElement* submitButton = nullptr;
     if (event && event->target()) {
         for (Node* node = event->target()->toNode(); node; node = node->parentNode()) {
             if (is<HTMLFormControlElement>(*node)) {
@@ -201,11 +201,10 @@ Ref<FormSubmission> FormSubmission::create(HTMLFormElement* form, const Attribut
     Vector<std::pair<String, String>> formValues;
 
     bool containsPasswordData = false;
-    for (unsigned i = 0; i < form->associatedElements().size(); ++i) {
-        FormAssociatedElement& control = *form->associatedElements()[i];
-        HTMLElement& element = control.asHTMLElement();
+    for (auto& control : form->associatedElements()) {
+        HTMLElement& element = control->asHTMLElement();
         if (!element.isDisabledFormControl())
-            control.appendFormData(*domFormData, isMultiPartForm);
+            control->appendFormData(*domFormData, isMultiPartForm);
         if (is<HTMLInputElement>(element)) {
             HTMLInputElement& input = downcast<HTMLInputElement>(element);
             if (input.isTextField()) {

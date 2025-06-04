@@ -44,7 +44,6 @@ class CSSFontFaceRule;
 class CSSSegmentedFontFace;
 class CachedFont;
 class Document;
-class FontDescription;
 class StyleRuleFontFace;
 
 class CSSFontSelector final : public FontSelector {
@@ -58,16 +57,18 @@ public:
     virtual unsigned version() const override { return m_version; }
     virtual unsigned uniqueId() const override { return m_uniqueId; }
 
-    virtual FontRanges fontRangesForFamily(const FontDescription&, const AtomicString&) override;
+    //+EAWKDC Change. FontDescription to FontCascadeDescription
+    virtual FontRanges fontRangesForFamily(const FontCascadeDescription&, const AtomicString&) override;
+    //-EAWKDC Change.
     virtual size_t fallbackFontCount() override;
     virtual PassRefPtr<Font> fallbackFontAt(const FontDescription&, size_t) override;
     CSSSegmentedFontFace* getFontFace(const FontDescription&, const AtomicString& family);
 
-    virtual bool resolvesFamilyFor(const FontDescription&) const override;
+    virtual bool resolvesFamilyFor(const FontCascadeDescription&) const override;
 
     void clearDocument();
 
-    void addFontFaceRule(const StyleRuleFontFace*, bool isInitiatingElementInUserAgentShadowTree);
+    void addFontFaceRule(const StyleRuleFontFace&, bool isInitiatingElementInUserAgentShadowTree);
 
     void fontLoaded();
     virtual void fontCacheInvalidated() override;
@@ -89,9 +90,9 @@ private:
     void beginLoadTimerFired();
 
     Document* m_document;
-    HashMap<String, std::unique_ptr<Vector<RefPtr<CSSFontFace>>>, CaseFoldingHash> m_fontFaces;
-    HashMap<String, std::unique_ptr<Vector<RefPtr<CSSFontFace>>>, CaseFoldingHash> m_locallyInstalledFontFaces;
-    HashMap<String, std::unique_ptr<HashMap<unsigned, RefPtr<CSSSegmentedFontFace>>>, CaseFoldingHash> m_fonts;
+    HashMap<String, Vector<Ref<CSSFontFace>>, CaseFoldingHash> m_fontFaces;
+    HashMap<String, Vector<Ref<CSSFontFace>>, CaseFoldingHash> m_locallyInstalledFontFaces;
+    HashMap<String, HashMap<unsigned, RefPtr<CSSSegmentedFontFace>>, CaseFoldingHash> m_fonts;
     HashSet<FontSelectorClient*> m_clients;
 
     Vector<CachedResourceHandle<CachedFont>> m_fontsToBeginLoading;

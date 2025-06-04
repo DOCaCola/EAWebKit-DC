@@ -45,8 +45,6 @@ public:
     LiveNodeList(ContainerNode& ownerNode, NodeListInvalidationType);
     virtual ~LiveNodeList();
 
-    virtual Node* namedItem(const AtomicString&) const override final;
-
     virtual bool elementMatches(Element&) const = 0;
     virtual bool isRootedAtDocument() const = 0;
 
@@ -82,7 +80,7 @@ public:
     virtual ~CachedLiveNodeList();
 
     unsigned length() const override final { return m_indexCache.nodeCount(nodeList()); }
-    Node* item(unsigned offset) const override final { return m_indexCache.nodeAt(nodeList(), offset); }
+    Element* item(unsigned offset) const override { return m_indexCache.nodeAt(nodeList(), offset); }
 
     // For CollectionIndexCache
     ElementDescendantIterator collectionBegin() const { return CollectionTraversal<CollectionTraversalType::Descendants>::begin(nodeList(), rootNode()); }

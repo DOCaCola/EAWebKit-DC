@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegCurvetoCubicRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegCurvetoCubicRel>&& impl)
     {
-        JSSVGPathSegCurvetoCubicRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoCubicRel>(globalObject->vm().heap)) JSSVGPathSegCurvetoCubicRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegCurvetoCubicRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoCubicRel>(globalObject->vm().heap)) JSSVGPathSegCurvetoCubicRel(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegCurvetoCubicRel& impl() const
+    SVGPathSegCurvetoCubicRel& wrapped() const
     {
-        return static_cast<SVGPathSegCurvetoCubicRel&>(Base::impl());
+        return static_cast<SVGPathSegCurvetoCubicRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegCurvetoCubicRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegCurvetoCubicRel>&&);
+    JSSVGPathSegCurvetoCubicRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegCurvetoCubicRel>&&);
 
     void finishCreation(JSC::VM& vm)
     {

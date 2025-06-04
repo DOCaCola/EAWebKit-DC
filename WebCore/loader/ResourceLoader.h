@@ -79,10 +79,10 @@ public:
 #endif
 
     WEBCORE_EXPORT FrameLoader* frameLoader() const;
-    FrameLoader& dataProtocolFrameLoader() const;
     DocumentLoader* documentLoader() const { return m_documentLoader.get(); }
     const ResourceRequest& originalRequest() const { return m_originalRequest; }
-    
+
+    WEBCORE_EXPORT void start();
     WEBCORE_EXPORT void cancel(const ResourceError&);
     WEBCORE_EXPORT ResourceError cancelledError();
     ResourceError blockedError();
@@ -142,7 +142,7 @@ public:
 
     void willSwitchToSubstituteResource();
 
-#if PLATFORM(MAC)
+#if PLATFORM(COCOA) && !USE(CFNETWORK)
     void schedule(WTF::SchedulePair&);
     void unschedule(WTF::SchedulePair&);
 #endif
@@ -156,11 +156,6 @@ public:
 
 protected:
     ResourceLoader(Frame*, ResourceLoaderOptions);
-
-    friend class ResourceLoadScheduler; // for access to start()
-    // start() actually sends the load to the network (unless the load is being
-    // deferred) and should only be called by ResourceLoadScheduler or setDefersLoading().
-    void start();
 
     void didFinishLoadingOnePart(double finishTime);
     void cleanupForError(const ResourceError&);
@@ -190,6 +185,8 @@ private:
     virtual void didCancel(const ResourceError&) = 0;
 
     void addDataOrBuffer(const char*, unsigned, SharedBuffer*, DataPayloadType);
+    void loadDataURL();
+    void finishNetworkLoad();
 
     // ResourceHandleClient
     virtual void willSendRequest(ResourceHandle*, ResourceRequest&, const ResourceResponse& redirectResponse) override;

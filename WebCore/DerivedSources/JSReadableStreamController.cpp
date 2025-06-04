@@ -24,11 +24,9 @@
 
 #include "JSReadableStreamController.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "ReadableStreamController.h"
-#include <bindings/ScriptValue.h>
-#include <runtime/Error.h>
+#include "JSDOMConstructor.h"
+#include "ReadableStreamControllerBuiltins.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -37,13 +35,9 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionEnqueue(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionClose(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionError(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsReadableStreamControllerDesiredSize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsReadableStreamControllerConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSReadableStreamControllerPrototype : public JSC::JSNonFinalObject {
@@ -71,59 +65,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSReadableStreamControllerConstructor : public DOMConstructorObject {
-private:
-    JSReadableStreamControllerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSReadableStreamController> JSReadableStreamControllerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSReadableStreamControllerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSReadableStreamControllerConstructor* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamControllerConstructor>(vm.heap)) JSReadableStreamControllerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSReadableStreamControllerConstructor::s_info = { "ReadableStreamControllerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamControllerConstructor) };
-
-JSReadableStreamControllerConstructor::JSReadableStreamControllerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> JSC::EncodedJSValue JSC_HOST_CALL JSReadableStreamControllerConstructor::construct(JSC::ExecState* state)
 {
+    return constructJSReadableStreamController(state);
 }
 
-void JSReadableStreamControllerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSReadableStreamControllerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSReadableStreamController::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSReadableStreamController::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ReadableStreamController"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSReadableStreamControllerConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSReadableStreamController;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSReadableStreamControllerConstructor::s_info = { "ReadableStreamControllerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamControllerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSReadableStreamControllerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamControllerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "desiredSize", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamControllerDesiredSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "enqueue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamControllerPrototypeFunctionEnqueue), (intptr_t) (0) },
-    { "close", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamControllerPrototypeFunctionClose), (intptr_t) (0) },
-    { "error", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamControllerPrototypeFunctionError), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamControllerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "desiredSize", ReadOnly | Accessor | Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamControllerDesiredSizeCodeGenerator), (intptr_t) (0) } },
+    { "enqueue", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamControllerEnqueueCodeGenerator), (intptr_t) (0) } },
+    { "close", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamControllerCloseCodeGenerator), (intptr_t) (0) } },
+    { "error", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamControllerErrorCodeGenerator), (intptr_t) (0) } },
 };
 
 const ClassInfo JSReadableStreamControllerPrototype::s_info = { "ReadableStreamControllerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamControllerPrototype) };
@@ -136,11 +102,8 @@ void JSReadableStreamControllerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSReadableStreamController::s_info = { "ReadableStreamController", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamController) };
 
-JSReadableStreamController::JSReadableStreamController(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ReadableStreamController>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
+JSReadableStreamController::JSReadableStreamController(Structure* structure, JSDOMGlobalObject& globalObject)
+    : JSDOMObject(structure, globalObject) { }
 
 JSObject* JSReadableStreamController::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
@@ -158,121 +121,17 @@ void JSReadableStreamController::destroy(JSC::JSCell* cell)
     thisObject->JSReadableStreamController::~JSReadableStreamController();
 }
 
-JSReadableStreamController::~JSReadableStreamController()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsReadableStreamControllerDesiredSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSReadableStreamController* castedThis = jsDynamicCast<JSReadableStreamController*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSReadableStreamControllerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ReadableStreamController", "desiredSize");
-        return throwGetterTypeError(*exec, "ReadableStreamController", "desiredSize");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.desiredSize());
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsReadableStreamControllerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsReadableStreamControllerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSReadableStreamControllerPrototype* domObject = jsDynamicCast<JSReadableStreamControllerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    JSValue constructor = JSReadableStreamControllerConstructor::create(exec->vm(), JSReadableStreamControllerConstructor::createStructure(exec->vm(), domObject->globalObject(), domObject->globalObject()->objectPrototype()), jsCast<JSDOMGlobalObject*>(domObject->globalObject()));
+        return throwVMTypeError(state);
+    JSValue constructor = JSReadableStreamControllerConstructor::create(state->vm(), JSReadableStreamControllerConstructor::createStructure(state->vm(), *domObject->globalObject(), domObject->globalObject()->objectPrototype()), *jsCast<JSDOMGlobalObject*>(domObject->globalObject()));
     // Shadowing constructor property to ensure reusing the same constructor object
-    domObject->putDirect(exec->vm(), exec->propertyNames().constructor, constructor, DontEnum | ReadOnly);
+    domObject->putDirect(state->vm(), state->propertyNames().constructor, constructor, DontEnum | ReadOnly);
     return JSValue::encode(constructor);
 }
 
-EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionEnqueue(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamController* castedThis = jsDynamicCast<JSReadableStreamController*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamController", "enqueue");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamController::info());
-    auto& impl = castedThis->impl();
-    Deprecated::ScriptValue chunk = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.enqueue(exec, chunk);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionClose(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamController* castedThis = jsDynamicCast<JSReadableStreamController*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamController", "close");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamController::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.close(ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamControllerPrototypeFunctionError(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamController* castedThis = jsDynamicCast<JSReadableStreamController*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamController", "error");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamController::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Deprecated::ScriptValue error = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.error(exec, error, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-bool JSReadableStreamControllerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSReadableStreamControllerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsReadableStreamController = jsCast<JSReadableStreamController*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsReadableStreamController->impl(), jsReadableStreamController);
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ReadableStreamController* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSReadableStreamController>(globalObject, impl))
-        return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to ReadableStreamController.
-    COMPILE_ASSERT(!__is_polymorphic(ReadableStreamController), ReadableStreamController_is_polymorphic_but_idl_claims_not_to_be);
-#endif
-    return createNewWrapper<JSReadableStreamController>(globalObject, impl);
-}
-
-ReadableStreamController* JSReadableStreamController::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSReadableStreamController*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
 
 }
 

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCSSRule : public JSDOMWrapper {
+class JSCSSRule : public JSDOMWrapper<CSSRule> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CSSRule> Base;
     static JSCSSRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSRule>&& impl)
     {
-        JSCSSRule* ptr = new (NotNull, JSC::allocateCell<JSCSSRule>(globalObject->vm().heap)) JSCSSRule(structure, globalObject, WTF::move(impl));
+        JSCSSRule* ptr = new (NotNull, JSC::allocateCell<JSCSSRule>(globalObject->vm().heap)) JSCSSRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CSSRule* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCSSRule();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    CSSRule& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CSSRule* m_impl;
 protected:
-    JSCSSRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSRule>&&);
+    JSCSSRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CSSRule*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CSSRule*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CSSRule& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSRule& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CSSRule*);
 
 
 } // namespace WebCore

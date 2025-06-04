@@ -23,15 +23,8 @@
 
 #include "JSDOMBinding.h"
 #include "URL.h"
-#include "WorkerNavigator.h"
-#include "WorkerNavigatorStorageQuota.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
-
-#if ENABLE(QUOTA)
-#include "JSStorageQuota.h"
-#include "StorageQuota.h"
-#endif
 
 using namespace JSC;
 
@@ -44,12 +37,6 @@ JSC::EncodedJSValue jsWorkerNavigatorAppVersion(JSC::ExecState*, JSC::JSObject*,
 JSC::EncodedJSValue jsWorkerNavigatorPlatform(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsWorkerNavigatorUserAgent(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsWorkerNavigatorOnLine(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#if ENABLE(QUOTA)
-JSC::EncodedJSValue jsWorkerNavigatorWebkitTemporaryStorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
-#if ENABLE(QUOTA)
-JSC::EncodedJSValue jsWorkerNavigatorWebkitPersistentStorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
 
 class JSWorkerNavigatorPrototype : public JSC::JSNonFinalObject {
 public:
@@ -79,7 +66,6 @@ private:
 /* Hash table */
 
 static const struct CompactHashIndex JSWorkerNavigatorTableIndex[18] = {
-    { 6, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
@@ -88,7 +74,8 @@ static const struct CompactHashIndex JSWorkerNavigatorTableIndex[18] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 5, -1 },
+    { -1, -1 },
+    { -1, -1 },
     { 2, 17 },
     { -1, -1 },
     { -1, -1 },
@@ -102,29 +89,19 @@ static const struct CompactHashIndex JSWorkerNavigatorTableIndex[18] = {
 
 static const HashTableValue JSWorkerNavigatorTableValues[] =
 {
-    { "appName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorAppName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "appVersion", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorAppVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "platform", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorPlatform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "userAgent", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorUserAgent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onLine", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorOnLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#if ENABLE(QUOTA)
-    { "webkitTemporaryStorage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorWebkitTemporaryStorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(QUOTA)
-    { "webkitPersistentStorage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorWebkitPersistentStorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "appName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorAppName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "appVersion", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorAppVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "platform", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorPlatform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "userAgent", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorUserAgent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onLine", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerNavigatorOnLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSWorkerNavigatorTable = { 7, 15, true, JSWorkerNavigatorTableValues, 0, JSWorkerNavigatorTableIndex };
+static const HashTable JSWorkerNavigatorTable = { 5, 15, true, JSWorkerNavigatorTableValues, JSWorkerNavigatorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSWorkerNavigatorPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSWorkerNavigatorPrototype::s_info = { "WorkerNavigatorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerNavigatorPrototype) };
@@ -137,9 +114,8 @@ void JSWorkerNavigatorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWorkerNavigator::s_info = { "WorkerNavigator", &Base::s_info, &JSWorkerNavigatorTable, CREATE_METHOD_TABLE(JSWorkerNavigator) };
 
-JSWorkerNavigator::JSWorkerNavigator(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WorkerNavigator>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWorkerNavigator::JSWorkerNavigator(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WorkerNavigator>&& impl)
+    : JSDOMWrapper<WorkerNavigator>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -159,131 +135,94 @@ void JSWorkerNavigator::destroy(JSC::JSCell* cell)
     thisObject->JSWorkerNavigator::~JSWorkerNavigator();
 }
 
-JSWorkerNavigator::~JSWorkerNavigator()
-{
-    releaseImpl();
-}
-
-bool JSWorkerNavigator::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSWorkerNavigator::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSWorkerNavigator*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSWorkerNavigator, Base>(exec, JSWorkerNavigatorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSWorkerNavigator, Base>(state, JSWorkerNavigatorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsWorkerNavigatorAppName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerNavigatorAppName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
     JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "appName");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.appName());
+        reportDeprecatedGetterError(*state, "WorkerNavigator", "appName");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.appName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerNavigatorAppVersion(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerNavigatorAppVersion(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
     JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "appVersion");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.appVersion());
+        reportDeprecatedGetterError(*state, "WorkerNavigator", "appVersion");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.appVersion());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerNavigatorPlatform(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerNavigatorPlatform(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
     JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "platform");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.platform());
+        reportDeprecatedGetterError(*state, "WorkerNavigator", "platform");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.platform());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerNavigatorUserAgent(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerNavigatorUserAgent(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
     JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "userAgent");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.userAgent());
+        reportDeprecatedGetterError(*state, "WorkerNavigator", "userAgent");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.userAgent());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerNavigatorOnLine(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerNavigatorOnLine(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
     JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "onLine");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "WorkerNavigator", "onLine");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.onLine());
     return JSValue::encode(result);
 }
 
 
-#if ENABLE(QUOTA)
-EncodedJSValue jsWorkerNavigatorWebkitTemporaryStorage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
-    JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "webkitTemporaryStorage");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(WorkerNavigatorStorageQuota::webkitTemporaryStorage(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-#if ENABLE(QUOTA)
-EncodedJSValue jsWorkerNavigatorWebkitPersistentStorage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSWorkerNavigator*>(slotBase);
-    JSWorkerNavigator* castedThisObject = jsDynamicCast<JSWorkerNavigator*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "WorkerNavigator", "webkitPersistentStorage");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(WorkerNavigatorStorageQuota::webkitPersistentStorage(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
 bool JSWorkerNavigatorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWorkerNavigator = jsCast<JSWorkerNavigator*>(handle.slot()->asCell());
-    WorkerNavigator* root = &jsWorkerNavigator->impl();
+    WorkerNavigator* root = &jsWorkerNavigator->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -291,7 +230,7 @@ void JSWorkerNavigatorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsWorkerNavigator = jsCast<JSWorkerNavigator*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWorkerNavigator->impl(), jsWorkerNavigator);
+    uncacheWrapper(world, &jsWorkerNavigator->wrapped(), jsWorkerNavigator);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -302,6 +241,14 @@ extern "C" { extern void (*const __identifier("??_7WorkerNavigator@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15WorkerNavigatorE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WorkerNavigator* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWorkerNavigator>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WorkerNavigator* impl)
 {
     if (!impl)
@@ -333,7 +280,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WorkerNaviga
 WorkerNavigator* JSWorkerNavigator::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWorkerNavigator*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLAnchorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAnchorElement>&& impl)
     {
-        JSHTMLAnchorElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElement>(globalObject->vm().heap)) JSHTMLAnchorElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAnchorElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAnchorElement>(globalObject->vm().heap)) JSHTMLAnchorElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAnchorElement& impl() const
+    HTMLAnchorElement& wrapped() const
     {
-        return static_cast<HTMLAnchorElement&>(Base::impl());
+        return static_cast<HTMLAnchorElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAnchorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAnchorElement>&&);
+    JSHTMLAnchorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAnchorElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

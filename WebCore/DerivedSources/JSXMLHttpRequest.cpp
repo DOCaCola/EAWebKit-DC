@@ -25,12 +25,12 @@
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDocument.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "JSXMLHttpRequestUpload.h"
 #include "URL.h"
-#include "XMLHttpRequest.h"
 #include "XMLHttpRequestUpload.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -67,16 +67,12 @@ JSC::EncodedJSValue jsXMLHttpRequestOnloadstart(JSC::ExecState*, JSC::JSObject*,
 void setJSXMLHttpRequestOnloadstart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsXMLHttpRequestOnprogress(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestOnprogress(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#if ENABLE(XHR_TIMEOUT)
 JSC::EncodedJSValue jsXMLHttpRequestOntimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestOntimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
 JSC::EncodedJSValue jsXMLHttpRequestOnreadystatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestOnreadystatechange(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#if ENABLE(XHR_TIMEOUT)
 JSC::EncodedJSValue jsXMLHttpRequestTimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestTimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
 JSC::EncodedJSValue jsXMLHttpRequestReadyState(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsXMLHttpRequestWithCredentials(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestWithCredentials(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
@@ -116,142 +112,35 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXMLHttpRequestConstructor : public DOMConstructorObject {
-private:
-    JSXMLHttpRequestConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSXMLHttpRequestConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXMLHttpRequestConstructor* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestConstructor>(vm.heap)) JSXMLHttpRequestConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSXMLHttpRequest(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSXMLHttpRequest> JSXMLHttpRequestConstructor;
 
 /* Hash table */
 
-static const struct CompactHashIndex JSXMLHttpRequestTableIndex[65] = {
-    { 9, -1 },
+static const struct CompactHashIndex JSXMLHttpRequestTableIndex[5] = {
     { -1, -1 },
-    { 8, -1 },
+    { 0, 4 },
     { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 3, -1 },
-    { -1, -1 },
-    { 10, -1 },
-    { 4, -1 },
-    { 16, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 6, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { 11, -1 },
-    { 7, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 14, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 15, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 13, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 2, -1 },
     { -1, -1 },
     { 1, -1 },
-    { -1, -1 },
-    { 17, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 5, 64 },
-    { -1, -1 },
-    { 18, -1 },
-    { 12, -1 },
 };
 
 
 static const HashTableValue JSXMLHttpRequestTableValues[] =
 {
-    { "onabort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnabort) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnerror) },
-    { "onload", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnload) },
-    { "onloadend", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnloadend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnloadend) },
-    { "onloadstart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnloadstart) },
-    { "onprogress", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnprogress) },
-#if ENABLE(XHR_TIMEOUT)
-    { "ontimeout", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOntimeout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOntimeout) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-    { "onreadystatechange", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnreadystatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnreadystatechange) },
-#if ENABLE(XHR_TIMEOUT)
-    { "timeout", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestTimeout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestTimeout) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "withCredentials", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestWithCredentials), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestWithCredentials) },
-    { "upload", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUpload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "responseText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "responseXML", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseXML), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "responseType", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestResponseType) },
-    { "response", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponse), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "status", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestStatus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "statusText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestStatusText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "responseURL", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "responseText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "response", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponse), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSXMLHttpRequestTable = { 19, 63, true, JSXMLHttpRequestTableValues, 0, JSXMLHttpRequestTableIndex };
+static const HashTable JSXMLHttpRequestTable = { 2, 3, true, JSXMLHttpRequestTableValues, JSXMLHttpRequestTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSXMLHttpRequestConstructorTableValues[] =
 {
-    { "UNSENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "OPENED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "HEADERS_RECEIVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "DONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "UNSENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "OPENED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "HEADERS_RECEIVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "DONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
 
@@ -261,59 +150,63 @@ COMPILE_ASSERT(2 == XMLHttpRequest::HEADERS_RECEIVED, XMLHttpRequestEnumHEADERS_
 COMPILE_ASSERT(3 == XMLHttpRequest::LOADING, XMLHttpRequestEnumLOADINGIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(4 == XMLHttpRequest::DONE, XMLHttpRequestEnumDONEIsWrongUseDoNotCheckConstants);
 
-EncodedJSValue JSC_HOST_CALL JSXMLHttpRequestConstructor::constructJSXMLHttpRequest(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSXMLHttpRequestConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSXMLHttpRequestConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSXMLHttpRequestConstructor*>(state->callee());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "XMLHttpRequest");
+        return throwConstructorDocumentUnavailableError(*state, "XMLHttpRequest");
     RefPtr<XMLHttpRequest> object = XMLHttpRequest::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSXMLHttpRequestConstructor::s_info = { "XMLHttpRequestConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestConstructor) };
-
-JSXMLHttpRequestConstructor::JSXMLHttpRequestConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXMLHttpRequestConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXMLHttpRequestConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequest::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequest::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XMLHttpRequest"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSXMLHttpRequestConstructorTableValues, *this);
 }
 
-ConstructType JSXMLHttpRequestConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSXMLHttpRequest;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSXMLHttpRequestConstructor::s_info = { "XMLHttpRequestConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXMLHttpRequestPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "UNSENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "OPENED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "HEADERS_RECEIVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "DONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "open", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionOpen), (intptr_t) (2) },
-    { "setRequestHeader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionSetRequestHeader), (intptr_t) (2) },
-    { "send", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionSend), (intptr_t) (0) },
-    { "abort", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionAbort), (intptr_t) (0) },
-    { "getAllResponseHeaders", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionGetAllResponseHeaders), (intptr_t) (0) },
-    { "getResponseHeader", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionGetResponseHeader), (intptr_t) (1) },
-    { "overrideMimeType", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionOverrideMimeType), (intptr_t) (1) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onabort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnabort) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnerror) } },
+    { "onload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnload) } },
+    { "onloadend", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnloadend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnloadend) } },
+    { "onloadstart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnloadstart) } },
+    { "onprogress", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnprogress) } },
+    { "ontimeout", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOntimeout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOntimeout) } },
+    { "onreadystatechange", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestOnreadystatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestOnreadystatechange) } },
+    { "timeout", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestTimeout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestTimeout) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "withCredentials", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestWithCredentials), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestWithCredentials) } },
+    { "upload", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUpload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "responseXML", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseXML), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "responseType", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestResponseType) } },
+    { "status", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestStatus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "statusText", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestStatusText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "responseURL", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestResponseURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "UNSENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "OPENED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "HEADERS_RECEIVED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "DONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "open", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionOpen), (intptr_t) (2) } },
+    { "setRequestHeader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionSetRequestHeader), (intptr_t) (2) } },
+    { "send", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionSend), (intptr_t) (0) } },
+    { "abort", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionAbort), (intptr_t) (0) } },
+    { "getAllResponseHeaders", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionGetAllResponseHeaders), (intptr_t) (0) } },
+    { "getResponseHeader", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionGetResponseHeader), (intptr_t) (1) } },
+    { "overrideMimeType", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionOverrideMimeType), (intptr_t) (1) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSXMLHttpRequestPrototype::s_info = { "XMLHttpRequestPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestPrototype) };
@@ -326,9 +219,8 @@ void JSXMLHttpRequestPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXMLHttpRequest::s_info = { "XMLHttpRequest", &Base::s_info, &JSXMLHttpRequestTable, CREATE_METHOD_TABLE(JSXMLHttpRequest) };
 
-JSXMLHttpRequest::JSXMLHttpRequest(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequest>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXMLHttpRequest::JSXMLHttpRequest(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XMLHttpRequest>&& impl)
+    : JSDOMWrapper<XMLHttpRequest>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -348,626 +240,676 @@ void JSXMLHttpRequest::destroy(JSC::JSCell* cell)
     thisObject->JSXMLHttpRequest::~JSXMLHttpRequest();
 }
 
-JSXMLHttpRequest::~JSXMLHttpRequest()
-{
-    releaseImpl();
-}
-
-bool JSXMLHttpRequest::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSXMLHttpRequest::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSXMLHttpRequest*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSXMLHttpRequest, Base>(exec, JSXMLHttpRequestTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSXMLHttpRequest, Base>(state, JSXMLHttpRequestTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsXMLHttpRequestOnabort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnabort(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onabort");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().abortEvent));
-}
-
-
-EncodedJSValue jsXMLHttpRequestOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onerror");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onabort");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onabort");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().abortEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestOnload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onload");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onerror");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onerror");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestOnloadend(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnload(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onloadend");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadendEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onload");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onload");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestOnloadstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnloadend(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onloadstart");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadstartEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onloadend");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onloadend");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadendEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestOnprogress(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnloadstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onprogress");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().progressEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onloadstart");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onloadstart");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadstartEvent));
 }
 
 
-#if ENABLE(XHR_TIMEOUT)
-EncodedJSValue jsXMLHttpRequestOntimeout(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOnprogress(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "ontimeout");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().timeoutEvent));
-}
-
-#endif
-
-EncodedJSValue jsXMLHttpRequestOnreadystatechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "onreadystatechange");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().readystatechangeEvent));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onprogress");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onprogress");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().progressEvent));
 }
 
 
-#if ENABLE(XHR_TIMEOUT)
-EncodedJSValue jsXMLHttpRequestTimeout(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestOntimeout(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "timeout");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "ontimeout");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "ontimeout");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().timeoutEvent));
+}
+
+
+EncodedJSValue jsXMLHttpRequestOnreadystatechange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "onreadystatechange");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "onreadystatechange");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().readystatechangeEvent));
+}
+
+
+EncodedJSValue jsXMLHttpRequestTimeout(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "timeout");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "timeout");
+    }
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.timeout());
     return JSValue::encode(result);
 }
 
-#endif
 
-EncodedJSValue jsXMLHttpRequestReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestReadyState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "readyState");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "readyState");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "readyState");
+    }
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.readyState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestWithCredentials(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestWithCredentials(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "withCredentials");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "withCredentials");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "withCredentials");
+    }
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.withCredentials());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestUpload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUpload(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "upload");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.upload()));
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "upload");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "upload");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.upload()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestResponseText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestResponseText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "responseText");
-    return JSValue::encode(castedThis->responseText(exec));
+    return JSValue::encode(castedThis->responseText(*state));
 }
 
 
-EncodedJSValue jsXMLHttpRequestResponseXML(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestResponseXML(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "responseXML");
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "responseXML");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "responseXML");
+    }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.responseXML(ec)));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.responseXML(ec)));
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestResponseType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestResponseType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "responseType");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.responseType());
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "responseType");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "responseType");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.responseType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestResponse(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestResponse(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "response");
-    return JSValue::encode(castedThis->response(exec));
+    return JSValue::encode(castedThis->response(*state));
 }
 
 
-EncodedJSValue jsXMLHttpRequestStatus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestStatus(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "status");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "status");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "status");
+    }
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.status());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestStatusText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestStatusText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "statusText");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.statusText());
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "statusText");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "statusText");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.statusText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestResponseURL(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestResponseURL(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(slotBase);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequest", "responseURL");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.responseURL());
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequest", "responseURL");
+        return throwGetterTypeError(*state, "XMLHttpRequest", "responseURL");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.responseURL());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXMLHttpRequestPrototype* domObject = jsDynamicCast<JSXMLHttpRequestPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXMLHttpRequest::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXMLHttpRequest::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSXMLHttpRequestOnabort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnabort(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onabort");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().abortEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onabort");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onabort");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().abortEvent, value);
 }
 
 
-void setJSXMLHttpRequestOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onerror");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onerror");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onerror");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().errorEvent, value);
 }
 
 
-void setJSXMLHttpRequestOnload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnload(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onload");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onload");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onload");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadEvent, value);
 }
 
 
-void setJSXMLHttpRequestOnloadend(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnloadend(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onloadend");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadendEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onloadend");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onloadend");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadendEvent, value);
 }
 
 
-void setJSXMLHttpRequestOnloadstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnloadstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onloadstart");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadstartEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onloadstart");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onloadstart");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadstartEvent, value);
 }
 
 
-void setJSXMLHttpRequestOnprogress(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnprogress(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onprogress");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().progressEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onprogress");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onprogress");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().progressEvent, value);
 }
 
 
-#if ENABLE(XHR_TIMEOUT)
-void setJSXMLHttpRequestOntimeout(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOntimeout(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "ontimeout");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().timeoutEvent, value);
-}
-
-#endif
-
-void setJSXMLHttpRequestOnreadystatechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "onreadystatechange");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().readystatechangeEvent, value);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "ontimeout");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "ontimeout");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().timeoutEvent, value);
 }
 
 
-#if ENABLE(XHR_TIMEOUT)
-void setJSXMLHttpRequestTimeout(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestOnreadystatechange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "timeout");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "onreadystatechange");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "onreadystatechange");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().readystatechangeEvent, value);
+}
+
+
+void setJSXMLHttpRequestTimeout(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "timeout");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "timeout");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setTimeout(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
-#endif
 
-void setJSXMLHttpRequestWithCredentials(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestWithCredentials(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "withCredentials");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "withCredentials");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "withCredentials");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setWithCredentials(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSXMLHttpRequestResponseType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestResponseType(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequest*>(baseObject);
-    JSXMLHttpRequest* castedThisObject = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequest", "responseType");
-    auto& impl = castedThis->impl();
+    JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequest", "responseType");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequest", "responseType");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (nativeValue != "" && nativeValue != "arraybuffer" && nativeValue != "blob" && nativeValue != "document" && nativeValue != "json" && nativeValue != "text")
         return;
     impl.setResponseType(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSXMLHttpRequest::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXMLHttpRequestConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXMLHttpRequestConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionOpen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionOpen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "open");
+        return throwThisTypeError(*state, "XMLHttpRequest", "open");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    return JSValue::encode(castedThis->open(exec));
+    return JSValue::encode(castedThis->open(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionSetRequestHeader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionSetRequestHeader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "setRequestHeader");
+        return throwThisTypeError(*state, "XMLHttpRequest", "setRequestHeader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String header = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String header = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String value = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String value = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setRequestHeader(header, value, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionSend(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionSend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "send");
+        return throwThisTypeError(*state, "XMLHttpRequest", "send");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    return JSValue::encode(castedThis->send(exec));
+    return JSValue::encode(castedThis->send(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionAbort(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionAbort(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "abort");
+        return throwThisTypeError(*state, "XMLHttpRequest", "abort");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.abort();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionGetAllResponseHeaders(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionGetAllResponseHeaders(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "getAllResponseHeaders");
+        return throwThisTypeError(*state, "XMLHttpRequest", "getAllResponseHeaders");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrUndefined(exec, impl.getAllResponseHeaders());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrUndefined(state, impl.getAllResponseHeaders());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionGetResponseHeader(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionGetResponseHeader(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "getResponseHeader");
+        return throwThisTypeError(*state, "XMLHttpRequest", "getResponseHeader");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String header = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String header = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.getResponseHeader(header));
+    JSValue result = jsStringOrNull(state, impl.getResponseHeader(header));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionOverrideMimeType(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionOverrideMimeType(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "overrideMimeType");
+        return throwThisTypeError(*state, "XMLHttpRequest", "overrideMimeType");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String override = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String override = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.overrideMimeType(override, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "addEventListener");
+        return throwThisTypeError(*state, "XMLHttpRequest", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "removeEventListener");
+        return throwThisTypeError(*state, "XMLHttpRequest", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequest* castedThis = jsDynamicCast<JSXMLHttpRequest*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequest", "dispatchEvent");
+        return throwThisTypeError(*state, "XMLHttpRequest", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequest::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -976,7 +918,7 @@ void JSXMLHttpRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSXMLHttpRequest*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
     thisObject->visitAdditionalChildren(visitor);
     visitor.append(&thisObject->m_response);
 }
@@ -984,9 +926,9 @@ void JSXMLHttpRequest::visitChildren(JSCell* cell, SlotVisitor& visitor)
 bool JSXMLHttpRequestOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsXMLHttpRequest = jsCast<JSXMLHttpRequest*>(handle.slot()->asCell());
-    if (jsXMLHttpRequest->impl().hasPendingActivity())
+    if (jsXMLHttpRequest->wrapped().hasPendingActivity())
         return true;
-    if (jsXMLHttpRequest->impl().isFiringEventListeners())
+    if (jsXMLHttpRequest->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -996,7 +938,7 @@ void JSXMLHttpRequestOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsXMLHttpRequest = jsCast<JSXMLHttpRequest*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXMLHttpRequest->impl(), jsXMLHttpRequest);
+    uncacheWrapper(world, &jsXMLHttpRequest->wrapped(), jsXMLHttpRequest);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -1007,6 +949,14 @@ extern "C" { extern void (*const __identifier("??_7XMLHttpRequest@WebCore@@6B@")
 extern "C" { extern void* _ZTVN7WebCore14XMLHttpRequestE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequest* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXMLHttpRequest>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequest* impl)
 {
     if (!impl)
@@ -1038,7 +988,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpReque
 XMLHttpRequest* JSXMLHttpRequest::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXMLHttpRequest*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

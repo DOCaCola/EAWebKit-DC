@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTextTrackCueList : public JSDOMWrapper {
+class JSTextTrackCueList : public JSDOMWrapper<TextTrackCueList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TextTrackCueList> Base;
     static JSTextTrackCueList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackCueList>&& impl)
     {
-        JSTextTrackCueList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCueList>(globalObject->vm().heap)) JSTextTrackCueList(structure, globalObject, WTF::move(impl));
+        JSTextTrackCueList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCueList>(globalObject->vm().heap)) JSTextTrackCueList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTextTrackCueList();
 
     DECLARE_INFO;
 
@@ -56,15 +55,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TextTrackCueList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrackCueList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSTextTrackCueList(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrackCueList>&&);
+    JSTextTrackCueList(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrackCueList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -87,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrackCueList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCueList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrackCueList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrackCueList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCueList*);
 
 
 } // namespace WebCore

@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSDOMSettableTokenList.h"
 
-#include "DOMSettableTokenList.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <runtime/PropertyNameArray.h>
@@ -61,26 +61,7 @@ private:
     }
 };
 
-class JSDOMSettableTokenListConstructor : public DOMConstructorObject {
-private:
-    JSDOMSettableTokenListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMSettableTokenListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMSettableTokenListConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMSettableTokenListConstructor>(vm.heap)) JSDOMSettableTokenListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSDOMSettableTokenList> JSDOMSettableTokenListConstructor;
 
 /* Hash table */
 
@@ -94,33 +75,26 @@ static const struct CompactHashIndex JSDOMSettableTokenListTableIndex[4] = {
 
 static const HashTableValue JSDOMSettableTokenListTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSettableTokenListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSettableTokenListValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMSettableTokenListValue) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSettableTokenListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "value", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSettableTokenListValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMSettableTokenListValue) } },
 };
 
-static const HashTable JSDOMSettableTokenListTable = { 2, 3, true, JSDOMSettableTokenListTableValues, 0, JSDOMSettableTokenListTableIndex };
-const ClassInfo JSDOMSettableTokenListConstructor::s_info = { "DOMSettableTokenListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSettableTokenListConstructor) };
-
-JSDOMSettableTokenListConstructor::JSDOMSettableTokenListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSDOMSettableTokenListTable = { 2, 3, true, JSDOMSettableTokenListTableValues, JSDOMSettableTokenListTableIndex };
+template<> void JSDOMSettableTokenListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDOMSettableTokenListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMSettableTokenList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMSettableTokenList::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMSettableTokenList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMSettableTokenListConstructor::s_info = { "DOMSettableTokenListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSettableTokenListConstructor) };
 
 /* Hash table for prototype */
 const ClassInfo JSDOMSettableTokenListPrototype::s_info = { "DOMSettableTokenListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSettableTokenListPrototype) };
 
 const ClassInfo JSDOMSettableTokenList::s_info = { "DOMSettableTokenList", &Base::s_info, &JSDOMSettableTokenListTable, CREATE_METHOD_TABLE(JSDOMSettableTokenList) };
 
-JSDOMSettableTokenList::JSDOMSettableTokenList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMSettableTokenList>&& impl)
+JSDOMSettableTokenList::JSDOMSettableTokenList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMSettableTokenList>&& impl)
     : JSDOMTokenList(structure, globalObject, WTF::move(impl))
 {
 }
@@ -135,85 +109,89 @@ JSObject* JSDOMSettableTokenList::getPrototype(VM& vm, JSGlobalObject* globalObj
     return getDOMPrototype<JSDOMSettableTokenList>(vm, globalObject);
 }
 
-bool JSDOMSettableTokenList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMSettableTokenList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMSettableTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSDOMSettableTokenList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
     if (optionalIndex) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, jsStringOrUndefined(state, thisObject->wrapped().item(index)));
         return true;
     }
-    return getStaticValueSlot<JSDOMSettableTokenList, Base>(exec, JSDOMSettableTokenListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDOMSettableTokenList, Base>(state, JSDOMSettableTokenListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSDOMSettableTokenList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDOMSettableTokenList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMSettableTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     if (index <= MAX_ARRAY_INDEX) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, jsStringOrUndefined(exec, thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, jsStringOrUndefined(state, thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDOMSettableTokenListValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSettableTokenListValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDOMSettableTokenList*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.value());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.value());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSettableTokenListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSettableTokenListConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSDOMSettableTokenList* domObject = jsDynamicCast<JSDOMSettableTokenList*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMSettableTokenList::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDOMSettableTokenList::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSDOMSettableTokenListValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMSettableTokenListValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDOMSettableTokenList*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setValue(nativeValue);
 }
 
 
-void JSDOMSettableTokenList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSDOMSettableTokenList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSDOMSettableTokenList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
 JSValue JSDOMSettableTokenList::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDOMSettableTokenListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMSettableTokenListConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMSettableTokenList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMSettableTokenList>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMSettableTokenList* impl)

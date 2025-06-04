@@ -49,27 +49,27 @@ using namespace DFG;
 size_t sizeOfGetById()
 {
 #if CPU(ARM64)
-    return 36;
+    return 32;
 #else
-    return 30;
+    return 27;
 #endif
 }
 
 size_t sizeOfPutById()
 {
 #if CPU(ARM64)
-    return 44;
+    return 40;
 #else
-    return 32;
+    return 29;
 #endif
 }
 
 size_t sizeOfCall()
 {
 #if CPU(ARM64)
-    return 56;
+    return 60;
 #else
-    return 53;
+    return 60;
 #endif
 }
 
@@ -82,12 +82,30 @@ size_t sizeOfCallVarargs()
 #endif
 }
 
+size_t sizeOfTailCallVarargs()
+{
+#if CPU(ARM64)
+    return 188 + sizeOfCallVarargs();
+#else
+    return 151 + sizeOfCallVarargs();
+#endif
+}
+
 size_t sizeOfCallForwardVarargs()
 {
 #if CPU(ARM64)
     return 312;
 #else
     return 262;
+#endif
+}
+
+size_t sizeOfTailCallForwardVarargs()
+{
+#if CPU(ARM64)
+    return 188 + sizeOfCallForwardVarargs();
+#else
+    return 151 + sizeOfCallForwardVarargs();
 #endif
 }
 
@@ -110,6 +128,183 @@ size_t sizeOfIn()
 #endif
 }
 
+size_t sizeOfBitAnd()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+return 180; // ARM64 release.
+#else
+return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+return 199; // X86_64 release.
+#else
+return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfBitOr()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfBitXor()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfBitLShift()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfBitRShift()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfBitURShift()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfArithDiv()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfArithMul()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfArithSub()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 216; // ARM64 release.
+#else
+    return 312; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 223; // X86_64 release.
+#else
+    return 298; // X86_64 debug.
+#endif
+#endif
+}
+
+size_t sizeOfValueAdd()
+{
+#if CPU(ARM64)
+#ifdef NDEBUG
+    return 180; // ARM64 release.
+#else
+    return 276; // ARM64 debug.
+#endif
+#else // CPU(X86_64)
+#ifdef NDEBUG
+    return 199; // X86_64 release.
+#else
+    return 286; // X86_64 debug.
+#endif
+#endif
+}
+
+#if ENABLE(MASM_PROBE)
+size_t sizeOfProbe()
+{
+    return 132; // Based on ARM64.
+}
+#endif
+
 size_t sizeOfICFor(Node* node)
 {
     switch (node->op()) {
@@ -121,9 +316,15 @@ size_t sizeOfICFor(Node* node)
     case Construct:
         return sizeOfCall();
     case CallVarargs:
+    case TailCallVarargsInlinedCaller:
         return sizeOfCallVarargs();
+    case TailCallVarargs:
+        return sizeOfTailCallVarargs();
     case CallForwardVarargs:
+    case TailCallForwardVarargsInlinedCaller:
         return sizeOfCallForwardVarargs();
+    case TailCallForwardVarargs:
+        return sizeOfTailCallForwardVarargs();
     case ConstructVarargs:
         return sizeOfConstructVarargs();
     case ConstructForwardVarargs:
@@ -131,7 +332,7 @@ size_t sizeOfICFor(Node* node)
     case In:
         return sizeOfIn();
     default:
-        return 0;
+        RELEASE_ASSERT_NOT_REACHED();
     }
 }
 

@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGPatternElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPatternElement>&& impl)
     {
-        JSSVGPatternElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPatternElement>(globalObject->vm().heap)) JSSVGPatternElement(structure, globalObject, WTF::move(impl));
+        JSSVGPatternElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPatternElement>(globalObject->vm().heap)) JSSVGPatternElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPatternElement& impl() const
+    SVGPatternElement& wrapped() const
     {
-        return static_cast<SVGPatternElement&>(Base::impl());
+        return static_cast<SVGPatternElement&>(Base::wrapped());
     }
 protected:
-    JSSVGPatternElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPatternElement>&&);
+    JSSVGPatternElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPatternElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -44,6 +44,7 @@ namespace WebCore {
 class FloatRect;
 class Path;
 class RenderBox;
+class SVGPathByteStream;
 
 class BasicShape : public RefCounted<BasicShape> {
 public:
@@ -51,18 +52,21 @@ public:
 
     enum Type {
         BasicShapePolygonType,
+        BasicShapePathType,
         BasicShapeCircleType,
         BasicShapeEllipseType,
         BasicShapeInsetType
     };
 
-    bool canBlend(const BasicShape&) const;
+    virtual Type type() const = 0;
 
     virtual void path(Path&, const FloatRect&) = 0;
     virtual WindRule windRule() const { return RULE_NONZERO; }
+
+    virtual bool canBlend(const BasicShape&) const = 0;
     virtual Ref<BasicShape> blend(const BasicShape&, double) const = 0;
 
-    virtual Type type() const = 0;
+    virtual bool operator==(const BasicShape&) const = 0;
 };
 
 class BasicShapeCenterCoordinate {
@@ -101,13 +105,20 @@ public:
     {
         return BasicShapeCenterCoordinate(TopLeft, m_computedLength.blend(other.m_computedLength, progress));
     }
+    
+    bool operator==(const BasicShapeCenterCoordinate& other) const
+    {
+        return m_direction == other.m_direction
+            && m_length == other.m_length
+            && m_computedLength == other.m_computedLength;
+    }
 
 private:
+    void updateComputedLength();
+
     Direction m_direction;
     Length m_length;
     Length m_computedLength;
-
-    void updateComputedLength();
 };
 
 class BasicShapeRadius {
@@ -117,10 +128,23 @@ public:
         ClosestSide,
         FarthestSide
     };
-    BasicShapeRadius() : m_value(Undefined), m_type(ClosestSide) { }
-    explicit BasicShapeRadius(Length v) : m_value(v), m_type(Value) { }
-    explicit BasicShapeRadius(Type t) : m_value(Undefined), m_type(t) { }
-    BasicShapeRadius(const BasicShapeRadius& other) : m_value(other.value()), m_type(other.type()) { }
+    BasicShapeRadius()
+        : m_value(Undefined),
+        m_type(ClosestSide)
+    { }
+
+    explicit BasicShapeRadius(Length v)
+        : m_value(v)
+        , m_type(Value)
+    { }
+    explicit BasicShapeRadius(Type t)
+        : m_value(Undefined)
+        , m_type(t)
+    { }
+    BasicShapeRadius(const BasicShapeRadius& other)
+        : m_value(other.value())
+        , m_type(other.type())
+    { }
 
     const Length& value() const { return m_value; }
     Type type() const { return m_type; }
@@ -137,6 +161,11 @@ public:
             return BasicShapeRadius(other);
 
         return BasicShapeRadius(m_value.blend(other.value(), progress));
+    }
+    
+    bool operator==(const BasicShapeRadius& other) const
+    {
+        return m_value == other.m_value && m_type == other.m_type;
     }
 
 private:
@@ -158,12 +187,17 @@ public:
     void setCenterY(BasicShapeCenterCoordinate centerY) { m_centerY = WTF::move(centerY); }
     void setRadius(BasicShapeRadius radius) { m_radius = WTF::move(radius); }
 
-    virtual void path(Path&, const FloatRect&) override;
-    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+private:
+    BasicShapeCircle() = default;
 
     virtual Type type() const override { return BasicShapeCircleType; }
-private:
-    BasicShapeCircle() { }
+
+    virtual void path(Path&, const FloatRect&) override;
+
+    virtual bool canBlend(const BasicShape&) const override;
+    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+
+    virtual bool operator==(const BasicShape&) const override;
 
     BasicShapeCenterCoordinate m_centerX;
     BasicShapeCenterCoordinate m_centerY;
@@ -185,12 +219,17 @@ public:
     void setRadiusX(BasicShapeRadius radiusX) { m_radiusX = WTF::move(radiusX); }
     void setRadiusY(BasicShapeRadius radiusY) { m_radiusY = WTF::move(radiusY); }
 
-    virtual void path(Path&, const FloatRect&) override;
-    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+private:
+    BasicShapeEllipse() = default;
 
     virtual Type type() const override { return BasicShapeEllipseType; }
-private:
-    BasicShapeEllipse() { }
+
+    virtual void path(Path&, const FloatRect&) override;
+
+    virtual bool canBlend(const BasicShape&) const override;
+    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+
+    virtual bool operator==(const BasicShape&) const override;
 
     BasicShapeCenterCoordinate m_centerX;
     BasicShapeCenterCoordinate m_centerY;
@@ -209,19 +248,50 @@ public:
     void setWindRule(WindRule windRule) { m_windRule = windRule; }
     void appendPoint(Length x, Length y) { m_values.append(WTF::move(x)); m_values.append(WTF::move(y)); }
 
-    virtual void path(Path&, const FloatRect&) override;
-    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
-
     virtual WindRule windRule() const override { return m_windRule; }
 
-    virtual Type type() const override { return BasicShapePolygonType; }
 private:
-    BasicShapePolygon()
-        : m_windRule(RULE_NONZERO)
-    { }
+    BasicShapePolygon() = default;
 
-    WindRule m_windRule;
+    virtual Type type() const override { return BasicShapePolygonType; }
+
+    virtual void path(Path&, const FloatRect&) override;
+
+    virtual bool canBlend(const BasicShape&) const override;
+    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+
+    virtual bool operator==(const BasicShape&) const override;
+
+    WindRule m_windRule { RULE_NONZERO };
     Vector<Length> m_values;
+};
+
+class BasicShapePath final : public BasicShape {
+public:
+    static Ref<BasicShapePath> create(std::unique_ptr<SVGPathByteStream>&& byteStream)
+    {
+        return adoptRef(*new BasicShapePath(WTF::move(byteStream)));
+    }
+
+    void setWindRule(WindRule windRule) { m_windRule = windRule; }
+    virtual WindRule windRule() const override { return m_windRule; }
+
+    const SVGPathByteStream* pathData() const { return m_byteStream.get(); }
+
+private:
+    BasicShapePath(std::unique_ptr<SVGPathByteStream>&&);
+
+    virtual Type type() const override { return BasicShapePathType; }
+
+    virtual void path(Path&, const FloatRect&) override;
+
+    virtual bool canBlend(const BasicShape&) const override;
+    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+
+    virtual bool operator==(const BasicShape&) const override;
+
+    std::unique_ptr<SVGPathByteStream> m_byteStream;
+    WindRule m_windRule { RULE_NONZERO };
 };
 
 class BasicShapeInset final : public BasicShape {
@@ -248,12 +318,17 @@ public:
     void setBottomRightRadius(LengthSize radius) { m_bottomRightRadius = WTF::move(radius); }
     void setBottomLeftRadius(LengthSize radius) { m_bottomLeftRadius = WTF::move(radius); }
 
-    virtual void path(Path&, const FloatRect&) override;
-    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+private:
+    BasicShapeInset() = default;
 
     virtual Type type() const override { return BasicShapeInsetType; }
-private:
-    BasicShapeInset() { }
+
+    virtual void path(Path&, const FloatRect&) override;
+
+    virtual bool canBlend(const BasicShape&) const override;
+    virtual Ref<BasicShape> blend(const BasicShape&, double) const override;
+
+    virtual bool operator==(const BasicShape&) const override;
 
     Length m_right;
     Length m_top;
@@ -276,6 +351,7 @@ SPECIALIZE_TYPE_TRAITS_END()
 SPECIALIZE_TYPE_TRAITS_BASIC_SHAPE(BasicShapeCircle, BasicShape::BasicShapeCircleType)
 SPECIALIZE_TYPE_TRAITS_BASIC_SHAPE(BasicShapeEllipse, BasicShape::BasicShapeEllipseType)
 SPECIALIZE_TYPE_TRAITS_BASIC_SHAPE(BasicShapePolygon, BasicShape::BasicShapePolygonType)
+SPECIALIZE_TYPE_TRAITS_BASIC_SHAPE(BasicShapePath, BasicShape::BasicShapePathType)
 SPECIALIZE_TYPE_TRAITS_BASIC_SHAPE(BasicShapeInset, BasicShape::BasicShapeInsetType)
 
 #endif // BasicShapes_h

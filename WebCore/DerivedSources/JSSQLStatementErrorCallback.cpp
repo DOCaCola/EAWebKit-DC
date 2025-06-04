@@ -31,7 +31,7 @@ namespace WebCore {
 JSSQLStatementErrorCallback::JSSQLStatementErrorCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : SQLStatementErrorCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -45,11 +45,20 @@ JSSQLStatementErrorCallback::~JSSQLStatementErrorCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
 
 // Functions
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLStatementErrorCallback* impl)
+{
+    if (!impl || !static_cast<JSSQLStatementErrorCallback&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSSQLStatementErrorCallback&>(*impl).callbackData()->callback();
+
+}
 
 }

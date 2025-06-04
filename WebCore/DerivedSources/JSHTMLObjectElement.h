@@ -32,7 +32,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLObjectElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLObjectElement>&& impl)
     {
-        JSHTMLObjectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLObjectElement>(globalObject->vm().heap)) JSHTMLObjectElement(structure, globalObject, WTF::move(impl));
+        JSHTMLObjectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLObjectElement>(globalObject->vm().heap)) JSHTMLObjectElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -56,14 +56,14 @@ public:
     static JSC::CallType getCallData(JSC::JSCell*, JSC::CallData&);
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLObjectElement& impl() const
+    HTMLObjectElement& wrapped() const
     {
-        return static_cast<HTMLObjectElement&>(Base::impl());
+        return static_cast<HTMLObjectElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::TypeOfShouldCallGetCallData | Base::StructureFlags;
 protected:
-    JSHTMLObjectElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLObjectElement>&&);
+    JSHTMLObjectElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLObjectElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

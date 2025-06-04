@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMFormData : public JSDOMWrapper {
+class JSDOMFormData : public JSDOMWrapper<DOMFormData> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMFormData> Base;
     static JSDOMFormData* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMFormData>&& impl)
     {
-        JSDOMFormData* ptr = new (NotNull, JSC::allocateCell<JSDOMFormData>(globalObject->vm().heap)) JSDOMFormData(structure, globalObject, WTF::move(impl));
+        JSDOMFormData* ptr = new (NotNull, JSC::allocateCell<JSDOMFormData>(globalObject->vm().heap)) JSDOMFormData(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMFormData* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMFormData();
 
     DECLARE_INFO;
 
@@ -53,14 +52,9 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue append(JSC::ExecState*);
-    DOMFormData& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMFormData* m_impl;
+    JSC::JSValue append(JSC::ExecState&);
 protected:
-    JSDOMFormData(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMFormData>&&);
+    JSDOMFormData(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMFormData>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMFormData*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMFormData*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMFormData& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMFormData& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMFormData*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMFormData(JSC::ExecState*);

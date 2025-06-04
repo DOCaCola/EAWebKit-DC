@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSUserMessageHandlersNamespace : public JSDOMWrapper {
+class JSUserMessageHandlersNamespace : public JSDOMWrapper<UserMessageHandlersNamespace> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<UserMessageHandlersNamespace> Base;
     static JSUserMessageHandlersNamespace* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<UserMessageHandlersNamespace>&& impl)
     {
-        JSUserMessageHandlersNamespace* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandlersNamespace>(globalObject->vm().heap)) JSUserMessageHandlersNamespace(structure, globalObject, WTF::move(impl));
+        JSUserMessageHandlersNamespace* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandlersNamespace>(globalObject->vm().heap)) JSUserMessageHandlersNamespace(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -46,7 +46,6 @@ public:
     bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSUserMessageHandlersNamespace();
 
     DECLARE_INFO;
 
@@ -56,15 +55,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    UserMessageHandlersNamespace& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    UserMessageHandlersNamespace* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSUserMessageHandlersNamespace(JSC::Structure*, JSDOMGlobalObject*, Ref<UserMessageHandlersNamespace>&&);
+    JSUserMessageHandlersNamespace(JSC::Structure*, JSDOMGlobalObject&, Ref<UserMessageHandlersNamespace>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -87,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, UserMessageHandlersN
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, UserMessageHandlersNamespace*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, UserMessageHandlersNamespace& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, UserMessageHandlersNamespace& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, UserMessageHandlersNamespace*);
 
 
 } // namespace WebCore

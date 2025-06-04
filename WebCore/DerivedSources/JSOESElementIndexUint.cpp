@@ -25,7 +25,6 @@
 #include "JSOESElementIndexUint.h"
 
 #include "JSDOMBinding.h"
-#include "OESElementIndexUint.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSOESElementIndexUintPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSOESElementIndexUintPrototype::s_info = { "OESElementIndexUintPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESElementIndexUintPrototype) };
@@ -74,9 +73,8 @@ void JSOESElementIndexUintPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSOESElementIndexUint::s_info = { "OESElementIndexUint", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESElementIndexUint) };
 
-JSOESElementIndexUint::JSOESElementIndexUint(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESElementIndexUint>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSOESElementIndexUint::JSOESElementIndexUint(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OESElementIndexUint>&& impl)
+    : JSDOMWrapper<OESElementIndexUint>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSOESElementIndexUint::destroy(JSC::JSCell* cell)
     thisObject->JSOESElementIndexUint::~JSOESElementIndexUint();
 }
 
-JSOESElementIndexUint::~JSOESElementIndexUint()
-{
-    releaseImpl();
-}
-
 bool JSOESElementIndexUintOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsOESElementIndexUint = jsCast<JSOESElementIndexUint*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsOESElementIndexUint->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsOESElementIndexUint->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSOESElementIndexUintOwner::finalize(JSC::Handle<JSC::Unknown> handle, void
 {
     auto* jsOESElementIndexUint = jsCast<JSOESElementIndexUint*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsOESElementIndexUint->impl(), jsOESElementIndexUint);
+    uncacheWrapper(world, &jsOESElementIndexUint->wrapped(), jsOESElementIndexUint);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7OESElementIndexUint@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19OESElementIndexUintE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESElementIndexUint* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSOESElementIndexUint>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESElementIndexUint* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESElementIn
 OESElementIndexUint* JSOESElementIndexUint::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSOESElementIndexUint*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

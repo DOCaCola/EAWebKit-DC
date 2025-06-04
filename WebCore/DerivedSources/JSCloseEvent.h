@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSCloseEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CloseEvent>&& impl)
     {
-        JSCloseEvent* ptr = new (NotNull, JSC::allocateCell<JSCloseEvent>(globalObject->vm().heap)) JSCloseEvent(structure, globalObject, WTF::move(impl));
+        JSCloseEvent* ptr = new (NotNull, JSC::allocateCell<JSCloseEvent>(globalObject->vm().heap)) JSCloseEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CloseEvent& impl() const
+    CloseEvent& wrapped() const
     {
-        return static_cast<CloseEvent&>(Base::impl());
+        return static_cast<CloseEvent&>(Base::wrapped());
     }
 protected:
-    JSCloseEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<CloseEvent>&&);
+    JSCloseEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<CloseEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

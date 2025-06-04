@@ -34,7 +34,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGHKernElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGHKernElement>&& impl)
     {
-        JSSVGHKernElement* ptr = new (NotNull, JSC::allocateCell<JSSVGHKernElement>(globalObject->vm().heap)) JSSVGHKernElement(structure, globalObject, WTF::move(impl));
+        JSSVGHKernElement* ptr = new (NotNull, JSC::allocateCell<JSSVGHKernElement>(globalObject->vm().heap)) JSSVGHKernElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGHKernElement& impl() const
+    SVGHKernElement& wrapped() const
     {
-        return static_cast<SVGHKernElement&>(Base::impl());
+        return static_cast<SVGHKernElement&>(Base::wrapped());
     }
 protected:
-    JSSVGHKernElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGHKernElement>&&);
+    JSSVGHKernElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGHKernElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

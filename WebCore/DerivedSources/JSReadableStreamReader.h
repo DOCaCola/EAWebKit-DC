@@ -24,27 +24,22 @@
 #if ENABLE(STREAMS_API)
 
 #include "JSDOMWrapper.h"
-#include "ReadableStreamReader.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSReadableStreamReader : public JSDOMWrapper {
+class JSReadableStreamReader : public JSDOMObject {
 public:
-    typedef JSDOMWrapper Base;
-    static JSReadableStreamReader* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ReadableStreamReader>&& impl)
+    typedef JSDOMObject Base;
+    static JSReadableStreamReader* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject)
     {
-        JSReadableStreamReader* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamReader>(globalObject->vm().heap)) JSReadableStreamReader(structure, globalObject, WTF::move(impl));
+        JSReadableStreamReader* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamReader>(globalObject->vm().heap)) JSReadableStreamReader(structure, *globalObject);
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static ReadableStreamReader* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSReadableStreamReader();
 
     DECLARE_INFO;
 
@@ -53,44 +48,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    JSC::WriteBarrier<JSC::Unknown> m_closed;
-    static void visitChildren(JSCell*, JSC::SlotVisitor&);
-
-
-    // Custom attributes
-    JSC::JSValue closed(JSC::ExecState*) const;
-    ReadableStreamReader& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ReadableStreamReader* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSReadableStreamReader(JSC::Structure*, JSDOMGlobalObject*, Ref<ReadableStreamReader>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
+    JSReadableStreamReader(JSC::Structure*, JSDOMGlobalObject&);
 
 };
 
-class JSReadableStreamReaderOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ReadableStreamReader*)
-{
-    static NeverDestroyed<JSReadableStreamReaderOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ReadableStreamReader*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ReadableStreamReader& impl) { return toJS(exec, globalObject, &impl); }
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSReadableStreamReader(JSC::ExecState*);

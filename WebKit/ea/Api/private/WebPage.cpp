@@ -1182,7 +1182,8 @@ void WebPage::SetInspectorDisplay(bool show)
     }
     else
     {
-        ic.close();
+		//EAWKDC TODO: Implement alternative
+    	//ic.close();
     }
 }
 
@@ -1211,7 +1212,7 @@ void WebPage::remoteFrontendConnected()
 void WebPage::remoteFrontendDisconnected()
 {
     WebCore::InspectorController &ic = d->page->inspectorController();
-    ic.disconnectFrontend(Inspector::DisconnectReason::InspectorDestroyed);
+    ic.disconnectFrontend(this);
 }
 
 void WebPage::dispatchMessageFromRemoteFrontend(const String& message)

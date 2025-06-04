@@ -30,7 +30,7 @@
 
 #include "FloatRect.h"
 #include "Logging.h"
-#include "MediaPlaybackTargetPickerMac.h"
+#include "MediaPlaybackTargetPickerMock.h"
 #include "WebMediaSessionManagerClient.h"
 #include <wtf/text/StringBuilder.h>
 
@@ -78,6 +78,8 @@ static String mediaProducerStateString(MediaProducer::MediaStateFlags flags)
         string.append("RequiresPlaybackTargetMonitoring + ");
     if (flags & MediaProducer::ExternalDeviceAutoPlayCandidate)
         string.append("ExternalDeviceAutoPlayCandidate + ");
+    if (flags & MediaProducer::DidPlayToEnd)
+        string.append("DidPlayToEnd + ");
     if (string.isEmpty())
         string.append("IsNotPlaying");
     else
@@ -86,6 +88,39 @@ static String mediaProducerStateString(MediaProducer::MediaStateFlags flags)
     return string.toString();
 }
 #endif
+
+void WebMediaSessionManager::setMockMediaPlaybackTargetPickerEnabled(bool enabled)
+{
+    LOG(Media, "WebMediaSessionManager::setMockMediaPlaybackTargetPickerEnabled - enabled = %i", (int)enabled);
+
+    if (m_mockPickerEnabled == enabled)
+        return;
+
+    m_mockPickerEnabled = enabled;
+}
+
+void WebMediaSessionManager::setMockMediaPlaybackTargetPickerState(const String& name, MediaPlaybackTargetContext::State state)
+{
+    LOG(Media, "WebMediaSessionManager::setMockMediaPlaybackTargetPickerState - name = %s, state = %i", name.utf8().data(), (int)state);
+
+    mockPicker().setState(name, state);
+}
+
+MediaPlaybackTargetPickerMock& WebMediaSessionManager::mockPicker()
+{
+    if (!m_pickerOverride)
+        m_pickerOverride = MediaPlaybackTargetPickerMock::create(*this);
+
+    return *m_pickerOverride.get();
+}
+
+WebCore::MediaPlaybackTargetPicker& WebMediaSessionManager::targetPicker()
+{
+    if (m_mockPickerEnabled)
+        return mockPicker();
+
+    return platformPicker();
+}
 
 WebMediaSessionManager::WebMediaSessionManager()
     : m_taskTimer(RunLoop::current(), this, &WebMediaSessionManager::taskTimerFired)

@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedEnumeration : public JSDOMWrapper {
+class JSSVGAnimatedEnumeration : public JSDOMWrapper<SVGAnimatedEnumeration> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedEnumeration> Base;
     static JSSVGAnimatedEnumeration* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedEnumeration>&& impl)
     {
-        JSSVGAnimatedEnumeration* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedEnumeration>(globalObject->vm().heap)) JSSVGAnimatedEnumeration(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedEnumeration* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedEnumeration>(globalObject->vm().heap)) JSSVGAnimatedEnumeration(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedEnumeration* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedEnumeration();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedEnumeration& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedEnumeration* m_impl;
 protected:
-    JSSVGAnimatedEnumeration(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedEnumeration>&&);
+    JSSVGAnimatedEnumeration(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedEnumeration>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedEnumerati
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedEnumeration*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedEnumeration& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedEnumeration& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedEnumeration*);
 
 
 } // namespace WebCore

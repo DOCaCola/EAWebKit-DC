@@ -44,7 +44,7 @@ namespace WebCore {
 using namespace HTMLNames;
 
 inline HTMLEmbedElement::HTMLEmbedElement(const QualifiedName& tagName, Document& document, bool createdByParser)
-    : HTMLPlugInImageElement(tagName, document, createdByParser, ShouldPreferPlugInsForImages)
+    : HTMLPlugInImageElement(tagName, document, createdByParser)
 {
     ASSERT(hasTagName(embedTag));
 }
@@ -183,6 +183,9 @@ void HTMLEmbedElement::updateWidget(PluginCreationOption pluginCreationOption)
 
 bool HTMLEmbedElement::rendererIsNeeded(const RenderStyle& style)
 {
+    if (!fastHasAttribute(typeAttr) && !fastHasAttribute(srcAttr))
+        return false;
+
     if (isImageType())
         return HTMLPlugInImageElement::rendererIsNeeded(style);
 

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLDebugShaders : public JSDOMWrapper {
+class JSWebGLDebugShaders : public JSDOMWrapper<WebGLDebugShaders> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLDebugShaders> Base;
     static JSWebGLDebugShaders* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDebugShaders>&& impl)
     {
-        JSWebGLDebugShaders* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugShaders>(globalObject->vm().heap)) JSWebGLDebugShaders(structure, globalObject, WTF::move(impl));
+        JSWebGLDebugShaders* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugShaders>(globalObject->vm().heap)) JSWebGLDebugShaders(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDebugShaders* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDebugShaders();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDebugShaders& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDebugShaders* m_impl;
 protected:
-    JSWebGLDebugShaders(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDebugShaders>&&);
+    JSWebGLDebugShaders(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDebugShaders>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDebugShaders*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugShaders*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDebugShaders& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDebugShaders& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugShaders*);
 
 
 } // namespace WebCore

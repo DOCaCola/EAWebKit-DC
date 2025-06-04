@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSXPathEvaluator : public JSDOMWrapper {
+class JSXPathEvaluator : public JSDOMWrapper<XPathEvaluator> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XPathEvaluator> Base;
     static JSXPathEvaluator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathEvaluator>&& impl)
     {
-        JSXPathEvaluator* ptr = new (NotNull, JSC::allocateCell<JSXPathEvaluator>(globalObject->vm().heap)) JSXPathEvaluator(structure, globalObject, WTF::move(impl));
+        JSXPathEvaluator* ptr = new (NotNull, JSC::allocateCell<JSXPathEvaluator>(globalObject->vm().heap)) JSXPathEvaluator(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XPathEvaluator* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathEvaluator();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathEvaluator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathEvaluator* m_impl;
 protected:
-    JSXPathEvaluator(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathEvaluator>&&);
+    JSXPathEvaluator(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathEvaluator>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathEvaluator*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathEvaluator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathEvaluator& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathEvaluator& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XPathEvaluator*);
 
 
 } // namespace WebCore

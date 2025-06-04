@@ -24,7 +24,6 @@
 
 #include "JSANGLEInstancedArrays.h"
 
-#include "ANGLEInstancedArrays.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include <runtime/Error.h>
@@ -69,10 +68,10 @@ private:
 
 static const HashTableValue JSANGLEInstancedArraysPrototypeTableValues[] =
 {
-    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FE), (intptr_t) (0) },
-    { "drawArraysInstancedANGLE", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionDrawArraysInstancedANGLE), (intptr_t) (4) },
-    { "drawElementsInstancedANGLE", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionDrawElementsInstancedANGLE), (intptr_t) (5) },
-    { "vertexAttribDivisorANGLE", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionVertexAttribDivisorANGLE), (intptr_t) (2) },
+    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FE) } },
+    { "drawArraysInstancedANGLE", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionDrawArraysInstancedANGLE), (intptr_t) (4) } },
+    { "drawElementsInstancedANGLE", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionDrawElementsInstancedANGLE), (intptr_t) (5) } },
+    { "vertexAttribDivisorANGLE", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsANGLEInstancedArraysPrototypeFunctionVertexAttribDivisorANGLE), (intptr_t) (2) } },
 };
 
 const ClassInfo JSANGLEInstancedArraysPrototype::s_info = { "ANGLEInstancedArraysPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSANGLEInstancedArraysPrototype) };
@@ -85,9 +84,8 @@ void JSANGLEInstancedArraysPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSANGLEInstancedArrays::s_info = { "ANGLEInstancedArrays", &Base::s_info, 0, CREATE_METHOD_TABLE(JSANGLEInstancedArrays) };
 
-JSANGLEInstancedArrays::JSANGLEInstancedArrays(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ANGLEInstancedArrays>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSANGLEInstancedArrays::JSANGLEInstancedArrays(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ANGLEInstancedArrays>&& impl)
+    : JSDOMWrapper<ANGLEInstancedArrays>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -107,81 +105,76 @@ void JSANGLEInstancedArrays::destroy(JSC::JSCell* cell)
     thisObject->JSANGLEInstancedArrays::~JSANGLEInstancedArrays();
 }
 
-JSANGLEInstancedArrays::~JSANGLEInstancedArrays()
+EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionDrawArraysInstancedANGLE(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionDrawArraysInstancedANGLE(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSANGLEInstancedArrays* castedThis = jsDynamicCast<JSANGLEInstancedArrays*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ANGLEInstancedArrays", "drawArraysInstancedANGLE");
+        return throwThisTypeError(*state, "ANGLEInstancedArrays", "drawArraysInstancedANGLE");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSANGLEInstancedArrays::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int first = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int first = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int primcount = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int primcount = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawArraysInstancedANGLE(mode, first, count, primcount);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionDrawElementsInstancedANGLE(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionDrawElementsInstancedANGLE(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSANGLEInstancedArrays* castedThis = jsDynamicCast<JSANGLEInstancedArrays*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ANGLEInstancedArrays", "drawElementsInstancedANGLE");
+        return throwThisTypeError(*state, "ANGLEInstancedArrays", "drawElementsInstancedANGLE");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSANGLEInstancedArrays::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int primcount = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int primcount = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionVertexAttribDivisorANGLE(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionVertexAttribDivisorANGLE(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSANGLEInstancedArrays* castedThis = jsDynamicCast<JSANGLEInstancedArrays*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ANGLEInstancedArrays", "vertexAttribDivisorANGLE");
+        return throwThisTypeError(*state, "ANGLEInstancedArrays", "vertexAttribDivisorANGLE");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSANGLEInstancedArrays::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned divisor = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned divisor = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribDivisorANGLE(index, divisor);
     return JSValue::encode(jsUndefined());
@@ -190,7 +183,7 @@ EncodedJSValue JSC_HOST_CALL jsANGLEInstancedArraysPrototypeFunctionVertexAttrib
 bool JSANGLEInstancedArraysOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsANGLEInstancedArrays = jsCast<JSANGLEInstancedArrays*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsANGLEInstancedArrays->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsANGLEInstancedArrays->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -198,7 +191,7 @@ void JSANGLEInstancedArraysOwner::finalize(JSC::Handle<JSC::Unknown> handle, voi
 {
     auto* jsANGLEInstancedArrays = jsCast<JSANGLEInstancedArrays*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsANGLEInstancedArrays->impl(), jsANGLEInstancedArrays);
+    uncacheWrapper(world, &jsANGLEInstancedArrays->wrapped(), jsANGLEInstancedArrays);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -209,6 +202,14 @@ extern "C" { extern void (*const __identifier("??_7ANGLEInstancedArrays@WebCore@
 extern "C" { extern void* _ZTVN7WebCore20ANGLEInstancedArraysE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSANGLEInstancedArrays>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays* impl)
 {
     if (!impl)
@@ -240,7 +241,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ANGLEInstanc
 ANGLEInstancedArrays* JSANGLEInstancedArrays::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSANGLEInstancedArrays*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

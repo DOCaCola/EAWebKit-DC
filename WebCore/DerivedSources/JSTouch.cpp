@@ -26,8 +26,8 @@
 
 #include "EventTarget.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEventTarget.h"
-#include "Touch.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -75,26 +75,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTouchConstructor : public DOMConstructorObject {
-private:
-    JSTouchConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSTouchConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTouchConstructor* ptr = new (NotNull, JSC::allocateCell<JSTouchConstructor>(vm.heap)) JSTouchConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSTouch> JSTouchConstructor;
 
 /* Hash table */
 
@@ -137,42 +118,35 @@ static const struct CompactHashIndex JSTouchTableIndex[33] = {
 
 static const HashTableValue JSTouchTableValues[] =
 {
-    { "clientX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchClientX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clientY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchClientY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchScreenX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchScreenY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pageX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchPageX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pageY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchPageY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "target", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "identifier", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchIdentifier), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitRadiusX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRadiusX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitRadiusY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRadiusY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitRotationAngle", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRotationAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitForce", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitForce), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "clientX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchClientX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clientY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchClientY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchScreenX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchScreenY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pageX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchPageX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pageY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchPageY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "target", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "identifier", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchIdentifier), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitRadiusX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRadiusX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitRadiusY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRadiusY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitRotationAngle", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitRotationAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitForce", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchWebkitForce), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSTouchTable = { 12, 31, true, JSTouchTableValues, 0, JSTouchTableIndex };
-const ClassInfo JSTouchConstructor::s_info = { "TouchConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchConstructor) };
-
-JSTouchConstructor::JSTouchConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSTouchTable = { 12, 31, true, JSTouchTableValues, JSTouchTableIndex };
+template<> void JSTouchConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTouchConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTouch::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTouch::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Touch"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTouchConstructor::s_info = { "TouchConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTouchPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTouchConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSTouchPrototype::s_info = { "TouchPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTouchPrototype) };
@@ -185,9 +159,8 @@ void JSTouchPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTouch::s_info = { "Touch", &Base::s_info, &JSTouchTable, CREATE_METHOD_TABLE(JSTouch) };
 
-JSTouch::JSTouch(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Touch>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTouch::JSTouch(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Touch>&& impl)
+    : JSDOMWrapper<Touch>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -207,209 +180,206 @@ void JSTouch::destroy(JSC::JSCell* cell)
     thisObject->JSTouch::~JSTouch();
 }
 
-JSTouch::~JSTouch()
-{
-    releaseImpl();
-}
-
-bool JSTouch::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSTouch::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTouch*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSTouch, Base>(exec, JSTouchTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSTouch, Base>(state, JSTouchTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsTouchClientX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchClientX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "clientX");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "clientX");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.clientX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchClientY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchClientY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "clientY");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "clientY");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.clientY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchScreenX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchScreenX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "screenX");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "screenX");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.screenX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchScreenY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchScreenY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "screenY");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "screenY");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.screenY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchPageX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchPageX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "pageX");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "pageX");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.pageX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchPageY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchPageY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "pageY");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "pageY");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.pageY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchTarget(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "target");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.target()));
+        reportDeprecatedGetterError(*state, "Touch", "target");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.target()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchIdentifier(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchIdentifier(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "identifier");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "identifier");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.identifier());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchWebkitRadiusX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchWebkitRadiusX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "webkitRadiusX");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "webkitRadiusX");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitRadiusX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchWebkitRadiusY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchWebkitRadiusY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "webkitRadiusY");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "webkitRadiusY");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitRadiusY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchWebkitRotationAngle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchWebkitRotationAngle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "webkitRotationAngle");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "webkitRotationAngle");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitRotationAngle());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchWebkitForce(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTouchWebkitForce(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTouch*>(slotBase);
     JSTouch* castedThisObject = jsDynamicCast<JSTouch*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Touch", "webkitForce");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Touch", "webkitForce");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitForce());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTouchConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTouchConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTouchPrototype* domObject = jsDynamicCast<JSTouchPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTouch::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSTouch::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSTouch::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTouchConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTouchConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSTouchOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -423,7 +393,14 @@ void JSTouchOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsTouch = jsCast<JSTouch*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTouch->impl(), jsTouch);
+    uncacheWrapper(world, &jsTouch->wrapped(), jsTouch);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Touch* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSTouch>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Touch* impl)
@@ -445,7 +422,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Touch* impl)
 Touch* JSTouch::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSTouch*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

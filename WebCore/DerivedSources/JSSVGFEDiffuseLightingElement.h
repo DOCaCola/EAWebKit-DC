@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEDiffuseLightingElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDiffuseLightingElement>&& impl)
     {
-        JSSVGFEDiffuseLightingElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDiffuseLightingElement>(globalObject->vm().heap)) JSSVGFEDiffuseLightingElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDiffuseLightingElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDiffuseLightingElement>(globalObject->vm().heap)) JSSVGFEDiffuseLightingElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDiffuseLightingElement& impl() const
+    SVGFEDiffuseLightingElement& wrapped() const
     {
-        return static_cast<SVGFEDiffuseLightingElement&>(Base::impl());
+        return static_cast<SVGFEDiffuseLightingElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDiffuseLightingElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDiffuseLightingElement>&&);
+    JSSVGFEDiffuseLightingElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDiffuseLightingElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

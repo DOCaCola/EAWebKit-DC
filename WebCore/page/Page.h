@@ -58,11 +58,19 @@
 #include "MediaSessionEvents.h"
 #endif
 
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+#include "MediaPlaybackTargetContext.h"
+#endif
+
 namespace JSC {
 class Debugger;
 }
 
 namespace WebCore {
+
+namespace IDBClient {
+class IDBConnectionToServer;
+}
 
 class AlternativeTextClient;
 class ApplicationCacheStorage;
@@ -105,6 +113,7 @@ class Range;
 class RenderObject;
 class RenderTheme;
 class ReplayController;
+class ResourceUsageOverlay;
 class VisibleSelection;
 class ScrollableArea;
 class ScrollingCoordinator;
@@ -129,6 +138,7 @@ class Page : public Supplementable<Page> {
 public:
     WEBCORE_EXPORT static void updateStyleForAllPagesAfterGlobalChangeInEnvironment();
     WEBCORE_EXPORT static void clearPreviousItemFromAllPages(HistoryItem*);
+    WEBCORE_EXPORT static void setTabSuspensionEnabled(bool);
 
     WEBCORE_EXPORT explicit Page(PageConfiguration&);
     WEBCORE_EXPORT ~Page();
@@ -173,6 +183,8 @@ public:
 #if ENABLE(REMOTE_INSPECTOR)
     WEBCORE_EXPORT bool remoteInspectionAllowed() const;
     WEBCORE_EXPORT void setRemoteInspectionAllowed(bool);
+    WEBCORE_EXPORT String remoteInspectionNameOverride() const;
+    WEBCORE_EXPORT void setRemoteInspectionNameOverride(const String&);
     void remoteInspectorInformationDidChange() const;
 #endif
 
@@ -240,6 +252,7 @@ public:
     enum { NoMatchAfterUserSelection = -1 };
     WEBCORE_EXPORT void findStringMatchingRanges(const String&, FindOptions, int maxCount, Vector<RefPtr<Range>>&, int& indexForSelection);
 #if PLATFORM(COCOA)
+    void platformInitialize();
     WEBCORE_EXPORT void addSchedulePair(Ref<SchedulePair>&&);
     WEBCORE_EXPORT void removeSchedulePair(Ref<SchedulePair>&&);
     SchedulePairHashSet* scheduledRunLoopPairs() { return m_scheduledRunLoopPairs.get(); }
@@ -328,6 +341,10 @@ public:
     void dnsPrefetchingStateChanged();
     void storageBlockingStateChanged();
 
+#if ENABLE(RESOURCE_USAGE_OVERLAY)
+    void setResourceUsageOverlayVisible(bool);
+#endif
+
     void setDebugger(JSC::Debugger*);
     JSC::Debugger* debugger() const { return m_debugger; }
 
@@ -348,6 +365,8 @@ public:
     // recursive frameset pages can quickly bring the program to its knees
     // with exponential growth in the number of frames.
     static const int maxNumberOfFrames = 1000;
+
+    static bool s_tabSuspensionIsEnabled;
 
     void setEditable(bool isEditable) { m_isEditable = isEditable; }
     bool isEditable() { return m_isEditable; }
@@ -378,6 +397,9 @@ public:
 
     WEBCORE_EXPORT void suspendActiveDOMObjectsAndAnimations();
     WEBCORE_EXPORT void resumeActiveDOMObjectsAndAnimations();
+    void suspendDeviceMotionAndOrientationUpdates();
+    void resumeDeviceMotionAndOrientationUpdates();
+
 #ifndef NDEBUG
     void setIsPainting(bool painting) { m_isPainting = painting; }
     bool isPainting() const { return m_isPainting; }
@@ -409,9 +431,10 @@ public:
     void captionPreferencesChanged();
 #endif
 
-    void incrementFrameHandlingBeforeUnloadEventCount();
-    void decrementFrameHandlingBeforeUnloadEventCount();
-    bool isAnyFrameHandlingBeforeUnloadEvent();
+    void forbidPrompts();
+    void allowPrompts();
+    bool arePromptsAllowed();
+
     void setLastSpatialNavigationCandidateCount(unsigned count) { m_lastSpatialNavigationCandidatesCount = count; }
     unsigned lastSpatialNavigationCandidateCount() const { return m_lastSpatialNavigationCandidatesCount; }
 
@@ -423,9 +446,6 @@ public:
 
     UserContentController* userContentController() { return m_userContentController.get(); }
     WEBCORE_EXPORT void setUserContentController(UserContentController*);
-
-    bool userContentExtensionsEnabled() const { return m_userContentExtensionsEnabled; }
-    void setUserContentExtensionsEnabled(bool enabled) { m_userContentExtensionsEnabled = enabled; }
 
     VisitedLinkStore& visitedLinkStore();
     WEBCORE_EXPORT void setVisitedLinkStore(Ref<VisitedLinkStore>&&);
@@ -442,13 +462,16 @@ public:
 
 #if ENABLE(MEDIA_SESSION)
     WEBCORE_EXPORT void handleMediaEvent(MediaEventType);
+    WEBCORE_EXPORT void setVolumeOfMediaElement(double, uint64_t);
 #endif
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
     void addPlaybackTargetPickerClient(uint64_t);
     void removePlaybackTargetPickerClient(uint64_t);
-    void showPlaybackTargetPicker(uint64_t, const WebCore::IntPoint&, bool);
+    void showPlaybackTargetPicker(uint64_t, const IntPoint&, bool);
     void playbackTargetPickerClientStateDidChange(uint64_t, MediaProducer::MediaStateFlags);
+    WEBCORE_EXPORT void setMockMediaPlaybackTargetPickerEnabled(bool);
+    WEBCORE_EXPORT void setMockMediaPlaybackTargetPickerState(const String&, MediaPlaybackTargetContext::State);
 
     WEBCORE_EXPORT void setPlaybackTarget(uint64_t, Ref<MediaPlaybackTarget>&&);
     WEBCORE_EXPORT void playbackTargetAvailabilityDidChange(uint64_t, bool);
@@ -464,6 +487,14 @@ public:
     bool allowsMediaDocumentInlinePlayback() const { return m_allowsMediaDocumentInlinePlayback; }
     WEBCORE_EXPORT void setAllowsMediaDocumentInlinePlayback(bool);
 #endif
+
+#if ENABLE(INDEXED_DATABASE)
+    IDBClient::IDBConnectionToServer& idbConnection();
+#endif
+
+    void setShowAllPlugins(bool showAll) { m_showAllPlugins = showAll; }
+    bool showAllPlugins() const;
+    void setIsTabSuspended(bool);
 
 private:
     WEBCORE_EXPORT void initGroup();
@@ -489,6 +520,9 @@ private:
 
     void hiddenPageDOMTimerThrottlingStateChanged();
     void setTimerThrottlingEnabled(bool);
+    bool canTabSuspend();
+    void scheduleTabSuspension(bool);
+    void tabSuspensionTimerFired();
 
     const std::unique_ptr<Chrome> m_chrome;
     const std::unique_ptr<DragCaretController> m_dragCaretController;
@@ -539,7 +573,7 @@ private:
 
     float m_pageScaleFactor;
     float m_zoomedOutPageScaleFactor;
-    float m_deviceScaleFactor;
+    float m_deviceScaleFactor { 1 };
     float m_viewScaleFactor { 1 };
 
     float m_topContentInset;
@@ -578,6 +612,7 @@ private:
     bool m_isEditable;
     bool m_isPrerender;
     ViewState::Flags m_viewState;
+    PageActivityState::Flags m_pageActivityState;
 
     LayoutMilestones m_requestedLayoutMilestones;
 
@@ -602,11 +637,15 @@ private:
     const std::unique_ptr<PageDebuggable> m_inspectorDebuggable;
 #endif
 
+#if ENABLE(INDEXED_DATABASE)
+    RefPtr<IDBClient::IDBConnectionToServer> m_idbIDBConnectionToServer;
+#endif
+
     HashSet<String> m_seenPlugins;
     HashSet<String> m_seenMediaEngines;
 
     unsigned m_lastSpatialNavigationCandidatesCount;
-    unsigned m_framesHandlingBeforeUnloadEvent;
+    unsigned m_forbidPromptsDepth;
 
     Ref<ApplicationCacheStorage> m_applicationCacheStorage;
     Ref<DatabaseProvider> m_databaseProvider;
@@ -617,14 +656,20 @@ private:
 
     HashSet<ViewStateChangeObserver*> m_viewStateChangeObservers;
 
+#if ENABLE(RESOURCE_USAGE_OVERLAY)
+    std::unique_ptr<ResourceUsageOverlay> m_resourceUsageOverlay;
+#endif
+
     SessionID m_sessionID;
 
     bool m_isClosing;
+    bool m_shouldTabSuspend { false };
+    Timer m_tabSuspensionTimer;
 
     MediaProducer::MediaStateFlags m_mediaState { MediaProducer::IsNotPlaying };
     
-    bool m_userContentExtensionsEnabled { true };
     bool m_allowsMediaDocumentInlinePlayback { false };
+    bool m_showAllPlugins { false };
 };
 
 inline PageGroup& Page::group()

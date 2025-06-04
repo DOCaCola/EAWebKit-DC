@@ -100,12 +100,13 @@ public:
     virtual ~Event();
 
     void initEvent(const AtomicString& type, bool canBubble, bool cancelable);
+    bool isInitialized() const { return m_isInitialized; }
 
     const AtomicString& type() const { return m_type; }
     void setType(const AtomicString& type) { m_type = type; }
     
     EventTarget* target() const { return m_target.get(); }
-    void setTarget(PassRefPtr<EventTarget>);
+    void setTarget(RefPtr<EventTarget>&&);
 
     EventTarget* currentTarget() const { return m_currentTarget; }
     void setCurrentTarget(EventTarget* currentTarget) { m_currentTarget = currentTarget; }
@@ -126,7 +127,7 @@ public:
     bool legacyReturnValue() const { return !defaultPrevented(); }
     void setLegacyReturnValue(bool returnValue) { setDefaultPrevented(!returnValue); }
 
-    DataTransfer* clipboardData() const { return isClipboardEvent() ? internalDataTransfer() : 0; }
+    DataTransfer* clipboardData() const { return isClipboardEvent() ? internalDataTransfer() : nullptr; }
 
     virtual EventInterface eventInterface() const;
 
@@ -149,6 +150,10 @@ public:
     virtual bool isErrorEvent() const;
     virtual bool isTextEvent() const;
     virtual bool isWheelEvent() const;
+
+#if ENABLE(INDEXED_DATABASE)
+    virtual bool isVersionChangeEvent() const { return false; }
+#endif
 
     bool propagationStopped() const { return m_propagationStopped || m_immediatePropagationStopped; }
     bool immediatePropagationStopped() const { return m_immediatePropagationStopped; }
@@ -188,18 +193,19 @@ protected:
     bool dispatched() const { return m_target; }
 
 private:
+    bool m_isInitialized { false };
     AtomicString m_type;
-    bool m_canBubble;
-    bool m_cancelable;
+    bool m_canBubble { false };
+    bool m_cancelable { false };
 
-    bool m_propagationStopped;
-    bool m_immediatePropagationStopped;
-    bool m_defaultPrevented;
-    bool m_defaultHandled;
-    bool m_cancelBubble;
+    bool m_propagationStopped { false };
+    bool m_immediatePropagationStopped { false };
+    bool m_defaultPrevented { false };
+    bool m_defaultHandled { false };
+    bool m_cancelBubble { false };
 
-    unsigned short m_eventPhase;
-    EventTarget* m_currentTarget;
+    unsigned short m_eventPhase { 0 };
+    EventTarget* m_currentTarget { nullptr };
     RefPtr<EventTarget> m_target;
     DOMTimeStamp m_createTime;
 

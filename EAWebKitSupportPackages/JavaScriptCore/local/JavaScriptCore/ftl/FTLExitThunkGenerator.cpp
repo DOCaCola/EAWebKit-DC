@@ -26,7 +26,7 @@
 #include "config.h"
 #include "FTLExitThunkGenerator.h"
 
-#if ENABLE(FTL_JIT)
+#if ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #include "FTLOSRExitCompilationInfo.h"
 #include "FTLState.h"
@@ -48,9 +48,12 @@ ExitThunkGenerator::~ExitThunkGenerator()
 
 void ExitThunkGenerator::emitThunk(unsigned index)
 {
-    OSRExitCompilationInfo& info = m_state.finalizer->osrExit[index];
+    OSRExit& exit = m_state.jitCode->osrExit[index];
+    ASSERT_UNUSED(exit, !(exit.willArriveAtOSRExitFromGenericUnwind() && exit.willArriveAtOSRExitFromCallOperation()));
     
+    OSRExitCompilationInfo& info = m_state.finalizer->osrExit[index];
     info.m_thunkLabel = label();
+
     pushToSaveImmediateWithoutTouchingRegisters(TrustedImm32(index));
     info.m_thunkJump = patchableJump();
     
@@ -65,5 +68,5 @@ void ExitThunkGenerator::emitThunks()
 
 } } // namespace JSC::FTL
 
-#endif // ENABLE(FTL_JIT)
+#endif // ENABLE(FTL_JIT) && !FTL_USES_B3
 

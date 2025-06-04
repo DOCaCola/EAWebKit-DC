@@ -61,7 +61,7 @@ ChildListMutationAccumulator::~ChildListMutationAccumulator()
     accumulatorMap().remove(m_target.ptr());
 }
 
-PassRefPtr<ChildListMutationAccumulator> ChildListMutationAccumulator::getOrCreate(ContainerNode& target)
+RefPtr<ChildListMutationAccumulator> ChildListMutationAccumulator::getOrCreate(ContainerNode& target)
 {
     AccumulatorMap::AddResult result = accumulatorMap().add(&target, nullptr);
     RefPtr<ChildListMutationAccumulator> accumulator;
@@ -71,7 +71,7 @@ PassRefPtr<ChildListMutationAccumulator> ChildListMutationAccumulator::getOrCrea
         accumulator = adoptRef(new ChildListMutationAccumulator(target, MutationObserverInterestGroup::createForChildListMutation(target)));
         result.iterator->value = accumulator.get();
     }
-    return accumulator.release();
+    return accumulator;
 }
 
 inline bool ChildListMutationAccumulator::isAddedNodeInOrder(Node& child)
@@ -130,7 +130,7 @@ void ChildListMutationAccumulator::enqueueMutationRecord()
     RefPtr<NodeList> removedNodes = StaticNodeList::adopt(m_removedNodes);
     RefPtr<MutationRecord> record = MutationRecord::createChildList(m_target, addedNodes.release(), removedNodes.release(), m_previousSibling.release(), m_nextSibling.release());
     m_observers->enqueueMutationRecord(record.release());
-    m_lastAdded = 0;
+    m_lastAdded = nullptr;
     ASSERT(isEmpty());
 }
 

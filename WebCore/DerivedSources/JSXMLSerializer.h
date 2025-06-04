@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSXMLSerializer : public JSDOMWrapper {
+class JSXMLSerializer : public JSDOMWrapper<XMLSerializer> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XMLSerializer> Base;
     static JSXMLSerializer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLSerializer>&& impl)
     {
-        JSXMLSerializer* ptr = new (NotNull, JSC::allocateCell<JSXMLSerializer>(globalObject->vm().heap)) JSXMLSerializer(structure, globalObject, WTF::move(impl));
+        JSXMLSerializer* ptr = new (NotNull, JSC::allocateCell<JSXMLSerializer>(globalObject->vm().heap)) JSXMLSerializer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XMLSerializer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXMLSerializer();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XMLSerializer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLSerializer* m_impl;
 protected:
-    JSXMLSerializer(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLSerializer>&&);
+    JSXMLSerializer(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLSerializer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLSerializer*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLSerializer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLSerializer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLSerializer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XMLSerializer*);
 
 
 } // namespace WebCore

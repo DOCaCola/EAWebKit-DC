@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSMessagePort : public JSDOMWrapper {
+class JSMessagePort : public JSDOMWrapper<MessagePort> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MessagePort> Base;
     static JSMessagePort* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessagePort>&& impl)
     {
-        JSMessagePort* ptr = new (NotNull, JSC::allocateCell<JSMessagePort>(globalObject->vm().heap)) JSMessagePort(structure, globalObject, WTF::move(impl));
+        JSMessagePort* ptr = new (NotNull, JSC::allocateCell<JSMessagePort>(globalObject->vm().heap)) JSMessagePort(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MessagePort* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMessagePort();
 
     DECLARE_INFO;
 
@@ -56,14 +55,9 @@ public:
 
 
     // Custom functions
-    JSC::JSValue postMessage(JSC::ExecState*);
-    MessagePort& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MessagePort* m_impl;
+    JSC::JSValue postMessage(JSC::ExecState&);
 protected:
-    JSMessagePort(JSC::Structure*, JSDOMGlobalObject*, Ref<MessagePort>&&);
+    JSMessagePort(JSC::Structure*, JSDOMGlobalObject&, Ref<MessagePort>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -86,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MessagePort*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MessagePort*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MessagePort& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MessagePort& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MessagePort*);
 
 
 } // namespace WebCore

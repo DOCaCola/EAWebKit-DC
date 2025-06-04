@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSScriptProfile : public JSDOMWrapper {
+class WEBCORE_EXPORT JSScriptProfile : public JSDOMWrapper<ScriptProfile> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<ScriptProfile> Base;
     static JSScriptProfile* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ScriptProfile>&& impl)
     {
-        JSScriptProfile* ptr = new (NotNull, JSC::allocateCell<JSScriptProfile>(globalObject->vm().heap)) JSScriptProfile(structure, globalObject, WTF::move(impl));
+        JSScriptProfile* ptr = new (NotNull, JSC::allocateCell<JSScriptProfile>(globalObject->vm().heap)) JSScriptProfile(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static ScriptProfile* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSScriptProfile();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    ScriptProfile& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ScriptProfile* m_impl;
 protected:
-    JSScriptProfile(JSC::Structure*, JSDOMGlobalObject*, Ref<ScriptProfile>&&);
+    JSScriptProfile(JSC::Structure*, JSDOMGlobalObject&, Ref<ScriptProfile>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ScriptProfile*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ScriptProfile*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ScriptProfile& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ScriptProfile& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ScriptProfile*);
 
 
 } // namespace WebCore

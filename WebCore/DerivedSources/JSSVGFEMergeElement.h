@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEMergeElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEMergeElement>&& impl)
     {
-        JSSVGFEMergeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMergeElement>(globalObject->vm().heap)) JSSVGFEMergeElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEMergeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMergeElement>(globalObject->vm().heap)) JSSVGFEMergeElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEMergeElement& impl() const
+    SVGFEMergeElement& wrapped() const
     {
-        return static_cast<SVGFEMergeElement&>(Base::impl());
+        return static_cast<SVGFEMergeElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEMergeElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEMergeElement>&&);
+    JSSVGFEMergeElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEMergeElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

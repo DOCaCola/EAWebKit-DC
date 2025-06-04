@@ -52,14 +52,15 @@ class Node;
 class Page;
 class RemoteFrontendChannel;
 
-class InspectorClientEA : public InspectorClient, public InspectorFrontendChannel {
+class InspectorClientEA : public InspectorClient, public Inspector::FrontendChannel {
 public:
     InspectorClientEA(EA::WebKit::WebPage*);
 
-    virtual void inspectorDestroyed(void) override; 
+    virtual void inspectedPageDestroyed() override;
+    ConnectionType connectionType() const override { return ConnectionType::Local; }
 
-    virtual WebCore::InspectorFrontendChannel* openInspectorFrontend(WebCore::InspectorController*) override;
-    virtual void closeInspectorFrontend() override;
+    virtual Inspector::FrontendChannel* openLocalFrontend(InspectorController*) override;
+    void closeInspectorFrontend();
     virtual void bringFrontendToFront() override;
 
     virtual void highlight(void) override;
@@ -79,7 +80,7 @@ private:
 class InspectorFrontendClientEA : public InspectorFrontendClientLocal {
 public:
     InspectorFrontendClientEA(EA::WebKit::WebPage* inspectedWebPage, EA::WebKit::View *inspectorView, InspectorClientEA* inspectorClient);
-    virtual ~InspectorFrontendClientEA(void);
+    ~InspectorFrontendClientEA() override;
 
     virtual void frontendLoaded(void) override;
     virtual String localizedStringsURL(void) override;
@@ -92,7 +93,6 @@ public:
 
 	virtual void setAttachedWindowHeight(unsigned height) override;
     virtual void setAttachedWindowWidth(unsigned) override;
-    virtual void setToolbarHeight(unsigned) override;
 
     virtual void inspectedURLChanged(const String& newURL) override;
 

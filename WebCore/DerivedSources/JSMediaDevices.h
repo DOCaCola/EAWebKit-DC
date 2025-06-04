@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaDevices : public JSDOMWrapper {
+class JSMediaDevices : public JSDOMWrapper<MediaDevices> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaDevices> Base;
     static JSMediaDevices* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDevices>&& impl)
     {
-        JSMediaDevices* ptr = new (NotNull, JSC::allocateCell<JSMediaDevices>(globalObject->vm().heap)) JSMediaDevices(structure, globalObject, WTF::move(impl));
+        JSMediaDevices* ptr = new (NotNull, JSC::allocateCell<JSMediaDevices>(globalObject->vm().heap)) JSMediaDevices(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaDevices* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaDevices();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaDevices& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaDevices* m_impl;
 protected:
-    JSMediaDevices(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaDevices>&&);
+    JSMediaDevices(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaDevices>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaDevices*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaDevices*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaDevices& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaDevices& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaDevices*);
 
 
 } // namespace WebCore

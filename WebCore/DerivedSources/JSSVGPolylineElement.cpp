@@ -22,10 +22,10 @@
 #include "JSSVGPolylineElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGPointList.h"
 #include "SVGPointList.h"
-#include "SVGPolylineElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -64,51 +64,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPolylineElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGPolylineElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPolylineElement> JSSVGPolylineElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPolylineElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPolylineElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPolylineElementConstructor>(vm.heap)) JSSVGPolylineElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPolylineElementConstructor::s_info = { "SVGPolylineElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPolylineElementConstructor) };
-
-JSSVGPolylineElementConstructor::JSSVGPolylineElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPolylineElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPolylineElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPolylineElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPolylineElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPolylineElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPolylineElementConstructor::s_info = { "SVGPolylineElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPolylineElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPolylineElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "points", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementPoints), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animatedPoints", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementAnimatedPoints), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "points", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementPoints), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animatedPoints", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementAnimatedPoints), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPolylineElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGPolylineElementPrototype::s_info = { "SVGPolylineElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPolylineElementPrototype) };
@@ -121,7 +95,7 @@ void JSSVGPolylineElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPolylineElement::s_info = { "SVGPolylineElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPolylineElement) };
 
-JSSVGPolylineElement::JSSVGPolylineElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPolylineElement>&& impl)
+JSSVGPolylineElement::JSSVGPolylineElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPolylineElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,69 +110,69 @@ JSObject* JSSVGPolylineElement::getPrototype(VM& vm, JSGlobalObject* globalObjec
     return getDOMPrototype<JSSVGPolylineElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPolylineElementPoints(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPolylineElementPoints(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPolylineElement* castedThis = jsDynamicCast<JSSVGPolylineElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPolylineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPolylineElement", "points");
-        return throwGetterTypeError(*exec, "SVGPolylineElement", "points");
+            return reportDeprecatedGetterError(*state, "SVGPolylineElement", "points");
+        return throwGetterTypeError(*state, "SVGPolylineElement", "points");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGListPropertyTearOff<SVGPointList>*>(impl.points().get())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.points()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPolylineElementAnimatedPoints(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPolylineElementAnimatedPoints(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPolylineElement* castedThis = jsDynamicCast<JSSVGPolylineElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPolylineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPolylineElement", "animatedPoints");
-        return throwGetterTypeError(*exec, "SVGPolylineElement", "animatedPoints");
+            return reportDeprecatedGetterError(*state, "SVGPolylineElement", "animatedPoints");
+        return throwGetterTypeError(*state, "SVGPolylineElement", "animatedPoints");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGListPropertyTearOff<SVGPointList>*>(impl.animatedPoints().get())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.animatedPoints()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPolylineElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPolylineElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPolylineElement* castedThis = jsDynamicCast<JSSVGPolylineElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPolylineElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPolylineElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGPolylineElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGPolylineElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGPolylineElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPolylineElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPolylineElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPolylineElementPrototype* domObject = jsDynamicCast<JSSVGPolylineElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPolylineElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPolylineElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGPolylineElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPolylineElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPolylineElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

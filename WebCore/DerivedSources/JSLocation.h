@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSLocation : public JSDOMWrapper {
+class JSLocation : public JSDOMWrapper<Location> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Location> Base;
     static JSLocation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Location>&& impl)
     {
-        JSLocation* ptr = new (NotNull, JSC::allocateCell<JSLocation>(globalObject->vm().heap)) JSLocation(structure, globalObject, WTF::move(impl));
+        JSLocation* ptr = new (NotNull, JSC::allocateCell<JSLocation>(globalObject->vm().heap)) JSLocation(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,7 +47,6 @@ public:
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSLocation();
 
     DECLARE_INFO;
 
@@ -62,30 +61,12 @@ public:
     static bool defineOwnProperty(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, const JSC::PropertyDescriptor&, bool shouldThrow);
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
-    // Custom attributes
-    void setHref(JSC::ExecState*, JSC::JSValue);
-    void setProtocol(JSC::ExecState*, JSC::JSValue);
-    void setHost(JSC::ExecState*, JSC::JSValue);
-    void setHostname(JSC::ExecState*, JSC::JSValue);
-    void setPort(JSC::ExecState*, JSC::JSValue);
-    void setPathname(JSC::ExecState*, JSC::JSValue);
-    void setSearch(JSC::ExecState*, JSC::JSValue);
-    void setHash(JSC::ExecState*, JSC::JSValue);
-
     // Custom functions
-    JSC::JSValue assign(JSC::ExecState*);
-    JSC::JSValue replace(JSC::ExecState*);
-    JSC::JSValue reload(JSC::ExecState*);
-    JSC::JSValue toStringFunction(JSC::ExecState*);
-    Location& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Location* m_impl;
+    JSC::JSValue toStringFunction(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSLocation(JSC::Structure*, JSDOMGlobalObject*, Ref<Location>&&);
+    JSLocation(JSC::Structure*, JSDOMGlobalObject&, Ref<Location>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -108,7 +89,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Location*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Location*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Location& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Location& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Location*);
 
 class JSLocationPrototype : public JSC::JSNonFinalObject {
 public:

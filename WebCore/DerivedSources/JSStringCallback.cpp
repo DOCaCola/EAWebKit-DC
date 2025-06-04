@@ -22,7 +22,9 @@
 #include "JSStringCallback.h"
 
 #include "ScriptExecutionContext.h"
+#include "URL.h"
 #include <runtime/JSLock.h>
+#include <runtime/JSString.h>
 
 using namespace JSC;
 
@@ -31,7 +33,7 @@ namespace WebCore {
 JSStringCallback::JSStringCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : StringCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -45,7 +47,7 @@ JSStringCallback::~JSStringCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
@@ -61,13 +63,25 @@ bool JSStringCallback::handleEvent(const String& data)
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(jsStringWithCache(exec, data));
+    args.append(jsStringWithCache(state, data));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<Exception> returnedException;
+    UNUSED_PARAM(state);
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StringCallback* impl)
+{
+    if (!impl || !static_cast<JSStringCallback&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSStringCallback&>(*impl).callbackData()->callback();
+
 }
 
 }

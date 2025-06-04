@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSAudioProcessingEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioProcessingEvent>&& impl)
     {
-        JSAudioProcessingEvent* ptr = new (NotNull, JSC::allocateCell<JSAudioProcessingEvent>(globalObject->vm().heap)) JSAudioProcessingEvent(structure, globalObject, WTF::move(impl));
+        JSAudioProcessingEvent* ptr = new (NotNull, JSC::allocateCell<JSAudioProcessingEvent>(globalObject->vm().heap)) JSAudioProcessingEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioProcessingEvent& impl() const
+    AudioProcessingEvent& wrapped() const
     {
-        return static_cast<AudioProcessingEvent&>(Base::impl());
+        return static_cast<AudioProcessingEvent&>(Base::wrapped());
     }
 protected:
-    JSAudioProcessingEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioProcessingEvent>&&);
+    JSAudioProcessingEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioProcessingEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioProcessingEvent*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioProcessingEvent& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioProcessingEvent& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioProcessingEvent*);
 
 
 } // namespace WebCore

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaStream : public JSDOMWrapper {
+class JSMediaStream : public JSDOMWrapper<MediaStream> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaStream> Base;
     static JSMediaStream* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStream>&& impl)
     {
-        JSMediaStream* ptr = new (NotNull, JSC::allocateCell<JSMediaStream>(globalObject->vm().heap)) JSMediaStream(structure, globalObject, WTF::move(impl));
+        JSMediaStream* ptr = new (NotNull, JSC::allocateCell<JSMediaStream>(globalObject->vm().heap)) JSMediaStream(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaStream* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaStream();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaStream& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaStream* m_impl;
 protected:
-    JSMediaStream(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStream>&&);
+    JSMediaStream(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStream>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaStream*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStream*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaStream& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStream& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaStream*);
 
 
 } // namespace WebCore

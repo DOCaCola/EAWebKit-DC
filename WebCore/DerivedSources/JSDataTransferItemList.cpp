@@ -25,7 +25,6 @@
 #include "JSDataTransferItemList.h"
 
 #include "DataTransferItem.h"
-#include "DataTransferItemList.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include "JSDataTransferItem.h"
@@ -85,17 +84,17 @@ static const struct CompactHashIndex JSDataTransferItemListTableIndex[4] = {
 
 static const HashTableValue JSDataTransferItemListTableValues[] =
 {
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferItemListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDataTransferItemListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSDataTransferItemListTable = { 1, 3, true, JSDataTransferItemListTableValues, 0, JSDataTransferItemListTableIndex };
+static const HashTable JSDataTransferItemListTable = { 1, 3, true, JSDataTransferItemListTableValues, JSDataTransferItemListTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSDataTransferItemListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionItem), (intptr_t) (0) },
-    { "clear", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionClear), (intptr_t) (0) },
-    { "add", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionAdd), (intptr_t) (1) },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionItem), (intptr_t) (0) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionClear), (intptr_t) (0) } },
+    { "add", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDataTransferItemListPrototypeFunctionAdd), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDataTransferItemListPrototype::s_info = { "DataTransferItemListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDataTransferItemListPrototype) };
@@ -108,9 +107,8 @@ void JSDataTransferItemListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDataTransferItemList::s_info = { "DataTransferItemList", &Base::s_info, &JSDataTransferItemListTable, CREATE_METHOD_TABLE(JSDataTransferItemList) };
 
-JSDataTransferItemList::JSDataTransferItemList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataTransferItemList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDataTransferItemList::JSDataTransferItemList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DataTransferItemList>&& impl)
+    : JSDOMWrapper<DataTransferItemList>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -130,136 +128,128 @@ void JSDataTransferItemList::destroy(JSC::JSCell* cell)
     thisObject->JSDataTransferItemList::~JSDataTransferItemList();
 }
 
-JSDataTransferItemList::~JSDataTransferItemList()
-{
-    releaseImpl();
-}
-
-bool JSDataTransferItemList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDataTransferItemList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDataTransferItemList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSDataTransferItemList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return getStaticValueSlot<JSDataTransferItemList, Base>(exec, JSDataTransferItemListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDataTransferItemList, Base>(state, JSDataTransferItemListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSDataTransferItemList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDataTransferItemList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDataTransferItemList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDataTransferItemListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDataTransferItemListLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDataTransferItemList*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-void JSDataTransferItemList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSDataTransferItemList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSDataTransferItemList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDataTransferItemList* castedThis = jsDynamicCast<JSDataTransferItemList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransferItemList", "item");
+        return throwThisTypeError(*state, "DataTransferItemList", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransferItemList::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionClear(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionClear(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDataTransferItemList* castedThis = jsDynamicCast<JSDataTransferItemList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransferItemList", "clear");
+        return throwThisTypeError(*state, "DataTransferItemList", "clear");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransferItemList::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.clear();
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDataTransferItemList* castedThis = jsDynamicCast<JSDataTransferItemList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransferItemList", "add");
+        return throwThisTypeError(*state, "DataTransferItemList", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransferItemList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    File* file = JSFile::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    File* file = JSFile::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(file);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDataTransferItemList* castedThis = jsDynamicCast<JSDataTransferItemList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DataTransferItemList", "add");
+        return throwThisTypeError(*state, "DataTransferItemList", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDataTransferItemList::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String data = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String data = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String type = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String type = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(data, type, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDataTransferItemListPrototypeFunctionAdd(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSFile::info())))))
-        return jsDataTransferItemListPrototypeFunctionAdd1(exec);
+        return jsDataTransferItemListPrototypeFunctionAdd1(state);
     if (argsCount == 0 || argsCount == 1 || argsCount == 2)
-        return jsDataTransferItemListPrototypeFunctionAdd2(exec);
-    return throwVMTypeError(exec);
+        return jsDataTransferItemListPrototypeFunctionAdd2(state);
+    return throwVMTypeError(state);
 }
 
 bool JSDataTransferItemListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -273,7 +263,14 @@ void JSDataTransferItemListOwner::finalize(JSC::Handle<JSC::Unknown> handle, voi
 {
     auto* jsDataTransferItemList = jsCast<JSDataTransferItemList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDataTransferItemList->impl(), jsDataTransferItemList);
+    uncacheWrapper(world, &jsDataTransferItemList->wrapped(), jsDataTransferItemList);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DataTransferItemList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDataTransferItemList>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DataTransferItemList* impl)
@@ -295,7 +292,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DataTransfer
 DataTransferItemList* JSDataTransferItemList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDataTransferItemList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

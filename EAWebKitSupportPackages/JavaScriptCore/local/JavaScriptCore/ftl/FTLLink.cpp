@@ -28,13 +28,11 @@
 
 #if ENABLE(FTL_JIT)
 
-#include "ArityCheckFailReturnThunks.h"
 #include "CCallHelpers.h"
 #include "CodeBlockWithJITType.h"
 #include "DFGCommon.h"
 #include "FTLJITCode.h"
 #include "JITOperations.h"
-#include "JITStubs.h"
 #include "LLVMAPI.h"
 #include "LinkBuffer.h"
 #include "JSCInlines.h"
@@ -53,10 +51,34 @@ void link(State& state)
     
     // LLVM will create its own jump tables as needed.
     codeBlock->clearSwitchJumpTables();
-    
-    // FIXME: Need to know the real frame register count.
-    // https://bugs.webkit.org/show_bug.cgi?id=125727
-    state.jitCode->common.frameRegisterCount = 1000;
+
+#if !FTL_USES_B3
+    // What LLVM's stackmaps call stackSizeForLocals and what we call frameRegisterCount have a simple
+    // relationship, though it's not obvious from reading the code. The easiest way to understand them
+    // is to look at stackOffset, i.e. what you have to add to FP to get SP. For LLVM that is just:
+    //
+    //     stackOffset == -state.jitCode->stackmaps.stackSizeForLocals()
+    //
+    // The way we define frameRegisterCount is that it satisfies this equality:
+    //
+    //     stackOffset == virtualRegisterForLocal(frameRegisterCount - 1).offset() * sizeof(Register)
+    //
+    // We can simplify this when we apply virtualRegisterForLocal():
+    //
+    //     stackOffset == (-1 - (frameRegisterCount - 1)) * sizeof(Register)
+    //     stackOffset == (-1 - frameRegisterCount + 1) * sizeof(Register)
+    //     stackOffset == -frameRegisterCount * sizeof(Register)
+    //
+    // Therefore we just have:
+    //
+    //     frameRegisterCount == -stackOffset / sizeof(Register)
+    //
+    // If we substitute what we have above, we get:
+    //
+    //     frameRegisterCount == -(-state.jitCode->stackmaps.stackSizeForLocals()) / sizeof(Register)
+    //     frameRegisterCount == state.jitCode->stackmaps.stackSizeForLocals() / sizeof(Register)
+    state.jitCode->common.frameRegisterCount = state.jitCode->stackmaps.stackSizeForLocals() / sizeof(void*);
+#endif
     
     state.jitCode->common.requiredRegisterCountForExit = graph.requiredRegisterCountForExit();
     
@@ -79,8 +101,8 @@ void link(State& state)
             Profiler::OriginStack(),
             toCString("Generated FTL JIT code for ", CodeBlockWithJITType(codeBlock, JITCode::FTLJIT), ", instruction count = ", graph.m_codeBlock->instructionCount(), ":\n"));
         
-        graph.m_dominators.computeIfNecessary(graph);
-        graph.m_naturalLoops.computeIfNecessary(graph);
+        graph.ensureDominators();
+        graph.ensureNaturalLoops();
         
         const char* prefix = "    ";
         
@@ -123,8 +145,11 @@ void link(State& state)
         dumpContext.dump(out, prefix);
         compilation->addDescription(Profiler::OriginStack(), out.toCString());
         out.reset();
-        
+
         out.print("    Disassembly:\n");
+#if FTL_USES_B3
+        out.print("        <not implemented yet>\n");
+#else
         for (unsigned i = 0; i < state.jitCode->handles().size(); ++i) {
             if (state.codeSectionNames[i] != SECTION_NAME("text"))
                 continue;
@@ -134,6 +159,7 @@ void link(State& state)
                 MacroAssemblerCodePtr(handle->start()), handle->sizeInBytes(),
                 "      ", out, LLVMSubset);
         }
+#endif
         compilation->addDescription(Profiler::OriginStack(), out.toCString());
         out.reset();
         
@@ -153,7 +179,7 @@ void link(State& state)
         jit.emitFunctionPrologue();
         jit.move(GPRInfo::callFrameRegister, GPRInfo::argumentGPR0);
         jit.store32(
-            CCallHelpers::TrustedImm32(CallFrame::Location::encodeAsBytecodeOffset(0)),
+            CCallHelpers::TrustedImm32(CallSiteIndex(0).bits()),
             CCallHelpers::tagFor(JSStack::ArgumentCount));
         jit.storePtr(GPRInfo::callFrameRegister, &vm.topCallFrame);
         CCallHelpers::Call callArityCheck = jit.call();
@@ -165,14 +191,10 @@ void link(State& state)
         jit.load64(vm.addressOfException(), GPRInfo::regT1);
         jit.jitAssertIsNull(GPRInfo::regT1);
 #endif
-        jit.move(GPRInfo::returnValueGPR, GPRInfo::regT0);
+        jit.move(GPRInfo::returnValueGPR, GPRInfo::argumentGPR0);
         jit.emitFunctionEpilogue();
-        mainPathJumps.append(jit.branchTest32(CCallHelpers::Zero, GPRInfo::regT0));
+        mainPathJumps.append(jit.branchTest32(CCallHelpers::Zero, GPRInfo::argumentGPR0));
         jit.emitFunctionPrologue();
-        CodeLocationLabel* arityThunkLabels =
-            vm.arityCheckFailReturnThunks->returnPCsFor(vm, codeBlock->numParameters());
-        jit.move(CCallHelpers::TrustedImmPtr(arityThunkLabels), GPRInfo::regT7);
-        jit.loadPtr(CCallHelpers::BaseIndex(GPRInfo::regT7, GPRInfo::regT0, CCallHelpers::timesPtr()), GPRInfo::regT7);
         CCallHelpers::Call callArityFixup = jit.call();
         jit.emitFunctionEpilogue();
         mainPathJumps.append(jit.jump());

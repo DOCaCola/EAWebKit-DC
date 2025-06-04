@@ -22,6 +22,8 @@
 #include "config.h"
 #include "TextureMapperGL.h"
 
+#if USE(TEXTURE_MAPPER_GL)
+
 #include "BitmapTextureGL.h"
 #include "BitmapTexturePool.h"
 #include "Extensions3D.h"
@@ -43,16 +45,6 @@
 #include <cairo.h>
 #include <wtf/text/CString.h>
 #endif
-
-#if !USE(TEXMAP_OPENGL_ES_2)
-// FIXME: Move to Extensions3D.h.
-#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
-#define GL_UNPACK_ROW_LENGTH 0x0CF2
-#define GL_UNPACK_SKIP_PIXELS 0x0CF4
-#define GL_UNPACK_SKIP_ROWS 0x0CF3
-#endif
-
-#if USE(TEXTURE_MAPPER)
 
 namespace WebCore {
 struct TextureMapperGLData {
@@ -246,7 +238,7 @@ TextureMapperGL::TextureMapperGL()
     m_context3D = GraphicsContext3D::createForCurrentGLContext();
     m_data = new TextureMapperGLData(m_context3D.get());
 #if USE(TEXTURE_MAPPER_GL)
-    m_texturePool = std::make_unique<BitmapTexturePool>(m_context3D);
+    m_texturePool = std::make_unique<BitmapTexturePool>(m_context3D.copyRef());
 #endif
 }
 
@@ -798,12 +790,11 @@ PassRefPtr<BitmapTexture> TextureMapperGL::createTexture()
     return adoptRef(texture);
 }
 
-#if USE(TEXTURE_MAPPER_GL)
 std::unique_ptr<TextureMapper> TextureMapper::platformCreateAccelerated()
 {
     return std::make_unique<TextureMapperGL>();
 }
-#endif
 
 };
-#endif
+
+#endif // USE(TEXTURE_MAPPER_GL)

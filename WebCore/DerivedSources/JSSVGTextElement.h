@@ -32,7 +32,7 @@ public:
     typedef JSSVGTextPositioningElement Base;
     static JSSVGTextElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTextElement>&& impl)
     {
-        JSSVGTextElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextElement>(globalObject->vm().heap)) JSSVGTextElement(structure, globalObject, WTF::move(impl));
+        JSSVGTextElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextElement>(globalObject->vm().heap)) JSSVGTextElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTextElement& impl() const
+    SVGTextElement& wrapped() const
     {
-        return static_cast<SVGTextElement&>(Base::impl());
+        return static_cast<SVGTextElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTextElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTextElement>&&);
+    JSSVGTextElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTextElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

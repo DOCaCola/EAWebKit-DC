@@ -25,18 +25,18 @@
 #include "HTMLCollection.h"
 #include "HTMLFormElement.h"
 #include "HTMLNames.h"
+#include "HTMLOptionElement.h"
 #include "HTMLOptionsCollection.h"
-#include "HTMLSelectElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLCollection.h"
 #include "JSHTMLElement.h"
 #include "JSHTMLFormElement.h"
+#include "JSHTMLOptionElement.h"
 #include "JSHTMLOptionsCollection.h"
-#include "JSNode.h"
 #include "JSNodeList.h"
 #include "JSValidityState.h"
 #include "NameNodeList.h"
-#include "Node.h"
 #include "NodeList.h"
 #include "URL.h"
 #include "ValidityState.h"
@@ -86,6 +86,8 @@ JSC::EncodedJSValue jsHTMLSelectElementWillValidate(JSC::ExecState*, JSC::JSObje
 JSC::EncodedJSValue jsHTMLSelectElementValidity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsHTMLSelectElementValidationMessage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsHTMLSelectElementLabels(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsHTMLSelectElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSHTMLSelectElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsHTMLSelectElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSHTMLSelectElementPrototype : public JSC::JSNonFinalObject {
@@ -113,26 +115,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLSelectElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLSelectElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLSelectElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLSelectElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLSelectElementConstructor>(vm.heap)) JSHTMLSelectElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLSelectElement> JSHTMLSelectElementConstructor;
 
 /* Hash table */
 
@@ -147,53 +130,47 @@ static const struct CompactHashIndex JSHTMLSelectElementTableIndex[5] = {
 
 static const HashTableValue JSHTMLSelectElementTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementLength) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "length", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementLength) } },
 };
 
-static const HashTable JSHTMLSelectElementTable = { 2, 3, true, JSHTMLSelectElementTableValues, 0, JSHTMLSelectElementTableIndex };
-const ClassInfo JSHTMLSelectElementConstructor::s_info = { "HTMLSelectElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSelectElementConstructor) };
-
-JSHTMLSelectElementConstructor::JSHTMLSelectElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHTMLSelectElementTable = { 2, 3, true, JSHTMLSelectElementTableValues, JSHTMLSelectElementTableIndex };
+template<> void JSHTMLSelectElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLSelectElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLSelectElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLSelectElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLSelectElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLSelectElementConstructor::s_info = { "HTMLSelectElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSelectElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLSelectElementPrototypeTableValues[] =
 {
-    { "autofocus", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementAutofocus) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementDisabled) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "multiple", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementMultiple), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementMultiple) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementName) },
-    { "required", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementRequired) },
-    { "size", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementSize) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "options", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectedOptions", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSelectedOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectedIndex", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSelectedIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementSelectedIndex) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementValue) },
-    { "willValidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validationMessage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionItem), (intptr_t) (1) },
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionNamedItem), (intptr_t) (0) },
-    { "add", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionAdd), (intptr_t) (1) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionRemove), (intptr_t) (0) },
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
-    { "setCustomValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) },
+    { "autofocus", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementAutofocus) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementDisabled) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "multiple", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementMultiple), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementMultiple) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementName) } },
+    { "required", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementRequired) } },
+    { "size", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementSize) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "options", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectedOptions", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSelectedOptions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectedIndex", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementSelectedIndex), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementSelectedIndex) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementValue) } },
+    { "willValidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validationMessage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "autocomplete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSelectElementAutocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLSelectElementAutocomplete) } },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionItem), (intptr_t) (1) } },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionNamedItem), (intptr_t) (0) } },
+    { "add", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionAdd), (intptr_t) (1) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionRemove), (intptr_t) (0) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "setCustomValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLSelectElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) } },
 };
 
 const ClassInfo JSHTMLSelectElementPrototype::s_info = { "HTMLSelectElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSelectElementPrototype) };
@@ -206,7 +183,7 @@ void JSHTMLSelectElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLSelectElement::s_info = { "HTMLSelectElement", &Base::s_info, &JSHTMLSelectElementTable, CREATE_METHOD_TABLE(JSHTMLSelectElement) };
 
-JSHTMLSelectElement::JSHTMLSelectElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSelectElement>&& impl)
+JSHTMLSelectElement::JSHTMLSelectElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLSelectElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -221,667 +198,701 @@ JSObject* JSHTMLSelectElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSHTMLSelectElement>(vm, globalObject);
 }
 
-bool JSHTMLSelectElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLSelectElement::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLSelectElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSHTMLSelectElement>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return getStaticValueSlot<JSHTMLSelectElement, Base>(exec, JSHTMLSelectElementTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSHTMLSelectElement, Base>(state, JSHTMLSelectElementTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSHTMLSelectElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLSelectElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLSelectElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLSelectElementAutofocus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementAutofocus(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "autofocus");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "autofocus");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "autofocus");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "autofocus");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::autofocusAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementDisabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "disabled");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "disabled");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "disabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementForm(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "form");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "form");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "form");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "form");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.form()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementMultiple(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementMultiple(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "multiple");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "multiple");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "multiple");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "multiple");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.multiple());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "name");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "name");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "name");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getNameAttribute());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "required");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "required");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "required");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "required");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::requiredAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementSize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "size");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "size");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "size");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "size");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.size());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "type");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "type");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.type());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementOptions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementOptions(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "options");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "options");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "options");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "options");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.options()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.options()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHTMLSelectElement*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementSelectedOptions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementSelectedOptions(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "selectedOptions");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "selectedOptions");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "selectedOptions");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "selectedOptions");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.selectedOptions()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.selectedOptions()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementSelectedIndex(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementSelectedIndex(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "selectedIndex");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "selectedIndex");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "selectedIndex");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "selectedIndex");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.selectedIndex());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "value");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "value");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "value");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "value");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.value());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.value());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementWillValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementWillValidate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "willValidate");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "willValidate");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "willValidate");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "willValidate");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.willValidate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementValidity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementValidity(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "validity");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "validity");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "validity");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "validity");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.validity()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.validity()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementValidationMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementValidationMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "validationMessage");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "validationMessage");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "validationMessage");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "validationMessage");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.validationMessage());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.validationMessage());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementLabels(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLSelectElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLSelectElement", "labels");
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "labels");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "labels");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.labels()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLSelectElementConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLSelectElementAutocomplete(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSHTMLSelectElementPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "HTMLSelectElement", "autocomplete");
+        return throwGetterTypeError(*state, "HTMLSelectElement", "autocomplete");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.autocomplete());
+    return JSValue::encode(result);
+}
+
+
+EncodedJSValue jsHTMLSelectElementConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSHTMLSelectElement* domObject = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLSelectElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLSelectElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHTMLSelectElement::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSHTMLSelectElement::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLSelectElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     if (Optional<uint32_t> index = parseIndex(propertyName)) {
-        thisObject->indexSetter(exec, index.value(), value);
+        thisObject->indexSetter(state, index.value(), value);
         return;
     }
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSHTMLSelectElement::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSHTMLSelectElement::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSHTMLSelectElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     if (index <= MAX_ARRAY_INDEX) {
-        thisObject->indexSetter(exec, index, value);
+        thisObject->indexSetter(state, index, value);
         return;
     }
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSHTMLSelectElementAutofocus(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementAutofocus(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "autofocus");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "autofocus");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "autofocus");
+            throwSetterTypeError(*state, "HTMLSelectElement", "autofocus");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::autofocusAttr, nativeValue);
 }
 
 
-void setJSHTMLSelectElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementDisabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "disabled");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "disabled");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "disabled");
+            throwSetterTypeError(*state, "HTMLSelectElement", "disabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
 }
 
 
-void setJSHTMLSelectElementMultiple(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementMultiple(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "multiple");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "multiple");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "multiple");
+            throwSetterTypeError(*state, "HTMLSelectElement", "multiple");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setMultiple(nativeValue);
 }
 
 
-void setJSHTMLSelectElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "name");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "name");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "name");
+            throwSetterTypeError(*state, "HTMLSelectElement", "name");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
 }
 
 
-void setJSHTMLSelectElementRequired(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementRequired(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "required");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "required");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "required");
+            throwSetterTypeError(*state, "HTMLSelectElement", "required");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::requiredAttr, nativeValue);
 }
 
 
-void setJSHTMLSelectElementSize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementSize(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "size");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "size");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "size");
+            throwSetterTypeError(*state, "HTMLSelectElement", "size");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSize(nativeValue);
 }
 
 
-void setJSHTMLSelectElementLength(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementLength(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHTMLSelectElement*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    auto& impl = castedThis->impl();
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLength(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLSelectElementSelectedIndex(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementSelectedIndex(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "selectedIndex");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "selectedIndex");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "selectedIndex");
+            throwSetterTypeError(*state, "HTMLSelectElement", "selectedIndex");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectedIndex(nativeValue);
 }
 
 
-void setJSHTMLSelectElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLSelectElementValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLSelectElement", "value");
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "value");
         else
-            throwSetterTypeError(*exec, "HTMLSelectElement", "value");
+            throwSetterTypeError(*state, "HTMLSelectElement", "value");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setValue(nativeValue);
 }
 
 
-void JSHTMLSelectElement::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void setJSHTMLSelectElementAutocomplete(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSHTMLSelectElementPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "HTMLSelectElement", "autocomplete");
+        else
+            throwSetterTypeError(*state, "HTMLSelectElement", "autocomplete");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setAutocomplete(nativeValue);
+}
+
+
+void JSHTMLSelectElement::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSHTMLSelectElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
 JSValue JSHTMLSelectElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLSelectElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLSelectElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "item");
+        return throwThisTypeError(*state, "HTMLSelectElement", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionNamedItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionNamedItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "namedItem");
+        return throwThisTypeError(*state, "HTMLSelectElement", "namedItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String name = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.namedItem(name)));
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "add");
+        return throwThisTypeError(*state, "HTMLSelectElement", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLElement* element = JSHTMLElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* element = JSHTMLElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    HTMLElement* before = JSHTMLElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* before = JSHTMLElement::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(element, before, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "add");
+        return throwThisTypeError(*state, "HTMLSelectElement", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLElement* element = JSHTMLElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLElement* element = JSHTMLElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int index = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int index = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.add(element, index, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionAdd(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
-    JSValue arg1(exec->argument(1));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
+    JSValue arg1(state->argument(1));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info()))) && (arg1.isUndefined() || arg1.isNull() || (arg1.isObject() && asObject(arg1)->inherits(JSHTMLElement::info())))))
-        return jsHTMLSelectElementPrototypeFunctionAdd1(exec);
+        return jsHTMLSelectElementPrototypeFunctionAdd1(state);
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSHTMLElement::info())))))
-        return jsHTMLSelectElementPrototypeFunctionAdd2(exec);
+        return jsHTMLSelectElementPrototypeFunctionAdd2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionRemove(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionRemove(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "remove");
+        return throwThisTypeError(*state, "HTMLSelectElement", "remove");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    return JSValue::encode(castedThis->remove(exec));
+    return JSValue::encode(castedThis->remove(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionCheckValidity(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionCheckValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "checkValidity");
+        return throwThisTypeError(*state, "HTMLSelectElement", "checkValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.checkValidity());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionSetCustomValidity(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLSelectElementPrototypeFunctionSetCustomValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLSelectElement* castedThis = jsDynamicCast<JSHTMLSelectElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLSelectElement", "setCustomValidity");
+        return throwThisTypeError(*state, "HTMLSelectElement", "setCustomValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLSelectElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String error = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String error = valueToStringWithUndefinedOrNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCustomValidity(error);
     return JSValue::encode(jsUndefined());

@@ -170,9 +170,10 @@ static inline PlatformThread getCurrentPlatformThread()
 class MachineThreads::Thread {
     WTF_MAKE_FAST_ALLOCATED;
 
-    Thread(const PlatformThread& platThread, void* base)
+    Thread(const PlatformThread& platThread, void* base, void* end)
         : platformThread(platThread)
         , stackBase(base)
+        , stackEnd(end)
     {
 //+EAWebKitChange
 //04/14/2016
@@ -214,7 +215,8 @@ public:
 
     static Thread* createForCurrentThread()
     {
-        return new Thread(getCurrentPlatformThread(), wtfThreadData().stack().origin());
+        auto stackBounds = wtfThreadData().stack();
+        return new Thread(getCurrentPlatformThread(), stackBounds.origin(), stackBounds.end());
     }
 
     struct Registers {
@@ -265,6 +267,7 @@ public:
     Thread* next;
     PlatformThread platformThread;
     void* stackBase;
+    void* stackEnd;
 #if OS(WINDOWS)
     HANDLE platformThreadHandle;
 #endif
@@ -565,14 +568,35 @@ void MachineThreads::Thread::freeRegisters(MachineThreads::Thread::Registers& re
 #endif
 }
 
+static inline int osRedZoneAdjustment()
+{
+    int redZoneAdjustment = 0;
+#if !OS(WINDOWS)
+#if CPU(X86_64)
+    // See http://people.freebsd.org/~obrien/amd64-elf-abi.pdf Section 3.2.2.
+    redZoneAdjustment = -128;
+#elif CPU(ARM64)
+    // See https://developer.apple.com/library/ios/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html#//apple_ref/doc/uid/TP40013702-SW7
+    redZoneAdjustment = -128;
+#endif
+#endif // !OS(WINDOWS)
+    return redZoneAdjustment;
+}
+
 std::pair<void*, size_t> MachineThreads::Thread::captureStack(void* stackTop)
 {
-    void* begin = stackBase;
-    void* end = reinterpret_cast<void*>(
-        WTF::roundUpToMultipleOf<sizeof(void*)>(reinterpret_cast<uintptr_t>(stackTop)));
-    if (begin > end)
-        std::swap(begin, end);
-    return std::make_pair(begin, static_cast<char*>(end) - static_cast<char*>(begin));
+    char* begin = reinterpret_cast_ptr<char*>(stackBase);
+    char* end = bitwise_cast<char*>(WTF::roundUpToMultipleOf<sizeof(void*)>(reinterpret_cast<uintptr_t>(stackTop)));
+    ASSERT(begin >= end);
+
+    char* endWithRedZone = end + osRedZoneAdjustment();
+    ASSERT(WTF::roundUpToMultipleOf<sizeof(void*)>(reinterpret_cast<uintptr_t>(endWithRedZone)) == reinterpret_cast<uintptr_t>(endWithRedZone));
+
+    if (endWithRedZone < stackEnd)
+        endWithRedZone = reinterpret_cast_ptr<char*>(stackEnd);
+
+    std::swap(begin, endWithRedZone);
+    return std::make_pair(begin, endWithRedZone - begin);
 }
 
 SUPPRESS_ASAN

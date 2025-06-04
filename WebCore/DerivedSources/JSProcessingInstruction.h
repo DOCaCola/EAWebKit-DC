@@ -31,7 +31,7 @@ public:
     typedef JSCharacterData Base;
     static JSProcessingInstruction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ProcessingInstruction>&& impl)
     {
-        JSProcessingInstruction* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstruction>(globalObject->vm().heap)) JSProcessingInstruction(structure, globalObject, WTF::move(impl));
+        JSProcessingInstruction* ptr = new (NotNull, JSC::allocateCell<JSProcessingInstruction>(globalObject->vm().heap)) JSProcessingInstruction(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ProcessingInstruction& impl() const
+    ProcessingInstruction& wrapped() const
     {
-        return static_cast<ProcessingInstruction&>(Base::impl());
+        return static_cast<ProcessingInstruction&>(Base::wrapped());
     }
 protected:
-    JSProcessingInstruction(JSC::Structure*, JSDOMGlobalObject*, Ref<ProcessingInstruction>&&);
+    JSProcessingInstruction(JSC::Structure*, JSDOMGlobalObject&, Ref<ProcessingInstruction>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -62,6 +62,9 @@ protected:
 
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ProcessingInstruction*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ProcessingInstruction& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ProcessingInstruction*);
 
 
 } // namespace WebCore

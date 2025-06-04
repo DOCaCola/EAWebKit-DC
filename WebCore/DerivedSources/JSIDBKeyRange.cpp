@@ -27,6 +27,7 @@
 #include "ExceptionCode.h"
 #include "IDBKeyRange.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSIDBKeyRange.h"
 #include <bindings/ScriptValue.h>
 #include <runtime/Error.h>
@@ -76,63 +77,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBKeyRangeConstructor : public DOMConstructorObject {
-private:
-    JSIDBKeyRangeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBKeyRangeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBKeyRangeConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBKeyRangeConstructor>(vm.heap)) JSIDBKeyRangeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSIDBKeyRange> JSIDBKeyRangeConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSIDBKeyRangeConstructorTableValues[] =
 {
-    { "only", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionOnly), (intptr_t) (1) },
-    { "lowerBound", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionLowerBound), (intptr_t) (1) },
-    { "upperBound", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionUpperBound), (intptr_t) (1) },
-    { "bound", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionBound), (intptr_t) (2) },
+    { "only", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionOnly), (intptr_t) (1) } },
+    { "lowerBound", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionLowerBound), (intptr_t) (1) } },
+    { "upperBound", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionUpperBound), (intptr_t) (1) } },
+    { "bound", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBKeyRangeConstructorFunctionBound), (intptr_t) (2) } },
 };
 
-const ClassInfo JSIDBKeyRangeConstructor::s_info = { "IDBKeyRangeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBKeyRangeConstructor) };
-
-JSIDBKeyRangeConstructor::JSIDBKeyRangeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSIDBKeyRangeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSIDBKeyRangeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBKeyRange::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBKeyRange::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBKeyRange"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSIDBKeyRangeConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSIDBKeyRangeConstructor::s_info = { "IDBKeyRangeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBKeyRangeConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBKeyRangePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lower", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeLower), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "upper", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeUpper), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lowerOpen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeLowerOpen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "upperOpen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeUpperOpen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lower", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeLower), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "upper", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeUpper), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lowerOpen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeLowerOpen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "upperOpen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBKeyRangeUpperOpen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSIDBKeyRangePrototype::s_info = { "IDBKeyRangePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBKeyRangePrototype) };
@@ -145,9 +120,8 @@ void JSIDBKeyRangePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBKeyRange::s_info = { "IDBKeyRange", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBKeyRange) };
 
-JSIDBKeyRange::JSIDBKeyRange(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBKeyRange>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBKeyRange::JSIDBKeyRange(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBKeyRange>&& impl)
+    : JSDOMWrapper<IDBKeyRange>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -167,212 +141,207 @@ void JSIDBKeyRange::destroy(JSC::JSCell* cell)
     thisObject->JSIDBKeyRange::~JSIDBKeyRange();
 }
 
-JSIDBKeyRange::~JSIDBKeyRange()
+EncodedJSValue jsIDBKeyRangeLower(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsIDBKeyRangeLower(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBKeyRange* castedThis = jsDynamicCast<JSIDBKeyRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBKeyRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBKeyRange", "lower");
-        return throwGetterTypeError(*exec, "IDBKeyRange", "lower");
+            return reportDeprecatedGetterError(*state, "IDBKeyRange", "lower");
+        return throwGetterTypeError(*state, "IDBKeyRange", "lower");
     }
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = (impl.lowerValue(scriptContext).hasNoValue() ? jsNull() : impl.lowerValue(scriptContext).jsValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBKeyRangeUpper(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBKeyRangeUpper(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBKeyRange* castedThis = jsDynamicCast<JSIDBKeyRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBKeyRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBKeyRange", "upper");
-        return throwGetterTypeError(*exec, "IDBKeyRange", "upper");
+            return reportDeprecatedGetterError(*state, "IDBKeyRange", "upper");
+        return throwGetterTypeError(*state, "IDBKeyRange", "upper");
     }
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = (impl.upperValue(scriptContext).hasNoValue() ? jsNull() : impl.upperValue(scriptContext).jsValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBKeyRangeLowerOpen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBKeyRangeLowerOpen(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBKeyRange* castedThis = jsDynamicCast<JSIDBKeyRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBKeyRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBKeyRange", "lowerOpen");
-        return throwGetterTypeError(*exec, "IDBKeyRange", "lowerOpen");
+            return reportDeprecatedGetterError(*state, "IDBKeyRange", "lowerOpen");
+        return throwGetterTypeError(*state, "IDBKeyRange", "lowerOpen");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.lowerOpen());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBKeyRangeUpperOpen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBKeyRangeUpperOpen(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBKeyRange* castedThis = jsDynamicCast<JSIDBKeyRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBKeyRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBKeyRange", "upperOpen");
-        return throwGetterTypeError(*exec, "IDBKeyRange", "upperOpen");
+            return reportDeprecatedGetterError(*state, "IDBKeyRange", "upperOpen");
+        return throwGetterTypeError(*state, "IDBKeyRange", "upperOpen");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.upperOpen());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBKeyRangeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBKeyRangeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSIDBKeyRangePrototype* domObject = jsDynamicCast<JSIDBKeyRangePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBKeyRange::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSIDBKeyRange::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSIDBKeyRange::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBKeyRangeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBKeyRangeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionOnly(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionOnly(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue value = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue value = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::only(scriptContext, value, ec)));
+    JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::only(scriptContext, value, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionLowerBound(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionLowerBound(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue lower = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue lower = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
-        JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::lowerBound(scriptContext, lower, ec)));
+        JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::lowerBound(scriptContext, lower, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    bool open = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool open = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::lowerBound(scriptContext, lower, open, ec)));
+    JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::lowerBound(scriptContext, lower, open, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionUpperBound(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionUpperBound(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue upper = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue upper = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
-        JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::upperBound(scriptContext, upper, ec)));
+        JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::upperBound(scriptContext, upper, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    bool open = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool open = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::upperBound(scriptContext, upper, open, ec)));
+    JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::upperBound(scriptContext, upper, open, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionBound(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBKeyRangeConstructorFunctionBound(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue lower = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue lower = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue upper = { exec->vm(), exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue upper = { state->vm(), state->argument(1) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 2) {
-        JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, ec)));
+        JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    bool lowerOpen = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool lowerOpen = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 3) {
-        JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, lowerOpen, ec)));
+        JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, lowerOpen, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    bool upperOpen = exec->argument(3).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool upperOpen = state->argument(3).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, lowerOpen, upperOpen, ec)));
+    JSValue result = toJS(state, jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject()), WTF::getPtr(IDBKeyRange::bound(scriptContext, lower, upper, lowerOpen, upperOpen, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -387,7 +356,14 @@ void JSIDBKeyRangeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsIDBKeyRange = jsCast<JSIDBKeyRange*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBKeyRange->impl(), jsIDBKeyRange);
+    uncacheWrapper(world, &jsIDBKeyRange->wrapped(), jsIDBKeyRange);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBKeyRange* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSIDBKeyRange>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBKeyRange* impl)
@@ -409,7 +385,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBKeyRange*
 IDBKeyRange* JSIDBKeyRange::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSIDBKeyRange*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

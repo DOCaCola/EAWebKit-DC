@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEConvolveMatrixElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEConvolveMatrixElement>&& impl)
     {
-        JSSVGFEConvolveMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElement>(globalObject->vm().heap)) JSSVGFEConvolveMatrixElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEConvolveMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEConvolveMatrixElement>(globalObject->vm().heap)) JSSVGFEConvolveMatrixElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEConvolveMatrixElement& impl() const
+    SVGFEConvolveMatrixElement& wrapped() const
     {
-        return static_cast<SVGFEConvolveMatrixElement&>(Base::impl());
+        return static_cast<SVGFEConvolveMatrixElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEConvolveMatrixElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEConvolveMatrixElement>&&);
+    JSSVGFEConvolveMatrixElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEConvolveMatrixElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

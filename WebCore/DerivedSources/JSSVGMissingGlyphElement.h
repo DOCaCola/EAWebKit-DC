@@ -34,7 +34,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGMissingGlyphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMissingGlyphElement>&& impl)
     {
-        JSSVGMissingGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMissingGlyphElement>(globalObject->vm().heap)) JSSVGMissingGlyphElement(structure, globalObject, WTF::move(impl));
+        JSSVGMissingGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMissingGlyphElement>(globalObject->vm().heap)) JSSVGMissingGlyphElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMissingGlyphElement& impl() const
+    SVGMissingGlyphElement& wrapped() const
     {
-        return static_cast<SVGMissingGlyphElement&>(Base::impl());
+        return static_cast<SVGMissingGlyphElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMissingGlyphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMissingGlyphElement>&&);
+    JSSVGMissingGlyphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMissingGlyphElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

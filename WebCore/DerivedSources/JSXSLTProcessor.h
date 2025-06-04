@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSXSLTProcessor : public JSDOMWrapper {
+class JSXSLTProcessor : public JSDOMWrapper<XSLTProcessor> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XSLTProcessor> Base;
     static JSXSLTProcessor* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XSLTProcessor>&& impl)
     {
-        JSXSLTProcessor* ptr = new (NotNull, JSC::allocateCell<JSXSLTProcessor>(globalObject->vm().heap)) JSXSLTProcessor(structure, globalObject, WTF::move(impl));
+        JSXSLTProcessor* ptr = new (NotNull, JSC::allocateCell<JSXSLTProcessor>(globalObject->vm().heap)) JSXSLTProcessor(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XSLTProcessor* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXSLTProcessor();
 
     DECLARE_INFO;
 
@@ -55,16 +54,11 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue setParameter(JSC::ExecState*);
-    JSC::JSValue getParameter(JSC::ExecState*);
-    JSC::JSValue removeParameter(JSC::ExecState*);
-    XSLTProcessor& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XSLTProcessor* m_impl;
+    JSC::JSValue setParameter(JSC::ExecState&);
+    JSC::JSValue getParameter(JSC::ExecState&);
+    JSC::JSValue removeParameter(JSC::ExecState&);
 protected:
-    JSXSLTProcessor(JSC::Structure*, JSDOMGlobalObject*, Ref<XSLTProcessor>&&);
+    JSXSLTProcessor(JSC::Structure*, JSDOMGlobalObject&, Ref<XSLTProcessor>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -87,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XSLTProcessor*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XSLTProcessor*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XSLTProcessor& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XSLTProcessor& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XSLTProcessor*);
 
 
 } // namespace WebCore

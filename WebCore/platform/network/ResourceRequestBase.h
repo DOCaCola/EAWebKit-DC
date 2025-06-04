@@ -54,10 +54,10 @@ namespace WebCore {
     class ResourceRequestBase {
         WTF_MAKE_FAST_ALLOCATED;
     public:
-        static std::unique_ptr<ResourceRequest> adopt(std::unique_ptr<CrossThreadResourceRequestData>);
+        WEBCORE_EXPORT static std::unique_ptr<ResourceRequest> adopt(std::unique_ptr<CrossThreadResourceRequestData>);
 
         // Gets a copy of the data suitable for passing to another thread.
-        std::unique_ptr<CrossThreadResourceRequestData> copyData() const;
+        WEBCORE_EXPORT std::unique_ptr<CrossThreadResourceRequestData> copyData() const;
 
         WEBCORE_EXPORT bool isNull() const;
         WEBCORE_EXPORT bool isEmpty() const;
@@ -244,7 +244,7 @@ namespace WebCore {
         ResourceRequestBase::Requester requester;
     };
     
-    unsigned initializeMaximumHTTPConnectionCountPerHost();
+    WEBCORE_EXPORT unsigned initializeMaximumHTTPConnectionCountPerHost();
 #if PLATFORM(IOS)
     WEBCORE_EXPORT void initializeHTTPConnectionSettingsOnStartup();
 #endif

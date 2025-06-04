@@ -35,15 +35,15 @@
 
 namespace JSC { namespace DFG {
 
+// We are in the middle of an experimental transition from LLVM to B3 as the backend for the FTL. We don't
+// yet know how it will turn out. For now, this flag will control whether FTL uses B3. Remember to set this
+// to 0 before committing!
+#define FTL_USES_B3 0
+
 struct Node;
 
 typedef uint32_t BlockIndex;
 static const BlockIndex NoBlock = UINT_MAX;
-
-struct NodePointerTraits {
-    static Node* defaultValue() { return 0; }
-    static bool isEmptyForDump(Node* value) { return !value; }
-};
 
 // Use RefChildren if the child ref counts haven't already been adjusted using
 // other means and either of the following is true:
@@ -371,10 +371,10 @@ inline CapabilityLevel leastUpperBound(CapabilityLevel a, CapabilityLevel b)
 }
 
 // Unconditionally disable DFG disassembly support if the DFG is not compiled in.
-inline bool shouldShowDisassembly(CompilationMode mode = DFGMode)
+inline bool shouldDumpDisassembly(CompilationMode mode = DFGMode)
 {
 #if ENABLE(DFG_JIT)
-    return Options::showDisassembly() || Options::showDFGDisassembly() || (isFTL(mode) && Options::showFTLDisassembly());
+    return Options::dumpDisassembly() || Options::dumpDFGDisassembly() || (isFTL(mode) && Options::dumpFTLDisassembly());
 #else
     UNUSED_PARAM(mode);
     return false;

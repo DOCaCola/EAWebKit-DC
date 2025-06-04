@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSFileError.h"
 
-#include "FileError.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -59,26 +59,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSFileErrorConstructor : public DOMConstructorObject {
-private:
-    JSFileErrorConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSFileErrorConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSFileErrorConstructor* ptr = new (NotNull, JSC::allocateCell<JSFileErrorConstructor>(vm.heap)) JSFileErrorConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSFileError> JSFileErrorConstructor;
 
 /* Hash table */
 
@@ -90,26 +71,26 @@ static const struct CompactHashIndex JSFileErrorTableIndex[2] = {
 
 static const HashTableValue JSFileErrorTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSFileErrorTable = { 1, 1, true, JSFileErrorTableValues, 0, JSFileErrorTableIndex };
+static const HashTable JSFileErrorTable = { 1, 1, true, JSFileErrorTableValues, JSFileErrorTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSFileErrorConstructorTableValues[] =
 {
-    { "NOT_FOUND_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SECURITY_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "NOT_READABLE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ENCODING_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "NO_MODIFICATION_ALLOWED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "INVALID_STATE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "INVALID_MODIFICATION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "QUOTA_EXCEEDED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "TYPE_MISMATCH_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "PATH_EXISTS_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
+    { "NOT_FOUND_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SECURITY_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "NOT_READABLE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ENCODING_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "NO_MODIFICATION_ALLOWED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "INVALID_STATE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "INVALID_MODIFICATION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "QUOTA_EXCEEDED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "TYPE_MISMATCH_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "PATH_EXISTS_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
 };
 
 
@@ -126,40 +107,33 @@ COMPILE_ASSERT(10 == FileError::QUOTA_EXCEEDED_ERR, FileErrorEnumQUOTA_EXCEEDED_
 COMPILE_ASSERT(11 == FileError::TYPE_MISMATCH_ERR, FileErrorEnumTYPE_MISMATCH_ERRIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(12 == FileError::PATH_EXISTS_ERR, FileErrorEnumPATH_EXISTS_ERRIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSFileErrorConstructor::s_info = { "FileErrorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileErrorConstructor) };
-
-JSFileErrorConstructor::JSFileErrorConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSFileErrorConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSFileErrorConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSFileError::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSFileError::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("FileError"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSFileErrorConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSFileErrorConstructor::s_info = { "FileErrorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileErrorConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSFileErrorPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileErrorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "NOT_FOUND_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SECURITY_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "NOT_READABLE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ENCODING_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "NO_MODIFICATION_ALLOWED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "INVALID_STATE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "INVALID_MODIFICATION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "QUOTA_EXCEEDED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "TYPE_MISMATCH_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "PATH_EXISTS_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileErrorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "NOT_FOUND_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SECURITY_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "NOT_READABLE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ENCODING_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "NO_MODIFICATION_ALLOWED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "INVALID_STATE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "INVALID_MODIFICATION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "QUOTA_EXCEEDED_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "TYPE_MISMATCH_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "PATH_EXISTS_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
 };
 
 const ClassInfo JSFileErrorPrototype::s_info = { "FileErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileErrorPrototype) };
@@ -172,9 +146,8 @@ void JSFileErrorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSFileError::s_info = { "FileError", &Base::s_info, &JSFileErrorTable, CREATE_METHOD_TABLE(JSFileError) };
 
-JSFileError::JSFileError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileError>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSFileError::JSFileError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<FileError>&& impl)
+    : JSDOMWrapper<FileError>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -194,41 +167,38 @@ void JSFileError::destroy(JSC::JSCell* cell)
     thisObject->JSFileError::~JSFileError();
 }
 
-JSFileError::~JSFileError()
-{
-    releaseImpl();
-}
-
-bool JSFileError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSFileError::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSFileError*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSFileError, Base>(exec, JSFileErrorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSFileError, Base>(state, JSFileErrorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsFileErrorCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFileErrorCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSFileError*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.code());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsFileErrorConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsFileErrorConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSFileErrorPrototype* domObject = jsDynamicCast<JSFileErrorPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSFileError::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSFileError::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSFileError::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSFileErrorConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSFileErrorConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSFileErrorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -242,7 +212,14 @@ void JSFileErrorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsFileError = jsCast<JSFileError*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsFileError->impl(), jsFileError);
+    uncacheWrapper(world, &jsFileError->wrapped(), jsFileError);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, FileError* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSFileError>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, FileError* impl)
@@ -264,7 +241,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, FileError* i
 FileError* JSFileError::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSFileError*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

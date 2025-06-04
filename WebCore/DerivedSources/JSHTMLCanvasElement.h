@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLCanvasElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLCanvasElement>&& impl)
     {
-        JSHTMLCanvasElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLCanvasElement>(globalObject->vm().heap)) JSHTMLCanvasElement(structure, globalObject, WTF::move(impl));
+        JSHTMLCanvasElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLCanvasElement>(globalObject->vm().heap)) JSHTMLCanvasElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,15 +52,15 @@ public:
 
 
     // Custom functions
-    JSC::JSValue toDataURL(JSC::ExecState*);
-    JSC::JSValue getContext(JSC::ExecState*);
-    JSC::JSValue probablySupportsContext(JSC::ExecState*);
-    HTMLCanvasElement& impl() const
+    JSC::JSValue toDataURL(JSC::ExecState&);
+    JSC::JSValue getContext(JSC::ExecState&);
+    JSC::JSValue probablySupportsContext(JSC::ExecState&);
+    HTMLCanvasElement& wrapped() const
     {
-        return static_cast<HTMLCanvasElement&>(Base::impl());
+        return static_cast<HTMLCanvasElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLCanvasElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLCanvasElement>&&);
+    JSHTMLCanvasElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLCanvasElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

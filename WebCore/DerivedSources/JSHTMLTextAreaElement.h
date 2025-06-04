@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLTextAreaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTextAreaElement>&& impl)
     {
-        JSHTMLTextAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTextAreaElement>(globalObject->vm().heap)) JSHTMLTextAreaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTextAreaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTextAreaElement>(globalObject->vm().heap)) JSHTMLTextAreaElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTextAreaElement& impl() const
+    HTMLTextAreaElement& wrapped() const
     {
-        return static_cast<HTMLTextAreaElement&>(Base::impl());
+        return static_cast<HTMLTextAreaElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTextAreaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTextAreaElement>&&);
+    JSHTMLTextAreaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTextAreaElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

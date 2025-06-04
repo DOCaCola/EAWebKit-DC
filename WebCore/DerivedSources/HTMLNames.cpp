@@ -65,7 +65,11 @@ static const LChar aria_activedescendantString8[] = "aria-activedescendant";
 static const LChar aria_atomicString8[] = "aria-atomic";
 static const LChar aria_busyString8[] = "aria-busy";
 static const LChar aria_checkedString8[] = "aria-checked";
+static const LChar aria_colcountString8[] = "aria-colcount";
+static const LChar aria_colindexString8[] = "aria-colindex";
+static const LChar aria_colspanString8[] = "aria-colspan";
 static const LChar aria_controlsString8[] = "aria-controls";
+static const LChar aria_currentString8[] = "aria-current";
 static const LChar aria_describedbyString8[] = "aria-describedby";
 static const LChar aria_disabledString8[] = "aria-disabled";
 static const LChar aria_dropeffectString8[] = "aria-dropeffect";
@@ -81,16 +85,21 @@ static const LChar aria_labeledbyString8[] = "aria-labeledby";
 static const LChar aria_labelledbyString8[] = "aria-labelledby";
 static const LChar aria_levelString8[] = "aria-level";
 static const LChar aria_liveString8[] = "aria-live";
+static const LChar aria_modalString8[] = "aria-modal";
 static const LChar aria_multilineString8[] = "aria-multiline";
 static const LChar aria_multiselectableString8[] = "aria-multiselectable";
 static const LChar aria_orientationString8[] = "aria-orientation";
 static const LChar aria_ownsString8[] = "aria-owns";
+static const LChar aria_placeholderString8[] = "aria-placeholder";
 static const LChar aria_posinsetString8[] = "aria-posinset";
 static const LChar aria_pressedString8[] = "aria-pressed";
 static const LChar aria_readonlyString8[] = "aria-readonly";
 static const LChar aria_relevantString8[] = "aria-relevant";
 static const LChar aria_requiredString8[] = "aria-required";
 static const LChar aria_roledescriptionString8[] = "aria-roledescription";
+static const LChar aria_rowcountString8[] = "aria-rowcount";
+static const LChar aria_rowindexString8[] = "aria-rowindex";
+static const LChar aria_rowspanString8[] = "aria-rowspan";
 static const LChar aria_selectedString8[] = "aria-selected";
 static const LChar aria_setsizeString8[] = "aria-setsize";
 static const LChar aria_sortString8[] = "aria-sort";
@@ -418,6 +427,7 @@ static const LChar outputString8[] = "output";
 static const LChar pString8[] = "p";
 static const LChar paramString8[] = "param";
 static const LChar patternString8[] = "pattern";
+static const LChar pictureString8[] = "picture";
 static const LChar pingString8[] = "ping";
 static const LChar placeholderString8[] = "placeholder";
 static const LChar plaintextString8[] = "plaintext";
@@ -465,6 +475,7 @@ static const LChar selectedString8[] = "selected";
 static const LChar shapeString8[] = "shape";
 static const LChar sizeString8[] = "size";
 static const LChar sizesString8[] = "sizes";
+static const LChar slotString8[] = "slot";
 static const LChar smallString8[] = "small";
 static const LChar sortableString8[] = "sortable";
 static const LChar sortdirectionString8[] = "sortdirection";
@@ -649,11 +660,35 @@ static StringImpl::StaticASCIILiteral aria_checkedData = {
     aria_checkedString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (1517039 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
+static StringImpl::StaticASCIILiteral aria_colcountData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    13,
+    aria_colcountString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (16595205 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_colindexData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    13,
+    aria_colindexString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (12411497 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_colspanData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    12,
+    aria_colspanString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (14075199 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
 static StringImpl::StaticASCIILiteral aria_controlsData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
     13,
     aria_controlsString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (5490937 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_currentData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    12,
+    aria_currentString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (3766836 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
 static StringImpl::StaticASCIILiteral aria_describedbyData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
@@ -745,6 +780,12 @@ static StringImpl::StaticASCIILiteral aria_liveData = {
     aria_liveString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (2064917 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
+static StringImpl::StaticASCIILiteral aria_modalData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    10,
+    aria_modalString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (12602557 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
 static StringImpl::StaticASCIILiteral aria_multilineData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
     14,
@@ -768,6 +809,12 @@ static StringImpl::StaticASCIILiteral aria_ownsData = {
     9,
     aria_ownsString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (15671106 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_placeholderData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    16,
+    aria_placeholderString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (14483277 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
 static StringImpl::StaticASCIILiteral aria_posinsetData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
@@ -804,6 +851,24 @@ static StringImpl::StaticASCIILiteral aria_roledescriptionData = {
     20,
     aria_roledescriptionString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (14879786 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_rowcountData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    13,
+    aria_rowcountString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (13808306 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_rowindexData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    13,
+    aria_rowindexString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (14976311 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral aria_rowspanData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    12,
+    aria_rowspanString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (4197864 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
 static StringImpl::StaticASCIILiteral aria_selectedData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
@@ -2767,6 +2832,12 @@ static StringImpl::StaticASCIILiteral patternData = {
     patternString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (16283150 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
+static StringImpl::StaticASCIILiteral pictureData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    7,
+    pictureString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (7136372 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
 static StringImpl::StaticASCIILiteral pingData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
     4,
@@ -3048,6 +3119,12 @@ static StringImpl::StaticASCIILiteral sizesData = {
     5,
     sizesString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (6795010 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral slotData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    4,
+    slotString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (8744197 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
 static StringImpl::StaticASCIILiteral smallData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
@@ -3559,6 +3636,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, optionTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, outputTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, pTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, paramTag)
+WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, pictureTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, plaintextTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, preTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, progressTag)
@@ -3573,6 +3651,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sampTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, scriptTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sectionTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, selectTag)
+WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, slotTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, smallTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, sourceTag)
 WEBCORE_EXPORT DEFINE_GLOBAL(HTMLQualifiedName, spanTag)
@@ -3701,6 +3780,7 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&outputTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&pTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&paramTag),
+        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&pictureTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&plaintextTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&preTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&progressTag),
@@ -3715,6 +3795,7 @@ const WebCore::HTMLQualifiedName* const* getHTMLTags()
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&scriptTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&sectionTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&selectTag),
+        reinterpret_cast<const WebCore::HTMLQualifiedName*>(&slotTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&smallTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&sourceTag),
         reinterpret_cast<const WebCore::HTMLQualifiedName*>(&spanTag),
@@ -3763,7 +3844,11 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_activedescendantAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_atomicAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_busyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_checkedAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colcountAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colindexAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_colspanAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_controlsAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_currentAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_describedbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_disabledAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_dropeffectAttr)
@@ -3779,16 +3864,21 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_labeledbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_labelledbyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_levelAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_liveAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_modalAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_multilineAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_multiselectableAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_orientationAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_ownsAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_placeholderAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_posinsetAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_pressedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_readonlyAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_relevantAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_requiredAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_roledescriptionAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowcountAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowindexAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_rowspanAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_selectedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_setsizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, aria_sortAttr)
@@ -4071,6 +4161,7 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, selectedAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, shapeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sizeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sizesAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, slotAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sortableAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, sortdirectionAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, spanAttr)
@@ -4134,7 +4225,11 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_atomicAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_busyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_checkedAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colcountAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colindexAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_colspanAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_controlsAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_currentAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_describedbyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_disabledAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_dropeffectAttr),
@@ -4150,16 +4245,21 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_labelledbyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_levelAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_liveAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_modalAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_multilineAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_multiselectableAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_orientationAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_ownsAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_placeholderAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_posinsetAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_pressedAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_readonlyAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_relevantAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_requiredAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_roledescriptionAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowcountAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowindexAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&aria_rowspanAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_selectedAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_setsizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&aria_sortAttr),
@@ -4442,6 +4542,7 @@ const WebCore::QualifiedName* const* getHTMLAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&shapeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sizeAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sizesAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&slotAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sortableAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&sortdirectionAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&spanAttr),
@@ -4525,7 +4626,11 @@ void init()
     reinterpret_cast<StringImpl*>(&aria_atomicData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_busyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_checkedData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colcountData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colindexData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_colspanData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_controlsData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_currentData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_describedbyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_disabledData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_dropeffectData)->assertHashIsCorrect();
@@ -4541,16 +4646,21 @@ void init()
     reinterpret_cast<StringImpl*>(&aria_labelledbyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_levelData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_liveData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_modalData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_multilineData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_multiselectableData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_orientationData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_ownsData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_placeholderData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_posinsetData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_pressedData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_readonlyData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_relevantData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_requiredData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_roledescriptionData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowcountData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowindexData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&aria_rowspanData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_selectedData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_setsizeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&aria_sortData)->assertHashIsCorrect();
@@ -4878,6 +4988,7 @@ void init()
     reinterpret_cast<StringImpl*>(&pData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&paramData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&patternData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&pictureData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&pingData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&placeholderData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&plaintextData)->assertHashIsCorrect();
@@ -4925,6 +5036,7 @@ void init()
     reinterpret_cast<StringImpl*>(&shapeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sizeData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sizesData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&slotData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&smallData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sortableData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&sortdirectionData)->assertHashIsCorrect();
@@ -5097,6 +5209,7 @@ void init()
         { (void*)&outputTag, *reinterpret_cast<StringImpl*>(&outputData) },
         { (void*)&pTag, *reinterpret_cast<StringImpl*>(&pData) },
         { (void*)&paramTag, *reinterpret_cast<StringImpl*>(&paramData) },
+        { (void*)&pictureTag, *reinterpret_cast<StringImpl*>(&pictureData) },
         { (void*)&plaintextTag, *reinterpret_cast<StringImpl*>(&plaintextData) },
         { (void*)&preTag, *reinterpret_cast<StringImpl*>(&preData) },
         { (void*)&progressTag, *reinterpret_cast<StringImpl*>(&progressData) },
@@ -5111,6 +5224,7 @@ void init()
         { (void*)&scriptTag, *reinterpret_cast<StringImpl*>(&scriptData) },
         { (void*)&sectionTag, *reinterpret_cast<StringImpl*>(&sectionData) },
         { (void*)&selectTag, *reinterpret_cast<StringImpl*>(&selectData) },
+        { (void*)&slotTag, *reinterpret_cast<StringImpl*>(&slotData) },
         { (void*)&smallTag, *reinterpret_cast<StringImpl*>(&smallData) },
         { (void*)&sourceTag, *reinterpret_cast<StringImpl*>(&sourceData) },
         { (void*)&spanTag, *reinterpret_cast<StringImpl*>(&spanData) },
@@ -5165,7 +5279,11 @@ void init()
         { (void*)&aria_atomicAttr, *reinterpret_cast<StringImpl*>(&aria_atomicData) },
         { (void*)&aria_busyAttr, *reinterpret_cast<StringImpl*>(&aria_busyData) },
         { (void*)&aria_checkedAttr, *reinterpret_cast<StringImpl*>(&aria_checkedData) },
+        { (void*)&aria_colcountAttr, *reinterpret_cast<StringImpl*>(&aria_colcountData) },
+        { (void*)&aria_colindexAttr, *reinterpret_cast<StringImpl*>(&aria_colindexData) },
+        { (void*)&aria_colspanAttr, *reinterpret_cast<StringImpl*>(&aria_colspanData) },
         { (void*)&aria_controlsAttr, *reinterpret_cast<StringImpl*>(&aria_controlsData) },
+        { (void*)&aria_currentAttr, *reinterpret_cast<StringImpl*>(&aria_currentData) },
         { (void*)&aria_describedbyAttr, *reinterpret_cast<StringImpl*>(&aria_describedbyData) },
         { (void*)&aria_disabledAttr, *reinterpret_cast<StringImpl*>(&aria_disabledData) },
         { (void*)&aria_dropeffectAttr, *reinterpret_cast<StringImpl*>(&aria_dropeffectData) },
@@ -5181,16 +5299,21 @@ void init()
         { (void*)&aria_labelledbyAttr, *reinterpret_cast<StringImpl*>(&aria_labelledbyData) },
         { (void*)&aria_levelAttr, *reinterpret_cast<StringImpl*>(&aria_levelData) },
         { (void*)&aria_liveAttr, *reinterpret_cast<StringImpl*>(&aria_liveData) },
+        { (void*)&aria_modalAttr, *reinterpret_cast<StringImpl*>(&aria_modalData) },
         { (void*)&aria_multilineAttr, *reinterpret_cast<StringImpl*>(&aria_multilineData) },
         { (void*)&aria_multiselectableAttr, *reinterpret_cast<StringImpl*>(&aria_multiselectableData) },
         { (void*)&aria_orientationAttr, *reinterpret_cast<StringImpl*>(&aria_orientationData) },
         { (void*)&aria_ownsAttr, *reinterpret_cast<StringImpl*>(&aria_ownsData) },
+        { (void*)&aria_placeholderAttr, *reinterpret_cast<StringImpl*>(&aria_placeholderData) },
         { (void*)&aria_posinsetAttr, *reinterpret_cast<StringImpl*>(&aria_posinsetData) },
         { (void*)&aria_pressedAttr, *reinterpret_cast<StringImpl*>(&aria_pressedData) },
         { (void*)&aria_readonlyAttr, *reinterpret_cast<StringImpl*>(&aria_readonlyData) },
         { (void*)&aria_relevantAttr, *reinterpret_cast<StringImpl*>(&aria_relevantData) },
         { (void*)&aria_requiredAttr, *reinterpret_cast<StringImpl*>(&aria_requiredData) },
         { (void*)&aria_roledescriptionAttr, *reinterpret_cast<StringImpl*>(&aria_roledescriptionData) },
+        { (void*)&aria_rowcountAttr, *reinterpret_cast<StringImpl*>(&aria_rowcountData) },
+        { (void*)&aria_rowindexAttr, *reinterpret_cast<StringImpl*>(&aria_rowindexData) },
+        { (void*)&aria_rowspanAttr, *reinterpret_cast<StringImpl*>(&aria_rowspanData) },
         { (void*)&aria_selectedAttr, *reinterpret_cast<StringImpl*>(&aria_selectedData) },
         { (void*)&aria_setsizeAttr, *reinterpret_cast<StringImpl*>(&aria_setsizeData) },
         { (void*)&aria_sortAttr, *reinterpret_cast<StringImpl*>(&aria_sortData) },
@@ -5473,6 +5596,7 @@ void init()
         { (void*)&shapeAttr, *reinterpret_cast<StringImpl*>(&shapeData) },
         { (void*)&sizeAttr, *reinterpret_cast<StringImpl*>(&sizeData) },
         { (void*)&sizesAttr, *reinterpret_cast<StringImpl*>(&sizesData) },
+        { (void*)&slotAttr, *reinterpret_cast<StringImpl*>(&slotData) },
         { (void*)&sortableAttr, *reinterpret_cast<StringImpl*>(&sortableData) },
         { (void*)&sortdirectionAttr, *reinterpret_cast<StringImpl*>(&sortdirectionData) },
         { (void*)&spanAttr, *reinterpret_cast<StringImpl*>(&spanData) },

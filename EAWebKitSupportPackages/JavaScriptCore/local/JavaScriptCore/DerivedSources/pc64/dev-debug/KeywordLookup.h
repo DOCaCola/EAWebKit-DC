@@ -384,7 +384,7 @@ template <bool shouldCreateIdentifier> ALWAYS_INLINE JSTokenType Lexer<UChar>::p
             internalShift<5>();
             if (shouldCreateIdentifier)
                 data->ident = &m_vm->propertyNames->yieldKeyword;
-            return RESERVED_IF_STRICT;
+            return YIELD;
         }
     } else if (code[0] == 'p') {
         if (code[1] == 'r') {
@@ -748,7 +748,7 @@ template <bool shouldCreateIdentifier> ALWAYS_INLINE JSTokenType Lexer<LChar>::p
             internalShift<5>();
             if (shouldCreateIdentifier)
                 data->ident = &m_vm->propertyNames->yieldKeyword;
-            return RESERVED_IF_STRICT;
+            return YIELD;
         }
     } else if (code[0] == 'p') {
         if (code[1] == 'r') {

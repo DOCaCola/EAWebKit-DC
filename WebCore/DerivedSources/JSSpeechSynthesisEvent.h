@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSSpeechSynthesisEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SpeechSynthesisEvent>&& impl)
     {
-        JSSpeechSynthesisEvent* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisEvent>(globalObject->vm().heap)) JSSpeechSynthesisEvent(structure, globalObject, WTF::move(impl));
+        JSSpeechSynthesisEvent* ptr = new (NotNull, JSC::allocateCell<JSSpeechSynthesisEvent>(globalObject->vm().heap)) JSSpeechSynthesisEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SpeechSynthesisEvent& impl() const
+    SpeechSynthesisEvent& wrapped() const
     {
-        return static_cast<SpeechSynthesisEvent&>(Base::impl());
+        return static_cast<SpeechSynthesisEvent&>(Base::wrapped());
     }
 protected:
-    JSSpeechSynthesisEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SpeechSynthesisEvent>&&);
+    JSSpeechSynthesisEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SpeechSynthesisEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

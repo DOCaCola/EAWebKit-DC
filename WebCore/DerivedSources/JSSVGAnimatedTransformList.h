@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedTransformList : public JSDOMWrapper {
+class JSSVGAnimatedTransformList : public JSDOMWrapper<SVGAnimatedTransformList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedTransformList> Base;
     static JSSVGAnimatedTransformList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedTransformList>&& impl)
     {
-        JSSVGAnimatedTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedTransformList>(globalObject->vm().heap)) JSSVGAnimatedTransformList(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedTransformList* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedTransformList>(globalObject->vm().heap)) JSSVGAnimatedTransformList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static SVGAnimatedTransformList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedTransformList();
 
     DECLARE_INFO;
 
@@ -53,15 +52,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedTransformList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedTransformList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSVGAnimatedTransformList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedTransformList>&&);
+    JSSVGAnimatedTransformList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedTransformList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedTransform
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedTransformList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedTransformList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedTransformList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedTransformList*);
 
 
 } // namespace WebCore

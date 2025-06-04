@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSPositionError : public JSDOMWrapper {
+class JSPositionError : public JSDOMWrapper<PositionError> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<PositionError> Base;
     static JSPositionError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PositionError>&& impl)
     {
-        JSPositionError* ptr = new (NotNull, JSC::allocateCell<JSPositionError>(globalObject->vm().heap)) JSPositionError(structure, globalObject, WTF::move(impl));
+        JSPositionError* ptr = new (NotNull, JSC::allocateCell<JSPositionError>(globalObject->vm().heap)) JSPositionError(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static PositionError* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSPositionError();
 
     DECLARE_INFO;
 
@@ -53,15 +52,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    PositionError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PositionError* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSPositionError(JSC::Structure*, JSDOMGlobalObject*, Ref<PositionError>&&);
+    JSPositionError(JSC::Structure*, JSDOMGlobalObject&, Ref<PositionError>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PositionError*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PositionError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PositionError& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PositionError& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, PositionError*);
 
 
 } // namespace WebCore

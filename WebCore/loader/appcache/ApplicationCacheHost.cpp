@@ -46,10 +46,10 @@
 namespace WebCore {
 
 ApplicationCacheHost::ApplicationCacheHost(DocumentLoader& documentLoader)
-    : m_domApplicationCache(0)
+    : m_domApplicationCache(nullptr)
     , m_documentLoader(documentLoader)
     , m_defersEvents(true)
-    , m_candidateApplicationCacheGroup(0)
+    , m_candidateApplicationCacheGroup(nullptr)
 {
 }
 
@@ -305,10 +305,8 @@ void ApplicationCacheHost::stopLoadingInFrame(Frame* frame)
 void ApplicationCacheHost::stopDeferringEvents()
 {
     Ref<DocumentLoader> protect(m_documentLoader);
-    for (unsigned i = 0; i < m_deferredEvents.size(); ++i) {
-        const DeferredEvent& deferred = m_deferredEvents[i];
-        dispatchDOMEvent(deferred.eventID, deferred.progressTotal, deferred.progressDone);
-    }
+    for (auto& event : m_deferredEvents)
+        dispatchDOMEvent(event.eventID, event.progressTotal, event.progressDone);
     m_deferredEvents.clear();
     m_defersEvents = false;
 }
@@ -352,7 +350,7 @@ void ApplicationCacheHost::dispatchDOMEvent(EventID id, int total, int done)
             event = ProgressEvent::create(eventType, true, done, total);
         else
             event = Event::create(eventType, false, false);
-        m_domApplicationCache->dispatchEvent(event, ASSERT_NO_EXCEPTION);
+        m_domApplicationCache->dispatchEvent(*event);
     }
 }
 
@@ -366,7 +364,7 @@ void ApplicationCacheHost::setApplicationCache(PassRefPtr<ApplicationCache> appl
 {
     if (m_candidateApplicationCacheGroup) {
         ASSERT(!m_applicationCache);
-        m_candidateApplicationCacheGroup = 0;
+        m_candidateApplicationCacheGroup = nullptr;
     }
 
     m_applicationCache = applicationCache;

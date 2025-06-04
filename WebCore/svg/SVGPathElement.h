@@ -82,10 +82,10 @@ public:
     Ref<SVGPathSegCurvetoQuadraticSmoothRel> createSVGPathSegCurvetoQuadraticSmoothRel(float x, float y, SVGPathSegRole = PathSegUndefinedRole);
 
     // Used in the bindings only.
-    RefPtr<SVGPathSegListPropertyTearOff> pathSegList();
-    RefPtr<SVGPathSegListPropertyTearOff> animatedPathSegList();
-    RefPtr<SVGPathSegListPropertyTearOff> normalizedPathSegList();
-    RefPtr<SVGPathSegListPropertyTearOff> animatedNormalizedPathSegList();
+    SVGPathSegListPropertyTearOff* pathSegList();
+    SVGPathSegListPropertyTearOff* animatedPathSegList();
+    SVGPathSegListPropertyTearOff* normalizedPathSegList();
+    SVGPathSegListPropertyTearOff* animatedNormalizedPathSegList();
 
     const SVGPathByteStream& pathByteStream() const;
 
@@ -96,8 +96,6 @@ public:
     static const SVGPropertyInfo* dPropertyInfo();
 
     bool isAnimValObserved() const { return m_isAnimValObserved; }
-
-    WeakPtr<SVGPathElement> createWeakPtr() const { return m_weakPtrFactory.createWeakPtr(); }
 
 private:
     SVGPathElement(const QualifiedName&, Document&);
@@ -128,7 +126,6 @@ private:
 private:
     SVGPathByteStream m_pathByteStream;
     mutable SVGSynchronizableAnimatedProperty<SVGPathSegList> m_pathSegList;
-    WeakPtrFactory<SVGPathElement> m_weakPtrFactory;
     bool m_isAnimValObserved;
 };
 

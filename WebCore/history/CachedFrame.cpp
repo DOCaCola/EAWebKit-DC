@@ -135,7 +135,7 @@ void CachedFrameBase::restore()
         m_document->page()->chrome().client().needTouchEvents(true);
 #endif
 
-    m_document->documentDidResumeFromPageCache();
+    m_document->resume();
 }
 
 CachedFrame::CachedFrame(Frame& frame)
@@ -165,20 +165,19 @@ CachedFrame::CachedFrame(Frame& frame)
     // but after we've fired the pagehide event, in case that creates more objects.
     // Suspending must also happen after we've recursed over child frames, in case
     // those create more objects.
-    m_document->documentWillSuspendForPageCache();
-    m_document->suspendScriptedAnimationControllerCallbacks();
-    m_document->suspendActiveDOMObjects(ActiveDOMObject::PageCache);
+
+    m_document->suspend();
+
     m_cachedFrameScriptData = std::make_unique<ScriptCachedFrameData>(frame);
 
-    m_document->domWindow()->suspendForPageCache();
+    m_document->domWindow()->suspendForDocumentSuspension();
 
     frame.loader().client().savePlatformDataToCachedFrame(this);
 
     if (m_isComposited && PageCache::singleton().shouldClearBackingStores())
         frame.view()->clearBackingStores();
 
-    // documentWillSuspendForPageCache() can set up a layout timer on the FrameView, so clear timers after that.
-    frame.clearTimers();
+    frame.view()->clearScrollableAreas();
 
     // Deconstruct the FrameTree, to restore it later.
     // We do this for two reasons:

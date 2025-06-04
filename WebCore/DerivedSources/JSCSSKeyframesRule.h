@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSKeyframesRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSKeyframesRule>&& impl)
     {
-        JSCSSKeyframesRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRule>(globalObject->vm().heap)) JSCSSKeyframesRule(structure, globalObject, WTF::move(impl));
+        JSCSSKeyframesRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframesRule>(globalObject->vm().heap)) JSCSSKeyframesRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSKeyframesRule& impl() const
+    CSSKeyframesRule& wrapped() const
     {
-        return static_cast<CSSKeyframesRule&>(Base::impl());
+        return static_cast<CSSKeyframesRule&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSCSSKeyframesRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSKeyframesRule>&&);
+    JSCSSKeyframesRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSKeyframesRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -25,8 +25,8 @@
 #include "JSTrackEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
-#include "TrackEvent.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -64,29 +64,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTrackEventConstructor : public DOMConstructorObject {
-private:
-    JSTrackEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSTrackEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTrackEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSTrackEventConstructor>(vm.heap)) JSTrackEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSTrackEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSTrackEvent> JSTrackEventConstructor;
 
 /* Hash table */
 
@@ -98,31 +76,33 @@ static const struct CompactHashIndex JSTrackEventTableIndex[2] = {
 
 static const HashTableValue JSTrackEventTableValues[] =
 {
-    { "track", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTrackEventTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "track", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTrackEventTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSTrackEventTable = { 1, 1, true, JSTrackEventTableValues, 0, JSTrackEventTableIndex };
-EncodedJSValue JSC_HOST_CALL JSTrackEventConstructor::constructJSTrackEvent(ExecState* exec)
+static const HashTable JSTrackEventTable = { 1, 1, true, JSTrackEventTableValues, JSTrackEventTableIndex };
+template<> EncodedJSValue JSC_HOST_CALL JSTrackEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSTrackEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSTrackEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     TrackEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillTrackEventInit(eventInit, dictionary))
@@ -130,7 +110,7 @@ EncodedJSValue JSC_HOST_CALL JSTrackEventConstructor::constructJSTrackEvent(Exec
     }
 
     RefPtr<TrackEvent> event = TrackEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillTrackEventInit(TrackEventInit& eventInit, JSDictionary& dictionary)
@@ -143,33 +123,20 @@ bool fillTrackEventInit(TrackEventInit& eventInit, JSDictionary& dictionary)
     return true;
 }
 
-const ClassInfo JSTrackEventConstructor::s_info = { "TrackEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTrackEventConstructor) };
-
-JSTrackEventConstructor::JSTrackEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSTrackEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTrackEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTrackEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTrackEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TrackEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSTrackEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSTrackEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSTrackEventConstructor::s_info = { "TrackEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTrackEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTrackEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTrackEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTrackEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSTrackEventPrototype::s_info = { "TrackEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTrackEventPrototype) };
@@ -182,7 +149,7 @@ void JSTrackEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTrackEvent::s_info = { "TrackEvent", &Base::s_info, &JSTrackEventTable, CREATE_METHOD_TABLE(JSTrackEvent) };
 
-JSTrackEvent::JSTrackEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TrackEvent>&& impl)
+JSTrackEvent::JSTrackEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TrackEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -197,34 +164,36 @@ JSObject* JSTrackEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSTrackEvent>(vm, globalObject);
 }
 
-bool JSTrackEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSTrackEvent::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTrackEvent*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSTrackEvent, Base>(exec, JSTrackEventTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSTrackEvent, Base>(state, JSTrackEventTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsTrackEventTrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTrackEventTrack(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTrackEvent*>(slotBase);
-    return JSValue::encode(castedThis->track(exec));
+    return JSValue::encode(castedThis->track(*state));
 }
 
 
-EncodedJSValue jsTrackEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTrackEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTrackEventPrototype* domObject = jsDynamicCast<JSTrackEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTrackEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSTrackEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSTrackEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTrackEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTrackEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

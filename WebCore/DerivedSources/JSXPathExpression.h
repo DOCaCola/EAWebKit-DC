@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSXPathExpression : public JSDOMWrapper {
+class JSXPathExpression : public JSDOMWrapper<XPathExpression> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XPathExpression> Base;
     static JSXPathExpression* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathExpression>&& impl)
     {
-        JSXPathExpression* ptr = new (NotNull, JSC::allocateCell<JSXPathExpression>(globalObject->vm().heap)) JSXPathExpression(structure, globalObject, WTF::move(impl));
+        JSXPathExpression* ptr = new (NotNull, JSC::allocateCell<JSXPathExpression>(globalObject->vm().heap)) JSXPathExpression(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XPathExpression* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSXPathExpression();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathExpression& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathExpression* m_impl;
 protected:
-    JSXPathExpression(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathExpression>&&);
+    JSXPathExpression(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathExpression>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathExpression*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathExpression*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathExpression& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathExpression& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XPathExpression*);
 
 
 } // namespace WebCore

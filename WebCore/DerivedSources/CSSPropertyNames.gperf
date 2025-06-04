@@ -30,13 +30,17 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "font-family",
     "font-size",
     "font-style",
-    "font-variant",
     "font-weight",
     "text-rendering",
-    "-webkit-font-feature-settings",
+    "font-feature-settings",
     "-webkit-font-kerning",
     "-webkit-font-smoothing",
-    "-webkit-font-variant-ligatures",
+    "font-variant-ligatures",
+    "font-variant-position",
+    "font-variant-caps",
+    "font-variant-numeric",
+    "font-variant-alternates",
+    "font-variant-east-asian",
     "-webkit-locale",
     "-webkit-text-orientation",
     "-webkit-writing-mode",
@@ -45,6 +49,7 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "font-synthesis",
     "-webkit-ruby-position",
     "alignment-baseline",
+    "all",
     "animation",
     "animation-delay",
     "animation-direction",
@@ -129,11 +134,11 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "fill",
     "fill-opacity",
     "fill-rule",
-    "filter",
     "float",
     "flood-color",
     "flood-opacity",
     "font",
+    "font-variant",
     "font-stretch",
     "glyph-orientation-horizontal",
     "glyph-orientation-vertical",
@@ -317,7 +322,7 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "column-width",
     "columns",
     "-webkit-box-decoration-break",
-    "-webkit-filter",
+    "filter",
     "align-content",
     "align-items",
     "align-self",
@@ -337,13 +342,16 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "-webkit-grid-auto-columns",
     "-webkit-grid-auto-rows",
     "-webkit-grid-column-end",
+    "-webkit-grid-column-gap",
     "-webkit-grid-column-start",
     "-webkit-grid-template",
     "-webkit-grid-template-columns",
     "-webkit-grid-template-rows",
     "-webkit-grid-row-end",
+    "-webkit-grid-row-gap",
     "-webkit-grid-row-start",
     "-webkit-grid-column",
+    "-webkit-grid-gap",
     "-webkit-grid-row",
     "-webkit-grid-template-areas",
     "-webkit-grid-auto-flow",
@@ -454,6 +462,7 @@ const char* const propertyNameStrings[numCSSProperties] = {
     "-webkit-shape-margin",
     "-webkit-shape-image-threshold",
     "-webkit-tap-highlight-color",
+    "touch-action",
 };
 
 %}
@@ -476,13 +485,17 @@ display, CSSPropertyDisplay
 font-family, CSSPropertyFontFamily
 font-size, CSSPropertyFontSize
 font-style, CSSPropertyFontStyle
-font-variant, CSSPropertyFontVariant
 font-weight, CSSPropertyFontWeight
 text-rendering, CSSPropertyTextRendering
--webkit-font-feature-settings, CSSPropertyWebkitFontFeatureSettings
+font-feature-settings, CSSPropertyFontFeatureSettings
 -webkit-font-kerning, CSSPropertyWebkitFontKerning
 -webkit-font-smoothing, CSSPropertyWebkitFontSmoothing
--webkit-font-variant-ligatures, CSSPropertyWebkitFontVariantLigatures
+font-variant-ligatures, CSSPropertyFontVariantLigatures
+font-variant-position, CSSPropertyFontVariantPosition
+font-variant-caps, CSSPropertyFontVariantCaps
+font-variant-numeric, CSSPropertyFontVariantNumeric
+font-variant-alternates, CSSPropertyFontVariantAlternates
+font-variant-east-asian, CSSPropertyFontVariantEastAsian
 -webkit-locale, CSSPropertyWebkitLocale
 -webkit-text-orientation, CSSPropertyWebkitTextOrientation
 -webkit-writing-mode, CSSPropertyWebkitWritingMode
@@ -491,6 +504,7 @@ zoom, CSSPropertyZoom
 font-synthesis, CSSPropertyFontSynthesis
 -webkit-ruby-position, CSSPropertyWebkitRubyPosition
 alignment-baseline, CSSPropertyAlignmentBaseline
+all, CSSPropertyAll
 animation, CSSPropertyAnimation
 animation-delay, CSSPropertyAnimationDelay
 animation-direction, CSSPropertyAnimationDirection
@@ -575,11 +589,11 @@ enable-background, CSSPropertyEnableBackground
 fill, CSSPropertyFill
 fill-opacity, CSSPropertyFillOpacity
 fill-rule, CSSPropertyFillRule
-filter, CSSPropertyFilter
 float, CSSPropertyFloat
 flood-color, CSSPropertyFloodColor
 flood-opacity, CSSPropertyFloodOpacity
 font, CSSPropertyFont
+font-variant, CSSPropertyFontVariant
 font-stretch, CSSPropertyFontStretch
 glyph-orientation-horizontal, CSSPropertyGlyphOrientationHorizontal
 glyph-orientation-vertical, CSSPropertyGlyphOrientationVertical
@@ -763,7 +777,7 @@ column-span, CSSPropertyColumnSpan
 column-width, CSSPropertyColumnWidth
 columns, CSSPropertyColumns
 -webkit-box-decoration-break, CSSPropertyWebkitBoxDecorationBreak
--webkit-filter, CSSPropertyWebkitFilter
+filter, CSSPropertyFilter
 align-content, CSSPropertyAlignContent
 align-items, CSSPropertyAlignItems
 align-self, CSSPropertyAlignSelf
@@ -783,13 +797,16 @@ justify-items, CSSPropertyJustifyItems
 -webkit-grid-auto-columns, CSSPropertyWebkitGridAutoColumns
 -webkit-grid-auto-rows, CSSPropertyWebkitGridAutoRows
 -webkit-grid-column-end, CSSPropertyWebkitGridColumnEnd
+-webkit-grid-column-gap, CSSPropertyWebkitGridColumnGap
 -webkit-grid-column-start, CSSPropertyWebkitGridColumnStart
 -webkit-grid-template, CSSPropertyWebkitGridTemplate
 -webkit-grid-template-columns, CSSPropertyWebkitGridTemplateColumns
 -webkit-grid-template-rows, CSSPropertyWebkitGridTemplateRows
 -webkit-grid-row-end, CSSPropertyWebkitGridRowEnd
+-webkit-grid-row-gap, CSSPropertyWebkitGridRowGap
 -webkit-grid-row-start, CSSPropertyWebkitGridRowStart
 -webkit-grid-column, CSSPropertyWebkitGridColumn
+-webkit-grid-gap, CSSPropertyWebkitGridGap
 -webkit-grid-row, CSSPropertyWebkitGridRow
 -webkit-grid-template-areas, CSSPropertyWebkitGridTemplateAreas
 -webkit-grid-auto-flow, CSSPropertyWebkitGridAutoFlow
@@ -900,6 +917,8 @@ transform-style, CSSPropertyTransformStyle
 -webkit-shape-margin, CSSPropertyWebkitShapeMargin
 -webkit-shape-image-threshold, CSSPropertyWebkitShapeImageThreshold
 -webkit-tap-highlight-color, CSSPropertyWebkitTapHighlightColor
+touch-action, CSSPropertyTouchAction
+font-kerning, CSSPropertyWebkitFontKerning
 -epub-text-orientation, CSSPropertyWebkitTextOrientation
 -epub-writing-mode, CSSPropertyWebkitWritingMode
 -webkit-border-bottom-left-radius, CSSPropertyBorderBottomLeftRadius
@@ -923,6 +942,7 @@ transform-style, CSSPropertyTransformStyle
 -webkit-column-span, CSSPropertyColumnSpan
 -webkit-column-width, CSSPropertyColumnWidth
 -webkit-columns, CSSPropertyColumns
+-webkit-filter, CSSPropertyFilter
 -webkit-align-content, CSSPropertyAlignContent
 -webkit-align-items, CSSPropertyAlignItems
 -webkit-align-self, CSSPropertyAlignSelf
@@ -1015,21 +1035,26 @@ String getJSPropertyName(CSSPropertyID id)
     return WTF::String(result);
 }
 
-static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
+static const bool isInheritedPropertyTable[numCSSProperties + 2] = {
     false, // CSSPropertyInvalid
+    true, // CSSPropertyCustom
     true , // CSSPropertyColor
     true , // CSSPropertyDirection
     false, // CSSPropertyDisplay
     true , // CSSPropertyFontFamily
     true , // CSSPropertyFontSize
     true , // CSSPropertyFontStyle
-    true , // CSSPropertyFontVariant
     true , // CSSPropertyFontWeight
     true , // CSSPropertyTextRendering
-    true , // CSSPropertyWebkitFontFeatureSettings
+    true , // CSSPropertyFontFeatureSettings
     true , // CSSPropertyWebkitFontKerning
     true , // CSSPropertyWebkitFontSmoothing
-    true , // CSSPropertyWebkitFontVariantLigatures
+    true , // CSSPropertyFontVariantLigatures
+    true , // CSSPropertyFontVariantPosition
+    true , // CSSPropertyFontVariantCaps
+    true , // CSSPropertyFontVariantNumeric
+    true , // CSSPropertyFontVariantAlternates
+    true , // CSSPropertyFontVariantEastAsian
     true , // CSSPropertyWebkitLocale
     true , // CSSPropertyWebkitTextOrientation
     true , // CSSPropertyWebkitWritingMode
@@ -1038,6 +1063,7 @@ static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
     true , // CSSPropertyFontSynthesis
     true , // CSSPropertyWebkitRubyPosition
     false, // CSSPropertyAlignmentBaseline
+    false, // CSSPropertyAll
     false, // CSSPropertyAnimation
     false, // CSSPropertyAnimationDelay
     false, // CSSPropertyAnimationDirection
@@ -1122,11 +1148,11 @@ static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
     true , // CSSPropertyFill
     true , // CSSPropertyFillOpacity
     true , // CSSPropertyFillRule
-    false, // CSSPropertyFilter
     false, // CSSPropertyFloat
     false, // CSSPropertyFloodColor
     false, // CSSPropertyFloodOpacity
     true , // CSSPropertyFont
+    true , // CSSPropertyFontVariant
     false, // CSSPropertyFontStretch
     true , // CSSPropertyGlyphOrientationHorizontal
     true , // CSSPropertyGlyphOrientationVertical
@@ -1310,7 +1336,7 @@ static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
     false, // CSSPropertyColumnWidth
     false, // CSSPropertyColumns
     false, // CSSPropertyWebkitBoxDecorationBreak
-    false, // CSSPropertyWebkitFilter
+    false, // CSSPropertyFilter
     false, // CSSPropertyAlignContent
     false, // CSSPropertyAlignItems
     false, // CSSPropertyAlignSelf
@@ -1330,13 +1356,16 @@ static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
     false, // CSSPropertyWebkitGridAutoColumns
     false, // CSSPropertyWebkitGridAutoRows
     false, // CSSPropertyWebkitGridColumnEnd
+    false, // CSSPropertyWebkitGridColumnGap
     false, // CSSPropertyWebkitGridColumnStart
     false, // CSSPropertyWebkitGridTemplate
     false, // CSSPropertyWebkitGridTemplateColumns
     false, // CSSPropertyWebkitGridTemplateRows
     false, // CSSPropertyWebkitGridRowEnd
+    false, // CSSPropertyWebkitGridRowGap
     false, // CSSPropertyWebkitGridRowStart
     false, // CSSPropertyWebkitGridColumn
+    false, // CSSPropertyWebkitGridGap
     false, // CSSPropertyWebkitGridRow
     false, // CSSPropertyWebkitGridTemplateAreas
     false, // CSSPropertyWebkitGridAutoFlow
@@ -1447,6 +1476,7 @@ static const bool isInheritedPropertyTable[numCSSProperties + 1] = {
     false, // CSSPropertyWebkitShapeMargin
     false, // CSSPropertyWebkitShapeImageThreshold
     true , // CSSPropertyWebkitTapHighlightColor
+    false, // CSSPropertyTouchAction
 };
 
 bool CSSProperty::isInheritedProperty(CSSPropertyID id)

@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSFile.h"
 
-#include "File.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -62,50 +62,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSFileConstructor : public DOMConstructorObject {
-private:
-    JSFileConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSFile> JSFileConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSFileConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSFileConstructor* ptr = new (NotNull, JSC::allocateCell<JSFileConstructor>(vm.heap)) JSFileConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSFileConstructor::s_info = { "FileConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileConstructor) };
-
-JSFileConstructor::JSFileConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSFileConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSFileConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSFile::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSFile::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("File"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSFileConstructor::s_info = { "FileConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFileConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSFilePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastModifiedDate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileLastModifiedDate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastModifiedDate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFileLastModifiedDate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSFilePrototype::s_info = { "FilePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFilePrototype) };
@@ -118,7 +92,7 @@ void JSFilePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSFile::s_info = { "File", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFile) };
 
-JSFile::JSFile(Structure* structure, JSDOMGlobalObject* globalObject, Ref<File>&& impl)
+JSFile::JSFile(Structure* structure, JSDOMGlobalObject& globalObject, Ref<File>&& impl)
     : JSBlob(structure, globalObject, WTF::move(impl))
 {
 }
@@ -133,51 +107,51 @@ JSObject* JSFile::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSFile>(vm, globalObject);
 }
 
-EncodedJSValue jsFileName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFileName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFile* castedThis = jsDynamicCast<JSFile*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "File", "name");
-        return throwGetterTypeError(*exec, "File", "name");
+            return reportDeprecatedGetterError(*state, "File", "name");
+        return throwGetterTypeError(*state, "File", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.name());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsFileLastModifiedDate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFileLastModifiedDate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFile* castedThis = jsDynamicCast<JSFile*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "File", "lastModifiedDate");
-        return throwGetterTypeError(*exec, "File", "lastModifiedDate");
+            return reportDeprecatedGetterError(*state, "File", "lastModifiedDate");
+        return throwGetterTypeError(*state, "File", "lastModifiedDate");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsDateOrNull(exec, impl.lastModifiedDate());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsDateOrNull(state, impl.lastModifiedDate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsFileConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsFileConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSFilePrototype* domObject = jsDynamicCast<JSFilePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSFile::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSFile::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSFile::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSFileConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSFileConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -188,6 +162,14 @@ extern "C" { extern void (*const __identifier("??_7File@WebCore@@6B@")[])(); }
 extern "C" { extern void* _ZTVN7WebCore4FileE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSFile>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
 {
     if (!impl)
@@ -219,7 +201,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, File* impl)
 File* JSFile::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSFile*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

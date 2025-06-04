@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLFrameElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFrameElement>&& impl)
     {
-        JSHTMLFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameElement>(globalObject->vm().heap)) JSHTMLFrameElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameElement>(globalObject->vm().heap)) JSHTMLFrameElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,15 +50,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setLocation(JSC::ExecState*, JSC::JSValue);
-    HTMLFrameElement& impl() const
+    void setLocation(JSC::ExecState&, JSC::JSValue);
+    HTMLFrameElement& wrapped() const
     {
-        return static_cast<HTMLFrameElement&>(Base::impl());
+        return static_cast<HTMLFrameElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLFrameElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFrameElement>&&);
+    JSHTMLFrameElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFrameElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

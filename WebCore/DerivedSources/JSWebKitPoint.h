@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSWebKitPoint : public JSDOMWrapper {
+class JSWebKitPoint : public JSDOMWrapper<WebKitPoint> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebKitPoint> Base;
     static JSWebKitPoint* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitPoint>&& impl)
     {
-        JSWebKitPoint* ptr = new (NotNull, JSC::allocateCell<JSWebKitPoint>(globalObject->vm().heap)) JSWebKitPoint(structure, globalObject, WTF::move(impl));
+        JSWebKitPoint* ptr = new (NotNull, JSC::allocateCell<JSWebKitPoint>(globalObject->vm().heap)) JSWebKitPoint(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitPoint* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitPoint();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitPoint& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitPoint* m_impl;
 protected:
-    JSWebKitPoint(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitPoint>&&);
+    JSWebKitPoint(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitPoint>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitPoint*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitPoint*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitPoint& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitPoint& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebKitPoint*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitPoint(JSC::ExecState*);

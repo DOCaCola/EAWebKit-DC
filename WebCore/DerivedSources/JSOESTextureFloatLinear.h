@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSOESTextureFloatLinear : public JSDOMWrapper {
+class JSOESTextureFloatLinear : public JSDOMWrapper<OESTextureFloatLinear> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<OESTextureFloatLinear> Base;
     static JSOESTextureFloatLinear* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureFloatLinear>&& impl)
     {
-        JSOESTextureFloatLinear* ptr = new (NotNull, JSC::allocateCell<JSOESTextureFloatLinear>(globalObject->vm().heap)) JSOESTextureFloatLinear(structure, globalObject, WTF::move(impl));
+        JSOESTextureFloatLinear* ptr = new (NotNull, JSC::allocateCell<JSOESTextureFloatLinear>(globalObject->vm().heap)) JSOESTextureFloatLinear(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESTextureFloatLinear* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESTextureFloatLinear();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESTextureFloatLinear& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESTextureFloatLinear* m_impl;
 protected:
-    JSOESTextureFloatLinear(JSC::Structure*, JSDOMGlobalObject*, Ref<OESTextureFloatLinear>&&);
+    JSOESTextureFloatLinear(JSC::Structure*, JSDOMGlobalObject&, Ref<OESTextureFloatLinear>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESTextureFloatLinea
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESTextureFloatLinear*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESTextureFloatLinear& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESTextureFloatLinear& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OESTextureFloatLinear*);
 
 
 } // namespace WebCore

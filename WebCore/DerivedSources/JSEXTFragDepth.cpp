@@ -24,7 +24,6 @@
 
 #include "JSEXTFragDepth.h"
 
-#include "EXTFragDepth.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSEXTFragDepthPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSEXTFragDepthPrototype::s_info = { "EXTFragDepthPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTFragDepthPrototype) };
@@ -74,9 +73,8 @@ void JSEXTFragDepthPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEXTFragDepth::s_info = { "EXTFragDepth", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTFragDepth) };
 
-JSEXTFragDepth::JSEXTFragDepth(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTFragDepth>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTFragDepth::JSEXTFragDepth(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTFragDepth>&& impl)
+    : JSDOMWrapper<EXTFragDepth>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSEXTFragDepth::destroy(JSC::JSCell* cell)
     thisObject->JSEXTFragDepth::~JSEXTFragDepth();
 }
 
-JSEXTFragDepth::~JSEXTFragDepth()
-{
-    releaseImpl();
-}
-
 bool JSEXTFragDepthOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTFragDepth = jsCast<JSEXTFragDepth*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTFragDepth->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTFragDepth->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSEXTFragDepthOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsEXTFragDepth = jsCast<JSEXTFragDepth*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTFragDepth->impl(), jsEXTFragDepth);
+    uncacheWrapper(world, &jsEXTFragDepth->wrapped(), jsEXTFragDepth);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7EXTFragDepth@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12EXTFragDepthE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSEXTFragDepth>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTFragDepth
 EXTFragDepth* JSEXTFragDepth::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSEXTFragDepth*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

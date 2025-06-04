@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSStyleSheet : public JSDOMWrapper {
+class JSStyleSheet : public JSDOMWrapper<StyleSheet> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<StyleSheet> Base;
     static JSStyleSheet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleSheet>&& impl)
     {
-        JSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSStyleSheet>(globalObject->vm().heap)) JSStyleSheet(structure, globalObject, WTF::move(impl));
+        JSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSStyleSheet>(globalObject->vm().heap)) JSStyleSheet(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static StyleSheet* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSStyleSheet();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    StyleSheet& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    StyleSheet* m_impl;
 protected:
-    JSStyleSheet(JSC::Structure*, JSDOMGlobalObject*, Ref<StyleSheet>&&);
+    JSStyleSheet(JSC::Structure*, JSDOMGlobalObject&, Ref<StyleSheet>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, StyleSheet*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheet*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, StyleSheet& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleSheet& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, StyleSheet*);
 
 
 } // namespace WebCore

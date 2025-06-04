@@ -67,16 +67,21 @@ CookiesStrategy* PlatformStrategiesEA::createCookiesStrategy()
 
 LoaderStrategy* PlatformStrategiesEA::createLoaderStrategy()
 {
-    return this;
+    return nullptr;
 }
 
 PasteboardStrategy* PlatformStrategiesEA::createPasteboardStrategy()
 {
-    return 0;
+    return nullptr;
 }
 PluginStrategy* PlatformStrategiesEA::createPluginStrategy()
 {
     return this;
+}
+
+WebCore::BlobRegistry* PlatformStrategiesEA::createBlobRegistry()
+{
+    return nullptr;
 }
 
 //SharedWorkerStrategy* PlatformStrategiesEA::createSharedWorkerStrategy()

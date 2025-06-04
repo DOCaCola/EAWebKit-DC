@@ -35,7 +35,7 @@ public:
     typedef JSHTMLMediaElement Base;
     static JSHTMLAudioElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAudioElement>&& impl)
     {
-        JSHTMLAudioElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAudioElement>(globalObject->vm().heap)) JSHTMLAudioElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAudioElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAudioElement>(globalObject->vm().heap)) JSHTMLAudioElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,12 +52,12 @@ public:
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSValue getNamedConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAudioElement& impl() const
+    HTMLAudioElement& wrapped() const
     {
-        return static_cast<HTMLAudioElement&>(Base::impl());
+        return static_cast<HTMLAudioElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLAudioElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAudioElement>&&);
+    JSHTMLAudioElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAudioElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

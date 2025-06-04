@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLSelectElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSelectElement>&& impl)
     {
-        JSHTMLSelectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSelectElement>(globalObject->vm().heap)) JSHTMLSelectElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSelectElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSelectElement>(globalObject->vm().heap)) JSHTMLSelectElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -54,15 +54,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue remove(JSC::ExecState*);
-    HTMLSelectElement& impl() const
+    JSC::JSValue remove(JSC::ExecState&);
+    HTMLSelectElement& wrapped() const
     {
-        return static_cast<HTMLSelectElement&>(Base::impl());
+        return static_cast<HTMLSelectElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLSelectElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSelectElement>&&);
+    JSHTMLSelectElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSelectElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

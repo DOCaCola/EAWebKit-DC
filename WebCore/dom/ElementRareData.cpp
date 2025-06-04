@@ -44,12 +44,11 @@ struct SameSizeAsElementRareData : NodeRareData {
 	//10/7/2015 : To match same sizes for all compilers
     void* pointers[4];
 	std::unique_ptr<DatasetDOMStringMap> pointer2;
-    std::unique_ptr<ClassList> pointer3;
+    std::unique_ptr<AttributeDOMTokenList> pointer3;
     std::unique_ptr<NamedNodeMap> pointer4;
 	//-EAWebKitChange
 };
-//+EAWebKitChange
-//10/7/2015
-COMPILE_ASSERT(sizeof(ElementRareData) == sizeof(SameSizeAsElementRareData), "ElementRareData should stay small");
-//-EAWebKitChange
+
+static_assert(sizeof(ElementRareData) == sizeof(SameSizeAsElementRareData), "ElementRareData should stay small");
+
 } // namespace WebCore

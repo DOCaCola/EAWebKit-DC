@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSTestNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TestNode>&& impl)
     {
-        JSTestNode* ptr = new (NotNull, JSC::allocateCell<JSTestNode>(globalObject->vm().heap)) JSTestNode(structure, globalObject, WTF::move(impl));
+        JSTestNode* ptr = new (NotNull, JSC::allocateCell<JSTestNode>(globalObject->vm().heap)) JSTestNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    TestNode& impl() const
+    TestNode& wrapped() const
     {
-        return static_cast<TestNode&>(Base::impl());
+        return static_cast<TestNode&>(Base::wrapped());
     }
 protected:
-    JSTestNode(JSC::Structure*, JSDOMGlobalObject*, Ref<TestNode>&&);
+    JSTestNode(JSC::Structure*, JSDOMGlobalObject&, Ref<TestNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -29,6 +29,7 @@
 namespace JSC {
 
 enum Intrinsic {
+    // Call intrinsics.
     NoIntrinsic,
     AbsIntrinsic,
     MinIntrinsic,
@@ -52,7 +53,13 @@ enum Intrinsic {
     RegExpTestIntrinsic,
     StringPrototypeValueOfIntrinsic,
     IMulIntrinsic,
+    RandomIntrinsic,
     FRoundIntrinsic,
+
+    // Getter intrinsics.
+    TypedArrayLengthIntrinsic,
+    TypedArrayByteLengthIntrinsic,
+    TypedArrayByteOffsetIntrinsic,
 
     // Debugging intrinsics. These are meant to be used as testing hacks within
     // jsc.cpp and should never be exposed to users.

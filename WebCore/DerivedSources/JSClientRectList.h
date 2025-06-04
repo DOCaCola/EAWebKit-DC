@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSClientRectList : public JSDOMWrapper {
+class WEBCORE_EXPORT JSClientRectList : public JSDOMWrapper<ClientRectList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<ClientRectList> Base;
     static JSClientRectList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ClientRectList>&& impl)
     {
-        JSClientRectList* ptr = new (NotNull, JSC::allocateCell<JSClientRectList>(globalObject->vm().heap)) JSClientRectList(structure, globalObject, WTF::move(impl));
+        JSClientRectList* ptr = new (NotNull, JSC::allocateCell<JSClientRectList>(globalObject->vm().heap)) JSClientRectList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSClientRectList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ClientRectList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ClientRectList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSClientRectList(JSC::Structure*, JSDOMGlobalObject*, Ref<ClientRectList>&&);
+    JSClientRectList(JSC::Structure*, JSDOMGlobalObject&, Ref<ClientRectList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ClientRectList*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ClientRectList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ClientRectList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ClientRectList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ClientRectList*);
 
 
 } // namespace WebCore

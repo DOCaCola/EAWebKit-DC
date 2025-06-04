@@ -65,14 +65,6 @@ SVGFEImageElement::~SVGFEImageElement()
     clearResourceReferences();
 }
 
-bool SVGFEImageElement::hasSingleSecurityOrigin() const
-{
-    if (!m_cachedImage)
-        return true;
-    auto* image = m_cachedImage->image();
-    return !image || image->hasSingleSecurityOrigin();
-}
-
 void SVGFEImageElement::clearResourceReferences()
 {
     if (m_cachedImage) {
@@ -175,9 +167,8 @@ void SVGFEImageElement::notifyFinished(CachedResource*)
         return;
 
     Element* parent = parentElement();
-    ASSERT(parent);
 
-    if (!parent->hasTagName(SVGNames::filterTag))
+    if (!parent || !parent->hasTagName(SVGNames::filterTag))
         return;
 
     RenderElement* parentRenderer = parent->renderer();

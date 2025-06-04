@@ -28,8 +28,11 @@
 
 #if ENABLE(FTL_JIT)
 
+#include "DFGCommon.h"
+#include "FTLAbbreviatedTypes.h"
 #include "FTLAbbreviations.h"
 #include "FTLAbstractHeapRepository.h"
+#include "FTLB3Output.h"
 #include "FTLOutput.h"
 #include "FTLTypedPointer.h"
 #include "JSCInlines.h"
@@ -37,6 +40,7 @@
 
 namespace JSC { namespace FTL {
 
+#if !FTL_USES_B3
 LValue AbstractHeap::tbaaMetadataSlow(const AbstractHeapRepository& repository) const
 {
     m_tbaaMetadata = mdNode(
@@ -45,12 +49,18 @@ LValue AbstractHeap::tbaaMetadataSlow(const AbstractHeapRepository& repository) 
         m_parent->tbaaMetadata(repository));
     return m_tbaaMetadata;
 }
+#endif
 
 void AbstractHeap::decorateInstruction(LValue instruction, const AbstractHeapRepository& repository) const
 {
+#if !FTL_USES_B3
     if (!Options::useFTLTBAA())
         return;
     setMetadata(instruction, repository.m_tbaaKind, tbaaMetadata(repository));
+#else
+    UNUSED_PARAM(instruction);
+    UNUSED_PARAM(repository);
+#endif
 }
 
 void AbstractHeap::dump(PrintStream& out) const
@@ -72,9 +82,14 @@ IndexedAbstractHeap::IndexedAbstractHeap(LContext context, AbstractHeap* parent,
     , m_heapNameLength(strlen(heapName))
     , m_offset(offset)
     , m_elementSize(elementSize)
+#if !FTL_USES_B3
     , m_scaleTerm(0)
     , m_canShift(false)
+#endif
 {
+#if FTL_USES_B3
+    UNUSED_PARAM(context);
+#else
     // See if there is a common shift amount we could use instead of multiplying. Don't
     // try too hard. This is just a speculative optimization to reduce load on LLVM.
     for (unsigned i = 0; i < 4; ++i) {
@@ -88,6 +103,7 @@ IndexedAbstractHeap::IndexedAbstractHeap(LContext context, AbstractHeap* parent,
     
     if (!m_canShift)
         m_scaleTerm = constInt(intPtrType(context), m_elementSize, ZeroExtend);
+#endif
 }
 
 IndexedAbstractHeap::~IndexedAbstractHeap()
@@ -98,7 +114,10 @@ TypedPointer IndexedAbstractHeap::baseIndex(Output& out, LValue base, LValue ind
 {
     if (indexAsConstant.isInt32())
         return out.address(base, at(indexAsConstant.asInt32()), offset);
-    
+
+#if FTL_USES_B3
+    LValue result = out.add(base, out.mul(index, out.constIntPtr(m_elementSize)));
+#else
     LValue result;
     if (m_canShift) {
         if (!m_scaleTerm)
@@ -107,6 +126,7 @@ TypedPointer IndexedAbstractHeap::baseIndex(Output& out, LValue base, LValue ind
             result = out.add(base, out.shl(index, m_scaleTerm));
     } else
         result = out.add(base, out.mul(index, m_scaleTerm));
+#endif
     
     return TypedPointer(atAnyIndex(), out.addPtr(result, m_offset + offset));
 }

@@ -25,7 +25,6 @@
 #include "JSRTCDTMFToneChangeEvent.h"
 
 #include "JSDOMBinding.h"
-#include "RTCDTMFToneChangeEvent.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -67,7 +66,7 @@ private:
 
 static const HashTableValue JSRTCDTMFToneChangeEventPrototypeTableValues[] =
 {
-    { "tone", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDTMFToneChangeEventTone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "tone", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDTMFToneChangeEventTone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCDTMFToneChangeEventPrototype::s_info = { "RTCDTMFToneChangeEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDTMFToneChangeEventPrototype) };
@@ -80,7 +79,7 @@ void JSRTCDTMFToneChangeEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCDTMFToneChangeEvent::s_info = { "RTCDTMFToneChangeEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDTMFToneChangeEvent) };
 
-JSRTCDTMFToneChangeEvent::JSRTCDTMFToneChangeEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
+JSRTCDTMFToneChangeEvent::JSRTCDTMFToneChangeEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCDTMFToneChangeEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -95,19 +94,19 @@ JSObject* JSRTCDTMFToneChangeEvent::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSRTCDTMFToneChangeEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsRTCDTMFToneChangeEventTone(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCDTMFToneChangeEventTone(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCDTMFToneChangeEvent* castedThis = jsDynamicCast<JSRTCDTMFToneChangeEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCDTMFToneChangeEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCDTMFToneChangeEvent", "tone");
-        return throwGetterTypeError(*exec, "RTCDTMFToneChangeEvent", "tone");
+            return reportDeprecatedGetterError(*state, "RTCDTMFToneChangeEvent", "tone");
+        return throwGetterTypeError(*state, "RTCDTMFToneChangeEvent", "tone");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.tone());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.tone());
     return JSValue::encode(result);
 }
 

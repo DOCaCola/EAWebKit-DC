@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLProgressElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLProgressElement>&& impl)
     {
-        JSHTMLProgressElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLProgressElement>(globalObject->vm().heap)) JSHTMLProgressElement(structure, globalObject, WTF::move(impl));
+        JSHTMLProgressElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLProgressElement>(globalObject->vm().heap)) JSHTMLProgressElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLProgressElement& impl() const
+    HTMLProgressElement& wrapped() const
     {
-        return static_cast<HTMLProgressElement&>(Base::impl());
+        return static_cast<HTMLProgressElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLProgressElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLProgressElement>&&);
+    JSHTMLProgressElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLProgressElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -22,9 +22,9 @@
 #include "JSSVGClipPathElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
-#include "SVGClipPathElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -62,50 +62,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGClipPathElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGClipPathElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGClipPathElement> JSSVGClipPathElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGClipPathElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGClipPathElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGClipPathElementConstructor>(vm.heap)) JSSVGClipPathElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGClipPathElementConstructor::s_info = { "SVGClipPathElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGClipPathElementConstructor) };
-
-JSSVGClipPathElementConstructor::JSSVGClipPathElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGClipPathElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGClipPathElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGClipPathElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGClipPathElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGClipPathElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGClipPathElementConstructor::s_info = { "SVGClipPathElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGClipPathElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGClipPathElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clipPathUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementClipPathUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clipPathUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementClipPathUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGClipPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGClipPathElementPrototype::s_info = { "SVGClipPathElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGClipPathElementPrototype) };
@@ -118,7 +92,7 @@ void JSSVGClipPathElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGClipPathElement::s_info = { "SVGClipPathElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGClipPathElement) };
 
-JSSVGClipPathElement::JSSVGClipPathElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGClipPathElement>&& impl)
+JSSVGClipPathElement::JSSVGClipPathElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGClipPathElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -133,53 +107,53 @@ JSObject* JSSVGClipPathElement::getPrototype(VM& vm, JSGlobalObject* globalObjec
     return getDOMPrototype<JSSVGClipPathElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGClipPathElementClipPathUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGClipPathElementClipPathUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGClipPathElement* castedThis = jsDynamicCast<JSSVGClipPathElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGClipPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGClipPathElement", "clipPathUnits");
-        return throwGetterTypeError(*exec, "SVGClipPathElement", "clipPathUnits");
+            return reportDeprecatedGetterError(*state, "SVGClipPathElement", "clipPathUnits");
+        return throwGetterTypeError(*state, "SVGClipPathElement", "clipPathUnits");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.clipPathUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGClipPathElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGClipPathElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGClipPathElement* castedThis = jsDynamicCast<JSSVGClipPathElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGClipPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGClipPathElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGClipPathElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGClipPathElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGClipPathElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGClipPathElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGClipPathElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGClipPathElementPrototype* domObject = jsDynamicCast<JSSVGClipPathElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGClipPathElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGClipPathElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGClipPathElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGClipPathElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGClipPathElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

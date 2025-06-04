@@ -510,9 +510,9 @@ static inline const FilterOperations& filterOperationsAt(const KeyframeValueList
 int GraphicsLayer::validateFilterOperations(const KeyframeValueList& valueList)
 {
 #if ENABLE(FILTERS_LEVEL_2)
-    ASSERT(valueList.property() == AnimatedPropertyWebkitFilter || valueList.property() == AnimatedPropertyWebkitBackdropFilter);
+    ASSERT(valueList.property() == AnimatedPropertyFilter || valueList.property() == AnimatedPropertyWebkitBackdropFilter);
 #else
-    ASSERT(valueList.property() == AnimatedPropertyWebkitFilter);
+    ASSERT(valueList.property() == AnimatedPropertyFilter);
 #endif
 
     if (valueList.size() < 2)
@@ -873,6 +873,29 @@ void GraphicsLayer::dumpProperties(TextStream& ts, int indent, LayerTreeAsTextBe
             ts << childrenStream.release();
         }
     }
+}
+
+TextStream& operator<<(TextStream& ts, const Vector<GraphicsLayer::PlatformLayerID>& layers)
+{
+    for (size_t i = 0; i < layers.size(); ++i) {
+        if (i)
+            ts << " ";
+        ts << layers[i];
+    }
+
+    return ts;
+}
+
+TextStream& operator<<(TextStream& ts, const WebCore::GraphicsLayer::CustomAppearance& customAppearance)
+{
+    switch (customAppearance) {
+    case GraphicsLayer::CustomAppearance::NoCustomAppearance: ts << "none"; break;
+    case GraphicsLayer::CustomAppearance::ScrollingOverhang: ts << "scrolling-overhang"; break;
+    case GraphicsLayer::CustomAppearance::ScrollingShadow: ts << "scrolling-shadow"; break;
+    case GraphicsLayer::CustomAppearance::LightBackdropAppearance: ts << "light-backdrop"; break;
+    case GraphicsLayer::CustomAppearance::DarkBackdropAppearance: ts << "dark-backdrop"; break;
+    }
+    return ts;
 }
 
 String GraphicsLayer::layerTreeAsText(LayerTreeAsTextBehavior behavior) const

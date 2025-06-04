@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCanvasRenderingContext : public JSDOMWrapper {
+class JSCanvasRenderingContext : public JSDOMWrapper<CanvasRenderingContext> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CanvasRenderingContext> Base;
     static JSCanvasRenderingContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasRenderingContext>&& impl)
     {
-        JSCanvasRenderingContext* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext>(globalObject->vm().heap)) JSCanvasRenderingContext(structure, globalObject, WTF::move(impl));
+        JSCanvasRenderingContext* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext>(globalObject->vm().heap)) JSCanvasRenderingContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CanvasRenderingContext* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCanvasRenderingContext();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    CanvasRenderingContext& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CanvasRenderingContext* m_impl;
 protected:
-    JSCanvasRenderingContext(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasRenderingContext>&&);
+    JSCanvasRenderingContext(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasRenderingContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasRenderingConte
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasRenderingContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CanvasRenderingContext& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasRenderingContext& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CanvasRenderingContext*);
 
 
 } // namespace WebCore

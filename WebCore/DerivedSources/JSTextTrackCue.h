@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTextTrackCue : public JSDOMWrapper {
+class JSTextTrackCue : public JSDOMWrapper<TextTrackCue> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TextTrackCue> Base;
     static JSTextTrackCue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackCue>&& impl)
     {
-        JSTextTrackCue* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCue>(globalObject->vm().heap)) JSTextTrackCue(structure, globalObject, WTF::move(impl));
+        JSTextTrackCue* ptr = new (NotNull, JSC::allocateCell<JSTextTrackCue>(globalObject->vm().heap)) JSTextTrackCue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static TextTrackCue* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTextTrackCue();
 
     DECLARE_INFO;
 
@@ -56,13 +55,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    TextTrackCue& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrackCue* m_impl;
 protected:
-    JSTextTrackCue(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrackCue>&&);
+    JSTextTrackCue(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrackCue>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrackCue*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCue*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrackCue& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrackCue& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TextTrackCue*);
 
 
 } // namespace WebCore

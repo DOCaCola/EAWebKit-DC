@@ -25,7 +25,6 @@
 #include "JSWebGLCompressedTextureATC.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLCompressedTextureATC.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,9 +60,9 @@ private:
 
 static const HashTableValue JSWebGLCompressedTextureATCPrototypeTableValues[] =
 {
-    { "COMPRESSED_RGB_ATC_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C92), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C93), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x87EE), (intptr_t) (0) },
+    { "COMPRESSED_RGB_ATC_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C92) } },
+    { "COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C93) } },
+    { "COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x87EE) } },
 };
 
 const ClassInfo JSWebGLCompressedTextureATCPrototype::s_info = { "WebGLCompressedTextureATCPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureATCPrototype) };
@@ -76,9 +75,8 @@ void JSWebGLCompressedTextureATCPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLCompressedTextureATC::s_info = { "WebGLCompressedTextureATC", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureATC) };
 
-JSWebGLCompressedTextureATC::JSWebGLCompressedTextureATC(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTextureATC>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLCompressedTextureATC::JSWebGLCompressedTextureATC(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLCompressedTextureATC>&& impl)
+    : JSDOMWrapper<WebGLCompressedTextureATC>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -98,15 +96,10 @@ void JSWebGLCompressedTextureATC::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLCompressedTextureATC::~JSWebGLCompressedTextureATC();
 }
 
-JSWebGLCompressedTextureATC::~JSWebGLCompressedTextureATC()
-{
-    releaseImpl();
-}
-
 bool JSWebGLCompressedTextureATCOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLCompressedTextureATC = jsCast<JSWebGLCompressedTextureATC*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureATC->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureATC->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -114,7 +107,7 @@ void JSWebGLCompressedTextureATCOwner::finalize(JSC::Handle<JSC::Unknown> handle
 {
     auto* jsWebGLCompressedTextureATC = jsCast<JSWebGLCompressedTextureATC*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLCompressedTextureATC->impl(), jsWebGLCompressedTextureATC);
+    uncacheWrapper(world, &jsWebGLCompressedTextureATC->wrapped(), jsWebGLCompressedTextureATC);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -125,6 +118,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLCompressedTextureATC@Web
 extern "C" { extern void* _ZTVN7WebCore25WebGLCompressedTextureATCE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTextureATC* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLCompressedTextureATC>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTextureATC* impl)
 {
     if (!impl)
@@ -156,7 +157,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
 WebGLCompressedTextureATC* JSWebGLCompressedTextureATC::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLCompressedTextureATC*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSMediaRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSMediaRule>&& impl)
     {
-        JSCSSMediaRule* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRule>(globalObject->vm().heap)) JSCSSMediaRule(structure, globalObject, WTF::move(impl));
+        JSCSSMediaRule* ptr = new (NotNull, JSC::allocateCell<JSCSSMediaRule>(globalObject->vm().heap)) JSCSSMediaRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSMediaRule& impl() const
+    CSSMediaRule& wrapped() const
     {
-        return static_cast<CSSMediaRule&>(Base::impl());
+        return static_cast<CSSMediaRule&>(Base::wrapped());
     }
 protected:
-    JSCSSMediaRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSMediaRule>&&);
+    JSCSSMediaRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSMediaRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

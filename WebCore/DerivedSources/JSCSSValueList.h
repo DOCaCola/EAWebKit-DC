@@ -31,7 +31,7 @@ public:
     typedef JSCSSValue Base;
     static JSCSSValueList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSValueList>&& impl)
     {
-        JSCSSValueList* ptr = new (NotNull, JSC::allocateCell<JSCSSValueList>(globalObject->vm().heap)) JSCSSValueList(structure, globalObject, WTF::move(impl));
+        JSCSSValueList* ptr = new (NotNull, JSC::allocateCell<JSCSSValueList>(globalObject->vm().heap)) JSCSSValueList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSValueList& impl() const
+    CSSValueList& wrapped() const
     {
-        return static_cast<CSSValueList&>(Base::impl());
+        return static_cast<CSSValueList&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSCSSValueList(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSValueList>&&);
+    JSCSSValueList(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSValueList>&&);
 
     void finishCreation(JSC::VM& vm)
     {

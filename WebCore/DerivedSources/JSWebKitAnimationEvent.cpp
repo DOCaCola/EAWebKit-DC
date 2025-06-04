@@ -22,9 +22,9 @@
 #include "JSWebKitAnimationEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "URL.h"
-#include "WebKitAnimationEvent.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -64,51 +64,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitAnimationEventConstructor : public DOMConstructorObject {
-private:
-    JSWebKitAnimationEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSWebKitAnimationEvent> JSWebKitAnimationEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitAnimationEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitAnimationEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitAnimationEventConstructor>(vm.heap)) JSWebKitAnimationEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitAnimationEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSWebKitAnimationEventConstructor::constructJSWebKitAnimationEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSWebKitAnimationEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSWebKitAnimationEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSWebKitAnimationEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     WebKitAnimationEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillWebKitAnimationEventInit(eventInit, dictionary))
@@ -116,7 +96,7 @@ EncodedJSValue JSC_HOST_CALL JSWebKitAnimationEventConstructor::constructJSWebKi
     }
 
     RefPtr<WebKitAnimationEvent> event = WebKitAnimationEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillWebKitAnimationEventInit(WebKitAnimationEventInit& eventInit, JSDictionary& dictionary)
@@ -131,35 +111,22 @@ bool fillWebKitAnimationEventInit(WebKitAnimationEventInit& eventInit, JSDiction
     return true;
 }
 
-const ClassInfo JSWebKitAnimationEventConstructor::s_info = { "WebKitAnimationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitAnimationEventConstructor) };
-
-JSWebKitAnimationEventConstructor::JSWebKitAnimationEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebKitAnimationEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebKitAnimationEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitAnimationEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitAnimationEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitAnimationEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSWebKitAnimationEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWebKitAnimationEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSWebKitAnimationEventConstructor::s_info = { "WebKitAnimationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitAnimationEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitAnimationEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animationName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventAnimationName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "elapsedTime", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animationName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventAnimationName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "elapsedTime", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitAnimationEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitAnimationEventPrototype::s_info = { "WebKitAnimationEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitAnimationEventPrototype) };
@@ -172,7 +139,7 @@ void JSWebKitAnimationEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitAnimationEvent::s_info = { "WebKitAnimationEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitAnimationEvent) };
 
-JSWebKitAnimationEvent::JSWebKitAnimationEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitAnimationEvent>&& impl)
+JSWebKitAnimationEvent::JSWebKitAnimationEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitAnimationEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -187,51 +154,51 @@ JSObject* JSWebKitAnimationEvent::getPrototype(VM& vm, JSGlobalObject* globalObj
     return getDOMPrototype<JSWebKitAnimationEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsWebKitAnimationEventAnimationName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitAnimationEventAnimationName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitAnimationEvent* castedThis = jsDynamicCast<JSWebKitAnimationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitAnimationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitAnimationEvent", "animationName");
-        return throwGetterTypeError(*exec, "WebKitAnimationEvent", "animationName");
+            return reportDeprecatedGetterError(*state, "WebKitAnimationEvent", "animationName");
+        return throwGetterTypeError(*state, "WebKitAnimationEvent", "animationName");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.animationName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.animationName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitAnimationEventElapsedTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitAnimationEventElapsedTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitAnimationEvent* castedThis = jsDynamicCast<JSWebKitAnimationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitAnimationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitAnimationEvent", "elapsedTime");
-        return throwGetterTypeError(*exec, "WebKitAnimationEvent", "elapsedTime");
+            return reportDeprecatedGetterError(*state, "WebKitAnimationEvent", "elapsedTime");
+        return throwGetterTypeError(*state, "WebKitAnimationEvent", "elapsedTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.elapsedTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitAnimationEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebKitAnimationEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebKitAnimationEventPrototype* domObject = jsDynamicCast<JSWebKitAnimationEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitAnimationEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebKitAnimationEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebKitAnimationEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebKitAnimationEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitAnimationEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

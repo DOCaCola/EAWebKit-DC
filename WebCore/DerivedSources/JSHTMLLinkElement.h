@@ -31,14 +31,13 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLLinkElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLinkElement>&& impl)
     {
-        JSHTMLLinkElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElement>(globalObject->vm().heap)) JSHTMLLinkElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLinkElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLinkElement>(globalObject->vm().heap)) JSHTMLLinkElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 
     DECLARE_INFO;
 
@@ -48,17 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom attributes
-    void setSizes(JSC::ExecState*, JSC::JSValue);
-    HTMLLinkElement& impl() const
+    HTMLLinkElement& wrapped() const
     {
-        return static_cast<HTMLLinkElement&>(Base::impl());
+        return static_cast<HTMLLinkElement&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLLinkElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLinkElement>&&);
+    JSHTMLLinkElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLinkElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

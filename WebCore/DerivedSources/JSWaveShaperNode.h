@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSWaveShaperNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WaveShaperNode>&& impl)
     {
-        JSWaveShaperNode* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNode>(globalObject->vm().heap)) JSWaveShaperNode(structure, globalObject, WTF::move(impl));
+        JSWaveShaperNode* ptr = new (NotNull, JSC::allocateCell<JSWaveShaperNode>(globalObject->vm().heap)) JSWaveShaperNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WaveShaperNode& impl() const
+    WaveShaperNode& wrapped() const
     {
-        return static_cast<WaveShaperNode&>(Base::impl());
+        return static_cast<WaveShaperNode&>(Base::wrapped());
     }
 protected:
-    JSWaveShaperNode(JSC::Structure*, JSDOMGlobalObject*, Ref<WaveShaperNode>&&);
+    JSWaveShaperNode(JSC::Structure*, JSDOMGlobalObject&, Ref<WaveShaperNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WaveShaperNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WaveShaperNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WaveShaperNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WaveShaperNode*);
 
 
 } // namespace WebCore

@@ -23,10 +23,10 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGMatrix.h"
 #include "SVGMatrix.h"
 #include "SVGMatrixTearOff.h"
-#include "SVGTransform.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -75,38 +75,19 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGTransformConstructor : public DOMConstructorObject {
-private:
-    JSSVGTransformConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGTransformConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGTransformConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGTransformConstructor>(vm.heap)) JSSVGTransformConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGTransform> JSSVGTransformConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGTransformConstructorTableValues[] =
 {
-    { "SVG_TRANSFORM_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_TRANSFORM_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_TRANSFORM_TRANSLATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SCALE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_TRANSFORM_ROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SKEWX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SKEWY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
+    { "SVG_TRANSFORM_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_TRANSFORM_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_TRANSFORM_TRANSLATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_TRANSFORM_SCALE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_TRANSFORM_ROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_TRANSFORM_SKEWX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "SVG_TRANSFORM_SKEWY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
 };
 
 
@@ -118,44 +99,37 @@ COMPILE_ASSERT(4 == SVGTransform::SVG_TRANSFORM_ROTATE, SVGTransformEnumSVG_TRAN
 COMPILE_ASSERT(5 == SVGTransform::SVG_TRANSFORM_SKEWX, SVGTransformEnumSVG_TRANSFORM_SKEWXIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(6 == SVGTransform::SVG_TRANSFORM_SKEWY, SVGTransformEnumSVG_TRANSFORM_SKEWYIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSSVGTransformConstructor::s_info = { "SVGTransformConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformConstructor) };
-
-JSSVGTransformConstructor::JSSVGTransformConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGTransformConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGTransformConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGTransform::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGTransform::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGTransform"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGTransformConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGTransformConstructor::s_info = { "SVGTransformConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGTransformPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "matrix", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformMatrix), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "angle", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_TRANSFORM_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_TRANSFORM_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_TRANSFORM_TRANSLATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SCALE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_TRANSFORM_ROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SKEWX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "SVG_TRANSFORM_SKEWY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "setMatrix", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetMatrix), (intptr_t) (1) },
-    { "setTranslate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetTranslate), (intptr_t) (2) },
-    { "setScale", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetScale), (intptr_t) (2) },
-    { "setRotate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetRotate), (intptr_t) (3) },
-    { "setSkewX", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetSkewX), (intptr_t) (1) },
-    { "setSkewY", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetSkewY), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "matrix", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformMatrix), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "angle", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_TRANSFORM_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_TRANSFORM_MATRIX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_TRANSFORM_TRANSLATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_TRANSFORM_SCALE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_TRANSFORM_ROTATE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_TRANSFORM_SKEWX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "SVG_TRANSFORM_SKEWY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "setMatrix", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetMatrix), (intptr_t) (1) } },
+    { "setTranslate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetTranslate), (intptr_t) (2) } },
+    { "setScale", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetScale), (intptr_t) (2) } },
+    { "setRotate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetRotate), (intptr_t) (3) } },
+    { "setSkewX", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetSkewX), (intptr_t) (1) } },
+    { "setSkewY", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformPrototypeFunctionSetSkewY), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSVGTransformPrototype::s_info = { "SVGTransformPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformPrototype) };
@@ -168,9 +142,8 @@ void JSSVGTransformPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGTransform::s_info = { "SVGTransform", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransform) };
 
-JSSVGTransform::JSSVGTransform(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGTransform>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGTransform::JSSVGTransform(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPropertyTearOff<SVGTransform>>&& impl)
+    : JSDOMWrapper<SVGPropertyTearOff<SVGTransform>>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -190,97 +163,92 @@ void JSSVGTransform::destroy(JSC::JSCell* cell)
     thisObject->JSSVGTransform::~JSSVGTransform();
 }
 
-JSSVGTransform::~JSSVGTransform()
+EncodedJSValue jsSVGTransformType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGTransformType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGTransformPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGTransform", "type");
-        return throwGetterTypeError(*exec, "SVGTransform", "type");
+            return reportDeprecatedGetterError(*state, "SVGTransform", "type");
+        return throwGetterTypeError(*state, "SVGTransform", "type");
     }
-    SVGTransform& impl = castedThis->impl().propertyReference();
+    SVGTransform& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.type());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGTransformMatrix(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGTransformMatrix(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGTransformPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGTransform", "matrix");
-        return throwGetterTypeError(*exec, "SVGTransform", "matrix");
+            return reportDeprecatedGetterError(*state, "SVGTransform", "matrix");
+        return throwGetterTypeError(*state, "SVGTransform", "matrix");
     }
-    SVGTransform& impl = castedThis->impl().propertyReference();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGMatrixTearOff::create(castedThis->impl(), impl.svgMatrix())));
+    SVGTransform& impl = castedThis->wrapped().propertyReference();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGMatrixTearOff::create(castedThis->wrapped(), impl.svgMatrix())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGTransformAngle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGTransformAngle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGTransformPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGTransform", "angle");
-        return throwGetterTypeError(*exec, "SVGTransform", "angle");
+            return reportDeprecatedGetterError(*state, "SVGTransform", "angle");
+        return throwGetterTypeError(*state, "SVGTransform", "angle");
     }
-    SVGTransform& impl = castedThis->impl().propertyReference();
+    SVGTransform& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.angle());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGTransformConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGTransformConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGTransformPrototype* domObject = jsDynamicCast<JSSVGTransformPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGTransform::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGTransform::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGTransform::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGTransformConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGTransformConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetMatrix(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetMatrix(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setMatrix");
+        return throwThisTypeError(*state, "SVGTransform", "setMatrix");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGMatrix::info()))
-        return throwArgumentTypeError(*exec, 0, "matrix", "SVGTransform", "setMatrix", "SVGMatrix");
-    SVGPropertyTearOff<SVGMatrix>* matrix = JSSVGMatrix::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGMatrix::info()))
+        return throwArgumentTypeError(*state, 0, "matrix", "SVGTransform", "setMatrix", "SVGMatrix");
+    SVGPropertyTearOff<SVGMatrix>* matrix = JSSVGMatrix::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!matrix) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
+        setDOMException(state, TYPE_MISMATCH_ERR);
         return JSValue::encode(jsUndefined());
     }
     podImpl.setMatrix(matrix->propertyReference());
@@ -288,127 +256,127 @@ EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetMatrix(ExecState*
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetTranslate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetTranslate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setTranslate");
+        return throwThisTypeError(*state, "SVGTransform", "setTranslate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float tx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float tx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float ty = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float ty = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.setTranslate(tx, ty);
     impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetScale(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetScale(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setScale");
+        return throwThisTypeError(*state, "SVGTransform", "setScale");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float sx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float sx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sy = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.setScale(sx, sy);
     impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetRotate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetRotate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setRotate");
+        return throwThisTypeError(*state, "SVGTransform", "setRotate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.setRotate(angle, cx, cy);
     impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetSkewX(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetSkewX(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setSkewX");
+        return throwThisTypeError(*state, "SVGTransform", "setSkewX");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.setSkewX(angle);
     impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetSkewY(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformPrototypeFunctionSetSkewY(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransform* castedThis = jsDynamicCast<JSSVGTransform*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransform", "setSkewY");
+        return throwThisTypeError(*state, "SVGTransform", "setSkewY");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransform::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGTransform& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.setSkewY(angle);
     impl.commitChange();
@@ -426,7 +394,14 @@ void JSSVGTransformOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsSVGTransform = jsCast<JSSVGTransform*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGTransform->impl(), jsSVGTransform);
+    uncacheWrapper(world, &jsSVGTransform->wrapped(), jsSVGTransform);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGTransform>* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGTransform, SVGPropertyTearOff<SVGTransform>>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGTransform>* impl)
@@ -441,7 +416,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyT
 SVGPropertyTearOff<SVGTransform>* JSSVGTransform::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGTransform*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

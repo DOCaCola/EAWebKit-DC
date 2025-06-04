@@ -75,7 +75,7 @@ public:
         FunctionExpr, ClassExpr, SuperExpr, BracketExpr, DotExpr, CallExpr,
         NewExpr, PreExpr, PostExpr, UnaryExpr, BinaryExpr,
         ConditionalExpr, AssignmentExpr, TypeofExpr, NewTargetExpr,
-        DeleteExpr, ArrayLiteralExpr, BindingDestructuring,
+        DeleteExpr, ArrayLiteralExpr, BindingDestructuring, RestParameter,
         ArrayDestructuring, ObjectDestructuring, SourceElementsResult,
         FunctionBodyResult, SpreadExpr, ArgumentsResult,
         PropertyListResult, ArgumentsListResult, ElementsListResult,
@@ -83,7 +83,7 @@ public:
         ClauseListResult, CommaExpr, DestructuringAssignment,
         TemplateStringResult, TemplateStringListResult,
         TemplateExpressionListResult, TemplateExpr,
-        TaggedTemplateExpr,
+        TaggedTemplateExpr, YieldExpr,
         ModuleNameResult,
         ImportSpecifierResult, ImportSpecifierListResult,
         ExportSpecifierResult, ExportSpecifierListResult
@@ -116,17 +116,13 @@ public:
     typedef int PropertyList;
     typedef int ElementList;
     typedef int ArgumentsList;
-#if ENABLE(ES6_TEMPLATE_LITERAL_SYNTAX)
     typedef int TemplateExpressionList;
     typedef int TemplateString;
     typedef int TemplateStringList;
     typedef int TemplateLiteral;
-#endif
     typedef int FormalParameterList;
     typedef int FunctionBody;
-#if ENABLE(ES6_CLASS_SYNTAX)
     typedef int ClassExpression;
-#endif
     typedef int ModuleName;
     typedef int ImportSpecifier;
     typedef int ImportSpecifierList;
@@ -139,6 +135,7 @@ public:
     typedef int DestructuringPattern;
     typedef DestructuringPattern ArrayPattern;
     typedef DestructuringPattern ObjectPattern;
+    typedef DestructuringPattern RestPattern;
 
     static const bool CreatesAST = false;
     static const bool NeedsFreeVariableInfo = false;
@@ -182,17 +179,16 @@ public:
     ExpressionType createAssignResolve(const JSTokenLocation&, const Identifier&, ExpressionType, int, int, int, AssignmentContext) { return AssignmentExpr; }
     ExpressionType createEmptyVarExpression(const JSTokenLocation&, const Identifier&) { return AssignmentExpr; }
     ExpressionType createEmptyLetExpression(const JSTokenLocation&, const Identifier&) { return AssignmentExpr; }
-#if ENABLE(ES6_CLASS_SYNTAX)
-    ClassExpression createClassExpr(const JSTokenLocation&, const Identifier&, ExpressionType, ExpressionType, PropertyList, PropertyList) { return ClassExpr; }
-#endif
+    ExpressionType createYield(const JSTokenLocation&) { return YieldExpr; }
+    ExpressionType createYield(const JSTokenLocation&, ExpressionType, bool, int, int, int) { return YieldExpr; }
+    ClassExpression createClassExpr(const JSTokenLocation&, const Identifier&, VariableEnvironment&, ExpressionType, ExpressionType, PropertyList, PropertyList) { return ClassExpr; }
     ExpressionType createFunctionExpr(const JSTokenLocation&, const ParserFunctionInfo<SyntaxChecker>&) { return FunctionExpr; }
-    int createFunctionMetadata(const JSTokenLocation&, const JSTokenLocation&, int, int, bool, int, int, int, ConstructorKind, unsigned, SourceParseMode) { return FunctionBodyResult; }
+    int createFunctionMetadata(const JSTokenLocation&, const JSTokenLocation&, int, int, bool, int, int, int, ConstructorKind, SuperBinding, unsigned, SourceParseMode, bool) { return FunctionBodyResult; }
     ExpressionType createArrowFunctionExpr(const JSTokenLocation&, const ParserFunctionInfo<SyntaxChecker>&) { return FunctionExpr; }
     void setFunctionNameStart(int, int) { }
     int createArguments() { return ArgumentsResult; }
     int createArguments(int) { return ArgumentsResult; }
     ExpressionType createSpreadExpression(const JSTokenLocation&, ExpressionType, int, int, int) { return SpreadExpr; }
-#if ENABLE(ES6_TEMPLATE_LITERAL_SYNTAX)
     TemplateString createTemplateString(const JSTokenLocation&, const Identifier&, const Identifier&) { return TemplateStringResult; }
     TemplateStringList createTemplateStringList(TemplateString) { return TemplateStringListResult; }
     TemplateStringList createTemplateStringList(TemplateStringList, TemplateString) { return TemplateStringListResult; }
@@ -201,7 +197,6 @@ public:
     TemplateLiteral createTemplateLiteral(const JSTokenLocation&, TemplateStringList) { return TemplateExpr; }
     TemplateLiteral createTemplateLiteral(const JSTokenLocation&, TemplateStringList, TemplateExpressionList) { return TemplateExpr; }
     ExpressionType createTaggedTemplate(const JSTokenLocation&, ExpressionType, TemplateLiteral, int, int, int) { return TaggedTemplateExpr; }
-#endif
 
     int createArgumentsList(const JSTokenLocation&, int) { return ArgumentsListResult; }
     int createArgumentsList(const JSTokenLocation&, int, int) { return ArgumentsListResult; }
@@ -232,10 +227,8 @@ public:
     int createClauseList(int) { return ClauseListResult; }
     int createClauseList(int, int) { return ClauseListResult; }
     int createFuncDeclStatement(const JSTokenLocation&, const ParserFunctionInfo<SyntaxChecker>&) { return StatementResult; }
-#if ENABLE(ES6_CLASS_SYNTAX)
     int createClassDeclStatement(const JSTokenLocation&, ClassExpression,
         const JSTextPosition&, const JSTextPosition&, int, int) { return StatementResult; }
-#endif
     int createBlockStatement(const JSTokenLocation&, int, int, int, VariableEnvironment&) { return StatementResult; }
     int createExprStatement(const JSTokenLocation&, int, int, int) { return StatementResult; }
     int createIfStatement(const JSTokenLocation&, int, int, int, int) { return StatementResult; }
@@ -279,6 +272,10 @@ public:
         if (!strict)
             return Property(type);
         return Property(name, type);
+    }
+    Property createGetterOrSetterProperty(const JSTokenLocation&, PropertyNode::Type type, bool, int, const ParserFunctionInfo<SyntaxChecker>&, SuperBinding)
+    {
+        return Property(type);
     }
     Property createGetterOrSetterProperty(VM* vm, ParserArena& parserArena, const JSTokenLocation&, PropertyNode::Type type, bool strict, double name, const ParserFunctionInfo<SyntaxChecker>&, SuperBinding)
     {
@@ -346,7 +343,19 @@ public:
     void appendObjectPatternEntry(ArrayPattern, const JSTokenLocation&, bool, const Identifier&, DestructuringPattern, int)
     {
     }
+    void appendObjectPatternEntry(ArrayPattern, const JSTokenLocation&, Expression, DestructuringPattern, Expression)
+    {
+    }
+
     DestructuringPattern createBindingLocation(const JSTokenLocation&, const Identifier&, const JSTextPosition&, const JSTextPosition&, AssignmentContext)
+    {
+        return BindingDestructuring;
+    }
+    RestPattern createRestParameter(const Identifier&, size_t, const JSTextPosition&, const JSTextPosition&)
+    { 
+        return RestParameter;
+    }
+    DestructuringPattern createAssignmentElement(const Expression&, const JSTextPosition&, const JSTextPosition&)
     {
         return BindingDestructuring;
     }
@@ -356,9 +365,31 @@ public:
         return pattern == BindingDestructuring;
     }
 
+    bool isAssignmentLocation(ExpressionType type)
+    {
+        return type == ResolveExpr || type == DotExpr || type == BracketExpr;
+    }
+
+    bool isObjectLiteral(ExpressionType type)
+    {
+        return type == ObjectLiteralExpr;
+    }
+
+    bool isArrayLiteral(ExpressionType type)
+    {
+        return type == ArrayLiteralExpr;
+    }
+
+    bool isObjectOrArrayLiteral(ExpressionType type)
+    {
+        return isObjectLiteral(type) || isArrayLiteral(type);
+    }
+
     void setEndOffset(int, int) { }
     int endOffset(int) { return 0; }
     void setStartOffset(int, int) { }
+
+    void propagateArgumentsUse() { }
 
 private:
     int m_topBinaryExpr;

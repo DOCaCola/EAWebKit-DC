@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSWebKitNamedFlow : public JSDOMWrapper {
+class JSWebKitNamedFlow : public JSDOMWrapper<WebKitNamedFlow> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebKitNamedFlow> Base;
     static JSWebKitNamedFlow* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitNamedFlow>&& impl)
     {
-        JSWebKitNamedFlow* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamedFlow>(globalObject->vm().heap)) JSWebKitNamedFlow(structure, globalObject, WTF::move(impl));
+        JSWebKitNamedFlow* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamedFlow>(globalObject->vm().heap)) JSWebKitNamedFlow(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitNamedFlow* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitNamedFlow();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    WebKitNamedFlow& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitNamedFlow* m_impl;
 protected:
-    JSWebKitNamedFlow(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitNamedFlow>&&);
+    JSWebKitNamedFlow(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitNamedFlow>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitNamedFlow*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamedFlow*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitNamedFlow& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitNamedFlow& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamedFlow*);
 
 
 } // namespace WebCore

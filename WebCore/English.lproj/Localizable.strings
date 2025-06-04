@@ -496,6 +496,9 @@
 /* Undo action name */
 "Set Writing Direction (Undo action name)" = "Set Writing Direction";
 
+/* Title for Share action button */
+"Share…" = "Share…";
+
 /* Show colors context menu item */
 "Show Colors" = "Show Colors";
 
@@ -592,6 +595,9 @@
 /* WebKitErrorCannotShowURL description */
 "The URL can’t be shown" = "The URL can’t be shown";
 
+/* WebKitErrorBlockedByContentBlocker description */
+"The URL was blocked by a content blocker" = "The URL was blocked by a content blocker";
+
 /* WKErrorWebViewInvalidated description */
 "The WKWebView was invalidated" = "The WKWebView was invalidated";
 
@@ -678,6 +684,9 @@
 
 /* Description of WebCrypto master keys in Keychain */
 "Used to encrypt WebCrypto keys in persistent storage, such as IndexedDB" = "Used to encrypt WebCrypto keys in persistent storage, such as IndexedDB";
+
+/* Web Inspector window title when inspecting Web Inspector */
+"Web Inspector [%d] — %@" = "Web Inspector [%d] — %@";
 
 /* Web Inspector window title */
 "Web Inspector — %@" = "Web Inspector — %@";

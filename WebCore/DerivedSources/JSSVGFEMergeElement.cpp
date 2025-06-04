@@ -22,9 +22,9 @@
 #include "JSSVGFEMergeElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEMergeElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -65,53 +65,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEMergeElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEMergeElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEMergeElement> JSSVGFEMergeElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEMergeElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEMergeElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMergeElementConstructor>(vm.heap)) JSSVGFEMergeElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEMergeElementConstructor::s_info = { "SVGFEMergeElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMergeElementConstructor) };
-
-JSSVGFEMergeElementConstructor::JSSVGFEMergeElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEMergeElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEMergeElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEMergeElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEMergeElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEMergeElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEMergeElementConstructor::s_info = { "SVGFEMergeElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMergeElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEMergeElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEMergeElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEMergeElementPrototype::s_info = { "SVGFEMergeElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMergeElementPrototype) };
@@ -124,7 +98,7 @@ void JSSVGFEMergeElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEMergeElement::s_info = { "SVGFEMergeElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEMergeElement) };
 
-JSSVGFEMergeElement::JSSVGFEMergeElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEMergeElement>&& impl)
+JSSVGFEMergeElement::JSSVGFEMergeElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEMergeElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -139,107 +113,107 @@ JSObject* JSSVGFEMergeElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSSVGFEMergeElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEMergeElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEMergeElement* castedThis = jsDynamicCast<JSSVGFEMergeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEMergeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMergeElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEMergeElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGFEMergeElement", "x");
+        return throwGetterTypeError(*state, "SVGFEMergeElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEMergeElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEMergeElement* castedThis = jsDynamicCast<JSSVGFEMergeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEMergeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMergeElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEMergeElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGFEMergeElement", "y");
+        return throwGetterTypeError(*state, "SVGFEMergeElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEMergeElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEMergeElement* castedThis = jsDynamicCast<JSSVGFEMergeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEMergeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMergeElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEMergeElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGFEMergeElement", "width");
+        return throwGetterTypeError(*state, "SVGFEMergeElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEMergeElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEMergeElement* castedThis = jsDynamicCast<JSSVGFEMergeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEMergeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMergeElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEMergeElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGFEMergeElement", "height");
+        return throwGetterTypeError(*state, "SVGFEMergeElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEMergeElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementResult(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEMergeElement* castedThis = jsDynamicCast<JSSVGFEMergeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEMergeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEMergeElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEMergeElement", "result");
+            return reportDeprecatedGetterError(*state, "SVGFEMergeElement", "result");
+        return throwGetterTypeError(*state, "SVGFEMergeElement", "result");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEMergeElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEMergeElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEMergeElementPrototype* domObject = jsDynamicCast<JSSVGFEMergeElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEMergeElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEMergeElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEMergeElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEMergeElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEMergeElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -53,13 +53,12 @@ public:
 	//static PassRefPtr<BitmapTexture> create() { return adoptRef(new BitmapTextureEA); }
 	virtual IntSize size() const override;
 	virtual bool isValid() const override;
-	virtual bool canReuseWith(const IntSize& contentsSize, Flags = 0) override;
 	virtual void didReset() override;
 	virtual void updateContents(Image*, const IntRect&, const IntPoint&, UpdateContentsFlag) override;
-	virtual void updateContents(TextureMapper*, GraphicsLayer*, const IntRect& target, const IntPoint& offset, UpdateContentsFlag) override;
+	virtual void updateContents(TextureMapper&, GraphicsLayer*, const IntRect& target, const IntPoint& offset, UpdateContentsFlag, float scale) override;
 	virtual void updateContents(const void*, const IntRect& target, const IntPoint& sourceOffset, int bytesPerLine, UpdateContentsFlag) override;
 
-	virtual PassRefPtr<BitmapTexture> applyFilters(TextureMapper*, const FilterOperations&) override;
+	virtual PassRefPtr<BitmapTexture> applyFilters(TextureMapper&, const FilterOperations&) override;
 	EA::WebKit::Filters *GetFilters(void) const {return mFilterList;}
 
 	void bind(TextureMapperEA*);
@@ -69,9 +68,9 @@ public:
 
 private:
 	BitmapTextureEA(EA::WebKit::ISurface *surface, EA::WebKit::View* view);
-	~BitmapTextureEA(void);
+	~BitmapTextureEA(void) override;
 
-	GraphicsContext* graphicsContext() { return mContext ? mContext.get() : 0 ; }
+	GraphicsContext* graphicsContext() { return mContext ? mContext.get() : nullptr ; }
 
 	EA::WebKit::View* mView;
 	EA::WebKit::ISurface *mSurface;

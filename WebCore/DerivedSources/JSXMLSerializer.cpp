@@ -23,9 +23,9 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "URL.h"
-#include "XMLSerializer.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -67,65 +67,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXMLSerializerConstructor : public DOMConstructorObject {
-private:
-    JSXMLSerializerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSXMLSerializer> JSXMLSerializerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSXMLSerializerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXMLSerializerConstructor* ptr = new (NotNull, JSC::allocateCell<JSXMLSerializerConstructor>(vm.heap)) JSXMLSerializerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSXMLSerializer(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSXMLSerializerConstructor::constructJSXMLSerializer(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSXMLSerializerConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSXMLSerializerConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSXMLSerializerConstructor*>(state->callee());
     RefPtr<XMLSerializer> object = XMLSerializer::create();
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSXMLSerializerConstructor::s_info = { "XMLSerializerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLSerializerConstructor) };
-
-JSXMLSerializerConstructor::JSXMLSerializerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXMLSerializerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXMLSerializerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXMLSerializer::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXMLSerializer::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XMLSerializer"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSXMLSerializerConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSXMLSerializer;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSXMLSerializerConstructor::s_info = { "XMLSerializerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLSerializerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXMLSerializerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLSerializerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "serializeToString", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLSerializerPrototypeFunctionSerializeToString), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLSerializerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "serializeToString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLSerializerPrototypeFunctionSerializeToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXMLSerializerPrototype::s_info = { "XMLSerializerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLSerializerPrototype) };
@@ -138,9 +103,8 @@ void JSXMLSerializerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXMLSerializer::s_info = { "XMLSerializer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLSerializer) };
 
-JSXMLSerializer::JSXMLSerializer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLSerializer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXMLSerializer::JSXMLSerializer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XMLSerializer>&& impl)
+    : JSDOMWrapper<XMLSerializer>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -160,39 +124,34 @@ void JSXMLSerializer::destroy(JSC::JSCell* cell)
     thisObject->JSXMLSerializer::~JSXMLSerializer();
 }
 
-JSXMLSerializer::~JSXMLSerializer()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsXMLSerializerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXMLSerializerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXMLSerializerPrototype* domObject = jsDynamicCast<JSXMLSerializerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXMLSerializer::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXMLSerializer::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSXMLSerializer::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXMLSerializerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXMLSerializerConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLSerializerPrototypeFunctionSerializeToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLSerializerPrototypeFunctionSerializeToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLSerializer* castedThis = jsDynamicCast<JSXMLSerializer*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLSerializer", "serializeToString");
+        return throwThisTypeError(*state, "XMLSerializer", "serializeToString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLSerializer::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.serializeToString(node, ec));
+    JSValue result = jsStringWithCache(state, impl.serializeToString(node, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -207,7 +166,14 @@ void JSXMLSerializerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsXMLSerializer = jsCast<JSXMLSerializer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXMLSerializer->impl(), jsXMLSerializer);
+    uncacheWrapper(world, &jsXMLSerializer->wrapped(), jsXMLSerializer);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLSerializer* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXMLSerializer>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLSerializer* impl)
@@ -229,7 +195,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLSerialize
 XMLSerializer* JSXMLSerializer::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXMLSerializer*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

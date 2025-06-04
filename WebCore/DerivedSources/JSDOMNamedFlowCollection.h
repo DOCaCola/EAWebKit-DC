@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSDOMNamedFlowCollection : public JSDOMWrapper {
+class JSDOMNamedFlowCollection : public JSDOMWrapper<DOMNamedFlowCollection> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMNamedFlowCollection> Base;
     static JSDOMNamedFlowCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMNamedFlowCollection>&& impl)
     {
-        JSDOMNamedFlowCollection* ptr = new (NotNull, JSC::allocateCell<JSDOMNamedFlowCollection>(globalObject->vm().heap)) JSDOMNamedFlowCollection(structure, globalObject, WTF::move(impl));
+        JSDOMNamedFlowCollection* ptr = new (NotNull, JSC::allocateCell<JSDOMNamedFlowCollection>(globalObject->vm().heap)) JSDOMNamedFlowCollection(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMNamedFlowCollection();
 
     DECLARE_INFO;
 
@@ -55,15 +54,10 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    DOMNamedFlowCollection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMNamedFlowCollection* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMNamedFlowCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMNamedFlowCollection>&&);
+    JSDOMNamedFlowCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMNamedFlowCollection>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -72,8 +66,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMNamedFlowCollection*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSDOMNamedFlowCollectionOwner : public JSC::WeakHandleOwner {
@@ -89,7 +82,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMNamedFlowCollecti
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMNamedFlowCollection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMNamedFlowCollection& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMNamedFlowCollection& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMNamedFlowCollection*);
 
 
 } // namespace WebCore

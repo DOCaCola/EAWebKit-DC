@@ -24,26 +24,22 @@
 #if ENABLE(STREAMS_API)
 
 #include "JSDOMWrapper.h"
-#include "ReadableStream.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSReadableStream : public JSDOMWrapper {
+class JSReadableStream : public JSDOMObject {
 public:
-    typedef JSDOMWrapper Base;
-    static JSReadableStream* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ReadableStream>&& impl)
+    typedef JSDOMObject Base;
+    static JSReadableStream* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject)
     {
-        JSReadableStream* ptr = new (NotNull, JSC::allocateCell<JSReadableStream>(globalObject->vm().heap)) JSReadableStream(structure, globalObject, WTF::move(impl));
+        JSReadableStream* ptr = new (NotNull, JSC::allocateCell<JSReadableStream>(globalObject->vm().heap)) JSReadableStream(structure, *globalObject);
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static ReadableStream* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSReadableStream();
 
     DECLARE_INFO;
 
@@ -53,40 +49,13 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    // Custom functions
-    JSC::JSValue pipeTo(JSC::ExecState*);
-    JSC::JSValue pipeThrough(JSC::ExecState*);
-    ReadableStream& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ReadableStream* m_impl;
 protected:
-    JSReadableStream(JSC::Structure*, JSDOMGlobalObject*, Ref<ReadableStream>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
+    JSReadableStream(JSC::Structure*, JSDOMGlobalObject&);
 
 };
 
-class JSReadableStreamOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ReadableStream*)
-{
-    static NeverDestroyed<JSReadableStreamOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ReadableStream*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ReadableStream& impl) { return toJS(exec, globalObject, &impl); }
 
 
 } // namespace WebCore

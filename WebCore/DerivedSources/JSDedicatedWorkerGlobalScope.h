@@ -54,10 +54,10 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue postMessage(JSC::ExecState*);
-    DedicatedWorkerGlobalScope& impl() const
+    JSC::JSValue postMessage(JSC::ExecState&);
+    DedicatedWorkerGlobalScope& wrapped() const
     {
-        return static_cast<DedicatedWorkerGlobalScope&>(Base::impl());
+        return static_cast<DedicatedWorkerGlobalScope&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;

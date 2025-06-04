@@ -24,7 +24,6 @@
 
 #include "JSEXTBlendMinMax.h"
 
-#include "EXTBlendMinMax.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -61,8 +60,8 @@ private:
 
 static const HashTableValue JSEXTBlendMinMaxPrototypeTableValues[] =
 {
-    { "MIN_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8007), (intptr_t) (0) },
-    { "MAX_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8008), (intptr_t) (0) },
+    { "MIN_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8007) } },
+    { "MAX_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8008) } },
 };
 
 const ClassInfo JSEXTBlendMinMaxPrototype::s_info = { "EXTBlendMinMaxPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTBlendMinMaxPrototype) };
@@ -75,9 +74,8 @@ void JSEXTBlendMinMaxPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEXTBlendMinMax::s_info = { "EXTBlendMinMax", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTBlendMinMax) };
 
-JSEXTBlendMinMax::JSEXTBlendMinMax(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTBlendMinMax>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTBlendMinMax::JSEXTBlendMinMax(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTBlendMinMax>&& impl)
+    : JSDOMWrapper<EXTBlendMinMax>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -97,15 +95,10 @@ void JSEXTBlendMinMax::destroy(JSC::JSCell* cell)
     thisObject->JSEXTBlendMinMax::~JSEXTBlendMinMax();
 }
 
-JSEXTBlendMinMax::~JSEXTBlendMinMax()
-{
-    releaseImpl();
-}
-
 bool JSEXTBlendMinMaxOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTBlendMinMax = jsCast<JSEXTBlendMinMax*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTBlendMinMax->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTBlendMinMax->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -113,7 +106,7 @@ void JSEXTBlendMinMaxOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsEXTBlendMinMax = jsCast<JSEXTBlendMinMax*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTBlendMinMax->impl(), jsEXTBlendMinMax);
+    uncacheWrapper(world, &jsEXTBlendMinMax->wrapped(), jsEXTBlendMinMax);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -124,6 +117,14 @@ extern "C" { extern void (*const __identifier("??_7EXTBlendMinMax@WebCore@@6B@")
 extern "C" { extern void* _ZTVN7WebCore14EXTBlendMinMaxE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinMax* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSEXTBlendMinMax>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinMax* impl)
 {
     if (!impl)
@@ -155,7 +156,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTBlendMinM
 EXTBlendMinMax* JSEXTBlendMinMax::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSEXTBlendMinMax*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

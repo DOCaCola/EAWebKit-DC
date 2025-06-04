@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSBeforeLoadEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BeforeLoadEvent>&& impl)
     {
-        JSBeforeLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEvent>(globalObject->vm().heap)) JSBeforeLoadEvent(structure, globalObject, WTF::move(impl));
+        JSBeforeLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeLoadEvent>(globalObject->vm().heap)) JSBeforeLoadEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    BeforeLoadEvent& impl() const
+    BeforeLoadEvent& wrapped() const
     {
-        return static_cast<BeforeLoadEvent&>(Base::impl());
+        return static_cast<BeforeLoadEvent&>(Base::wrapped());
     }
 protected:
-    JSBeforeLoadEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<BeforeLoadEvent>&&);
+    JSBeforeLoadEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<BeforeLoadEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

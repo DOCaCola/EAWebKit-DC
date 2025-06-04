@@ -22,8 +22,8 @@
 #include "JSHTMLParagraphElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLParagraphElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -63,49 +63,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLParagraphElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLParagraphElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLParagraphElement> JSHTMLParagraphElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLParagraphElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLParagraphElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElementConstructor>(vm.heap)) JSHTMLParagraphElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLParagraphElementConstructor::s_info = { "HTMLParagraphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementConstructor) };
-
-JSHTMLParagraphElementConstructor::JSHTMLParagraphElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLParagraphElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLParagraphElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLParagraphElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLParagraphElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLParagraphElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLParagraphElementConstructor::s_info = { "HTMLParagraphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLParagraphElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLParagraphElementAlign) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLParagraphElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLParagraphElementAlign) } },
 };
 
 const ClassInfo JSHTMLParagraphElementPrototype::s_info = { "HTMLParagraphElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElementPrototype) };
@@ -118,7 +92,7 @@ void JSHTMLParagraphElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLParagraphElement::s_info = { "HTMLParagraphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLParagraphElement) };
 
-JSHTMLParagraphElement::JSHTMLParagraphElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLParagraphElement>&& impl)
+JSHTMLParagraphElement::JSHTMLParagraphElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLParagraphElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -133,46 +107,46 @@ JSObject* JSHTMLParagraphElement::getPrototype(VM& vm, JSGlobalObject* globalObj
     return getDOMPrototype<JSHTMLParagraphElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLParagraphElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLParagraphElementAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLParagraphElement* castedThis = jsDynamicCast<JSHTMLParagraphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLParagraphElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLParagraphElement", "align");
-        return throwGetterTypeError(*exec, "HTMLParagraphElement", "align");
+            return reportDeprecatedGetterError(*state, "HTMLParagraphElement", "align");
+        return throwGetterTypeError(*state, "HTMLParagraphElement", "align");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLParagraphElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLParagraphElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLParagraphElementPrototype* domObject = jsDynamicCast<JSHTMLParagraphElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLParagraphElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLParagraphElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLParagraphElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLParagraphElementAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLParagraphElement* castedThis = jsDynamicCast<JSHTMLParagraphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLParagraphElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLParagraphElement", "align");
+            reportDeprecatedSetterError(*state, "HTMLParagraphElement", "align");
         else
-            throwSetterTypeError(*exec, "HTMLParagraphElement", "align");
+            throwSetterTypeError(*state, "HTMLParagraphElement", "align");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
 }
@@ -180,7 +154,7 @@ void setJSHTMLParagraphElementAlign(ExecState* exec, JSObject* baseObject, Encod
 
 JSValue JSHTMLParagraphElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLParagraphElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLParagraphElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

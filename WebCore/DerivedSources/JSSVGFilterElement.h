@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFilterElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFilterElement>&& impl)
     {
-        JSSVGFilterElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFilterElement>(globalObject->vm().heap)) JSSVGFilterElement(structure, globalObject, WTF::move(impl));
+        JSSVGFilterElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFilterElement>(globalObject->vm().heap)) JSSVGFilterElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFilterElement& impl() const
+    SVGFilterElement& wrapped() const
     {
-        return static_cast<SVGFilterElement&>(Base::impl());
+        return static_cast<SVGFilterElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFilterElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFilterElement>&&);
+    JSSVGFilterElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFilterElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

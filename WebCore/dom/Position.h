@@ -128,11 +128,11 @@ public:
     // will be treated as before ignoredNode (thus node() is really after the position, not containing it).
     Node* deprecatedNode() const { return m_anchorNode.get(); }
 
-    Document* document() const { return m_anchorNode ? &m_anchorNode->document() : 0; }
+    Document* document() const { return m_anchorNode ? &m_anchorNode->document() : nullptr; }
     Element* rootEditableElement() const
     {
         Node* container = containerNode();
-        return container ? container->rootEditableElement() : 0;
+        return container ? container->rootEditableElement() : nullptr;
     }
 
     // These should only be used for PositionIsOffsetInAnchor positions, unless
@@ -207,7 +207,10 @@ public:
     void showAnchorTypeAndOffset() const;
     void showTreeForThis() const;
 #endif
-    
+
+    // This is a tentative enhancement of operator== to account for different position types.
+    // FIXME: Combine this function with operator==
+    bool equals(const Position&) const;
 private:
     WEBCORE_EXPORT int offsetForPositionAfterAnchor() const;
     

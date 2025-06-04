@@ -23,10 +23,10 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "JSStorage.h"
 #include "Storage.h"
-#include "StorageEvent.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -74,51 +74,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSStorageEventConstructor : public DOMConstructorObject {
-private:
-    JSStorageEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSStorageEvent> JSStorageEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSStorageEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSStorageEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSStorageEventConstructor>(vm.heap)) JSStorageEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSStorageEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSStorageEventConstructor::constructJSStorageEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSStorageEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSStorageEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSStorageEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     StorageEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillStorageEventInit(eventInit, dictionary))
@@ -126,7 +106,7 @@ EncodedJSValue JSC_HOST_CALL JSStorageEventConstructor::constructJSStorageEvent(
     }
 
     RefPtr<StorageEvent> event = StorageEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillStorageEventInit(StorageEventInit& eventInit, JSDictionary& dictionary)
@@ -147,39 +127,26 @@ bool fillStorageEventInit(StorageEventInit& eventInit, JSDictionary& dictionary)
     return true;
 }
 
-const ClassInfo JSStorageEventConstructor::s_info = { "StorageEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageEventConstructor) };
-
-JSStorageEventConstructor::JSStorageEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSStorageEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSStorageEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSStorageEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSStorageEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("StorageEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSStorageEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSStorageEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSStorageEventConstructor::s_info = { "StorageEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSStorageEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "key", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "oldValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventOldValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "newValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventNewValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "url", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "storageArea", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventStorageArea), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "initStorageEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsStorageEventPrototypeFunctionInitStorageEvent), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "key", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "oldValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventOldValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "newValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventNewValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "url", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "storageArea", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsStorageEventStorageArea), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initStorageEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsStorageEventPrototypeFunctionInitStorageEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSStorageEventPrototype::s_info = { "StorageEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageEventPrototype) };
@@ -192,7 +159,7 @@ void JSStorageEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSStorageEvent::s_info = { "StorageEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSStorageEvent) };
 
-JSStorageEvent::JSStorageEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<StorageEvent>&& impl)
+JSStorageEvent::JSStorageEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<StorageEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -207,135 +174,135 @@ JSObject* JSStorageEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSStorageEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsStorageEventKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStorageEventKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSStorageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StorageEvent", "key");
-        return throwGetterTypeError(*exec, "StorageEvent", "key");
+            return reportDeprecatedGetterError(*state, "StorageEvent", "key");
+        return throwGetterTypeError(*state, "StorageEvent", "key");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.key());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.key());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStorageEventOldValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStorageEventOldValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSStorageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StorageEvent", "oldValue");
-        return throwGetterTypeError(*exec, "StorageEvent", "oldValue");
+            return reportDeprecatedGetterError(*state, "StorageEvent", "oldValue");
+        return throwGetterTypeError(*state, "StorageEvent", "oldValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.oldValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.oldValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStorageEventNewValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStorageEventNewValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSStorageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StorageEvent", "newValue");
-        return throwGetterTypeError(*exec, "StorageEvent", "newValue");
+            return reportDeprecatedGetterError(*state, "StorageEvent", "newValue");
+        return throwGetterTypeError(*state, "StorageEvent", "newValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.newValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.newValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStorageEventUrl(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStorageEventUrl(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSStorageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StorageEvent", "url");
-        return throwGetterTypeError(*exec, "StorageEvent", "url");
+            return reportDeprecatedGetterError(*state, "StorageEvent", "url");
+        return throwGetterTypeError(*state, "StorageEvent", "url");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.url());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.url());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStorageEventStorageArea(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsStorageEventStorageArea(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSStorageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "StorageEvent", "storageArea");
-        return throwGetterTypeError(*exec, "StorageEvent", "storageArea");
+            return reportDeprecatedGetterError(*state, "StorageEvent", "storageArea");
+        return throwGetterTypeError(*state, "StorageEvent", "storageArea");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.storageArea()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.storageArea()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsStorageEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsStorageEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSStorageEventPrototype* domObject = jsDynamicCast<JSStorageEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSStorageEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSStorageEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSStorageEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSStorageEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSStorageEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsStorageEventPrototypeFunctionInitStorageEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsStorageEventPrototypeFunctionInitStorageEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSStorageEvent* castedThis = jsDynamicCast<JSStorageEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "StorageEvent", "initStorageEvent");
+        return throwThisTypeError(*state, "StorageEvent", "initStorageEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSStorageEvent::info());
-    auto& impl = castedThis->impl();
-    String typeArg = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String typeArg = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool canBubbleArg = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool canBubbleArg = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool cancelableArg = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool cancelableArg = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String keyArg = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String keyArg = state->argument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String oldValueArg = valueToStringWithNullCheck(exec, exec->argument(4));
-    if (UNLIKELY(exec->hadException()))
+    String oldValueArg = valueToStringWithNullCheck(state, state->argument(4));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String newValueArg = valueToStringWithNullCheck(exec, exec->argument(5));
-    if (UNLIKELY(exec->hadException()))
+    String newValueArg = valueToStringWithNullCheck(state, state->argument(5));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String urlArg = exec->argument(6).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String urlArg = state->argument(6).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Storage* storageAreaArg = JSStorage::toWrapped(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    Storage* storageAreaArg = JSStorage::toWrapped(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.initStorageEvent(typeArg, canBubbleArg, cancelableArg, keyArg, oldValueArg, newValueArg, urlArg, storageAreaArg);
     return JSValue::encode(jsUndefined());

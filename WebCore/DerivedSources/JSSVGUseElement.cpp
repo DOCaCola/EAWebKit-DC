@@ -22,10 +22,10 @@
 #include "JSSVGUseElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGUseElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -67,54 +67,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGUseElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGUseElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGUseElement> JSSVGUseElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGUseElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGUseElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGUseElementConstructor>(vm.heap)) JSSVGUseElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGUseElementConstructor::s_info = { "SVGUseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUseElementConstructor) };
-
-JSSVGUseElementConstructor::JSSVGUseElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGUseElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGUseElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGUseElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGUseElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGUseElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGUseElementConstructor::s_info = { "SVGUseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUseElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGUseElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGUseElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGUseElementPrototype::s_info = { "SVGUseElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUseElementPrototype) };
@@ -127,7 +101,7 @@ void JSSVGUseElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGUseElement::s_info = { "SVGUseElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGUseElement) };
 
-JSSVGUseElement::JSSVGUseElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGUseElement>&& impl)
+JSSVGUseElement::JSSVGUseElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGUseElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -142,125 +116,125 @@ JSObject* JSSVGUseElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGUseElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGUseElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "x");
-        return throwGetterTypeError(*exec, "SVGUseElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "x");
+        return throwGetterTypeError(*state, "SVGUseElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "y");
-        return throwGetterTypeError(*exec, "SVGUseElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "y");
+        return throwGetterTypeError(*state, "SVGUseElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "width");
-        return throwGetterTypeError(*exec, "SVGUseElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "width");
+        return throwGetterTypeError(*state, "SVGUseElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "height");
-        return throwGetterTypeError(*exec, "SVGUseElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "height");
+        return throwGetterTypeError(*state, "SVGUseElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGUseElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGUseElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGUseElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGUseElement* castedThis = jsDynamicCast<JSSVGUseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGUseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGUseElement", "href");
-        return throwGetterTypeError(*exec, "SVGUseElement", "href");
+            return reportDeprecatedGetterError(*state, "SVGUseElement", "href");
+        return throwGetterTypeError(*state, "SVGUseElement", "href");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGUseElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGUseElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGUseElementPrototype* domObject = jsDynamicCast<JSSVGUseElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGUseElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGUseElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGUseElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGUseElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGUseElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

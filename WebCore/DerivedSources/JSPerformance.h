@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSPerformance : public JSDOMWrapper {
+class JSPerformance : public JSDOMWrapper<Performance> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Performance> Base;
     static JSPerformance* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Performance>&& impl)
     {
-        JSPerformance* ptr = new (NotNull, JSC::allocateCell<JSPerformance>(globalObject->vm().heap)) JSPerformance(structure, globalObject, WTF::move(impl));
+        JSPerformance* ptr = new (NotNull, JSC::allocateCell<JSPerformance>(globalObject->vm().heap)) JSPerformance(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Performance* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPerformance();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    Performance& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Performance* m_impl;
 protected:
-    JSPerformance(JSC::Structure*, JSDOMGlobalObject*, Ref<Performance>&&);
+    JSPerformance(JSC::Structure*, JSDOMGlobalObject&, Ref<Performance>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Performance*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Performance*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Performance& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Performance& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Performance*);
 
 
 } // namespace WebCore

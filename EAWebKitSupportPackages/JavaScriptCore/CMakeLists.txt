@@ -5,7 +5,7 @@ project(
   LANGUAGES C CXX ASM_MASM
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB LOCAL_DIR "local")
@@ -106,6 +106,7 @@ list(REMOVE_ITEM JAVASCRIPTCORE_SOURCES
   "${LOCAL_DIR}/JavaScriptCore/API/JSStringRefBSTR.cpp"
   "${LOCAL_DIR}/JavaScriptCore/API/JSStringRefCF.cpp"
   "${LOCAL_DIR}/JavaScriptCore/bytecode/SamplingTool.cpp"
+  "${LOCAL_DIR}/JavaScriptCore/ftl/FTLCommonValues.cpp"
   "${LOCAL_DIR}/JavaScriptCore/inspector/EventLoop.cpp"
   "${LOCAL_DIR}/JavaScriptCore/inspector/JSGlobalObjectConsoleClient.cpp"
   "${LOCAL_DIR}/JavaScriptCore/inspector/JSGlobalObjectInspectorController.cpp"

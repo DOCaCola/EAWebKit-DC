@@ -22,7 +22,6 @@
 #include "JSCSSSupportsRule.h"
 
 #include "CSSRuleList.h"
-#include "CSSSupportsRule.h"
 #include "ExceptionCode.h"
 #include "JSCSSRuleList.h"
 #include "JSDOMBinding.h"
@@ -74,10 +73,10 @@ private:
 
 static const HashTableValue JSCSSSupportsRulePrototypeTableValues[] =
 {
-    { "cssRules", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "conditionText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleConditionText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "insertRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionInsertRule), (intptr_t) (0) },
-    { "deleteRule", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionDeleteRule), (intptr_t) (0) },
+    { "cssRules", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleCssRules), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "conditionText", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSSupportsRuleConditionText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "insertRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionInsertRule), (intptr_t) (0) } },
+    { "deleteRule", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSSupportsRulePrototypeFunctionDeleteRule), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSSupportsRulePrototype::s_info = { "CSSSupportsRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSSupportsRulePrototype) };
@@ -90,7 +89,7 @@ void JSCSSSupportsRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSSupportsRule::s_info = { "CSSSupportsRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSSupportsRule) };
 
-JSCSSSupportsRule::JSCSSSupportsRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSSupportsRule>&& impl)
+JSCSSSupportsRule::JSCSSSupportsRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSSupportsRule>&& impl)
     : JSCSSRule(structure, globalObject, WTF::move(impl))
 {
 }
@@ -105,75 +104,75 @@ JSObject* JSCSSSupportsRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCSSSupportsRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSSupportsRuleCssRules(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSSupportsRuleCssRules(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSSupportsRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSSupportsRule", "cssRules");
-        return throwGetterTypeError(*exec, "CSSSupportsRule", "cssRules");
+            return reportDeprecatedGetterError(*state, "CSSSupportsRule", "cssRules");
+        return throwGetterTypeError(*state, "CSSSupportsRule", "cssRules");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.cssRules()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSSupportsRuleConditionText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSSupportsRuleConditionText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSSupportsRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSSupportsRule", "conditionText");
-        return throwGetterTypeError(*exec, "CSSSupportsRule", "conditionText");
+            return reportDeprecatedGetterError(*state, "CSSSupportsRule", "conditionText");
+        return throwGetterTypeError(*state, "CSSSupportsRule", "conditionText");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.conditionText());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.conditionText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionInsertRule(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionInsertRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSSupportsRule", "insertRule");
+        return throwThisTypeError(*state, "CSSSupportsRule", "insertRule");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSSupportsRule::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String rule = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String rule = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.insertRule(rule, index, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionDeleteRule(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSSupportsRulePrototypeFunctionDeleteRule(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSSupportsRule* castedThis = jsDynamicCast<JSCSSSupportsRule*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSSupportsRule", "deleteRule");
+        return throwThisTypeError(*state, "CSSSupportsRule", "deleteRule");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSSupportsRule::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteRule(index, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 

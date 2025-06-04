@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSTestObj : public JSDOMWrapper {
+class JSTestObj : public JSDOMWrapper<TestObj> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TestObj> Base;
     static JSTestObj* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TestObj>&& impl)
     {
-        JSTestObj* ptr = new (NotNull, JSC::allocateCell<JSTestObj>(globalObject->vm().heap)) JSTestObj(structure, globalObject, WTF::move(impl));
+        JSTestObj* ptr = new (NotNull, JSC::allocateCell<JSTestObj>(globalObject->vm().heap)) JSTestObj(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static TestObj* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTestObj();
 
     DECLARE_INFO;
 
@@ -52,28 +51,23 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_cachedAttribute1;
-    JSC::WriteBarrier<JSC::Unknown> m_cachedAttribute2;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_cachedAttribute1;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_cachedAttribute2;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue customAttr(JSC::ExecState*) const;
-    void setCustomAttr(JSC::ExecState*, JSC::JSValue);
+    JSC::JSValue customAttr(JSC::ExecState&) const;
+    void setCustomAttr(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue customMethod(JSC::ExecState*);
-    JSC::JSValue customMethodWithArgs(JSC::ExecState*);
-    static JSC::JSValue classMethod2(JSC::ExecState*);
-    TestObj& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TestObj* m_impl;
+    JSC::JSValue customMethod(JSC::ExecState&);
+    JSC::JSValue customMethodWithArgs(JSC::ExecState&);
+    static JSC::JSValue classMethod2(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTestObj(JSC::Structure*, JSDOMGlobalObject*, Ref<TestObj>&&);
+    JSTestObj(JSC::Structure*, JSDOMGlobalObject&, Ref<TestObj>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -96,7 +90,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TestObj*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TestObj*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TestObj& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TestObj& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TestObj*);
 
 // Functions
 

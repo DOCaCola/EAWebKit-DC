@@ -98,26 +98,28 @@ namespace WebCore {
 
 static void FillRectWithSolidBorder(const PaintInfo& i, const IntRect& r, const Color fillColor = Color::lightGray, const Color strokeColor = Color::black)
 {
-    i.context->save();
+    GraphicsContext& graphicsContext = i.context();
+    graphicsContext.save();
     
-	i.context->setFillColor(fillColor, ColorSpaceDeviceRGB);
-    i.context->setStrokeColor(strokeColor, ColorSpaceDeviceRGB);
-    i.context->setStrokeStyle(SolidStroke);
-    i.context->setStrokeThickness(1.0f);
-    i.context->drawRect(r);   
+	graphicsContext.setFillColor(fillColor);
+    graphicsContext.setStrokeColor(strokeColor);
+    graphicsContext.setStrokeStyle(SolidStroke);
+    graphicsContext.setStrokeThickness(1.0f);
+    graphicsContext.drawRect(r);   
     
-	i.context->restore();
+	graphicsContext.restore();
 }
 
 static void FillRectWithoutBorder(const PaintInfo& i, const IntRect& r, const Color fillColor = Color::lightGray)
 {
-    i.context->save();
+    GraphicsContext& graphicsContext = i.context();
+    graphicsContext.save();
    
-	i.context->setFillColor(fillColor, ColorSpaceDeviceRGB);
-    i.context->setStrokeStyle(NoStroke);
-    i.context->drawRect(r);   
+	graphicsContext.setFillColor(fillColor);
+    graphicsContext.setStrokeStyle(NoStroke);
+    graphicsContext.drawRect(r);   
     
-	i.context->restore();
+	graphicsContext.restore();
 }
 
 Ref<RenderTheme> RenderThemeEA::create(Page* page)
@@ -269,7 +271,7 @@ Color RenderThemeEA::platformInactiveListBoxSelectionForegroundColor() const
 	return c;
 }
 
-void RenderThemeEA::updateCachedSystemFontDescription(CSSValueID propId, FontDescription& fd) const
+void RenderThemeEA::updateCachedSystemFontDescription(CSSValueID systemFontID, FontCascadeDescription& fd) const
 {
     // This function is called to retrieve system font information. System fonts
     // refer to "operating system" fonts used in operating system GUI elements such
@@ -279,9 +281,9 @@ void RenderThemeEA::updateCachedSystemFontDescription(CSSValueID propId, FontDes
     const EA::WebKit::Parameters& param = EA::WebKit::GetParameters();
 
 	uint32_t fontSize = param.mSystemFontSize;
-	if(propId == CSSValueWebkitSmallControl)
+	if(systemFontID == CSSValueWebkitSmallControl)
 		fontSize -= 2;
-	if (propId == CSSValueWebkitMiniControl)
+	if (systemFontID == CSSValueWebkitMiniControl)
 		fontSize -= 4;
 
     if(param.mSystemFont[0])
@@ -289,7 +291,6 @@ void RenderThemeEA::updateCachedSystemFontDescription(CSSValueID propId, FontDes
         fd.setOneFamily(param.mSystemFont);
         fd.setSpecifiedSize((float)param.mSystemFontSize);
         fd.setIsAbsoluteSize(true);
-		fd.setSmallCaps(FontSmallCapsOff);
         fd.setWeight(param.mSystemFontBold ? WebCore::FontWeightBold : WebCore::FontWeightNormal);
 		fd.setItalic(param.mSystemFontItalic ? FontItalicOn : FontItalicOff);
     }
@@ -317,7 +318,8 @@ bool RenderThemeEA::paintCheckbox(const RenderObject& o, const PaintInfo& i, con
 	const bool enabledFlag = isEnabled(o);
     const bool hoveredFlag = isHovered(o);
 
-    i.context->save();
+    GraphicsContext& graphicsContext = i.context();
+    graphicsContext.save();
     // Draw the outer box
     Color strokeCol(Color::black);
     Color fillCol(EA::WebKit::GetThemeParameters().mBoxEnabledFillColor);
@@ -350,12 +352,12 @@ bool RenderThemeEA::paintCheckbox(const RenderObject& o, const PaintInfo& i, con
         IntPoint bottom( a.x() + halfW, a.y() + halfH + quarterH );  
         IntPoint right( a.x() + halfH + quarterW, a.y() + quarterH );
 
-        i.context->setStrokeColor(EA::WebKit::GetThemeParameters().mCheckMarkColor, ColorSpaceDeviceRGB);
-        i.context->setStrokeThickness(2.0f);
-        i.context->drawLine(left, bottom);
-        i.context->drawLine(bottom,right);       
+        graphicsContext.setStrokeColor(EA::WebKit::GetThemeParameters().mCheckMarkColor);
+        graphicsContext.setStrokeThickness(2.0f);
+        graphicsContext.drawLine(left, bottom);
+        graphicsContext.drawLine(bottom,right);       
     }
-    i.context->restore();
+    graphicsContext.restore();
 
     return false;
 }
@@ -376,7 +378,8 @@ bool RenderThemeEA::paintRadio(const RenderObject& o, const PaintInfo& i, const 
 	const bool enabledFlag = isEnabled(o);
     const bool hoveredFlag = isHovered(o);
 
-    i.context->save();
+    GraphicsContext& graphicsContext = i.context();
+    graphicsContext.save();
     
     // Draw the outer circle
     Color strokeCol(Color::black);
@@ -387,19 +390,19 @@ bool RenderThemeEA::paintRadio(const RenderObject& o, const PaintInfo& i, const 
         fillCol = Color::white;
     }
    
-    i.context->setStrokeColor(strokeCol, ColorSpaceDeviceRGB);
-    i.context->setFillColor(fillCol, ColorSpaceDeviceRGB);
-    i.context->setStrokeStyle(SolidStroke);
-    i.context->setStrokeThickness(1.0f);
-    i.context->drawEllipse(r);
+    graphicsContext.setStrokeColor(strokeCol);
+    graphicsContext.setFillColor(fillCol);
+    graphicsContext.setStrokeStyle(SolidStroke);
+    graphicsContext.setStrokeThickness(1.0f);
+    graphicsContext.drawEllipse(r);
 
      // Draw on mouse over
     if((hoveredFlag) && (enabledFlag))
     {
-        i.context->setFillColor(0, ColorSpaceDeviceRGB);    // 0 alpha shuts off the fill
-        i.context->setStrokeColor(EA::WebKit::GetThemeParameters().mHoverHighlightColor, ColorSpaceDeviceRGB);
+        graphicsContext.setFillColor(0);    // 0 alpha shuts off the fill
+        graphicsContext.setStrokeColor(EA::WebKit::GetThemeParameters().mHoverHighlightColor);
         IntRect selectRect(r.x() + 1, r.y() + 1, r.width() -2, r.height() -2 );
-        i.context->drawEllipse(selectRect);
+        graphicsContext.drawEllipse(selectRect);
     }
 
 
@@ -416,11 +419,11 @@ bool RenderThemeEA::paintRadio(const RenderObject& o, const PaintInfo& i, const 
             h++;
 
         IntRect innerRect( r.x() + (w >>2), r.y() + (h >>2), (r.width() >>1), (r.height() >>1) );  
-        i.context->setFillColor(EA::WebKit::GetThemeParameters().mCheckMarkColor, ColorSpaceDeviceRGB);
-        i.context->setStrokeStyle(NoStroke);
-        i.context->drawEllipse(innerRect);
+        graphicsContext.setFillColor(EA::WebKit::GetThemeParameters().mCheckMarkColor);
+        graphicsContext.setStrokeStyle(NoStroke);
+        graphicsContext.drawEllipse(innerRect);
     }
-    i.context->restore();
+    graphicsContext.restore();
 
     return false;
 }
@@ -430,7 +433,7 @@ void RenderThemeEA::adjustButtonStyle(StyleResolver& resolver, RenderStyle& styl
     // White-space is locked to pre
     style.setWhiteSpace(PRE);
 
-    FontDescription fontDescription = style.fontDescription();
+    FontCascadeDescription fontDescription = style.fontDescription();
     fontDescription.setIsAbsoluteSize(true);
     fontDescription.setSpecifiedSize(style.fontSize());
     fontDescription.setComputedSize(style.fontSize());
@@ -468,10 +471,10 @@ void RenderThemeEA::paintEdgeHighlights(GraphicsContext* context,const IntRect& 
 	
 	context->setStrokeThickness(1.0f); 
 	context->setStrokeStyle(SolidStroke);
-	context->setStrokeColor(Color::black, ColorSpaceDeviceRGB);
+	context->setStrokeColor(Color::black);
 	context->drawLine(p2, p4);
 	context->drawLine(p3, p5);
-	context->setStrokeColor(Color::white, ColorSpaceDeviceRGB);
+	context->setStrokeColor(Color::white);
 	context->drawLine(p1, p2);
 	context->drawLine(p1, p3);
 	
@@ -479,22 +482,23 @@ void RenderThemeEA::paintEdgeHighlights(GraphicsContext* context,const IntRect& 
 }
 bool RenderThemeEA::paintButton(const RenderObject& o, const PaintInfo& i, const IntRect& r)
 {
-	i.context->save();
-	i.context->setFillColor(o.style().visitedDependentColor(CSSPropertyBackgroundColor), ColorSpaceDeviceRGB);
+	GraphicsContext& graphicsContext = i.context();
+	graphicsContext.save();
+	graphicsContext.setFillColor(o.style().visitedDependentColor(CSSPropertyBackgroundColor));
 	if(isHovered(o))
 	{
-		i.context->setStrokeColor(EA::WebKit::GetThemeParameters().mHoverHighlightColor, ColorSpaceDeviceRGB);
-		i.context->setStrokeStyle(SolidStroke);
+		graphicsContext.setStrokeColor(EA::WebKit::GetThemeParameters().mHoverHighlightColor);
+		graphicsContext.setStrokeStyle(SolidStroke);
 	}
 	else
 	{
-		i.context->setStrokeStyle(NoStroke);
+		graphicsContext.setStrokeStyle(NoStroke);
 	}
 	//resizing the rect to a smaller rect gives the "click" effect.
 	WebCore::IntRect rect = isPressed(o) ? WebCore::IntRect(r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2) : r;
-	i.context->drawRect(rect);
-	paintEdgeHighlights(i.context,rect);//this gives a slightly raised effect to the button
-	i.context->restore();
+	graphicsContext.drawRect(rect);
+	paintEdgeHighlights(&graphicsContext,rect);//this gives a slightly raised effect to the button
+	graphicsContext.restore();
 
 	return false;
 }
@@ -527,15 +531,16 @@ void RenderThemeEA::adjustTextFieldStyle(StyleResolver&, RenderStyle& style, Ele
 bool RenderThemeEA::paintTextField(const RenderObject& o, const PaintInfo& i, const FloatRect& r)
 {
     Color c = isEnabled(o) ? o.style().visitedDependentColor(CSSPropertyBackgroundColor) : EA::WebKit::GetThemeParameters().mBoxDisabledFillColor;
-        
-	i.context->save();
+
+    GraphicsContext& graphicsContext = i.context();
+	graphicsContext.save();
 		
-	i.context->setFillColor(c, ColorSpaceDeviceRGB);   
-	i.context->setStrokeColor(ThemeEA::kTextFieldBorderColor, ColorSpaceDeviceRGB);
-	i.context->setStrokeStyle(SolidStroke);
-	i.context->drawRect(r); 
+	graphicsContext.setFillColor(c);   
+	graphicsContext.setStrokeColor(ThemeEA::kTextFieldBorderColor);
+	graphicsContext.setStrokeStyle(SolidStroke);
+	graphicsContext.drawRect(r); 
 		
-	i.context->restore();
+	graphicsContext.restore();
 	return false;
 }
 
@@ -580,18 +585,20 @@ void RenderThemeEA::adjustMenuListStyle(StyleResolver&, RenderStyle& style, Elem
 
 bool RenderThemeEA::paintMenuList(const RenderObject& o, const PaintInfo& i, const FloatRect& r)
 {
-    i.context->save();
-    i.context->setStrokeStyle(SolidStroke);
-    i.context->setStrokeColor(Color::black, ColorSpaceDeviceRGB);
-	i.context->setFillColor(o.style().visitedDependentColor(CSSPropertyBackgroundColor), ColorSpaceDeviceRGB);   
-	i.context->drawRect(r);
+    auto& graphicsContext = i.context();
+
+    graphicsContext.save();
+    graphicsContext.setStrokeStyle(SolidStroke);
+    graphicsContext.setStrokeColor(Color::black);
+	graphicsContext.setFillColor(o.style().visitedDependentColor(CSSPropertyBackgroundColor));   
+	graphicsContext.drawRect(r);
 		
 	// Fill in arrow background color as a square.
 	Color fillCol = isHovered(o) ? EA::WebKit::GetThemeParameters().mBoxDisabledFillColor : Color::lightGray;
     WebCore::IntRect rect(r.x() + r.width() - ThemeEA::kPopupMenuArrowSize, r.y() , ThemeEA::kPopupMenuArrowSize, r.height());
-	i.context->setFillColor(fillCol, ColorSpaceDeviceRGB);   
-	i.context->drawRect(rect);
-	paintEdgeHighlights(i.context,rect);
+	graphicsContext.setFillColor(fillCol);   
+	graphicsContext.drawRect(rect);
+	paintEdgeHighlights(&graphicsContext,rect);
 		
     // Draw arrow
     float arrowW  = ((float)ThemeEA::kPopupMenuArrowSize)/4.0f;
@@ -603,9 +610,9 @@ bool RenderThemeEA::paintMenuList(const RenderObject& o, const PaintInfo& i, con
     pts[1].set(arrowX + arrowW, arrowY);
     pts[2].set(arrowX, arrowY + arrowW);
 
-    i.context->setFillColor(Color::black, ColorSpaceDeviceRGB);
-    i.context->drawConvexPolygon(3, pts, true);
-    i.context->restore();
+    graphicsContext.setFillColor(Color::black);
+    graphicsContext.drawConvexPolygon(3, pts, true);
+    graphicsContext.restore();
     return false;  
 }
 
@@ -667,24 +674,26 @@ bool RenderThemeEA::paintSliderTrack(const RenderObject& o, const PaintInfo& pi,
     IntPoint left( r.x(), r.y() + offsetH);  
     IntPoint right( r.x() + r.width(), r.y() + offsetH );
 
-    // Top line 
-    pi.context->save();
-    pi.context->setStrokeStyle(SolidStroke);
-    pi.context->setStrokeThickness(1.0f);
-    pi.context->setStrokeColor(0xffa8a8a8, ColorSpaceDeviceRGB);
-    pi.context->drawLine(left, right);  
+    GraphicsContext& graphicsContext = pi.context();
+
+    // Top line
+    graphicsContext.save();
+    graphicsContext.setStrokeStyle(SolidStroke);
+    graphicsContext.setStrokeThickness(1.0f);
+    graphicsContext.setStrokeColor(0xffa8a8a8);
+    graphicsContext.drawLine(left, right);  
 
     // Left edge 
     const IntPoint bottom(left.x(), left.y() + 4);    // +4 = 1  thickness + 3 thickness
-    pi.context->drawLine(left, bottom); 
+    graphicsContext.drawLine(left, bottom); 
 
     // Highlight line.
     left.move(1,2); // Offset by 1 in X so not to erase the vertical edge (left-bottom).
     right.move(0,2);
-    pi.context->setStrokeThickness(3.0f);
-	pi.context->setStrokeColor(ThemeEA::kSliderTrackHighlight, ColorSpaceDeviceRGB);
-    pi.context->drawLine(left, right); // Bottom line
-    pi.context->restore();
+    graphicsContext.setStrokeThickness(3.0f);
+	graphicsContext.setStrokeColor(ThemeEA::kSliderTrackHighlight);
+    graphicsContext.drawLine(left, right); // Bottom line
+    graphicsContext.restore();
       
     return false;
 }
@@ -697,12 +706,14 @@ void RenderThemeEA::adjustSliderTrackStyle(StyleResolver&, RenderStyle& style, E
 bool RenderThemeEA::paintSliderThumb(const RenderObject& o, const PaintInfo& pi,
                                      const IntRect& r)
 {
-    pi.context->save();
-    pi.context->setStrokeThickness(1.0f);
-    pi.context->setStrokeStyle(SolidStroke);
-    pi.context->setStrokeColor(ThemeEA::kSliderThumbBorderColor, ColorSpaceDeviceRGB);
-    pi.context->setFillColor(ThemeEA::kSliderThumbFillColor, ColorSpaceDeviceRGB);
-    pi.context->drawEllipse(r);
+    GraphicsContext& graphicsContext = pi.context();
+
+    graphicsContext.save();
+    graphicsContext.setStrokeThickness(1.0f);
+    graphicsContext.setStrokeStyle(SolidStroke);
+    graphicsContext.setStrokeColor(ThemeEA::kSliderThumbBorderColor);
+    graphicsContext.setFillColor(ThemeEA::kSliderThumbFillColor);
+    graphicsContext.drawEllipse(r);
 
     // Draw the highlight
     const int kHightlightOffsetX = 1;
@@ -710,9 +721,9 @@ bool RenderThemeEA::paintSliderThumb(const RenderObject& o, const PaintInfo& pi,
     const IntPoint center(r.center());
     const IntPoint top( center.x() + kHightlightOffsetX, center.y() - kHightlightOffsetY); // offset from center +1 and  
     const IntPoint bottom( center.x() + kHightlightOffsetX, center.y() + kHightlightOffsetY);  
-    pi.context->setStrokeColor(Color::white, ColorSpaceDeviceRGB);
-    pi.context->drawLine(top, bottom); 
-    pi.context->restore();
+    graphicsContext.setStrokeColor(Color::white);
+    graphicsContext.drawLine(top, bottom); 
+    graphicsContext.restore();
 
     return false;
 }
@@ -797,7 +808,10 @@ bool RenderThemeEA::paintSearchFieldCancelButton(const RenderObject& o, const Pa
 
 	static Image* cancelImage = Image::loadPlatformResource("searchCancel").leakRef();
 	static Image* cancelPressedImage = Image::loadPlatformResource("searchCancelPressed").leakRef();
-	pi.context->drawImage(isPressed(o) ? cancelPressedImage : cancelImage, o.style().colorSpace(), bounds);
+    if (isPressed(o))
+    	pi.context().drawImage(*cancelPressedImage, bounds);
+    else
+		pi.context().drawImage(*cancelImage, bounds);
 	return false;
 }
 
@@ -850,7 +864,7 @@ bool RenderThemeEA::paintSearchFieldResultsDecorationPart(const RenderObject& o,
 	bounds.setY(parentBox.y() + (parentBox.height() - bounds.height() + 1) / 2);
 
 	static Image* magnifierImage = Image::loadPlatformResource("searchMagnifier").leakRef();
-	pi.context->drawImage(magnifierImage, o.style().colorSpace(), bounds);
+	pi.context().drawImage(*magnifierImage, bounds);
 	return false;
 }
 
@@ -886,7 +900,7 @@ bool RenderThemeEA::paintSearchFieldResultsButton(const RenderObject& o, const P
 	bounds.setY(parentBox.y() + (parentBox.height() - bounds.height() + 1) / 2);
 
 	static Image* magnifierImage = Image::loadPlatformResource("searchMagnifier"/*"searchMagnifierResults"*/).leakRef();
-	paintInfo.context->drawImage(magnifierImage, o.style().colorSpace(), bounds);
+	paintInfo.context().drawImage(*magnifierImage, bounds);
 	return false;
 }
 
@@ -934,18 +948,20 @@ bool RenderThemeEA::paintMediaPlayButton(const RenderObject& o, const PaintInfo&
         if (pPlayer)
             paused = pPlayer->paused();    
     }
+
+    GraphicsContext& graphicsContext = i.context();
     
-    i.context->save();   
-    i.context->setFillColor(Color::black, ColorSpaceDeviceRGB);
-    i.context->setStrokeStyle(NoStroke);
+	graphicsContext.save();   
+    graphicsContext.setFillColor(Color::black);
+    graphicsContext.setStrokeStyle(NoStroke);
     if (!paused)
     {
         // build 2 a small rects
         int stepW = r.width() / 5;  
         IntRect box( r.x() + stepW, (center.y() - (offsetH)), stepW, offsetH << 1);
-        i.context->drawRect(box);
+        graphicsContext.drawRect(box);
         box.setX(box.x() + stepW + stepW);
-        i.context->drawRect(box);    
+        graphicsContext.drawRect(box);    
     }
     else
     {
@@ -954,9 +970,9 @@ bool RenderThemeEA::paintMediaPlayButton(const RenderObject& o, const PaintInfo&
         pts[0].set((int) (center.x() - offsetW), (int) (center.y() - offsetH));
         pts[2].set((int) (center.x() + offsetW), (int) center.y());
         pts[1].set((int) (center.x() - offsetW), (int) (center.y() + offsetH));
-        i.context->drawConvexPolygon(3, pts, true);
+        i.context().drawConvexPolygon(3, pts, true);
     }
-    i.context->restore();
+    graphicsContext.restore();
    
     return false;
 }
@@ -989,16 +1005,19 @@ bool RenderThemeEA::paintMediaMuteButton(const RenderObject& obj, const PaintInf
     {
         c = kUnMutedColor;
     }
-    i.context->save();
+
+    GraphicsContext& graphicsContext = i.context();
+
+	graphicsContext.save();
    
-    i.context->setFillColor(c, ColorSpaceDeviceRGB);
-    i.context->drawConvexPolygon(3, pts, true);
+    graphicsContext.setFillColor(c);
+    graphicsContext.drawConvexPolygon(3, pts, true);
 
     // Build a small box
     IntRect box( (int) (center.x() - offsetW), (int) (center.y() - offsetH / 2.0f), (int) (offsetW), (int) (offsetH));
-    i.context->setStrokeStyle(NoStroke);
-    i.context->drawRect(box);
-    i.context->restore();
+    graphicsContext.setStrokeStyle(NoStroke);
+    graphicsContext.drawRect(box);
+    graphicsContext.restore();
 
     // (We could also add some vertical lines as sound waves when the speaker is active if needed).
 
@@ -1017,12 +1036,14 @@ bool RenderThemeEA::paintMediaSeekBackButton(const RenderObject& o , const Paint
     IntPoint p2(center.x() - offsetW, center.y());
     IntPoint p3(center.x() + offsetW, center.y() + offsetH);
 
-    i.context->save();   
-    i.context->setStrokeColor(Color::black, ColorSpaceDeviceRGB);
-    i.context->setStrokeThickness(1.0f);
-    i.context->drawLine(p1,p2);
-    i.context->drawLine(p2,p3);
-    i.context->restore();   
+    GraphicsContext& graphicsContext = i.context();
+
+    graphicsContext.save();
+    graphicsContext.setStrokeColor(Color::black);
+    graphicsContext.setStrokeThickness(1.0f);
+    graphicsContext.drawLine(p1,p2);
+    graphicsContext.drawLine(p2,p3);
+    graphicsContext.restore();   
 
     return false;    
 }
@@ -1038,12 +1059,14 @@ bool RenderThemeEA::paintMediaSeekForwardButton(const RenderObject& o, const Pai
     IntPoint p2(center.x() + offsetW, center.y());
     IntPoint p3(center.x() - offsetW, center.y() + offsetH);
 
-    i.context->save();   
-    i.context->setStrokeColor(Color::black, ColorSpaceDeviceRGB);
-    i.context->setStrokeThickness(1.0f);  
-    i.context->drawLine(p1,p2);
-    i.context->drawLine(p2,p3);
-    i.context->restore();       
+    GraphicsContext& graphicsContext = i.context();
+
+    graphicsContext.save();   
+    graphicsContext.setStrokeColor(Color::black);
+    graphicsContext.setStrokeThickness(1.0f);  
+    graphicsContext.drawLine(p1,p2);
+    graphicsContext.drawLine(p2,p3);
+    graphicsContext.restore();       
    
     return false;    
 }
@@ -1154,7 +1177,7 @@ double RenderThemeEA::caretBlinkInterval() const
 
 #if ENABLE(VIDEO)
 // To modify the slider location. 
-LayoutPoint RenderThemeEA::volumeSliderOffsetFromMuteButton(const RenderBox& muteButtonBox, const LayoutSize& size) const const
+LayoutPoint RenderThemeEA::volumeSliderOffsetFromMuteButton(const RenderBox& muteButtonBox, const LayoutSize& size) const
 {
     int y = -size.height();
     FloatPoint absPoint = muteButtonBox.localToAbsolute(FloatPoint(muteButtonBox.offsetLeft(), y), IsFixed | UseTransforms);

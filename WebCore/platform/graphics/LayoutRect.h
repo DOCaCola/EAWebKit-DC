@@ -39,6 +39,8 @@
 
 namespace WebCore {
 
+class TextStream;
+
 class LayoutRect {
 public:
     LayoutRect() { }
@@ -46,6 +48,8 @@ public:
         : m_location(location), m_size(size) { }
     LayoutRect(LayoutUnit x, LayoutUnit y, LayoutUnit width, LayoutUnit height)
         : m_location(LayoutPoint(x, y)), m_size(LayoutSize(width, height)) { }
+    LayoutRect(const LayoutPoint& topLeft, const LayoutPoint& bottomRight)
+        : m_location(topLeft), m_size(LayoutSize(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y())) { }
     LayoutRect(const FloatPoint& location, const FloatSize& size)
         : m_location(location), m_size(size) { }
     LayoutRect(const IntRect& rect) : m_location(rect.location()), m_size(rect.size()) { }
@@ -234,6 +238,8 @@ inline FloatRect snapRectToDevicePixelsWithWritingDirection(const LayoutRect& re
 }
 
 FloatRect encloseRectToDevicePixels(const LayoutRect&, float pixelSnappingFactor);
+
+TextStream& operator<<(TextStream&, const LayoutRect&);
 
 } // namespace WebCore
 

@@ -22,8 +22,8 @@
 #include "JSSVGFEDistantLightElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedNumber.h"
-#include "SVGFEDistantLightElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,50 +61,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEDistantLightElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEDistantLightElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEDistantLightElement> JSSVGFEDistantLightElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEDistantLightElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEDistantLightElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDistantLightElementConstructor>(vm.heap)) JSSVGFEDistantLightElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEDistantLightElementConstructor::s_info = { "SVGFEDistantLightElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDistantLightElementConstructor) };
-
-JSSVGFEDistantLightElementConstructor::JSSVGFEDistantLightElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEDistantLightElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEDistantLightElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDistantLightElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDistantLightElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEDistantLightElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEDistantLightElementConstructor::s_info = { "SVGFEDistantLightElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDistantLightElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEDistantLightElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "azimuth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementAzimuth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "elevation", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementElevation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "azimuth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementAzimuth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "elevation", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDistantLightElementElevation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEDistantLightElementPrototype::s_info = { "SVGFEDistantLightElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDistantLightElementPrototype) };
@@ -117,7 +91,7 @@ void JSSVGFEDistantLightElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEDistantLightElement::s_info = { "SVGFEDistantLightElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDistantLightElement) };
 
-JSSVGFEDistantLightElement::JSSVGFEDistantLightElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDistantLightElement>&& impl)
+JSSVGFEDistantLightElement::JSSVGFEDistantLightElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEDistantLightElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -132,53 +106,53 @@ JSObject* JSSVGFEDistantLightElement::getPrototype(VM& vm, JSGlobalObject* globa
     return getDOMPrototype<JSSVGFEDistantLightElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEDistantLightElementAzimuth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDistantLightElementAzimuth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDistantLightElement* castedThis = jsDynamicCast<JSSVGFEDistantLightElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDistantLightElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDistantLightElement", "azimuth");
-        return throwGetterTypeError(*exec, "SVGFEDistantLightElement", "azimuth");
+            return reportDeprecatedGetterError(*state, "SVGFEDistantLightElement", "azimuth");
+        return throwGetterTypeError(*state, "SVGFEDistantLightElement", "azimuth");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.azimuthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDistantLightElementElevation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDistantLightElementElevation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDistantLightElement* castedThis = jsDynamicCast<JSSVGFEDistantLightElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDistantLightElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDistantLightElement", "elevation");
-        return throwGetterTypeError(*exec, "SVGFEDistantLightElement", "elevation");
+            return reportDeprecatedGetterError(*state, "SVGFEDistantLightElement", "elevation");
+        return throwGetterTypeError(*state, "SVGFEDistantLightElement", "elevation");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.elevationAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDistantLightElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEDistantLightElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEDistantLightElementPrototype* domObject = jsDynamicCast<JSSVGFEDistantLightElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEDistantLightElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEDistantLightElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEDistantLightElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEDistantLightElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEDistantLightElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

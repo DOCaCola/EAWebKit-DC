@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSFileReader : public JSDOMWrapper {
+class JSFileReader : public JSDOMWrapper<FileReader> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FileReader> Base;
     static JSFileReader* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileReader>&& impl)
     {
-        JSFileReader* ptr = new (NotNull, JSC::allocateCell<JSFileReader>(globalObject->vm().heap)) JSFileReader(structure, globalObject, WTF::move(impl));
+        JSFileReader* ptr = new (NotNull, JSC::allocateCell<JSFileReader>(globalObject->vm().heap)) JSFileReader(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static FileReader* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileReader();
 
     DECLARE_INFO;
 
@@ -56,16 +55,11 @@ public:
 
 
     // Custom attributes
-    JSC::JSValue result(JSC::ExecState*) const;
-    FileReader& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileReader* m_impl;
+    JSC::JSValue result(JSC::ExecState&) const;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSFileReader(JSC::Structure*, JSDOMGlobalObject*, Ref<FileReader>&&);
+    JSFileReader(JSC::Structure*, JSDOMGlobalObject&, Ref<FileReader>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -88,7 +82,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileReader*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReader*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileReader& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileReader& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FileReader*);
 
 
 } // namespace WebCore

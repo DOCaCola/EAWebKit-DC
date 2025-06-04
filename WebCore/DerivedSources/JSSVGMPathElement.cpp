@@ -22,9 +22,9 @@
 #include "JSSVGMPathElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGMPathElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -62,50 +62,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGMPathElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGMPathElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGMPathElement> JSSVGMPathElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGMPathElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGMPathElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGMPathElementConstructor>(vm.heap)) JSSVGMPathElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGMPathElementConstructor::s_info = { "SVGMPathElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMPathElementConstructor) };
-
-JSSVGMPathElementConstructor::JSSVGMPathElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGMPathElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGMPathElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGMPathElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGMPathElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGMPathElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGMPathElementConstructor::s_info = { "SVGMPathElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMPathElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGMPathElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMPathElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGMPathElementPrototype::s_info = { "SVGMPathElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMPathElementPrototype) };
@@ -118,7 +92,7 @@ void JSSVGMPathElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGMPathElement::s_info = { "SVGMPathElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMPathElement) };
 
-JSSVGMPathElement::JSSVGMPathElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMPathElement>&& impl)
+JSSVGMPathElement::JSSVGMPathElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGMPathElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -133,53 +107,53 @@ JSObject* JSSVGMPathElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGMPathElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGMPathElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMPathElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMPathElement* castedThis = jsDynamicCast<JSSVGMPathElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMPathElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGMPathElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGMPathElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGMPathElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMPathElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMPathElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMPathElement* castedThis = jsDynamicCast<JSSVGMPathElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMPathElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMPathElement", "href");
-        return throwGetterTypeError(*exec, "SVGMPathElement", "href");
+            return reportDeprecatedGetterError(*state, "SVGMPathElement", "href");
+        return throwGetterTypeError(*state, "SVGMPathElement", "href");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMPathElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGMPathElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGMPathElementPrototype* domObject = jsDynamicCast<JSSVGMPathElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGMPathElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGMPathElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGMPathElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGMPathElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGMPathElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

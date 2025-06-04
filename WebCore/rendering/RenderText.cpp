@@ -236,7 +236,7 @@ bool RenderText::isTextFragment() const
 bool RenderText::computeUseBackslashAsYenSymbol() const
 {
     const RenderStyle& style = this->style();
-    const FontDescription& fontDescription = style.fontCascade().fontDescription();
+    const auto& fontDescription = style.fontDescription();
     if (style.fontCascade().useBackslashAsYenSymbol())
         return true;
     if (fontDescription.isSpecifiedFont())
@@ -466,7 +466,7 @@ ALWAYS_INLINE float RenderText::widthFromCache(const FontCascade& f, int start, 
             return combineText.combinedTextWidth(f);
     }
 
-    if (f.isFixedPitch() && !f.isSmallCaps() && m_isAllASCII && (!glyphOverflow || !glyphOverflow->computeBounds)) {
+    if (f.isFixedPitch() && f.fontDescription().variantSettings().isAllNormal() && m_isAllASCII && (!glyphOverflow || !glyphOverflow->computeBounds)) {
         float monospaceCharacterWidth = f.spaceWidth();
         float w = 0;
         bool isSpace;
@@ -1333,11 +1333,8 @@ LayoutRect RenderText::collectSelectionRectsForLineBoxes(const RenderLayerModelO
     }
 
     if (clipToVisibleContent)
-        computeRectForRepaint(repaintContainer, resultRect);
-    else
-        resultRect = localToContainerQuad(FloatRect(resultRect), repaintContainer).enclosingBoundingBox();
-
-    return resultRect;
+        return computeRectForRepaint(resultRect, repaintContainer);
+    return localToContainerQuad(FloatRect(resultRect), repaintContainer).enclosingBoundingBox();
 }
 
 LayoutRect RenderText::collectSelectionRectsForLineBoxes(const RenderLayerModelObject* repaintContainer, bool clipToVisibleContent, Vector<LayoutRect>& rects)

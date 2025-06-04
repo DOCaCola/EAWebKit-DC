@@ -35,7 +35,7 @@ public:
     typedef JSHTMLMediaElement Base;
     static JSHTMLVideoElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLVideoElement>&& impl)
     {
-        JSHTMLVideoElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLVideoElement>(globalObject->vm().heap)) JSHTMLVideoElement(structure, globalObject, WTF::move(impl));
+        JSHTMLVideoElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLVideoElement>(globalObject->vm().heap)) JSHTMLVideoElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,12 +52,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLVideoElement& impl() const
+    HTMLVideoElement& wrapped() const
     {
-        return static_cast<HTMLVideoElement&>(Base::impl());
+        return static_cast<HTMLVideoElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLVideoElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLVideoElement>&&);
+    JSHTMLVideoElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLVideoElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

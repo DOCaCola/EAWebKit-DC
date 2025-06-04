@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSANGLEInstancedArrays : public JSDOMWrapper {
+class JSANGLEInstancedArrays : public JSDOMWrapper<ANGLEInstancedArrays> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<ANGLEInstancedArrays> Base;
     static JSANGLEInstancedArrays* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ANGLEInstancedArrays>&& impl)
     {
-        JSANGLEInstancedArrays* ptr = new (NotNull, JSC::allocateCell<JSANGLEInstancedArrays>(globalObject->vm().heap)) JSANGLEInstancedArrays(structure, globalObject, WTF::move(impl));
+        JSANGLEInstancedArrays* ptr = new (NotNull, JSC::allocateCell<JSANGLEInstancedArrays>(globalObject->vm().heap)) JSANGLEInstancedArrays(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static ANGLEInstancedArrays* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSANGLEInstancedArrays();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    ANGLEInstancedArrays& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ANGLEInstancedArrays* m_impl;
 protected:
-    JSANGLEInstancedArrays(JSC::Structure*, JSDOMGlobalObject*, Ref<ANGLEInstancedArrays>&&);
+    JSANGLEInstancedArrays(JSC::Structure*, JSDOMGlobalObject&, Ref<ANGLEInstancedArrays>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ANGLEInstancedArrays
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ANGLEInstancedArrays*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ANGLEInstancedArrays& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ANGLEInstancedArrays*);
 
 
 } // namespace WebCore

@@ -62,6 +62,7 @@ typedef struct tagPOINTS POINTS;
 namespace WebCore {
 
 class FloatPoint;
+class TextStream;
 
 class IntPoint {
 public:
@@ -71,6 +72,7 @@ public:
     explicit IntPoint(const FloatPoint&); // don't do this implicitly since it's lossy
 
     static IntPoint zero() { return IntPoint(); }
+    bool isZero() const { return !m_x && !m_y; }
 
     int x() const { return m_x; }
     int y() const { return m_y; }
@@ -89,15 +91,21 @@ public:
     
     IntPoint expandedTo(const IntPoint& other) const
     {
-        return IntPoint(m_x > other.m_x ? m_x : other.m_x,
-            m_y > other.m_y ? m_y : other.m_y);
+        return {
+            m_x > other.m_x ? m_x : other.m_x,
+            m_y > other.m_y ? m_y : other.m_y
+        };
     }
 
     IntPoint shrunkTo(const IntPoint& other) const
     {
-        return IntPoint(m_x < other.m_x ? m_x : other.m_x,
-            m_y < other.m_y ? m_y : other.m_y);
+        return {
+            m_x < other.m_x ? m_x : other.m_x,
+            m_y < other.m_y ? m_y : other.m_y
+        };
     }
+
+    IntPoint constrainedBetween(const IntPoint& min, const IntPoint& max) const;
 
     int distanceSquaredToPoint(const IntPoint&) const;
 
@@ -138,8 +146,6 @@ public:
 	operator EA::WebKit::IntPoint() const;
 	//-EAWebKitChange
 #endif
-
-    void dump(WTF::PrintStream& out) const;
 
 private:
     int m_x, m_y;
@@ -201,6 +207,8 @@ inline int IntPoint::distanceSquaredToPoint(const IntPoint& point) const
 {
     return ((*this) - point).diagonalLengthSquared();
 }
+
+WEBCORE_EXPORT TextStream& operator<<(TextStream&, const IntPoint&);
 
 } // namespace WebCore
 

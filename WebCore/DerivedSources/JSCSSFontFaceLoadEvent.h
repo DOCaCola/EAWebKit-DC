@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSCSSFontFaceLoadEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
     {
-        JSCSSFontFaceLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceLoadEvent>(globalObject->vm().heap)) JSCSSFontFaceLoadEvent(structure, globalObject, WTF::move(impl));
+        JSCSSFontFaceLoadEvent* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceLoadEvent>(globalObject->vm().heap)) JSCSSFontFaceLoadEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    CSSFontFaceLoadEvent& impl() const
+    CSSFontFaceLoadEvent& wrapped() const
     {
-        return static_cast<CSSFontFaceLoadEvent&>(Base::impl());
+        return static_cast<CSSFontFaceLoadEvent&>(Base::wrapped());
     }
 protected:
-    JSCSSFontFaceLoadEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSFontFaceLoadEvent>&&);
+    JSCSSFontFaceLoadEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSFontFaceLoadEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

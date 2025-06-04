@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMetaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMetaElement>&& impl)
     {
-        JSHTMLMetaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMetaElement>(globalObject->vm().heap)) JSHTMLMetaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMetaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMetaElement>(globalObject->vm().heap)) JSHTMLMetaElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMetaElement& impl() const
+    HTMLMetaElement& wrapped() const
     {
-        return static_cast<HTMLMetaElement&>(Base::impl());
+        return static_cast<HTMLMetaElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMetaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMetaElement>&&);
+    JSHTMLMetaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMetaElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

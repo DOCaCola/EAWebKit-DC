@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSEXTsRGB : public JSDOMWrapper {
+class JSEXTsRGB : public JSDOMWrapper<EXTsRGB> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<EXTsRGB> Base;
     static JSEXTsRGB* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTsRGB>&& impl)
     {
-        JSEXTsRGB* ptr = new (NotNull, JSC::allocateCell<JSEXTsRGB>(globalObject->vm().heap)) JSEXTsRGB(structure, globalObject, WTF::move(impl));
+        JSEXTsRGB* ptr = new (NotNull, JSC::allocateCell<JSEXTsRGB>(globalObject->vm().heap)) JSEXTsRGB(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTsRGB* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTsRGB();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTsRGB& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTsRGB* m_impl;
 protected:
-    JSEXTsRGB(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTsRGB>&&);
+    JSEXTsRGB(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTsRGB>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTsRGB*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTsRGB*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTsRGB& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTsRGB& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, EXTsRGB*);
 
 
 } // namespace WebCore

@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSChannelMergerNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelMergerNode>&& impl)
     {
-        JSChannelMergerNode* ptr = new (NotNull, JSC::allocateCell<JSChannelMergerNode>(globalObject->vm().heap)) JSChannelMergerNode(structure, globalObject, WTF::move(impl));
+        JSChannelMergerNode* ptr = new (NotNull, JSC::allocateCell<JSChannelMergerNode>(globalObject->vm().heap)) JSChannelMergerNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ChannelMergerNode& impl() const
+    ChannelMergerNode& wrapped() const
     {
-        return static_cast<ChannelMergerNode&>(Base::impl());
+        return static_cast<ChannelMergerNode&>(Base::wrapped());
     }
 protected:
-    JSChannelMergerNode(JSC::Structure*, JSDOMGlobalObject*, Ref<ChannelMergerNode>&&);
+    JSChannelMergerNode(JSC::Structure*, JSDOMGlobalObject&, Ref<ChannelMergerNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelMergerNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ChannelMergerNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ChannelMergerNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ChannelMergerNode*);
 
 
 } // namespace WebCore

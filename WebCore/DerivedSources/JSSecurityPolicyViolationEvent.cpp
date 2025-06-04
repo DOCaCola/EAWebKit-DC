@@ -25,8 +25,8 @@
 #include "JSSecurityPolicyViolationEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
-#include "SecurityPolicyViolationEvent.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -73,51 +73,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSecurityPolicyViolationEventConstructor : public DOMConstructorObject {
-private:
-    JSSecurityPolicyViolationEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSSecurityPolicyViolationEvent> JSSecurityPolicyViolationEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSecurityPolicyViolationEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSecurityPolicyViolationEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSSecurityPolicyViolationEventConstructor>(vm.heap)) JSSecurityPolicyViolationEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSSecurityPolicyViolationEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSSecurityPolicyViolationEventConstructor::constructJSSecurityPolicyViolationEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSSecurityPolicyViolationEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSSecurityPolicyViolationEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSSecurityPolicyViolationEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     SecurityPolicyViolationEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillSecurityPolicyViolationEventInit(eventInit, dictionary))
@@ -125,7 +105,7 @@ EncodedJSValue JSC_HOST_CALL JSSecurityPolicyViolationEventConstructor::construc
     }
 
     RefPtr<SecurityPolicyViolationEvent> event = SecurityPolicyViolationEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillSecurityPolicyViolationEventInit(SecurityPolicyViolationEventInit& eventInit, JSDictionary& dictionary)
@@ -152,41 +132,28 @@ bool fillSecurityPolicyViolationEventInit(SecurityPolicyViolationEventInit& even
     return true;
 }
 
-const ClassInfo JSSecurityPolicyViolationEventConstructor::s_info = { "SecurityPolicyViolationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSecurityPolicyViolationEventConstructor) };
-
-JSSecurityPolicyViolationEventConstructor::JSSecurityPolicyViolationEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSecurityPolicyViolationEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSecurityPolicyViolationEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSecurityPolicyViolationEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSecurityPolicyViolationEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SecurityPolicyViolationEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSSecurityPolicyViolationEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSSecurityPolicyViolationEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSSecurityPolicyViolationEventConstructor::s_info = { "SecurityPolicyViolationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSecurityPolicyViolationEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSecurityPolicyViolationEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "documentURI", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventDocumentURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "referrer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventReferrer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "blockedURI", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventBlockedURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "violatedDirective", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventViolatedDirective), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "effectiveDirective", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventEffectiveDirective), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "originalPolicy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventOriginalPolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "sourceFile", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventSourceFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lineNumber", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventLineNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "documentURI", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventDocumentURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "referrer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventReferrer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "blockedURI", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventBlockedURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "violatedDirective", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventViolatedDirective), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "effectiveDirective", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventEffectiveDirective), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "originalPolicy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventOriginalPolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "sourceFile", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventSourceFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lineNumber", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSecurityPolicyViolationEventLineNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSecurityPolicyViolationEventPrototype::s_info = { "SecurityPolicyViolationEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSecurityPolicyViolationEventPrototype) };
@@ -199,7 +166,7 @@ void JSSecurityPolicyViolationEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSecurityPolicyViolationEvent::s_info = { "SecurityPolicyViolationEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSecurityPolicyViolationEvent) };
 
-JSSecurityPolicyViolationEvent::JSSecurityPolicyViolationEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SecurityPolicyViolationEvent>&& impl)
+JSSecurityPolicyViolationEvent::JSSecurityPolicyViolationEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SecurityPolicyViolationEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -214,153 +181,153 @@ JSObject* JSSecurityPolicyViolationEvent::getPrototype(VM& vm, JSGlobalObject* g
     return getDOMPrototype<JSSecurityPolicyViolationEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsSecurityPolicyViolationEventDocumentURI(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventDocumentURI(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "documentURI");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "documentURI");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "documentURI");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "documentURI");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.documentURI());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.documentURI());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventReferrer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventReferrer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "referrer");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "referrer");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "referrer");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "referrer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.referrer());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.referrer());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventBlockedURI(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventBlockedURI(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "blockedURI");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "blockedURI");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "blockedURI");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "blockedURI");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.blockedURI());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.blockedURI());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventViolatedDirective(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventViolatedDirective(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "violatedDirective");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "violatedDirective");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "violatedDirective");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "violatedDirective");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.violatedDirective());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.violatedDirective());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventEffectiveDirective(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventEffectiveDirective(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "effectiveDirective");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "effectiveDirective");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "effectiveDirective");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "effectiveDirective");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.effectiveDirective());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.effectiveDirective());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventOriginalPolicy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventOriginalPolicy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "originalPolicy");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "originalPolicy");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "originalPolicy");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "originalPolicy");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.originalPolicy());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.originalPolicy());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventSourceFile(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventSourceFile(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "sourceFile");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "sourceFile");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "sourceFile");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "sourceFile");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.sourceFile());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.sourceFile());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventLineNumber(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventLineNumber(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSecurityPolicyViolationEvent* castedThis = jsDynamicCast<JSSecurityPolicyViolationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SecurityPolicyViolationEvent", "lineNumber");
-        return throwGetterTypeError(*exec, "SecurityPolicyViolationEvent", "lineNumber");
+            return reportDeprecatedGetterError(*state, "SecurityPolicyViolationEvent", "lineNumber");
+        return throwGetterTypeError(*state, "SecurityPolicyViolationEvent", "lineNumber");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.lineNumber());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSecurityPolicyViolationEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSecurityPolicyViolationEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSecurityPolicyViolationEventPrototype* domObject = jsDynamicCast<JSSecurityPolicyViolationEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSecurityPolicyViolationEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSecurityPolicyViolationEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSecurityPolicyViolationEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSecurityPolicyViolationEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSecurityPolicyViolationEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

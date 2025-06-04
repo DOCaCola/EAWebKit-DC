@@ -48,8 +48,6 @@ public:
 
     bool canReuse(const ResourceRequest&) const;
 
-    bool wasRedirected() const { return !m_redirectChain.isEmpty(); };
-
 private:
     virtual void didAddClient(CachedResourceClient*) override;
     virtual void addDataBuffer(SharedBuffer&) override;

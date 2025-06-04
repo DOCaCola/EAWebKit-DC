@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGCircleElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGCircleElement>&& impl)
     {
-        JSSVGCircleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCircleElement>(globalObject->vm().heap)) JSSVGCircleElement(structure, globalObject, WTF::move(impl));
+        JSSVGCircleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCircleElement>(globalObject->vm().heap)) JSSVGCircleElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGCircleElement& impl() const
+    SVGCircleElement& wrapped() const
     {
-        return static_cast<SVGCircleElement&>(Base::impl());
+        return static_cast<SVGCircleElement&>(Base::wrapped());
     }
 protected:
-    JSSVGCircleElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGCircleElement>&&);
+    JSSVGCircleElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGCircleElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

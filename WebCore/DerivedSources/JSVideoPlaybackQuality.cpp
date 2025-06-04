@@ -25,7 +25,6 @@
 #include "JSVideoPlaybackQuality.h"
 
 #include "JSDOMBinding.h"
-#include "VideoPlaybackQuality.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -69,11 +68,11 @@ private:
 
 static const HashTableValue JSVideoPlaybackQualityPrototypeTableValues[] =
 {
-    { "creationTime", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityCreationTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "totalVideoFrames", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityTotalVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "droppedVideoFrames", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityDroppedVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "corruptedVideoFrames", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityCorruptedVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "totalFrameDelay", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityTotalFrameDelay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "creationTime", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityCreationTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "totalVideoFrames", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityTotalVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "droppedVideoFrames", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityDroppedVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "corruptedVideoFrames", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityCorruptedVideoFrames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "totalFrameDelay", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoPlaybackQualityTotalFrameDelay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSVideoPlaybackQualityPrototype::s_info = { "VideoPlaybackQualityPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVideoPlaybackQualityPrototype) };
@@ -86,9 +85,8 @@ void JSVideoPlaybackQualityPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSVideoPlaybackQuality::s_info = { "VideoPlaybackQuality", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVideoPlaybackQuality) };
 
-JSVideoPlaybackQuality::JSVideoPlaybackQuality(Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoPlaybackQuality>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSVideoPlaybackQuality::JSVideoPlaybackQuality(Structure* structure, JSDOMGlobalObject& globalObject, Ref<VideoPlaybackQuality>&& impl)
+    : JSDOMWrapper<VideoPlaybackQuality>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -108,91 +106,86 @@ void JSVideoPlaybackQuality::destroy(JSC::JSCell* cell)
     thisObject->JSVideoPlaybackQuality::~JSVideoPlaybackQuality();
 }
 
-JSVideoPlaybackQuality::~JSVideoPlaybackQuality()
+EncodedJSValue jsVideoPlaybackQualityCreationTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsVideoPlaybackQualityCreationTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoPlaybackQuality* castedThis = jsDynamicCast<JSVideoPlaybackQuality*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoPlaybackQualityPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoPlaybackQuality", "creationTime");
-        return throwGetterTypeError(*exec, "VideoPlaybackQuality", "creationTime");
+            return reportDeprecatedGetterError(*state, "VideoPlaybackQuality", "creationTime");
+        return throwGetterTypeError(*state, "VideoPlaybackQuality", "creationTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.creationTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoPlaybackQualityTotalVideoFrames(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoPlaybackQualityTotalVideoFrames(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoPlaybackQuality* castedThis = jsDynamicCast<JSVideoPlaybackQuality*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoPlaybackQualityPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoPlaybackQuality", "totalVideoFrames");
-        return throwGetterTypeError(*exec, "VideoPlaybackQuality", "totalVideoFrames");
+            return reportDeprecatedGetterError(*state, "VideoPlaybackQuality", "totalVideoFrames");
+        return throwGetterTypeError(*state, "VideoPlaybackQuality", "totalVideoFrames");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.totalVideoFrames());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoPlaybackQualityDroppedVideoFrames(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoPlaybackQualityDroppedVideoFrames(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoPlaybackQuality* castedThis = jsDynamicCast<JSVideoPlaybackQuality*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoPlaybackQualityPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoPlaybackQuality", "droppedVideoFrames");
-        return throwGetterTypeError(*exec, "VideoPlaybackQuality", "droppedVideoFrames");
+            return reportDeprecatedGetterError(*state, "VideoPlaybackQuality", "droppedVideoFrames");
+        return throwGetterTypeError(*state, "VideoPlaybackQuality", "droppedVideoFrames");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.droppedVideoFrames());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoPlaybackQualityCorruptedVideoFrames(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoPlaybackQualityCorruptedVideoFrames(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoPlaybackQuality* castedThis = jsDynamicCast<JSVideoPlaybackQuality*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoPlaybackQualityPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoPlaybackQuality", "corruptedVideoFrames");
-        return throwGetterTypeError(*exec, "VideoPlaybackQuality", "corruptedVideoFrames");
+            return reportDeprecatedGetterError(*state, "VideoPlaybackQuality", "corruptedVideoFrames");
+        return throwGetterTypeError(*state, "VideoPlaybackQuality", "corruptedVideoFrames");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.corruptedVideoFrames());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoPlaybackQualityTotalFrameDelay(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoPlaybackQualityTotalFrameDelay(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoPlaybackQuality* castedThis = jsDynamicCast<JSVideoPlaybackQuality*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoPlaybackQualityPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoPlaybackQuality", "totalFrameDelay");
-        return throwGetterTypeError(*exec, "VideoPlaybackQuality", "totalFrameDelay");
+            return reportDeprecatedGetterError(*state, "VideoPlaybackQuality", "totalFrameDelay");
+        return throwGetterTypeError(*state, "VideoPlaybackQuality", "totalFrameDelay");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.totalFrameDelay());
     return JSValue::encode(result);
 }
@@ -209,7 +202,14 @@ void JSVideoPlaybackQualityOwner::finalize(JSC::Handle<JSC::Unknown> handle, voi
 {
     auto* jsVideoPlaybackQuality = jsCast<JSVideoPlaybackQuality*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsVideoPlaybackQuality->impl(), jsVideoPlaybackQuality);
+    uncacheWrapper(world, &jsVideoPlaybackQuality->wrapped(), jsVideoPlaybackQuality);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoPlaybackQuality* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSVideoPlaybackQuality>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoPlaybackQuality* impl)
@@ -231,7 +231,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoPlaybac
 VideoPlaybackQuality* JSVideoPlaybackQuality::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSVideoPlaybackQuality*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

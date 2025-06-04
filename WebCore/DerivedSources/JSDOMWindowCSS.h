@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMWindowCSS : public JSDOMWrapper {
+class JSDOMWindowCSS : public JSDOMWrapper<DOMWindowCSS> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMWindowCSS> Base;
     static JSDOMWindowCSS* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMWindowCSS>&& impl)
     {
-        JSDOMWindowCSS* ptr = new (NotNull, JSC::allocateCell<JSDOMWindowCSS>(globalObject->vm().heap)) JSDOMWindowCSS(structure, globalObject, WTF::move(impl));
+        JSDOMWindowCSS* ptr = new (NotNull, JSC::allocateCell<JSDOMWindowCSS>(globalObject->vm().heap)) JSDOMWindowCSS(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMWindowCSS* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMWindowCSS();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    DOMWindowCSS& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMWindowCSS* m_impl;
 protected:
-    JSDOMWindowCSS(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMWindowCSS>&&);
+    JSDOMWindowCSS(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMWindowCSS>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMWindowCSS*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMWindowCSS*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMWindowCSS& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMWindowCSS& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMWindowCSS*);
 
 
 } // namespace WebCore

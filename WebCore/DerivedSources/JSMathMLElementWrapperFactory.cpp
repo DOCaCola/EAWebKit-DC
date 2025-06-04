@@ -61,29 +61,29 @@ namespace WebCore {
 
 using namespace MathMLNames;
 
-typedef JSDOMWrapper* (*CreateMathMLElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<MathMLElement>);
+typedef JSDOMObject* (*CreateMathMLElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<MathMLElement>);
 
-static JSDOMWrapper* createMathMLTextElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLTextElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, MathMLTextElement, element.get());
 }
 
-static JSDOMWrapper* createMathMLInlineContainerElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLInlineContainerElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, MathMLInlineContainerElement, element.get());
 }
 
-static JSDOMWrapper* createMathMLSelectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLSelectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, MathMLSelectElement, element.get());
 }
 
-static JSDOMWrapper* createMathMLMathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLMathElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, MathMLMathElement, element.get());
 }
 
-static JSDOMWrapper* createMathMLMencloseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+static JSDOMObject* createMathMLMencloseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, MathMLMencloseElement, element.get());
 }
@@ -133,7 +133,7 @@ static NEVER_INLINE void populateMathMLWrapperMap(HashMap<AtomicStringImpl*, Cre
         map.add(table[i].name.localName().impl(), table[i].function);
 }
 
-JSDOMWrapper* createJSMathMLWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
+JSDOMObject* createJSMathMLWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<MathMLElement> element)
 {
     static NeverDestroyed<HashMap<AtomicStringImpl*, CreateMathMLElementWrapperFunction>> functions;
     if (functions.get().isEmpty())

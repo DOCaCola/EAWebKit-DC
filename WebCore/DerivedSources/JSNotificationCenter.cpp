@@ -29,7 +29,6 @@
 #include "JSNotification.h"
 #include "JSVoidCallback.h"
 #include "Notification.h"
-#include "NotificationCenter.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -72,9 +71,9 @@ private:
 
 static const HashTableValue JSNotificationCenterPrototypeTableValues[] =
 {
-    { "createNotification", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionCreateNotification), (intptr_t) (3) },
-    { "checkPermission", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionCheckPermission), (intptr_t) (0) },
-    { "requestPermission", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionRequestPermission), (intptr_t) (0) },
+    { "createNotification", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionCreateNotification), (intptr_t) (3) } },
+    { "checkPermission", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionCheckPermission), (intptr_t) (0) } },
+    { "requestPermission", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNotificationCenterPrototypeFunctionRequestPermission), (intptr_t) (0) } },
 };
 
 const ClassInfo JSNotificationCenterPrototype::s_info = { "NotificationCenterPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotificationCenterPrototype) };
@@ -87,9 +86,8 @@ void JSNotificationCenterPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSNotificationCenter::s_info = { "NotificationCenter", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNotificationCenter) };
 
-JSNotificationCenter::JSNotificationCenter(Structure* structure, JSDOMGlobalObject* globalObject, Ref<NotificationCenter>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSNotificationCenter::JSNotificationCenter(Structure* structure, JSDOMGlobalObject& globalObject, Ref<NotificationCenter>&& impl)
+    : JSDOMWrapper<NotificationCenter>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -109,62 +107,57 @@ void JSNotificationCenter::destroy(JSC::JSCell* cell)
     thisObject->JSNotificationCenter::~JSNotificationCenter();
 }
 
-JSNotificationCenter::~JSNotificationCenter()
+EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionCreateNotification(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionCreateNotification(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNotificationCenter* castedThis = jsDynamicCast<JSNotificationCenter*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NotificationCenter", "createNotification");
+        return throwThisTypeError(*state, "NotificationCenter", "createNotification");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotificationCenter::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String iconUrl = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String iconUrl = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String title = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String title = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String body = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String body = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createNotification(iconUrl, title, body, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createNotification(iconUrl, title, body, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionCheckPermission(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionCheckPermission(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNotificationCenter* castedThis = jsDynamicCast<JSNotificationCenter*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NotificationCenter", "checkPermission");
+        return throwThisTypeError(*state, "NotificationCenter", "checkPermission");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotificationCenter::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.checkPermission());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionRequestPermission(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionRequestPermission(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNotificationCenter* castedThis = jsDynamicCast<JSNotificationCenter*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NotificationCenter", "requestPermission");
+        return throwThisTypeError(*state, "NotificationCenter", "requestPermission");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNotificationCenter::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<VoidCallback> callback;
-    if (!exec->argument(0).isUndefinedOrNull()) {
-        if (!exec->uncheckedArgument(0).isFunction())
-            return throwArgumentMustBeFunctionError(*exec, 0, "callback", "NotificationCenter", "requestPermission");
-        callback = JSVoidCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
+    if (!state->argument(0).isUndefinedOrNull()) {
+        if (!state->uncheckedArgument(0).isFunction())
+            return throwArgumentMustBeFunctionError(*state, 0, "callback", "NotificationCenter", "requestPermission");
+        callback = JSVoidCallback::create(asObject(state->uncheckedArgument(0)), castedThis->globalObject());
     }
     impl.requestPermission(callback);
     return JSValue::encode(jsUndefined());
@@ -173,7 +166,7 @@ EncodedJSValue JSC_HOST_CALL jsNotificationCenterPrototypeFunctionRequestPermiss
 bool JSNotificationCenterOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsNotificationCenter = jsCast<JSNotificationCenter*>(handle.slot()->asCell());
-    if (jsNotificationCenter->impl().hasPendingActivity())
+    if (jsNotificationCenter->wrapped().hasPendingActivity())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -183,7 +176,7 @@ void JSNotificationCenterOwner::finalize(JSC::Handle<JSC::Unknown> handle, void*
 {
     auto* jsNotificationCenter = jsCast<JSNotificationCenter*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNotificationCenter->impl(), jsNotificationCenter);
+    uncacheWrapper(world, &jsNotificationCenter->wrapped(), jsNotificationCenter);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -194,6 +187,14 @@ extern "C" { extern void (*const __identifier("??_7NotificationCenter@WebCore@@6
 extern "C" { extern void* _ZTVN7WebCore18NotificationCenterE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, NotificationCenter* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSNotificationCenter>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, NotificationCenter* impl)
 {
     if (!impl)
@@ -225,7 +226,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Notification
 NotificationCenter* JSNotificationCenter::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSNotificationCenter*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

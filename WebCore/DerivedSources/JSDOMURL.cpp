@@ -21,10 +21,10 @@
 #include "config.h"
 #include "JSDOMURL.h"
 
-#include "DOMURL.h"
 #include "ExceptionCode.h"
 #include "JSBlob.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMURL.h"
 #include "URL.h"
 #include <runtime/Error.h>
@@ -101,153 +101,115 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMURLConstructor : public DOMConstructorObject {
-private:
-    JSDOMURLConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMURLConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMURLConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMURLConstructor>(vm.heap)) JSDOMURLConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMURL(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMURL1(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMURL2(JSC::ExecState*);
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMURL3(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSDOMURL> JSDOMURLConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSDOMURLConstructorTableValues[] =
 {
-    { "createObjectURL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMURLConstructorFunctionCreateObjectURL), (intptr_t) (1) },
-    { "revokeObjectURL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMURLConstructorFunctionRevokeObjectURL), (intptr_t) (1) },
+    { "createObjectURL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMURLConstructorFunctionCreateObjectURL), (intptr_t) (1) } },
+    { "revokeObjectURL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMURLConstructorFunctionRevokeObjectURL), (intptr_t) (1) } },
 };
 
-EncodedJSValue JSC_HOST_CALL JSDOMURLConstructor::constructJSDOMURL1(ExecState* exec)
+static inline EncodedJSValue constructJSDOMURL1(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDOMURLConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto* castedThis = jsCast<JSDOMURLConstructor*>(state->callee());
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<DOMURL> object = DOMURL::create(url, ec);
     if (ec) {
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(JSValue());
     }
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-EncodedJSValue JSC_HOST_CALL JSDOMURLConstructor::constructJSDOMURL2(ExecState* exec)
+static inline EncodedJSValue constructJSDOMURL2(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDOMURLConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto* castedThis = jsCast<JSDOMURLConstructor*>(state->callee());
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String base = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String base = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<DOMURL> object = DOMURL::create(url, base, ec);
     if (ec) {
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(JSValue());
     }
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-EncodedJSValue JSC_HOST_CALL JSDOMURLConstructor::constructJSDOMURL3(ExecState* exec)
+static inline EncodedJSValue constructJSDOMURL3(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDOMURLConstructor*>(exec->callee());
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto* castedThis = jsCast<JSDOMURLConstructor*>(state->callee());
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    DOMURL* base = JSDOMURL::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    DOMURL* base = JSDOMURL::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<DOMURL> object = DOMURL::create(url, base, ec);
     if (ec) {
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(JSValue());
     }
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-EncodedJSValue JSC_HOST_CALL JSDOMURLConstructor::constructJSDOMURL(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSDOMURLConstructor::construct(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
     if (argsCount == 1)
-        return JSDOMURLConstructor::constructJSDOMURL1(exec);
+        return constructJSDOMURL1(state);
     if (argsCount == 2)
-        return JSDOMURLConstructor::constructJSDOMURL2(exec);
-    JSValue arg1(exec->argument(1));
+        return constructJSDOMURL2(state);
+    JSValue arg1(state->argument(1));
     if ((argsCount == 2 && ((arg1.isObject() && asObject(arg1)->inherits(JSDOMURL::info())))))
-        return JSDOMURLConstructor::constructJSDOMURL3(exec);
+        return constructJSDOMURL3(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-const ClassInfo JSDOMURLConstructor::s_info = { "URLConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMURLConstructor) };
-
-JSDOMURLConstructor::JSDOMURLConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSDOMURLConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDOMURLConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMURL::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMURL::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("URL"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSDOMURLConstructorTableValues, *this);
 }
 
-ConstructType JSDOMURLConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDOMURL;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDOMURLConstructor::s_info = { "URLConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMURLConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMURLPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHref) },
-    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "protocol", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLProtocol) },
-    { "username", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLUsername) },
-    { "password", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPassword), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPassword) },
-    { "host", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHost) },
-    { "hostname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHostname) },
-    { "port", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPort) },
-    { "pathname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPathname) },
-    { "search", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLSearch) },
-    { "hash", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHash) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMURLPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHref) } },
+    { "origin", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "protocol", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLProtocol) } },
+    { "username", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLUsername) } },
+    { "password", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPassword), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPassword) } },
+    { "host", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHost) } },
+    { "hostname", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHostname) } },
+    { "port", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPort) } },
+    { "pathname", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLPathname) } },
+    { "search", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLSearch) } },
+    { "hash", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMURLHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMURLHash) } },
+    { "toString", DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMURLPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDOMURLPrototype::s_info = { "URLPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMURLPrototype) };
@@ -260,9 +222,8 @@ void JSDOMURLPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMURL::s_info = { "URL", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMURL) };
 
-JSDOMURL::JSDOMURL(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMURL>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMURL::JSDOMURL(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMURL>&& impl)
+    : JSDOMWrapper<DOMURL>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -282,403 +243,398 @@ void JSDOMURL::destroy(JSC::JSCell* cell)
     thisObject->JSDOMURL::~JSDOMURL();
 }
 
-JSDOMURL::~JSDOMURL()
+EncodedJSValue jsDOMURLHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsDOMURLHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "href");
-        return throwGetterTypeError(*exec, "DOMURL", "href");
+            return reportDeprecatedGetterError(*state, "DOMURL", "href");
+        return throwGetterTypeError(*state, "DOMURL", "href");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.href());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.href());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLOrigin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "origin");
-        return throwGetterTypeError(*exec, "DOMURL", "origin");
+            return reportDeprecatedGetterError(*state, "DOMURL", "origin");
+        return throwGetterTypeError(*state, "DOMURL", "origin");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.origin());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.origin());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLProtocol(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLProtocol(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "protocol");
-        return throwGetterTypeError(*exec, "DOMURL", "protocol");
+            return reportDeprecatedGetterError(*state, "DOMURL", "protocol");
+        return throwGetterTypeError(*state, "DOMURL", "protocol");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.protocol());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.protocol());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLUsername(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLUsername(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "username");
-        return throwGetterTypeError(*exec, "DOMURL", "username");
+            return reportDeprecatedGetterError(*state, "DOMURL", "username");
+        return throwGetterTypeError(*state, "DOMURL", "username");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.username());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.username());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLPassword(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLPassword(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "password");
-        return throwGetterTypeError(*exec, "DOMURL", "password");
+            return reportDeprecatedGetterError(*state, "DOMURL", "password");
+        return throwGetterTypeError(*state, "DOMURL", "password");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.password());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.password());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLHost(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLHost(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "host");
-        return throwGetterTypeError(*exec, "DOMURL", "host");
+            return reportDeprecatedGetterError(*state, "DOMURL", "host");
+        return throwGetterTypeError(*state, "DOMURL", "host");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.host());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.host());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLHostname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLHostname(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "hostname");
-        return throwGetterTypeError(*exec, "DOMURL", "hostname");
+            return reportDeprecatedGetterError(*state, "DOMURL", "hostname");
+        return throwGetterTypeError(*state, "DOMURL", "hostname");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hostname());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.hostname());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLPort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLPort(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "port");
-        return throwGetterTypeError(*exec, "DOMURL", "port");
+            return reportDeprecatedGetterError(*state, "DOMURL", "port");
+        return throwGetterTypeError(*state, "DOMURL", "port");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.port());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.port());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLPathname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLPathname(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "pathname");
-        return throwGetterTypeError(*exec, "DOMURL", "pathname");
+            return reportDeprecatedGetterError(*state, "DOMURL", "pathname");
+        return throwGetterTypeError(*state, "DOMURL", "pathname");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.pathname());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.pathname());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLSearch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLSearch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "search");
-        return throwGetterTypeError(*exec, "DOMURL", "search");
+            return reportDeprecatedGetterError(*state, "DOMURL", "search");
+        return throwGetterTypeError(*state, "DOMURL", "search");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.search());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.search());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLHash(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMURLHash(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMURL", "hash");
-        return throwGetterTypeError(*exec, "DOMURL", "hash");
+            return reportDeprecatedGetterError(*state, "DOMURL", "hash");
+        return throwGetterTypeError(*state, "DOMURL", "hash");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hash());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.hash());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMURLConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDOMURLConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSDOMURLPrototype* domObject = jsDynamicCast<JSDOMURLPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMURL::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDOMURL::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSDOMURLHref(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLHref(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "href");
+            reportDeprecatedSetterError(*state, "DOMURL", "href");
         else
-            throwSetterTypeError(*exec, "DOMURL", "href");
+            throwSetterTypeError(*state, "DOMURL", "href");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setHref(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDOMURLProtocol(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLProtocol(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "protocol");
+            reportDeprecatedSetterError(*state, "DOMURL", "protocol");
         else
-            throwSetterTypeError(*exec, "DOMURL", "protocol");
+            throwSetterTypeError(*state, "DOMURL", "protocol");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setProtocol(nativeValue);
 }
 
 
-void setJSDOMURLUsername(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLUsername(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "username");
+            reportDeprecatedSetterError(*state, "DOMURL", "username");
         else
-            throwSetterTypeError(*exec, "DOMURL", "username");
+            throwSetterTypeError(*state, "DOMURL", "username");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setUsername(nativeValue);
 }
 
 
-void setJSDOMURLPassword(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLPassword(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "password");
+            reportDeprecatedSetterError(*state, "DOMURL", "password");
         else
-            throwSetterTypeError(*exec, "DOMURL", "password");
+            throwSetterTypeError(*state, "DOMURL", "password");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPassword(nativeValue);
 }
 
 
-void setJSDOMURLHost(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLHost(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "host");
+            reportDeprecatedSetterError(*state, "DOMURL", "host");
         else
-            throwSetterTypeError(*exec, "DOMURL", "host");
+            throwSetterTypeError(*state, "DOMURL", "host");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setHost(nativeValue);
 }
 
 
-void setJSDOMURLHostname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLHostname(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "hostname");
+            reportDeprecatedSetterError(*state, "DOMURL", "hostname");
         else
-            throwSetterTypeError(*exec, "DOMURL", "hostname");
+            throwSetterTypeError(*state, "DOMURL", "hostname");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setHostname(nativeValue);
 }
 
 
-void setJSDOMURLPort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLPort(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "port");
+            reportDeprecatedSetterError(*state, "DOMURL", "port");
         else
-            throwSetterTypeError(*exec, "DOMURL", "port");
+            throwSetterTypeError(*state, "DOMURL", "port");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPort(nativeValue);
 }
 
 
-void setJSDOMURLPathname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLPathname(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "pathname");
+            reportDeprecatedSetterError(*state, "DOMURL", "pathname");
         else
-            throwSetterTypeError(*exec, "DOMURL", "pathname");
+            throwSetterTypeError(*state, "DOMURL", "pathname");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setPathname(nativeValue);
 }
 
 
-void setJSDOMURLSearch(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLSearch(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "search");
+            reportDeprecatedSetterError(*state, "DOMURL", "search");
         else
-            throwSetterTypeError(*exec, "DOMURL", "search");
+            throwSetterTypeError(*state, "DOMURL", "search");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSearch(nativeValue);
 }
 
 
-void setJSDOMURLHash(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMURLHash(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMURLPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMURL", "hash");
+            reportDeprecatedSetterError(*state, "DOMURL", "hash");
         else
-            throwSetterTypeError(*exec, "DOMURL", "hash");
+            throwSetterTypeError(*state, "DOMURL", "hash");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setHash(nativeValue);
 }
@@ -686,101 +642,101 @@ void setJSDOMURLHash(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 
 JSValue JSDOMURL::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDOMURLConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMURLConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL1(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Blob* blob = JSBlob::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Blob* blob = JSBlob::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, DOMURL::createObjectURL(scriptContext, blob));
+    JSValue result = jsStringOrNull(state, DOMURL::createObjectURL(scriptContext, blob));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionRevokeObjectURL(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionRevokeObjectURL(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     DOMURL::revokeObjectURL(scriptContext, url);
     return JSValue::encode(jsUndefined());
 }
 
 #if ENABLE(MEDIA_SOURCE)
-static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL2(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    MediaSource* source = JSMediaSource::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    MediaSource* source = JSMediaSource::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, DOMURLMediaSource::createObjectURL(scriptContext, source));
+    JSValue result = jsStringOrNull(state, WebCore::DOMURLMediaSource::createObjectURL(scriptContext, source));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(MEDIA_STREAM)
-static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL3(ExecState* state)
 {
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    MediaStream* stream = JSMediaStream::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    MediaStream* stream = JSMediaStream::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, DOMURLMediaStream::createObjectURL(scriptContext, stream));
+    JSValue result = jsStringOrNull(state, WebCore::DOMURLMediaStream::createObjectURL(scriptContext, stream));
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMURLConstructorFunctionCreateObjectURL(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSBlob::info())))))
-        return jsDOMURLConstructorFunctionCreateObjectURL1(exec);
+        return jsDOMURLConstructorFunctionCreateObjectURL1(state);
 #if ENABLE(MEDIA_SOURCE)
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSMediaSource::info())))))
-        return jsDOMURLConstructorFunctionCreateObjectURL2(exec);
+        return jsDOMURLConstructorFunctionCreateObjectURL2(state);
 #endif
 
 #if ENABLE(MEDIA_STREAM)
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSMediaStream::info())))))
-        return jsDOMURLConstructorFunctionCreateObjectURL3(exec);
+        return jsDOMURLConstructorFunctionCreateObjectURL3(state);
 #endif
 
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMURLPrototypeFunctionToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMURLPrototypeFunctionToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMURL* castedThis = jsDynamicCast<JSDOMURL*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMURL", "toString");
+        return throwThisTypeError(*state, "DOMURL", "toString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMURL::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.toString());
     return JSValue::encode(result);
 }
 
@@ -795,7 +751,14 @@ void JSDOMURLOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsDOMURL = jsCast<JSDOMURL*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMURL->impl(), jsDOMURL);
+    uncacheWrapper(world, &jsDOMURL->wrapped(), jsDOMURL);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMURL* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMURL>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMURL* impl)
@@ -817,7 +780,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMURL* impl
 DOMURL* JSDOMURL::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMURL*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

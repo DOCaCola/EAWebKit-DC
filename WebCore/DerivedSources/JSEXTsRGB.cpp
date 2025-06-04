@@ -24,7 +24,6 @@
 
 #include "JSEXTsRGB.h"
 
-#include "EXTsRGB.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -61,10 +60,10 @@ private:
 
 static const HashTableValue JSEXTsRGBPrototypeTableValues[] =
 {
-    { "SRGB_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C40), (intptr_t) (0) },
-    { "SRGB_ALPHA_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C42), (intptr_t) (0) },
-    { "SRGB8_ALPHA8_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C43), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8210), (intptr_t) (0) },
+    { "SRGB_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C40) } },
+    { "SRGB_ALPHA_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C42) } },
+    { "SRGB8_ALPHA8_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C43) } },
+    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8210) } },
 };
 
 const ClassInfo JSEXTsRGBPrototype::s_info = { "EXTsRGBPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTsRGBPrototype) };
@@ -77,9 +76,8 @@ void JSEXTsRGBPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEXTsRGB::s_info = { "EXTsRGB", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTsRGB) };
 
-JSEXTsRGB::JSEXTsRGB(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTsRGB>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTsRGB::JSEXTsRGB(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTsRGB>&& impl)
+    : JSDOMWrapper<EXTsRGB>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -99,15 +97,10 @@ void JSEXTsRGB::destroy(JSC::JSCell* cell)
     thisObject->JSEXTsRGB::~JSEXTsRGB();
 }
 
-JSEXTsRGB::~JSEXTsRGB()
-{
-    releaseImpl();
-}
-
 bool JSEXTsRGBOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTsRGB = jsCast<JSEXTsRGB*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTsRGB->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTsRGB->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -115,7 +108,7 @@ void JSEXTsRGBOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsEXTsRGB = jsCast<JSEXTsRGB*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTsRGB->impl(), jsEXTsRGB);
+    uncacheWrapper(world, &jsEXTsRGB->wrapped(), jsEXTsRGB);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -126,6 +119,14 @@ extern "C" { extern void (*const __identifier("??_7EXTsRGB@WebCore@@6B@")[])(); 
 extern "C" { extern void* _ZTVN7WebCore7EXTsRGBE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTsRGB* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSEXTsRGB>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTsRGB* impl)
 {
     if (!impl)
@@ -157,7 +158,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTsRGB* imp
 EXTsRGB* JSEXTsRGB::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSEXTsRGB*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

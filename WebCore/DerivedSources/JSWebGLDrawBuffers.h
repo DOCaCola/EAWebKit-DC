@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLDrawBuffers : public JSDOMWrapper {
+class JSWebGLDrawBuffers : public JSDOMWrapper<WebGLDrawBuffers> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLDrawBuffers> Base;
     static JSWebGLDrawBuffers* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDrawBuffers>&& impl)
     {
-        JSWebGLDrawBuffers* ptr = new (NotNull, JSC::allocateCell<JSWebGLDrawBuffers>(globalObject->vm().heap)) JSWebGLDrawBuffers(structure, globalObject, WTF::move(impl));
+        JSWebGLDrawBuffers* ptr = new (NotNull, JSC::allocateCell<JSWebGLDrawBuffers>(globalObject->vm().heap)) JSWebGLDrawBuffers(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDrawBuffers* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDrawBuffers();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDrawBuffers& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDrawBuffers* m_impl;
 protected:
-    JSWebGLDrawBuffers(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDrawBuffers>&&);
+    JSWebGLDrawBuffers(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDrawBuffers>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDrawBuffers*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDrawBuffers*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDrawBuffers& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDrawBuffers& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLDrawBuffers*);
 
 
 } // namespace WebCore

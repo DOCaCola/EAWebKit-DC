@@ -28,8 +28,8 @@
 #if ENABLE(WEBGL)
 #include "JSWebGLRenderingContext.h"
 #include "DOMWrapperWorld.h"
-#include <JavaScriptCore/JSCellInlines.h> 
-#include <JavaScriptCore/StructureInlines.h> 
+#include <JavaScriptCore/JSCellInlines.h>
+#include <JavaScriptCore/StructureInlines.h>
 #include <heap/SlotVisitorInlines.h>
 
 using namespace JSC;
@@ -38,7 +38,7 @@ namespace WebCore {
 
 void JSWebGLRenderingContext::visitAdditionalChildren(SlotVisitor& visitor)
 {
-    visitor.addOpaqueRoot(&impl());
+    visitor.addOpaqueRoot(&wrapped());
 }
 
 } // namespace WebCore

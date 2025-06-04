@@ -82,7 +82,7 @@ void handleDataURL(ResourceHandle* handle)
         //-EAWebKitChange
         {
             Vector<char> out;
-            if (base64Decode(data, out, Base64IgnoreSpacesAndNewLines) && out.size() > 0) {
+            if (base64Decode(data, out, Base64IgnoreWhitespace) && out.size() > 0) {
                 response.setExpectedContentLength(out.size());
                 handle->client()->didReceiveData(handle, out.data(), out.size(), 0);
             }

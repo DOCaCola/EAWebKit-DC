@@ -25,7 +25,6 @@
 #include "JSMediaTrackConstraintSet.h"
 
 #include "JSDOMBinding.h"
-#include "MediaTrackConstraintSet.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSMediaTrackConstraintSetPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSMediaTrackConstraintSetPrototype::s_info = { "MediaTrackConstraintSetPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraintSetPrototype) };
@@ -74,9 +73,8 @@ void JSMediaTrackConstraintSetPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaTrackConstraintSet::s_info = { "MediaTrackConstraintSet", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaTrackConstraintSet) };
 
-JSMediaTrackConstraintSet::JSMediaTrackConstraintSet(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaTrackConstraintSet>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaTrackConstraintSet::JSMediaTrackConstraintSet(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaTrackConstraintSet>&& impl)
+    : JSDOMWrapper<MediaTrackConstraintSet>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,11 +94,6 @@ void JSMediaTrackConstraintSet::destroy(JSC::JSCell* cell)
     thisObject->JSMediaTrackConstraintSet::~JSMediaTrackConstraintSet();
 }
 
-JSMediaTrackConstraintSet::~JSMediaTrackConstraintSet()
-{
-    releaseImpl();
-}
-
 bool JSMediaTrackConstraintSetOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     UNUSED_PARAM(handle);
@@ -112,7 +105,7 @@ void JSMediaTrackConstraintSetOwner::finalize(JSC::Handle<JSC::Unknown> handle, 
 {
     auto* jsMediaTrackConstraintSet = jsCast<JSMediaTrackConstraintSet*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaTrackConstraintSet->impl(), jsMediaTrackConstraintSet);
+    uncacheWrapper(world, &jsMediaTrackConstraintSet->wrapped(), jsMediaTrackConstraintSet);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7MediaTrackConstraintSet@WebCo
 extern "C" { extern void* _ZTVN7WebCore23MediaTrackConstraintSetE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackConstraintSet* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaTrackConstraintSet>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackConstraintSet* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaTrackCo
 MediaTrackConstraintSet* JSMediaTrackConstraintSet::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaTrackConstraintSet*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

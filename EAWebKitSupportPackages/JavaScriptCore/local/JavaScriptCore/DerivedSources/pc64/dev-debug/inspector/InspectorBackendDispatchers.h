@@ -48,13 +48,14 @@ class AlternateDOMDebuggerBackendDispatcher;
 class AlternateDOMStorageBackendDispatcher;
 class AlternateDatabaseBackendDispatcher;
 class AlternateDebuggerBackendDispatcher;
+class AlternateHeapBackendDispatcher;
 class AlternateInspectorBackendDispatcher;
 class AlternateLayerTreeBackendDispatcher;
 class AlternateNetworkBackendDispatcher;
 class AlternatePageBackendDispatcher;
 class AlternateRuntimeBackendDispatcher;
+class AlternateScriptProfilerBackendDispatcher;
 class AlternateTimelineBackendDispatcher;
-class AlternateWorkerBackendDispatcher;
 #endif // ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
 
 class JS_EXPORT_PRIVATE ApplicationCacheBackendDispatcherHandler {
@@ -80,7 +81,8 @@ public:
     virtual void setStyleSheetText(ErrorString&, const String& in_styleSheetId, const String& in_text) = 0;
     virtual void setStyleText(ErrorString&, const Inspector::InspectorObject& in_styleId, const String& in_text, RefPtr<Inspector::Protocol::CSS::CSSStyle>& out_style) = 0;
     virtual void setRuleSelector(ErrorString&, const Inspector::InspectorObject& in_ruleId, const String& in_selector, RefPtr<Inspector::Protocol::CSS::CSSRule>& out_rule) = 0;
-    virtual void addRule(ErrorString&, int in_contextNodeId, const String& in_selector, RefPtr<Inspector::Protocol::CSS::CSSRule>& out_rule) = 0;
+    virtual void createStyleSheet(ErrorString&, const String& in_frameId, String* out_styleSheetId) = 0;
+    virtual void addRule(ErrorString&, const String& in_styleSheetId, const String& in_selector, RefPtr<Inspector::Protocol::CSS::CSSRule>& out_rule) = 0;
     virtual void getSupportedCSSProperties(ErrorString&, RefPtr<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSPropertyInfo>>& out_cssProperties) = 0;
     virtual void getSupportedSystemFontFamilyNames(ErrorString&, RefPtr<Inspector::Protocol::Array<String>>& out_fontFamilyNames) = 0;
     virtual void forcePseudoState(ErrorString&, int in_nodeId, const Inspector::InspectorArray& in_forcedPseudoClasses) = 0;
@@ -145,9 +147,9 @@ class JS_EXPORT_PRIVATE DOMDebuggerBackendDispatcherHandler {
 public:
     // Named after parameter 'type' while generating command/event setDOMBreakpoint.
     enum class Type {
-        SubtreeModified = 56,
-        AttributeModified = 57,
-        NodeRemoved = 58,
+        SubtreeModified = 61,
+        AttributeModified = 62,
+        NodeRemoved = 63,
     }; // enum class Type
     virtual void setDOMBreakpoint(ErrorString&, int in_nodeId, const String& in_type) = 0;
     virtual void removeDOMBreakpoint(ErrorString&, int in_nodeId, const String& in_type) = 0;
@@ -206,15 +208,24 @@ public:
     virtual void getFunctionDetails(ErrorString&, const String& in_functionId, RefPtr<Inspector::Protocol::Debugger::FunctionDetails>& out_details) = 0;
     // Named after parameter 'state' while generating command/event setPauseOnExceptions.
     enum class State {
-        None = 99,
-        Uncaught = 142,
-        All = 143,
+        None = 106,
+        Uncaught = 140,
+        All = 141,
     }; // enum class State
     virtual void setPauseOnExceptions(ErrorString&, const String& in_state) = 0;
     virtual void evaluateOnCallFrame(ErrorString&, const String& in_callFrameId, const String& in_expression, const String* opt_in_objectGroup, const bool* opt_in_includeCommandLineAPI, const bool* opt_in_doNotPauseOnExceptionsAndMuteConsole, const bool* opt_in_returnByValue, const bool* opt_in_generatePreview, const bool* opt_in_saveResult, RefPtr<Inspector::Protocol::Runtime::RemoteObject>& out_result, Inspector::Protocol::OptOutput<bool>* opt_out_wasThrown, Inspector::Protocol::OptOutput<int>* opt_out_savedResultIndex) = 0;
     virtual void setOverlayMessage(ErrorString&, const String* opt_in_message) = 0;
 protected:
     virtual ~DebuggerBackendDispatcherHandler();
+};
+
+class JS_EXPORT_PRIVATE HeapBackendDispatcherHandler {
+public:
+    virtual void enable(ErrorString&) = 0;
+    virtual void disable(ErrorString&) = 0;
+    virtual void gc(ErrorString&) = 0;
+protected:
+    virtual ~HeapBackendDispatcherHandler();
 };
 
 class JS_EXPORT_PRIVATE InspectorBackendDispatcherHandler {
@@ -242,10 +253,6 @@ public:
     virtual void disable(ErrorString&) = 0;
     virtual void setExtraHTTPHeaders(ErrorString&, const Inspector::InspectorObject& in_headers) = 0;
     virtual void getResponseBody(ErrorString&, const String& in_requestId, String* out_body, bool* out_base64Encoded) = 0;
-    virtual void canClearBrowserCache(ErrorString&, bool* out_result) = 0;
-    virtual void clearBrowserCache(ErrorString&) = 0;
-    virtual void canClearBrowserCookies(ErrorString&, bool* out_result) = 0;
-    virtual void clearBrowserCookies(ErrorString&) = 0;
     virtual void setCacheDisabled(ErrorString&, bool in_cacheDisabled) = 0;
     class JS_EXPORT_PRIVATE LoadResourceCallback : public BackendDispatcher::CallbackBase {
     public:
@@ -275,9 +282,9 @@ public:
     virtual void setShowPaintRects(ErrorString&, bool in_result) = 0;
     // Named after parameter 'result' while generating command/event getScriptExecutionStatus.
     enum class Result {
-        Allowed = 144,
+        Allowed = 142,
         Disabled = 6,
-        Forbidden = 145,
+        Forbidden = 143,
     }; // enum class Result
     virtual void getScriptExecutionStatus(ErrorString&, PageBackendDispatcherHandler::Result* out_result) = 0;
     virtual void setScriptExecutionDisabled(ErrorString&, bool in_value) = 0;
@@ -288,8 +295,8 @@ public:
     virtual void snapshotNode(ErrorString&, int in_nodeId, String* out_dataURL) = 0;
     // Named after parameter 'coordinateSystem' while generating command/event snapshotRect.
     enum class CoordinateSystem {
-        Viewport = 78,
-        Page = 79,
+        Viewport = 86,
+        Page = 87,
     }; // enum class CoordinateSystem
     virtual void snapshotRect(ErrorString&, int in_x, int in_y, int in_width, int in_height, const String& in_coordinateSystem, String* out_dataURL) = 0;
     virtual void handleJavaScriptDialog(ErrorString&, bool in_accept, const String* opt_in_promptText) = 0;
@@ -302,10 +309,10 @@ class JS_EXPORT_PRIVATE RuntimeBackendDispatcherHandler {
 public:
     // Named after parameter 'result' while generating command/event parse.
     enum class Result {
-        None = 99,
-        Irrecoverable = 100,
-        UnterminatedLiteral = 101,
-        Recoverable = 102,
+        None = 106,
+        Irrecoverable = 107,
+        UnterminatedLiteral = 108,
+        Recoverable = 109,
     }; // enum class Result
     virtual void parse(ErrorString&, const String& in_source, Inspector::Protocol::Runtime::SyntaxErrorType* out_result, Inspector::Protocol::OptOutput<String>* opt_out_message, RefPtr<Inspector::Protocol::Runtime::ErrorRange>& opt_out_range) = 0;
     virtual void evaluate(ErrorString&, const String& in_expression, const String* opt_in_objectGroup, const bool* opt_in_includeCommandLineAPI, const bool* opt_in_doNotPauseOnExceptionsAndMuteConsole, const int* opt_in_contextId, const bool* opt_in_returnByValue, const bool* opt_in_generatePreview, const bool* opt_in_saveResult, RefPtr<Inspector::Protocol::Runtime::RemoteObject>& out_result, Inspector::Protocol::OptOutput<bool>* opt_out_wasThrown, Inspector::Protocol::OptOutput<int>* opt_out_savedResultIndex) = 0;
@@ -316,7 +323,6 @@ public:
     virtual void saveResult(ErrorString&, const Inspector::InspectorObject& in_value, const int* opt_in_contextId, Inspector::Protocol::OptOutput<int>* opt_out_savedResultIndex) = 0;
     virtual void releaseObject(ErrorString&, const String& in_objectId) = 0;
     virtual void releaseObjectGroup(ErrorString&, const String& in_objectGroup) = 0;
-    virtual void run(ErrorString&) = 0;
     virtual void enable(ErrorString&) = 0;
     virtual void disable(ErrorString&) = 0;
     virtual void getRuntimeTypesForVariablesAtOffsets(ErrorString&, const Inspector::InspectorArray& in_locations, RefPtr<Inspector::Protocol::Array<Inspector::Protocol::Runtime::TypeDescription>>& out_types) = 0;
@@ -327,6 +333,14 @@ protected:
     virtual ~RuntimeBackendDispatcherHandler();
 };
 
+class JS_EXPORT_PRIVATE ScriptProfilerBackendDispatcherHandler {
+public:
+    virtual void startTracking(ErrorString&, const bool* opt_in_profile) = 0;
+    virtual void stopTracking(ErrorString&) = 0;
+protected:
+    virtual ~ScriptProfilerBackendDispatcherHandler();
+};
+
 class JS_EXPORT_PRIVATE TimelineBackendDispatcherHandler {
 public:
     virtual void start(ErrorString&, const int* opt_in_maxCallStackDepth) = 0;
@@ -335,28 +349,15 @@ protected:
     virtual ~TimelineBackendDispatcherHandler();
 };
 
-class JS_EXPORT_PRIVATE WorkerBackendDispatcherHandler {
-public:
-    virtual void enable(ErrorString&) = 0;
-    virtual void disable(ErrorString&) = 0;
-    virtual void sendMessageToWorker(ErrorString&, int in_workerId, const Inspector::InspectorObject& in_message) = 0;
-    virtual void canInspectWorkers(ErrorString&, bool* out_result) = 0;
-    virtual void connectToWorker(ErrorString&, int in_workerId) = 0;
-    virtual void disconnectFromWorker(ErrorString&, int in_workerId) = 0;
-    virtual void setAutoconnectToWorkers(ErrorString&, bool in_value) = 0;
-protected:
-    virtual ~WorkerBackendDispatcherHandler();
-};
-
 class JS_EXPORT_PRIVATE ApplicationCacheBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<ApplicationCacheBackendDispatcher> create(BackendDispatcher*, ApplicationCacheBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<ApplicationCacheBackendDispatcher> create(BackendDispatcher&, ApplicationCacheBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void getFramesWithManifests(long callId, const InspectorObject& message);
-    void enable(long callId, const InspectorObject& message);
-    void getManifestForFrame(long callId, const InspectorObject& message);
-    void getApplicationCacheForFrame(long callId, const InspectorObject& message);
+    void getFramesWithManifests(long requestId, RefPtr<InspectorObject>&& parameters);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getManifestForFrame(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getApplicationCacheForFrame(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     ApplicationCacheBackendDispatcher(BackendDispatcher&, ApplicationCacheBackendDispatcherHandler*);
     ApplicationCacheBackendDispatcherHandler* m_agent;
@@ -370,25 +371,26 @@ private:
 
 class JS_EXPORT_PRIVATE CSSBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<CSSBackendDispatcher> create(BackendDispatcher*, CSSBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<CSSBackendDispatcher> create(BackendDispatcher&, CSSBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void getMatchedStylesForNode(long callId, const InspectorObject& message);
-    void getInlineStylesForNode(long callId, const InspectorObject& message);
-    void getComputedStyleForNode(long callId, const InspectorObject& message);
-    void getAllStyleSheets(long callId, const InspectorObject& message);
-    void getStyleSheet(long callId, const InspectorObject& message);
-    void getStyleSheetText(long callId, const InspectorObject& message);
-    void setStyleSheetText(long callId, const InspectorObject& message);
-    void setStyleText(long callId, const InspectorObject& message);
-    void setRuleSelector(long callId, const InspectorObject& message);
-    void addRule(long callId, const InspectorObject& message);
-    void getSupportedCSSProperties(long callId, const InspectorObject& message);
-    void getSupportedSystemFontFamilyNames(long callId, const InspectorObject& message);
-    void forcePseudoState(long callId, const InspectorObject& message);
-    void getNamedFlowCollection(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getMatchedStylesForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getInlineStylesForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getComputedStyleForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getAllStyleSheets(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getStyleSheet(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getStyleSheetText(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setStyleSheetText(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setStyleText(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setRuleSelector(long requestId, RefPtr<InspectorObject>&& parameters);
+    void createStyleSheet(long requestId, RefPtr<InspectorObject>&& parameters);
+    void addRule(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getSupportedCSSProperties(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getSupportedSystemFontFamilyNames(long requestId, RefPtr<InspectorObject>&& parameters);
+    void forcePseudoState(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getNamedFlowCollection(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     CSSBackendDispatcher(BackendDispatcher&, CSSBackendDispatcherHandler*);
     CSSBackendDispatcherHandler* m_agent;
@@ -402,14 +404,14 @@ private:
 
 class JS_EXPORT_PRIVATE ConsoleBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<ConsoleBackendDispatcher> create(BackendDispatcher*, ConsoleBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<ConsoleBackendDispatcher> create(BackendDispatcher&, ConsoleBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void clearMessages(long callId, const InspectorObject& message);
-    void setMonitoringXHREnabled(long callId, const InspectorObject& message);
-    void addInspectedNode(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void clearMessages(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setMonitoringXHREnabled(long requestId, RefPtr<InspectorObject>&& parameters);
+    void addInspectedNode(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     ConsoleBackendDispatcher(BackendDispatcher&, ConsoleBackendDispatcherHandler*);
     ConsoleBackendDispatcherHandler* m_agent;
@@ -423,44 +425,44 @@ private:
 
 class JS_EXPORT_PRIVATE DOMBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<DOMBackendDispatcher> create(BackendDispatcher*, DOMBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<DOMBackendDispatcher> create(BackendDispatcher&, DOMBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void getDocument(long callId, const InspectorObject& message);
-    void requestChildNodes(long callId, const InspectorObject& message);
-    void querySelector(long callId, const InspectorObject& message);
-    void querySelectorAll(long callId, const InspectorObject& message);
-    void setNodeName(long callId, const InspectorObject& message);
-    void setNodeValue(long callId, const InspectorObject& message);
-    void removeNode(long callId, const InspectorObject& message);
-    void setAttributeValue(long callId, const InspectorObject& message);
-    void setAttributesAsText(long callId, const InspectorObject& message);
-    void removeAttribute(long callId, const InspectorObject& message);
-    void getEventListenersForNode(long callId, const InspectorObject& message);
-    void getAccessibilityPropertiesForNode(long callId, const InspectorObject& message);
-    void getOuterHTML(long callId, const InspectorObject& message);
-    void setOuterHTML(long callId, const InspectorObject& message);
-    void performSearch(long callId, const InspectorObject& message);
-    void getSearchResults(long callId, const InspectorObject& message);
-    void discardSearchResults(long callId, const InspectorObject& message);
-    void requestNode(long callId, const InspectorObject& message);
-    void setInspectModeEnabled(long callId, const InspectorObject& message);
-    void highlightRect(long callId, const InspectorObject& message);
-    void highlightQuad(long callId, const InspectorObject& message);
-    void highlightSelector(long callId, const InspectorObject& message);
-    void highlightNode(long callId, const InspectorObject& message);
-    void hideHighlight(long callId, const InspectorObject& message);
-    void highlightFrame(long callId, const InspectorObject& message);
-    void pushNodeByPathToFrontend(long callId, const InspectorObject& message);
-    void pushNodeByBackendIdToFrontend(long callId, const InspectorObject& message);
-    void releaseBackendNodeIds(long callId, const InspectorObject& message);
-    void resolveNode(long callId, const InspectorObject& message);
-    void getAttributes(long callId, const InspectorObject& message);
-    void moveTo(long callId, const InspectorObject& message);
-    void undo(long callId, const InspectorObject& message);
-    void redo(long callId, const InspectorObject& message);
-    void markUndoableState(long callId, const InspectorObject& message);
-    void focus(long callId, const InspectorObject& message);
+    void getDocument(long requestId, RefPtr<InspectorObject>&& parameters);
+    void requestChildNodes(long requestId, RefPtr<InspectorObject>&& parameters);
+    void querySelector(long requestId, RefPtr<InspectorObject>&& parameters);
+    void querySelectorAll(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setNodeName(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setNodeValue(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setAttributeValue(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setAttributesAsText(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeAttribute(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getEventListenersForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getAccessibilityPropertiesForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getOuterHTML(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setOuterHTML(long requestId, RefPtr<InspectorObject>&& parameters);
+    void performSearch(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getSearchResults(long requestId, RefPtr<InspectorObject>&& parameters);
+    void discardSearchResults(long requestId, RefPtr<InspectorObject>&& parameters);
+    void requestNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setInspectModeEnabled(long requestId, RefPtr<InspectorObject>&& parameters);
+    void highlightRect(long requestId, RefPtr<InspectorObject>&& parameters);
+    void highlightQuad(long requestId, RefPtr<InspectorObject>&& parameters);
+    void highlightSelector(long requestId, RefPtr<InspectorObject>&& parameters);
+    void highlightNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void hideHighlight(long requestId, RefPtr<InspectorObject>&& parameters);
+    void highlightFrame(long requestId, RefPtr<InspectorObject>&& parameters);
+    void pushNodeByPathToFrontend(long requestId, RefPtr<InspectorObject>&& parameters);
+    void pushNodeByBackendIdToFrontend(long requestId, RefPtr<InspectorObject>&& parameters);
+    void releaseBackendNodeIds(long requestId, RefPtr<InspectorObject>&& parameters);
+    void resolveNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getAttributes(long requestId, RefPtr<InspectorObject>&& parameters);
+    void moveTo(long requestId, RefPtr<InspectorObject>&& parameters);
+    void undo(long requestId, RefPtr<InspectorObject>&& parameters);
+    void redo(long requestId, RefPtr<InspectorObject>&& parameters);
+    void markUndoableState(long requestId, RefPtr<InspectorObject>&& parameters);
+    void focus(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     DOMBackendDispatcher(BackendDispatcher&, DOMBackendDispatcherHandler*);
     DOMBackendDispatcherHandler* m_agent;
@@ -474,17 +476,17 @@ private:
 
 class JS_EXPORT_PRIVATE DOMDebuggerBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<DOMDebuggerBackendDispatcher> create(BackendDispatcher*, DOMDebuggerBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<DOMDebuggerBackendDispatcher> create(BackendDispatcher&, DOMDebuggerBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void setDOMBreakpoint(long callId, const InspectorObject& message);
-    void removeDOMBreakpoint(long callId, const InspectorObject& message);
-    void setEventListenerBreakpoint(long callId, const InspectorObject& message);
-    void removeEventListenerBreakpoint(long callId, const InspectorObject& message);
-    void setInstrumentationBreakpoint(long callId, const InspectorObject& message);
-    void removeInstrumentationBreakpoint(long callId, const InspectorObject& message);
-    void setXHRBreakpoint(long callId, const InspectorObject& message);
-    void removeXHRBreakpoint(long callId, const InspectorObject& message);
+    void setDOMBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeDOMBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setEventListenerBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeEventListenerBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setInstrumentationBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeInstrumentationBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setXHRBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeXHRBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     DOMDebuggerBackendDispatcher(BackendDispatcher&, DOMDebuggerBackendDispatcherHandler*);
     DOMDebuggerBackendDispatcherHandler* m_agent;
@@ -498,14 +500,14 @@ private:
 
 class JS_EXPORT_PRIVATE DOMStorageBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<DOMStorageBackendDispatcher> create(BackendDispatcher*, DOMStorageBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<DOMStorageBackendDispatcher> create(BackendDispatcher&, DOMStorageBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void getDOMStorageItems(long callId, const InspectorObject& message);
-    void setDOMStorageItem(long callId, const InspectorObject& message);
-    void removeDOMStorageItem(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getDOMStorageItems(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setDOMStorageItem(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeDOMStorageItem(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     DOMStorageBackendDispatcher(BackendDispatcher&, DOMStorageBackendDispatcherHandler*);
     DOMStorageBackendDispatcherHandler* m_agent;
@@ -519,13 +521,13 @@ private:
 
 class JS_EXPORT_PRIVATE DatabaseBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<DatabaseBackendDispatcher> create(BackendDispatcher*, DatabaseBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<DatabaseBackendDispatcher> create(BackendDispatcher&, DatabaseBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void getDatabaseTableNames(long callId, const InspectorObject& message);
-    void executeSQL(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getDatabaseTableNames(long requestId, RefPtr<InspectorObject>&& parameters);
+    void executeSQL(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     DatabaseBackendDispatcher(BackendDispatcher&, DatabaseBackendDispatcherHandler*);
     DatabaseBackendDispatcherHandler* m_agent;
@@ -539,27 +541,27 @@ private:
 
 class JS_EXPORT_PRIVATE DebuggerBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<DebuggerBackendDispatcher> create(BackendDispatcher*, DebuggerBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<DebuggerBackendDispatcher> create(BackendDispatcher&, DebuggerBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void setBreakpointsActive(long callId, const InspectorObject& message);
-    void setBreakpointByUrl(long callId, const InspectorObject& message);
-    void setBreakpoint(long callId, const InspectorObject& message);
-    void removeBreakpoint(long callId, const InspectorObject& message);
-    void continueToLocation(long callId, const InspectorObject& message);
-    void stepOver(long callId, const InspectorObject& message);
-    void stepInto(long callId, const InspectorObject& message);
-    void stepOut(long callId, const InspectorObject& message);
-    void pause(long callId, const InspectorObject& message);
-    void resume(long callId, const InspectorObject& message);
-    void searchInContent(long callId, const InspectorObject& message);
-    void getScriptSource(long callId, const InspectorObject& message);
-    void getFunctionDetails(long callId, const InspectorObject& message);
-    void setPauseOnExceptions(long callId, const InspectorObject& message);
-    void evaluateOnCallFrame(long callId, const InspectorObject& message);
-    void setOverlayMessage(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setBreakpointsActive(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setBreakpointByUrl(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters);
+    void continueToLocation(long requestId, RefPtr<InspectorObject>&& parameters);
+    void stepOver(long requestId, RefPtr<InspectorObject>&& parameters);
+    void stepInto(long requestId, RefPtr<InspectorObject>&& parameters);
+    void stepOut(long requestId, RefPtr<InspectorObject>&& parameters);
+    void pause(long requestId, RefPtr<InspectorObject>&& parameters);
+    void resume(long requestId, RefPtr<InspectorObject>&& parameters);
+    void searchInContent(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getScriptSource(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getFunctionDetails(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setPauseOnExceptions(long requestId, RefPtr<InspectorObject>&& parameters);
+    void evaluateOnCallFrame(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setOverlayMessage(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     DebuggerBackendDispatcher(BackendDispatcher&, DebuggerBackendDispatcherHandler*);
     DebuggerBackendDispatcherHandler* m_agent;
@@ -571,14 +573,33 @@ private:
 #endif
 };
 
+class JS_EXPORT_PRIVATE HeapBackendDispatcher final : public SupplementalBackendDispatcher {
+public:
+    static Ref<HeapBackendDispatcher> create(BackendDispatcher&, HeapBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
+private:
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void gc(long requestId, RefPtr<InspectorObject>&& parameters);
+private:
+    HeapBackendDispatcher(BackendDispatcher&, HeapBackendDispatcherHandler*);
+    HeapBackendDispatcherHandler* m_agent;
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+public:
+    void setAlternateDispatcher(AlternateHeapBackendDispatcher* alternateDispatcher) { m_alternateDispatcher = alternateDispatcher; }
+private:
+    AlternateHeapBackendDispatcher* m_alternateDispatcher;
+#endif
+};
+
 class JS_EXPORT_PRIVATE InspectorBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<InspectorBackendDispatcher> create(BackendDispatcher*, InspectorBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<InspectorBackendDispatcher> create(BackendDispatcher&, InspectorBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void initialized(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void initialized(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     InspectorBackendDispatcher(BackendDispatcher&, InspectorBackendDispatcherHandler*);
     InspectorBackendDispatcherHandler* m_agent;
@@ -592,13 +613,13 @@ private:
 
 class JS_EXPORT_PRIVATE LayerTreeBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<LayerTreeBackendDispatcher> create(BackendDispatcher*, LayerTreeBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<LayerTreeBackendDispatcher> create(BackendDispatcher&, LayerTreeBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void layersForNode(long callId, const InspectorObject& message);
-    void reasonsForCompositingLayer(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void layersForNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void reasonsForCompositingLayer(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     LayerTreeBackendDispatcher(BackendDispatcher&, LayerTreeBackendDispatcherHandler*);
     LayerTreeBackendDispatcherHandler* m_agent;
@@ -612,19 +633,15 @@ private:
 
 class JS_EXPORT_PRIVATE NetworkBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<NetworkBackendDispatcher> create(BackendDispatcher*, NetworkBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<NetworkBackendDispatcher> create(BackendDispatcher&, NetworkBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void setExtraHTTPHeaders(long callId, const InspectorObject& message);
-    void getResponseBody(long callId, const InspectorObject& message);
-    void canClearBrowserCache(long callId, const InspectorObject& message);
-    void clearBrowserCache(long callId, const InspectorObject& message);
-    void canClearBrowserCookies(long callId, const InspectorObject& message);
-    void clearBrowserCookies(long callId, const InspectorObject& message);
-    void setCacheDisabled(long callId, const InspectorObject& message);
-    void loadResource(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setExtraHTTPHeaders(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getResponseBody(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setCacheDisabled(long requestId, RefPtr<InspectorObject>&& parameters);
+    void loadResource(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     NetworkBackendDispatcher(BackendDispatcher&, NetworkBackendDispatcherHandler*);
     NetworkBackendDispatcherHandler* m_agent;
@@ -638,33 +655,33 @@ private:
 
 class JS_EXPORT_PRIVATE PageBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<PageBackendDispatcher> create(BackendDispatcher*, PageBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<PageBackendDispatcher> create(BackendDispatcher&, PageBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void addScriptToEvaluateOnLoad(long callId, const InspectorObject& message);
-    void removeScriptToEvaluateOnLoad(long callId, const InspectorObject& message);
-    void reload(long callId, const InspectorObject& message);
-    void navigate(long callId, const InspectorObject& message);
-    void getCookies(long callId, const InspectorObject& message);
-    void deleteCookie(long callId, const InspectorObject& message);
-    void getResourceTree(long callId, const InspectorObject& message);
-    void getResourceContent(long callId, const InspectorObject& message);
-    void searchInResource(long callId, const InspectorObject& message);
-    void searchInResources(long callId, const InspectorObject& message);
-    void setDocumentContent(long callId, const InspectorObject& message);
-    void setShowPaintRects(long callId, const InspectorObject& message);
-    void getScriptExecutionStatus(long callId, const InspectorObject& message);
-    void setScriptExecutionDisabled(long callId, const InspectorObject& message);
-    void setTouchEmulationEnabled(long callId, const InspectorObject& message);
-    void setEmulatedMedia(long callId, const InspectorObject& message);
-    void getCompositingBordersVisible(long callId, const InspectorObject& message);
-    void setCompositingBordersVisible(long callId, const InspectorObject& message);
-    void snapshotNode(long callId, const InspectorObject& message);
-    void snapshotRect(long callId, const InspectorObject& message);
-    void handleJavaScriptDialog(long callId, const InspectorObject& message);
-    void archive(long callId, const InspectorObject& message);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void addScriptToEvaluateOnLoad(long requestId, RefPtr<InspectorObject>&& parameters);
+    void removeScriptToEvaluateOnLoad(long requestId, RefPtr<InspectorObject>&& parameters);
+    void reload(long requestId, RefPtr<InspectorObject>&& parameters);
+    void navigate(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getCookies(long requestId, RefPtr<InspectorObject>&& parameters);
+    void deleteCookie(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getResourceTree(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getResourceContent(long requestId, RefPtr<InspectorObject>&& parameters);
+    void searchInResource(long requestId, RefPtr<InspectorObject>&& parameters);
+    void searchInResources(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setDocumentContent(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setShowPaintRects(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getScriptExecutionStatus(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setScriptExecutionDisabled(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setTouchEmulationEnabled(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setEmulatedMedia(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getCompositingBordersVisible(long requestId, RefPtr<InspectorObject>&& parameters);
+    void setCompositingBordersVisible(long requestId, RefPtr<InspectorObject>&& parameters);
+    void snapshotNode(long requestId, RefPtr<InspectorObject>&& parameters);
+    void snapshotRect(long requestId, RefPtr<InspectorObject>&& parameters);
+    void handleJavaScriptDialog(long requestId, RefPtr<InspectorObject>&& parameters);
+    void archive(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     PageBackendDispatcher(BackendDispatcher&, PageBackendDispatcherHandler*);
     PageBackendDispatcherHandler* m_agent;
@@ -678,25 +695,24 @@ private:
 
 class JS_EXPORT_PRIVATE RuntimeBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<RuntimeBackendDispatcher> create(BackendDispatcher*, RuntimeBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<RuntimeBackendDispatcher> create(BackendDispatcher&, RuntimeBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void parse(long callId, const InspectorObject& message);
-    void evaluate(long callId, const InspectorObject& message);
-    void callFunctionOn(long callId, const InspectorObject& message);
-    void getProperties(long callId, const InspectorObject& message);
-    void getDisplayableProperties(long callId, const InspectorObject& message);
-    void getCollectionEntries(long callId, const InspectorObject& message);
-    void saveResult(long callId, const InspectorObject& message);
-    void releaseObject(long callId, const InspectorObject& message);
-    void releaseObjectGroup(long callId, const InspectorObject& message);
-    void run(long callId, const InspectorObject& message);
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void getRuntimeTypesForVariablesAtOffsets(long callId, const InspectorObject& message);
-    void enableTypeProfiler(long callId, const InspectorObject& message);
-    void disableTypeProfiler(long callId, const InspectorObject& message);
-    void getBasicBlocks(long callId, const InspectorObject& message);
+    void parse(long requestId, RefPtr<InspectorObject>&& parameters);
+    void evaluate(long requestId, RefPtr<InspectorObject>&& parameters);
+    void callFunctionOn(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getProperties(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getDisplayableProperties(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getCollectionEntries(long requestId, RefPtr<InspectorObject>&& parameters);
+    void saveResult(long requestId, RefPtr<InspectorObject>&& parameters);
+    void releaseObject(long requestId, RefPtr<InspectorObject>&& parameters);
+    void releaseObjectGroup(long requestId, RefPtr<InspectorObject>&& parameters);
+    void enable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disable(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getRuntimeTypesForVariablesAtOffsets(long requestId, RefPtr<InspectorObject>&& parameters);
+    void enableTypeProfiler(long requestId, RefPtr<InspectorObject>&& parameters);
+    void disableTypeProfiler(long requestId, RefPtr<InspectorObject>&& parameters);
+    void getBasicBlocks(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     RuntimeBackendDispatcher(BackendDispatcher&, RuntimeBackendDispatcherHandler*);
     RuntimeBackendDispatcherHandler* m_agent;
@@ -708,13 +724,31 @@ private:
 #endif
 };
 
+class JS_EXPORT_PRIVATE ScriptProfilerBackendDispatcher final : public SupplementalBackendDispatcher {
+public:
+    static Ref<ScriptProfilerBackendDispatcher> create(BackendDispatcher&, ScriptProfilerBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
+private:
+    void startTracking(long requestId, RefPtr<InspectorObject>&& parameters);
+    void stopTracking(long requestId, RefPtr<InspectorObject>&& parameters);
+private:
+    ScriptProfilerBackendDispatcher(BackendDispatcher&, ScriptProfilerBackendDispatcherHandler*);
+    ScriptProfilerBackendDispatcherHandler* m_agent;
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+public:
+    void setAlternateDispatcher(AlternateScriptProfilerBackendDispatcher* alternateDispatcher) { m_alternateDispatcher = alternateDispatcher; }
+private:
+    AlternateScriptProfilerBackendDispatcher* m_alternateDispatcher;
+#endif
+};
+
 class JS_EXPORT_PRIVATE TimelineBackendDispatcher final : public SupplementalBackendDispatcher {
 public:
-    static Ref<TimelineBackendDispatcher> create(BackendDispatcher*, TimelineBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
+    static Ref<TimelineBackendDispatcher> create(BackendDispatcher&, TimelineBackendDispatcherHandler*);
+    virtual void dispatch(long requestId, const String& method, Ref<InspectorObject>&& message) override;
 private:
-    void start(long callId, const InspectorObject& message);
-    void stop(long callId, const InspectorObject& message);
+    void start(long requestId, RefPtr<InspectorObject>&& parameters);
+    void stop(long requestId, RefPtr<InspectorObject>&& parameters);
 private:
     TimelineBackendDispatcher(BackendDispatcher&, TimelineBackendDispatcherHandler*);
     TimelineBackendDispatcherHandler* m_agent;
@@ -723,29 +757,6 @@ public:
     void setAlternateDispatcher(AlternateTimelineBackendDispatcher* alternateDispatcher) { m_alternateDispatcher = alternateDispatcher; }
 private:
     AlternateTimelineBackendDispatcher* m_alternateDispatcher;
-#endif
-};
-
-class JS_EXPORT_PRIVATE WorkerBackendDispatcher final : public SupplementalBackendDispatcher {
-public:
-    static Ref<WorkerBackendDispatcher> create(BackendDispatcher*, WorkerBackendDispatcherHandler*);
-    virtual void dispatch(long callId, const String& method, Ref<InspectorObject>&& message) override;
-private:
-    void enable(long callId, const InspectorObject& message);
-    void disable(long callId, const InspectorObject& message);
-    void sendMessageToWorker(long callId, const InspectorObject& message);
-    void canInspectWorkers(long callId, const InspectorObject& message);
-    void connectToWorker(long callId, const InspectorObject& message);
-    void disconnectFromWorker(long callId, const InspectorObject& message);
-    void setAutoconnectToWorkers(long callId, const InspectorObject& message);
-private:
-    WorkerBackendDispatcher(BackendDispatcher&, WorkerBackendDispatcherHandler*);
-    WorkerBackendDispatcherHandler* m_agent;
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-public:
-    void setAlternateDispatcher(AlternateWorkerBackendDispatcher* alternateDispatcher) { m_alternateDispatcher = alternateDispatcher; }
-private:
-    AlternateWorkerBackendDispatcher* m_alternateDispatcher;
 #endif
 };
 

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTestSerializedScriptValueInterface : public JSDOMWrapper {
+class JSTestSerializedScriptValueInterface : public JSDOMWrapper<TestSerializedScriptValueInterface> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TestSerializedScriptValueInterface> Base;
     static JSTestSerializedScriptValueInterface* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TestSerializedScriptValueInterface>&& impl)
     {
-        JSTestSerializedScriptValueInterface* ptr = new (NotNull, JSC::allocateCell<JSTestSerializedScriptValueInterface>(globalObject->vm().heap)) JSTestSerializedScriptValueInterface(structure, globalObject, WTF::move(impl));
+        JSTestSerializedScriptValueInterface* ptr = new (NotNull, JSC::allocateCell<JSTestSerializedScriptValueInterface>(globalObject->vm().heap)) JSTestSerializedScriptValueInterface(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static TestSerializedScriptValueInterface* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTestSerializedScriptValueInterface();
 
     DECLARE_INFO;
 
@@ -53,17 +52,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_cachedValue;
-    JSC::WriteBarrier<JSC::Unknown> m_cachedReadonlyValue;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_cachedValue;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_cachedReadonlyValue;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    TestSerializedScriptValueInterface& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TestSerializedScriptValueInterface* m_impl;
 protected:
-    JSTestSerializedScriptValueInterface(JSC::Structure*, JSDOMGlobalObject*, Ref<TestSerializedScriptValueInterface>&&);
+    JSTestSerializedScriptValueInterface(JSC::Structure*, JSDOMGlobalObject&, Ref<TestSerializedScriptValueInterface>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -86,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TestSerializedScript
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TestSerializedScriptValueInterface*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TestSerializedScriptValueInterface& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TestSerializedScriptValueInterface& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TestSerializedScriptValueInterface*);
 
 
 } // namespace WebCore

@@ -31,7 +31,7 @@ public:
     typedef JSUIEvent Base;
     static JSTextEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextEvent>&& impl)
     {
-        JSTextEvent* ptr = new (NotNull, JSC::allocateCell<JSTextEvent>(globalObject->vm().heap)) JSTextEvent(structure, globalObject, WTF::move(impl));
+        JSTextEvent* ptr = new (NotNull, JSC::allocateCell<JSTextEvent>(globalObject->vm().heap)) JSTextEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TextEvent& impl() const
+    TextEvent& wrapped() const
     {
-        return static_cast<TextEvent&>(Base::impl());
+        return static_cast<TextEvent&>(Base::wrapped());
     }
 protected:
-    JSTextEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TextEvent>&&);
+    JSTextEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TextEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

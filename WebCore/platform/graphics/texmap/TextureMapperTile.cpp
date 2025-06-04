@@ -37,7 +37,7 @@ namespace WebCore {
 
 class GraphicsLayer;
 
-void TextureMapperTile::updateContents(TextureMapper* textureMapper, Image* image, const IntRect& dirtyRect, BitmapTexture::UpdateContentsFlag updateContentsFlag)
+void TextureMapperTile::updateContents(TextureMapper& textureMapper, Image* image, const IntRect& dirtyRect, BitmapTexture::UpdateContentsFlag updateContentsFlag)
 {
     IntRect targetRect = enclosingIntRect(m_rect);
     targetRect.intersect(dirtyRect);
@@ -53,7 +53,7 @@ void TextureMapperTile::updateContents(TextureMapper* textureMapper, Image* imag
     if (!m_texture) {
         //+EAWebKitChange
         //4/28/2015
-        m_texture = textureMapper->createTexture(EA::WebKit::SurfaceTypeTexture, 0, 0);
+        m_texture = textureMapper.createTexture(EA::WebKit::SurfaceTypeTexture, 0, 0);
         //-EAWebKitChange
         m_texture->reset(targetRect.size(), image->currentFrameKnownToBeOpaque() ? 0 : BitmapTexture::SupportsAlpha);
     }
@@ -78,7 +78,7 @@ const WTF::String* imageSrcUrl(const GraphicsLayer* layer)
 //-EAWebKitChange
 
 
-void TextureMapperTile::updateContents(TextureMapper* textureMapper, GraphicsLayer* sourceLayer, const IntRect& dirtyRect, BitmapTexture::UpdateContentsFlag updateContentsFlag)
+void TextureMapperTile::updateContents(TextureMapper& textureMapper, GraphicsLayer* sourceLayer, const IntRect& dirtyRect, BitmapTexture::UpdateContentsFlag updateContentsFlag, float scale)
 {
     IntRect targetRect = enclosingIntRect(m_rect);
     targetRect.intersect(dirtyRect);
@@ -111,20 +111,20 @@ void TextureMapperTile::updateContents(TextureMapper* textureMapper, GraphicsLay
     if (!m_texture || srcChanged) 
     {
         if(customTexture)
-            m_texture = textureMapper->createTexture(EA::WebKit::SurfaceTypeCustom, textureName.characters8(), textureName.length());
+            m_texture = textureMapper.createTexture(EA::WebKit::SurfaceTypeCustom, textureName.characters8(), textureName.length());
         else
-            m_texture = textureMapper->createTexture(EA::WebKit::SurfaceTypeTexture);
+            m_texture = textureMapper.createTexture(EA::WebKit::SurfaceTypeTexture);
         m_texture->reset(targetRect.size(), BitmapTexture::SupportsAlpha);
     }
     //-EAWebKitChange
 
-    m_texture->updateContents(textureMapper, sourceLayer, targetRect, sourceOffset, updateContentsFlag);
+    m_texture->updateContents(textureMapper, sourceLayer, targetRect, sourceOffset, updateContentsFlag, scale);
 }
 
-void TextureMapperTile::paint(TextureMapper* textureMapper, const TransformationMatrix& transform, float opacity, const unsigned exposedEdges)
+void TextureMapperTile::paint(TextureMapper& textureMapper, const TransformationMatrix& transform, float opacity, const unsigned exposedEdges)
 {
     if (texture().get())
-        textureMapper->drawTexture(*texture().get(), rect(), transform, opacity, exposedEdges);
+        textureMapper.drawTexture(*texture().get(), rect(), transform, opacity, exposedEdges);
 }
 
 } // namespace WebCore

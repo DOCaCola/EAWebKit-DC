@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSAbstractView : public JSDOMWrapper {
+class JSAbstractView : public JSDOMWrapper<DOMWindow> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMWindow> Base;
     static JSAbstractView* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMWindow>&& impl)
     {
-        JSAbstractView* ptr = new (NotNull, JSC::allocateCell<JSAbstractView>(globalObject->vm().heap)) JSAbstractView(structure, globalObject, WTF::move(impl));
+        JSAbstractView* ptr = new (NotNull, JSC::allocateCell<JSAbstractView>(globalObject->vm().heap)) JSAbstractView(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMWindow* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSAbstractView();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    DOMWindow& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMWindow* m_impl;
 protected:
-    JSAbstractView(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMWindow>&&);
+    JSAbstractView(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMWindow>&&);
 
     void finishCreation(JSC::VM& vm)
     {

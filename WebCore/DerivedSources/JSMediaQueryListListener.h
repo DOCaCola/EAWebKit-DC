@@ -38,6 +38,7 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSMediaQueryListListener();
+    JSCallbackDataStrong* callbackData() { return m_data; }
     virtual bool operator==(const MediaQueryListListener&) const;
 
 
@@ -47,8 +48,11 @@ public:
 private:
     JSMediaQueryListListener(JSC::JSObject* callback, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaQueryListListener*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaQueryListListener& impl) { return toJS(state, globalObject, &impl); }
 
 } // namespace WebCore
 

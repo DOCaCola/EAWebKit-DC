@@ -34,7 +34,7 @@ public:
     typedef JSSVGTextPositioningElement Base;
     static JSSVGAltGlyphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAltGlyphElement>&& impl)
     {
-        JSSVGAltGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphElement>(globalObject->vm().heap)) JSSVGAltGlyphElement(structure, globalObject, WTF::move(impl));
+        JSSVGAltGlyphElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphElement>(globalObject->vm().heap)) JSSVGAltGlyphElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAltGlyphElement& impl() const
+    SVGAltGlyphElement& wrapped() const
     {
-        return static_cast<SVGAltGlyphElement&>(Base::impl());
+        return static_cast<SVGAltGlyphElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAltGlyphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAltGlyphElement>&&);
+    JSSVGAltGlyphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAltGlyphElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSCDATASection.h"
 
-#include "CDATASection.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCDATASectionConstructor : public DOMConstructorObject {
-private:
-    JSCDATASectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCDATASection> JSCDATASectionConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCDATASectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCDATASectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSCDATASectionConstructor>(vm.heap)) JSCDATASectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCDATASectionConstructor::s_info = { "CDATASectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionConstructor) };
-
-JSCDATASectionConstructor::JSCDATASectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCDATASectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCDATASectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCDATASection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCDATASection::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CDATASection"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCDATASectionConstructor::s_info = { "CDATASectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCDATASectionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCDATASectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCDATASectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCDATASectionPrototype::s_info = { "CDATASectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASectionPrototype) };
@@ -112,7 +86,7 @@ void JSCDATASectionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCDATASection::s_info = { "CDATASection", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCDATASection) };
 
-JSCDATASection::JSCDATASection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CDATASection>&& impl)
+JSCDATASection::JSCDATASection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CDATASection>&& impl)
     : JSText(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,61 @@ JSObject* JSCDATASection::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCDATASection>(vm, globalObject);
 }
 
-EncodedJSValue jsCDATASectionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCDATASectionConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCDATASectionPrototype* domObject = jsDynamicCast<JSCDATASectionPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCDATASection::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCDATASection::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSCDATASection::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCDATASectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCDATASectionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7CDATASection@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore12CDATASectionE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, CDATASection* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSCDATASection>(globalObject, impl);
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CDATASection* impl)
+{
+    if (!impl)
+        return jsNull();
+    if (JSValue result = getExistingWrapper<JSCDATASection>(globalObject, impl))
+        return result;
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CDATASection@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore12CDATASectionE[2];
+#if COMPILER(CLANG)
+    // If this fails CDATASection does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    COMPILE_ASSERT(__is_polymorphic(CDATASection), CDATASection_is_not_polymorphic);
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // CDATASection has subclasses. If CDATASection has subclasses that get passed
+    // to toJS() we currently require CDATASection you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createNewWrapper<JSCDATASection>(globalObject, impl);
 }
 
 

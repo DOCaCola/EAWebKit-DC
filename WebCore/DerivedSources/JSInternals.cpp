@@ -30,12 +30,12 @@
 #include "ExceptionCode.h"
 #include "File.h"
 #include "InternalSettings.h"
-#include "Internals.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSClientRect.h"
 #include "JSClientRectList.h"
 #include "JSDOMBinding.h"
 #include "JSDOMStringList.h"
+#include "JSDOMURL.h"
 #include "JSDOMWindow.h"
 #include "JSDocument.h"
 #include "JSElement.h"
@@ -43,6 +43,7 @@
 #include "JSInternalSettings.h"
 #include "JSMallocStatistics.h"
 #include "JSMemoryInfo.h"
+#include "JSMockPageOverlay.h"
 #include "JSNode.h"
 #include "JSNodeList.h"
 #include "JSRange.h"
@@ -51,6 +52,7 @@
 #include "JSXMLHttpRequest.h"
 #include "MallocStatistics.h"
 #include "MemoryInfo.h"
+#include "MockPageOverlay.h"
 #include "NameNodeList.h"
 #include "Node.h"
 #include "NodeList.h"
@@ -138,6 +140,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtT
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtTimeOnPseudoElement(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAttached(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionVisiblePlaceholder(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSelectColorInColorChooser(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionFormControlStateOfPreviousHistoryItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFormControlStateOfPreviousHistoryItem(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAbsoluteCaretBounds(JSC::ExecState*);
@@ -147,6 +150,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInspectorHighlight
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerCountForNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerRangeForNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerDescriptionForNode(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDumpMarkerRects(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAddTextMatchMarker(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMarkedTextMatchesAreHighlighted(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInvalidateFontCache(JSC::ExecState*);
@@ -204,7 +208,6 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertAuthorCSS(JS
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertUserCSS(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveNodes(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveDocuments(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionConsoleMessageArgumentCounts(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionOpenDummyInspectorFrontend(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCloseDummyInspectorFrontend(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetJavaScriptProfilingEnabled(JSC::ExecState*);
@@ -254,6 +257,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSerializeObject(JS
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsFromCurrentWorld(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUsesOverlayScrollbars(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionForceReload(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnableAutoSizeMode(JSC::ExecState*);
 #if ENABLE(VIDEO)
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateAudioInterruption(JSC::ExecState*);
 #endif
@@ -320,7 +324,7 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementPlayer
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaControlEvent(JSC::ExecState*);
 #endif
 #if ENABLE(VIDEO)
-JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterForeground(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationDidEnterForeground(JSC::ExecState*);
 #endif
 #if ENABLE(VIDEO)
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterBackground(JSC::ExecState*);
@@ -337,6 +341,15 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAudioContextRes
 #if ENABLE(VIDEO)
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPostRemoteControlCommand(JSC::ExecState*);
 #endif
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerEnabled(JSC::ExecState*);
+#endif
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerState(JSC::ExecState*);
+#endif
+#if ENABLE(MEDIA_STREAM)
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaCaptureDevicesEnabled(JSC::ExecState*);
+#endif
 #if ENABLE(VIDEO)
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemSleep(JSC::ExecState*);
 #endif
@@ -350,10 +363,19 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInstallMockPageOve
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageOverlayLayerTreeAsText(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageMuted(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPagePlayingAudio(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageDefersLoading(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateFile(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionQueueMicroTask(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTestPreloaderSettingViewport(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPathStringWithShrinkWrappedRects(JSC::ExecState*);
+#if ENABLE(VIDEO)
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetCurrentMediaControlsStatusForElement(JSC::ExecState*);
+#endif
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserVisibleString(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShowAllPlugins(JSC::ExecState*);
+#if ENABLE(STREAMS_API)
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsReadableStreamDisturbed(JSC::ExecState*);
+#endif
 
 // Attributes
 
@@ -394,334 +416,364 @@ private:
 
 static const HashTableValue JSInternalsPrototypeTableValues[] =
 {
-    { "settings", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsSettings), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "workerThreadCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsWorkerThreadCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "consoleProfiles", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsConsoleProfiles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "layoutCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsLayoutCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "settings", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsSettings), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "workerThreadCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsWorkerThreadCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "consoleProfiles", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsConsoleProfiles), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "layoutCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsLayoutCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(CONTENT_FILTERING)
-    { "mockContentFilterSettings", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsMockContentFilterSettings), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "mockContentFilterSettings", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsInternalsMockContentFilterSettings), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "LAYER_TREE_INCLUDES_VISIBLE_RECTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "LAYER_TREE_INCLUDES_TILE_CACHES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "LAYER_TREE_INCLUDES_REPAINT_RECTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "LAYER_TREE_INCLUDES_PAINTING_PHASES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "LAYER_TREE_INCLUDES_CONTENT_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "address", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAddress), (intptr_t) (1) },
-    { "nodeNeedsStyleRecalc", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNodeNeedsStyleRecalc), (intptr_t) (1) },
-    { "description", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionDescription), (intptr_t) (1) },
-    { "hasPausedImageAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasPausedImageAnimations), (intptr_t) (1) },
-    { "elementRenderTreeAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementRenderTreeAsText), (intptr_t) (1) },
-    { "isPreloaded", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPreloaded), (intptr_t) (1) },
-    { "isLoadingFromMemoryCache", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsLoadingFromMemoryCache), (intptr_t) (1) },
-    { "xhrResponseSource", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionXhrResponseSource), (intptr_t) (1) },
-    { "isSharingStyleSheetContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsSharingStyleSheetContents), (intptr_t) (2) },
-    { "isStyleSheetLoadingSubresources", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsStyleSheetLoadingSubresources), (intptr_t) (1) },
-    { "clearMemoryCache", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClearMemoryCache), (intptr_t) (0) },
-    { "pruneMemoryCacheToSize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPruneMemoryCacheToSize), (intptr_t) (1) },
-    { "memoryCacheSize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMemoryCacheSize), (intptr_t) (0) },
-    { "setOverrideCachePolicy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetOverrideCachePolicy), (intptr_t) (1) },
-    { "setOverrideResourceLoadPriority", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetOverrideResourceLoadPriority), (intptr_t) (1) },
-    { "setStrictRawResourceValidationPolicyDisabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetStrictRawResourceValidationPolicyDisabled), (intptr_t) (1) },
-    { "clearPageCache", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClearPageCache), (intptr_t) (0) },
-    { "pageCacheSize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageCacheSize), (intptr_t) (0) },
-    { "computedStyleIncludingVisitedInfo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionComputedStyleIncludingVisitedInfo), (intptr_t) (1) },
-    { "ensureShadowRoot", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnsureShadowRoot), (intptr_t) (1) },
-    { "ensureUserAgentShadowRoot", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnsureUserAgentShadowRoot), (intptr_t) (1) },
-    { "createShadowRoot", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateShadowRoot), (intptr_t) (1) },
-    { "shadowRoot", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowRoot), (intptr_t) (1) },
-    { "shadowRootType", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowRootType), (intptr_t) (1) },
-    { "includerFor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIncluderFor), (intptr_t) (1) },
-    { "shadowPseudoId", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowPseudoId), (intptr_t) (1) },
-    { "setShadowPseudoId", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShadowPseudoId), (intptr_t) (2) },
-    { "treeScopeRootNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTreeScopeRootNode), (intptr_t) (1) },
-    { "parentTreeScope", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionParentTreeScope), (intptr_t) (1) },
-    { "lastSpatialNavigationCandidateCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpatialNavigationCandidateCount), (intptr_t) (0) },
-    { "numberOfActiveAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfActiveAnimations), (intptr_t) (0) },
-    { "suspendAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSuspendAnimations), (intptr_t) (0) },
-    { "resumeAnimations", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionResumeAnimations), (intptr_t) (0) },
-    { "animationsAreSuspended", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAnimationsAreSuspended), (intptr_t) (0) },
-    { "pauseAnimationAtTimeOnElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseAnimationAtTimeOnElement), (intptr_t) (3) },
-    { "pauseAnimationAtTimeOnPseudoElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseAnimationAtTimeOnPseudoElement), (intptr_t) (4) },
-    { "pauseTransitionAtTimeOnElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseTransitionAtTimeOnElement), (intptr_t) (3) },
-    { "pauseTransitionAtTimeOnPseudoElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseTransitionAtTimeOnPseudoElement), (intptr_t) (4) },
-    { "attached", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAttached), (intptr_t) (1) },
-    { "visiblePlaceholder", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionVisiblePlaceholder), (intptr_t) (1) },
-    { "formControlStateOfPreviousHistoryItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionFormControlStateOfPreviousHistoryItem), (intptr_t) (0) },
-    { "setFormControlStateOfPreviousHistoryItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFormControlStateOfPreviousHistoryItem), (intptr_t) (1) },
-    { "absoluteCaretBounds", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAbsoluteCaretBounds), (intptr_t) (0) },
-    { "boundingBox", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBoundingBox), (intptr_t) (1) },
-    { "inspectorHighlightRects", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInspectorHighlightRects), (intptr_t) (0) },
-    { "inspectorHighlightObject", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInspectorHighlightObject), (intptr_t) (0) },
-    { "markerCountForNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerCountForNode), (intptr_t) (2) },
-    { "markerRangeForNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerRangeForNode), (intptr_t) (3) },
-    { "markerDescriptionForNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerDescriptionForNode), (intptr_t) (3) },
-    { "addTextMatchMarker", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAddTextMatchMarker), (intptr_t) (2) },
-    { "setMarkedTextMatchesAreHighlighted", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMarkedTextMatchesAreHighlighted), (intptr_t) (1) },
-    { "invalidateFontCache", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInvalidateFontCache), (intptr_t) (0) },
-    { "setScrollViewPosition", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetScrollViewPosition), (intptr_t) (2) },
-    { "setViewBaseBackgroundColor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetViewBaseBackgroundColor), (intptr_t) (1) },
-    { "setPagination", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPagination), (intptr_t) (2) },
-    { "configurationForViewport", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionConfigurationForViewport), (intptr_t) (5) },
-    { "wasLastChangeUserEdit", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWasLastChangeUserEdit), (intptr_t) (1) },
-    { "elementShouldAutoComplete", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementShouldAutoComplete), (intptr_t) (1) },
-    { "setEditingValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetEditingValue), (intptr_t) (2) },
-    { "setAutofilled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutofilled), (intptr_t) (2) },
-    { "setShowAutoFillButton", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShowAutoFillButton), (intptr_t) (2) },
-    { "countMatchesForText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCountMatchesForText), (intptr_t) (3) },
-    { "paintControlTints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPaintControlTints), (intptr_t) (0) },
-    { "scrollElementToRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionScrollElementToRect), (intptr_t) (5) },
-    { "rangeFromLocationAndLength", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeFromLocationAndLength), (intptr_t) (3) },
-    { "locationFromRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLocationFromRange), (intptr_t) (2) },
-    { "lengthFromRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLengthFromRange), (intptr_t) (2) },
-    { "rangeAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeAsText), (intptr_t) (1) },
-    { "subrange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSubrange), (intptr_t) (3) },
-    { "rangeForDictionaryLookupAtLocation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeForDictionaryLookupAtLocation), (intptr_t) (2) },
-    { "setDelegatesScrolling", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetDelegatesScrolling), (intptr_t) (1) },
-    { "lastSpellCheckRequestSequence", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpellCheckRequestSequence), (intptr_t) (0) },
-    { "lastSpellCheckProcessedSequence", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpellCheckProcessedSequence), (intptr_t) (0) },
-    { "userPreferredLanguages", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUserPreferredLanguages), (intptr_t) (0) },
-    { "setUserPreferredLanguages", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUserPreferredLanguages), (intptr_t) (1) },
-    { "userPreferredAudioCharacteristics", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUserPreferredAudioCharacteristics), (intptr_t) (0) },
-    { "setUserPreferredAudioCharacteristic", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUserPreferredAudioCharacteristic), (intptr_t) (1) },
-    { "wheelEventHandlerCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWheelEventHandlerCount), (intptr_t) (0) },
-    { "touchEventHandlerCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTouchEventHandlerCount), (intptr_t) (0) },
-    { "nodesFromRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNodesFromRect), (intptr_t) (10) },
-    { "parserMetaData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionParserMetaData), (intptr_t) (0) },
-    { "updateEditorUINowIfScheduled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUpdateEditorUINowIfScheduled), (intptr_t) (0) },
-    { "hasSpellingMarker", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasSpellingMarker), (intptr_t) (2) },
-    { "hasGrammarMarker", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasGrammarMarker), (intptr_t) (2) },
-    { "hasAutocorrectedMarker", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasAutocorrectedMarker), (intptr_t) (2) },
-    { "setContinuousSpellCheckingEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetContinuousSpellCheckingEnabled), (intptr_t) (1) },
-    { "setAutomaticQuoteSubstitutionEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticQuoteSubstitutionEnabled), (intptr_t) (1) },
-    { "setAutomaticLinkDetectionEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticLinkDetectionEnabled), (intptr_t) (1) },
-    { "setAutomaticDashSubstitutionEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticDashSubstitutionEnabled), (intptr_t) (1) },
-    { "setAutomaticTextReplacementEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticTextReplacementEnabled), (intptr_t) (1) },
-    { "setAutomaticSpellingCorrectionEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticSpellingCorrectionEnabled), (intptr_t) (1) },
-    { "isOverwriteModeEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsOverwriteModeEnabled), (intptr_t) (0) },
-    { "toggleOverwriteModeEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionToggleOverwriteModeEnabled), (intptr_t) (0) },
-    { "numberOfScrollableAreas", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfScrollableAreas), (intptr_t) (0) },
-    { "isPageBoxVisible", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPageBoxVisible), (intptr_t) (1) },
-    { "layerTreeAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLayerTreeAsText), (intptr_t) (1) },
-    { "scrollingStateTreeAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionScrollingStateTreeAsText), (intptr_t) (0) },
-    { "mainThreadScrollingReasons", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMainThreadScrollingReasons), (intptr_t) (0) },
-    { "nonFastScrollableRects", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNonFastScrollableRects), (intptr_t) (0) },
-    { "repaintRectsAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRepaintRectsAsText), (intptr_t) (0) },
-    { "garbageCollectDocumentResources", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGarbageCollectDocumentResources), (intptr_t) (0) },
-    { "allowRoundingHacks", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAllowRoundingHacks), (intptr_t) (0) },
-    { "insertAuthorCSS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInsertAuthorCSS), (intptr_t) (1) },
-    { "insertUserCSS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInsertUserCSS), (intptr_t) (1) },
-    { "numberOfLiveNodes", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfLiveNodes), (intptr_t) (0) },
-    { "numberOfLiveDocuments", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfLiveDocuments), (intptr_t) (0) },
-    { "consoleMessageArgumentCounts", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionConsoleMessageArgumentCounts), (intptr_t) (0) },
-    { "openDummyInspectorFrontend", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionOpenDummyInspectorFrontend), (intptr_t) (1) },
-    { "closeDummyInspectorFrontend", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCloseDummyInspectorFrontend), (intptr_t) (0) },
-    { "setJavaScriptProfilingEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetJavaScriptProfilingEnabled), (intptr_t) (1) },
-    { "setInspectorIsUnderTest", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetInspectorIsUnderTest), (intptr_t) (1) },
-    { "counterValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCounterValue), (intptr_t) (1) },
-    { "pageNumber", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageNumber), (intptr_t) (1) },
-    { "shortcutIconURLs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShortcutIconURLs), (intptr_t) (0) },
-    { "numberOfPages", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfPages), (intptr_t) (0) },
-    { "pageProperty", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageProperty), (intptr_t) (2) },
-    { "pageSizeAndMarginsInPixels", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageSizeAndMarginsInPixels), (intptr_t) (7) },
-    { "setPageScaleFactor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageScaleFactor), (intptr_t) (3) },
-    { "setPageZoomFactor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageZoomFactor), (intptr_t) (1) },
-    { "setTextZoomFactor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetTextZoomFactor), (intptr_t) (1) },
-    { "setUseFixedLayout", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUseFixedLayout), (intptr_t) (1) },
-    { "setFixedLayoutSize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFixedLayoutSize), (intptr_t) (2) },
-    { "setHeaderHeight", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetHeaderHeight), (intptr_t) (1) },
-    { "setFooterHeight", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFooterHeight), (intptr_t) (1) },
-    { "setTopContentInset", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetTopContentInset), (intptr_t) (1) },
-    { "webkitWillEnterFullScreenForElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitWillEnterFullScreenForElement), (intptr_t) (1) },
-    { "webkitDidEnterFullScreenForElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitDidEnterFullScreenForElement), (intptr_t) (1) },
-    { "webkitWillExitFullScreenForElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitWillExitFullScreenForElement), (intptr_t) (1) },
-    { "webkitDidExitFullScreenForElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitDidExitFullScreenForElement), (intptr_t) (1) },
-    { "setApplicationCacheOriginQuota", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetApplicationCacheOriginQuota), (intptr_t) (1) },
-    { "registerURLSchemeAsBypassingContentSecurityPolicy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRegisterURLSchemeAsBypassingContentSecurityPolicy), (intptr_t) (1) },
-    { "removeURLSchemeRegisteredAsBypassingContentSecurityPolicy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRemoveURLSchemeRegisteredAsBypassingContentSecurityPolicy), (intptr_t) (1) },
-    { "mallocStatistics", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMallocStatistics), (intptr_t) (0) },
-    { "typeConversions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTypeConversions), (intptr_t) (0) },
-    { "memoryInfo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMemoryInfo), (intptr_t) (0) },
-    { "getReferencedFilePaths", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetReferencedFilePaths), (intptr_t) (0) },
-    { "startTrackingRepaints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingRepaints), (intptr_t) (0) },
-    { "stopTrackingRepaints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStopTrackingRepaints), (intptr_t) (0) },
-    { "startTrackingLayerFlushes", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingLayerFlushes), (intptr_t) (0) },
-    { "layerFlushCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLayerFlushCount), (intptr_t) (0) },
-    { "isTimerThrottled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsTimerThrottled), (intptr_t) (1) },
-    { "isRequestAnimationFrameThrottled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsRequestAnimationFrameThrottled), (intptr_t) (0) },
-    { "areTimersThrottled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAreTimersThrottled), (intptr_t) (0) },
-    { "startTrackingStyleRecalcs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingStyleRecalcs), (intptr_t) (0) },
-    { "styleRecalcCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStyleRecalcCount), (intptr_t) (0) },
-    { "startTrackingCompositingUpdates", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingCompositingUpdates), (intptr_t) (0) },
-    { "compositingUpdateCount", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCompositingUpdateCount), (intptr_t) (0) },
-    { "updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUpdateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks), (intptr_t) (0) },
-    { "getCurrentCursorInfo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetCurrentCursorInfo), (intptr_t) (0) },
-    { "markerTextForListItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerTextForListItem), (intptr_t) (1) },
-    { "toolTipFromElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionToolTipFromElement), (intptr_t) (1) },
-    { "deserializeBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionDeserializeBuffer), (intptr_t) (1) },
-    { "serializeObject", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSerializeObject), (intptr_t) (1) },
-    { "isFromCurrentWorld", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsFromCurrentWorld), (intptr_t) (1) },
-    { "setUsesOverlayScrollbars", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUsesOverlayScrollbars), (intptr_t) (1) },
-    { "forceReload", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionForceReload), (intptr_t) (1) },
+    { "LAYER_TREE_INCLUDES_VISIBLE_RECTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "LAYER_TREE_INCLUDES_TILE_CACHES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "LAYER_TREE_INCLUDES_REPAINT_RECTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "LAYER_TREE_INCLUDES_PAINTING_PHASES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "LAYER_TREE_INCLUDES_CONTENT_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "address", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAddress), (intptr_t) (1) } },
+    { "nodeNeedsStyleRecalc", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNodeNeedsStyleRecalc), (intptr_t) (1) } },
+    { "description", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionDescription), (intptr_t) (1) } },
+    { "hasPausedImageAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasPausedImageAnimations), (intptr_t) (1) } },
+    { "elementRenderTreeAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementRenderTreeAsText), (intptr_t) (1) } },
+    { "isPreloaded", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPreloaded), (intptr_t) (1) } },
+    { "isLoadingFromMemoryCache", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsLoadingFromMemoryCache), (intptr_t) (1) } },
+    { "xhrResponseSource", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionXhrResponseSource), (intptr_t) (1) } },
+    { "isSharingStyleSheetContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsSharingStyleSheetContents), (intptr_t) (2) } },
+    { "isStyleSheetLoadingSubresources", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsStyleSheetLoadingSubresources), (intptr_t) (1) } },
+    { "clearMemoryCache", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClearMemoryCache), (intptr_t) (0) } },
+    { "pruneMemoryCacheToSize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPruneMemoryCacheToSize), (intptr_t) (1) } },
+    { "memoryCacheSize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMemoryCacheSize), (intptr_t) (0) } },
+    { "setOverrideCachePolicy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetOverrideCachePolicy), (intptr_t) (1) } },
+    { "setOverrideResourceLoadPriority", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetOverrideResourceLoadPriority), (intptr_t) (1) } },
+    { "setStrictRawResourceValidationPolicyDisabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetStrictRawResourceValidationPolicyDisabled), (intptr_t) (1) } },
+    { "clearPageCache", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClearPageCache), (intptr_t) (0) } },
+    { "pageCacheSize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageCacheSize), (intptr_t) (0) } },
+    { "computedStyleIncludingVisitedInfo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionComputedStyleIncludingVisitedInfo), (intptr_t) (1) } },
+    { "ensureShadowRoot", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnsureShadowRoot), (intptr_t) (1) } },
+    { "ensureUserAgentShadowRoot", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnsureUserAgentShadowRoot), (intptr_t) (1) } },
+    { "createShadowRoot", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateShadowRoot), (intptr_t) (1) } },
+    { "shadowRoot", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowRoot), (intptr_t) (1) } },
+    { "shadowRootType", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowRootType), (intptr_t) (1) } },
+    { "includerFor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIncluderFor), (intptr_t) (1) } },
+    { "shadowPseudoId", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShadowPseudoId), (intptr_t) (1) } },
+    { "setShadowPseudoId", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShadowPseudoId), (intptr_t) (2) } },
+    { "treeScopeRootNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTreeScopeRootNode), (intptr_t) (1) } },
+    { "parentTreeScope", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionParentTreeScope), (intptr_t) (1) } },
+    { "lastSpatialNavigationCandidateCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpatialNavigationCandidateCount), (intptr_t) (0) } },
+    { "numberOfActiveAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfActiveAnimations), (intptr_t) (0) } },
+    { "suspendAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSuspendAnimations), (intptr_t) (0) } },
+    { "resumeAnimations", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionResumeAnimations), (intptr_t) (0) } },
+    { "animationsAreSuspended", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAnimationsAreSuspended), (intptr_t) (0) } },
+    { "pauseAnimationAtTimeOnElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseAnimationAtTimeOnElement), (intptr_t) (3) } },
+    { "pauseAnimationAtTimeOnPseudoElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseAnimationAtTimeOnPseudoElement), (intptr_t) (4) } },
+    { "pauseTransitionAtTimeOnElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseTransitionAtTimeOnElement), (intptr_t) (3) } },
+    { "pauseTransitionAtTimeOnPseudoElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPauseTransitionAtTimeOnPseudoElement), (intptr_t) (4) } },
+    { "attached", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAttached), (intptr_t) (1) } },
+    { "visiblePlaceholder", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionVisiblePlaceholder), (intptr_t) (1) } },
+    { "selectColorInColorChooser", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSelectColorInColorChooser), (intptr_t) (2) } },
+    { "formControlStateOfPreviousHistoryItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionFormControlStateOfPreviousHistoryItem), (intptr_t) (0) } },
+    { "setFormControlStateOfPreviousHistoryItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFormControlStateOfPreviousHistoryItem), (intptr_t) (1) } },
+    { "absoluteCaretBounds", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAbsoluteCaretBounds), (intptr_t) (0) } },
+    { "boundingBox", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBoundingBox), (intptr_t) (1) } },
+    { "inspectorHighlightRects", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInspectorHighlightRects), (intptr_t) (0) } },
+    { "inspectorHighlightObject", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInspectorHighlightObject), (intptr_t) (0) } },
+    { "markerCountForNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerCountForNode), (intptr_t) (2) } },
+    { "markerRangeForNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerRangeForNode), (intptr_t) (3) } },
+    { "markerDescriptionForNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerDescriptionForNode), (intptr_t) (3) } },
+    { "dumpMarkerRects", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionDumpMarkerRects), (intptr_t) (1) } },
+    { "addTextMatchMarker", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAddTextMatchMarker), (intptr_t) (2) } },
+    { "setMarkedTextMatchesAreHighlighted", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMarkedTextMatchesAreHighlighted), (intptr_t) (1) } },
+    { "invalidateFontCache", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInvalidateFontCache), (intptr_t) (0) } },
+    { "setScrollViewPosition", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetScrollViewPosition), (intptr_t) (2) } },
+    { "setViewBaseBackgroundColor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetViewBaseBackgroundColor), (intptr_t) (1) } },
+    { "setPagination", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPagination), (intptr_t) (2) } },
+    { "configurationForViewport", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionConfigurationForViewport), (intptr_t) (5) } },
+    { "wasLastChangeUserEdit", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWasLastChangeUserEdit), (intptr_t) (1) } },
+    { "elementShouldAutoComplete", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementShouldAutoComplete), (intptr_t) (1) } },
+    { "setEditingValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetEditingValue), (intptr_t) (2) } },
+    { "setAutofilled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutofilled), (intptr_t) (2) } },
+    { "setShowAutoFillButton", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShowAutoFillButton), (intptr_t) (2) } },
+    { "countMatchesForText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCountMatchesForText), (intptr_t) (3) } },
+    { "paintControlTints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPaintControlTints), (intptr_t) (0) } },
+    { "scrollElementToRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionScrollElementToRect), (intptr_t) (5) } },
+    { "rangeFromLocationAndLength", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeFromLocationAndLength), (intptr_t) (3) } },
+    { "locationFromRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLocationFromRange), (intptr_t) (2) } },
+    { "lengthFromRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLengthFromRange), (intptr_t) (2) } },
+    { "rangeAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeAsText), (intptr_t) (1) } },
+    { "subrange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSubrange), (intptr_t) (3) } },
+    { "rangeForDictionaryLookupAtLocation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRangeForDictionaryLookupAtLocation), (intptr_t) (2) } },
+    { "setDelegatesScrolling", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetDelegatesScrolling), (intptr_t) (1) } },
+    { "lastSpellCheckRequestSequence", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpellCheckRequestSequence), (intptr_t) (0) } },
+    { "lastSpellCheckProcessedSequence", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLastSpellCheckProcessedSequence), (intptr_t) (0) } },
+    { "userPreferredLanguages", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUserPreferredLanguages), (intptr_t) (0) } },
+    { "setUserPreferredLanguages", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUserPreferredLanguages), (intptr_t) (1) } },
+    { "userPreferredAudioCharacteristics", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUserPreferredAudioCharacteristics), (intptr_t) (0) } },
+    { "setUserPreferredAudioCharacteristic", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUserPreferredAudioCharacteristic), (intptr_t) (1) } },
+    { "wheelEventHandlerCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWheelEventHandlerCount), (intptr_t) (0) } },
+    { "touchEventHandlerCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTouchEventHandlerCount), (intptr_t) (0) } },
+    { "nodesFromRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNodesFromRect), (intptr_t) (10) } },
+    { "parserMetaData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionParserMetaData), (intptr_t) (0) } },
+    { "updateEditorUINowIfScheduled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUpdateEditorUINowIfScheduled), (intptr_t) (0) } },
+    { "hasSpellingMarker", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasSpellingMarker), (intptr_t) (2) } },
+    { "hasGrammarMarker", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasGrammarMarker), (intptr_t) (2) } },
+    { "hasAutocorrectedMarker", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionHasAutocorrectedMarker), (intptr_t) (2) } },
+    { "setContinuousSpellCheckingEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetContinuousSpellCheckingEnabled), (intptr_t) (1) } },
+    { "setAutomaticQuoteSubstitutionEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticQuoteSubstitutionEnabled), (intptr_t) (1) } },
+    { "setAutomaticLinkDetectionEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticLinkDetectionEnabled), (intptr_t) (1) } },
+    { "setAutomaticDashSubstitutionEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticDashSubstitutionEnabled), (intptr_t) (1) } },
+    { "setAutomaticTextReplacementEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticTextReplacementEnabled), (intptr_t) (1) } },
+    { "setAutomaticSpellingCorrectionEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAutomaticSpellingCorrectionEnabled), (intptr_t) (1) } },
+    { "isOverwriteModeEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsOverwriteModeEnabled), (intptr_t) (0) } },
+    { "toggleOverwriteModeEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionToggleOverwriteModeEnabled), (intptr_t) (0) } },
+    { "numberOfScrollableAreas", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfScrollableAreas), (intptr_t) (0) } },
+    { "isPageBoxVisible", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPageBoxVisible), (intptr_t) (1) } },
+    { "layerTreeAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLayerTreeAsText), (intptr_t) (1) } },
+    { "scrollingStateTreeAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionScrollingStateTreeAsText), (intptr_t) (0) } },
+    { "mainThreadScrollingReasons", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMainThreadScrollingReasons), (intptr_t) (0) } },
+    { "nonFastScrollableRects", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNonFastScrollableRects), (intptr_t) (0) } },
+    { "repaintRectsAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRepaintRectsAsText), (intptr_t) (0) } },
+    { "garbageCollectDocumentResources", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGarbageCollectDocumentResources), (intptr_t) (0) } },
+    { "allowRoundingHacks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAllowRoundingHacks), (intptr_t) (0) } },
+    { "insertAuthorCSS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInsertAuthorCSS), (intptr_t) (1) } },
+    { "insertUserCSS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInsertUserCSS), (intptr_t) (1) } },
+    { "numberOfLiveNodes", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfLiveNodes), (intptr_t) (0) } },
+    { "numberOfLiveDocuments", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfLiveDocuments), (intptr_t) (0) } },
+    { "openDummyInspectorFrontend", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionOpenDummyInspectorFrontend), (intptr_t) (1) } },
+    { "closeDummyInspectorFrontend", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCloseDummyInspectorFrontend), (intptr_t) (0) } },
+    { "setJavaScriptProfilingEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetJavaScriptProfilingEnabled), (intptr_t) (1) } },
+    { "setInspectorIsUnderTest", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetInspectorIsUnderTest), (intptr_t) (1) } },
+    { "counterValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCounterValue), (intptr_t) (1) } },
+    { "pageNumber", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageNumber), (intptr_t) (1) } },
+    { "shortcutIconURLs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionShortcutIconURLs), (intptr_t) (0) } },
+    { "numberOfPages", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionNumberOfPages), (intptr_t) (0) } },
+    { "pageProperty", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageProperty), (intptr_t) (2) } },
+    { "pageSizeAndMarginsInPixels", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageSizeAndMarginsInPixels), (intptr_t) (7) } },
+    { "setPageScaleFactor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageScaleFactor), (intptr_t) (3) } },
+    { "setPageZoomFactor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageZoomFactor), (intptr_t) (1) } },
+    { "setTextZoomFactor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetTextZoomFactor), (intptr_t) (1) } },
+    { "setUseFixedLayout", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUseFixedLayout), (intptr_t) (1) } },
+    { "setFixedLayoutSize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFixedLayoutSize), (intptr_t) (2) } },
+    { "setHeaderHeight", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetHeaderHeight), (intptr_t) (1) } },
+    { "setFooterHeight", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetFooterHeight), (intptr_t) (1) } },
+    { "setTopContentInset", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetTopContentInset), (intptr_t) (1) } },
+    { "webkitWillEnterFullScreenForElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitWillEnterFullScreenForElement), (intptr_t) (1) } },
+    { "webkitDidEnterFullScreenForElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitDidEnterFullScreenForElement), (intptr_t) (1) } },
+    { "webkitWillExitFullScreenForElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitWillExitFullScreenForElement), (intptr_t) (1) } },
+    { "webkitDidExitFullScreenForElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionWebkitDidExitFullScreenForElement), (intptr_t) (1) } },
+    { "setApplicationCacheOriginQuota", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetApplicationCacheOriginQuota), (intptr_t) (1) } },
+    { "registerURLSchemeAsBypassingContentSecurityPolicy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRegisterURLSchemeAsBypassingContentSecurityPolicy), (intptr_t) (1) } },
+    { "removeURLSchemeRegisteredAsBypassingContentSecurityPolicy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionRemoveURLSchemeRegisteredAsBypassingContentSecurityPolicy), (intptr_t) (1) } },
+    { "mallocStatistics", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMallocStatistics), (intptr_t) (0) } },
+    { "typeConversions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTypeConversions), (intptr_t) (0) } },
+    { "memoryInfo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMemoryInfo), (intptr_t) (0) } },
+    { "getReferencedFilePaths", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetReferencedFilePaths), (intptr_t) (0) } },
+    { "startTrackingRepaints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingRepaints), (intptr_t) (0) } },
+    { "stopTrackingRepaints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStopTrackingRepaints), (intptr_t) (0) } },
+    { "startTrackingLayerFlushes", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingLayerFlushes), (intptr_t) (0) } },
+    { "layerFlushCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionLayerFlushCount), (intptr_t) (0) } },
+    { "isTimerThrottled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsTimerThrottled), (intptr_t) (1) } },
+    { "isRequestAnimationFrameThrottled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsRequestAnimationFrameThrottled), (intptr_t) (0) } },
+    { "areTimersThrottled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionAreTimersThrottled), (intptr_t) (0) } },
+    { "startTrackingStyleRecalcs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingStyleRecalcs), (intptr_t) (0) } },
+    { "styleRecalcCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStyleRecalcCount), (intptr_t) (0) } },
+    { "startTrackingCompositingUpdates", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionStartTrackingCompositingUpdates), (intptr_t) (0) } },
+    { "compositingUpdateCount", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCompositingUpdateCount), (intptr_t) (0) } },
+    { "updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUpdateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks), (intptr_t) (0) } },
+    { "getCurrentCursorInfo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetCurrentCursorInfo), (intptr_t) (0) } },
+    { "markerTextForListItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMarkerTextForListItem), (intptr_t) (1) } },
+    { "toolTipFromElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionToolTipFromElement), (intptr_t) (1) } },
+    { "deserializeBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionDeserializeBuffer), (intptr_t) (1) } },
+    { "serializeObject", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSerializeObject), (intptr_t) (1) } },
+    { "isFromCurrentWorld", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsFromCurrentWorld), (intptr_t) (1) } },
+    { "setUsesOverlayScrollbars", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetUsesOverlayScrollbars), (intptr_t) (1) } },
+    { "forceReload", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionForceReload), (intptr_t) (1) } },
+    { "enableAutoSizeMode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnableAutoSizeMode), (intptr_t) (5) } },
 #if ENABLE(VIDEO)
-    { "simulateAudioInterruption", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateAudioInterruption), (intptr_t) (1) },
+    { "simulateAudioInterruption", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateAudioInterruption), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "mediaElementHasCharacteristic", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaElementHasCharacteristic), (intptr_t) (2) },
+    { "mediaElementHasCharacteristic", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaElementHasCharacteristic), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(ENCRYPTED_MEDIA_V2)
-    { "initializeMockCDM", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInitializeMockCDM), (intptr_t) (0) },
+    { "initializeMockCDM", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInitializeMockCDM), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(SPEECH_SYNTHESIS)
-    { "enableMockSpeechSynthesizer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnableMockSpeechSynthesizer), (intptr_t) (0) },
+    { "enableMockSpeechSynthesizer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEnableMockSpeechSynthesizer), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "getImageSourceURL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetImageSourceURL), (intptr_t) (1) },
+    { "getImageSourceURL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetImageSourceURL), (intptr_t) (1) } },
 #if ENABLE(VIDEO_TRACK)
-    { "captionsStyleSheetOverride", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCaptionsStyleSheetOverride), (intptr_t) (0) },
+    { "captionsStyleSheetOverride", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCaptionsStyleSheetOverride), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(VIDEO_TRACK)
-    { "setCaptionsStyleSheetOverride", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetCaptionsStyleSheetOverride), (intptr_t) (1) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_TRACK)
-    { "setPrimaryAudioTrackLanguageOverride", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPrimaryAudioTrackLanguageOverride), (intptr_t) (1) },
+    { "setCaptionsStyleSheetOverride", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetCaptionsStyleSheetOverride), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_TRACK)
-    { "setCaptionDisplayMode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetCaptionDisplayMode), (intptr_t) (1) },
+    { "setPrimaryAudioTrackLanguageOverride", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPrimaryAudioTrackLanguageOverride), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(VIDEO_TRACK)
+    { "setCaptionDisplayMode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetCaptionDisplayMode), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "createTimeRanges", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateTimeRanges), (intptr_t) (2) },
+    { "createTimeRanges", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateTimeRanges), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "closestTimeToTimeRanges", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClosestTimeToTimeRanges), (intptr_t) (2) },
+    { "closestTimeToTimeRanges", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionClosestTimeToTimeRanges), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "isSelectPopupVisible", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsSelectPopupVisible), (intptr_t) (1) },
-    { "isPluginUnavailabilityIndicatorObscured", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPluginUnavailabilityIndicatorObscured), (intptr_t) (1) },
-    { "isPluginSnapshotted", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPluginSnapshotted), (intptr_t) (1) },
-    { "selectionBounds", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSelectionBounds), (intptr_t) (0) },
+    { "isSelectPopupVisible", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsSelectPopupVisible), (intptr_t) (1) } },
+    { "isPluginUnavailabilityIndicatorObscured", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPluginUnavailabilityIndicatorObscured), (intptr_t) (1) } },
+    { "isPluginSnapshotted", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPluginSnapshotted), (intptr_t) (1) } },
+    { "selectionBounds", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSelectionBounds), (intptr_t) (0) } },
 #if ENABLE(MEDIA_SOURCE)
-    { "initializeMockMediaSource", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInitializeMockMediaSource), (intptr_t) (0) },
+    { "initializeMockMediaSource", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInitializeMockMediaSource), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(MEDIA_SOURCE)
-    { "bufferedSamplesForTrackID", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBufferedSamplesForTrackID), (intptr_t) (2) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SOURCE)
-    { "setShouldGenerateTimestamps", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShouldGenerateTimestamps), (intptr_t) (2) },
+    { "bufferedSamplesForTrackID", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBufferedSamplesForTrackID), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MEDIA_SOURCE)
+    { "setShouldGenerateTimestamps", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShouldGenerateTimestamps), (intptr_t) (2) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "beginMediaSessionInterruption", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBeginMediaSessionInterruption), (intptr_t) (0) },
+    { "beginMediaSessionInterruption", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionBeginMediaSessionInterruption), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "endMediaSessionInterruption", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEndMediaSessionInterruption), (intptr_t) (1) },
+    { "endMediaSessionInterruption", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionEndMediaSessionInterruption), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SESSION)
-    { "sendMediaSessionStartOfInterruptionNotification", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaSessionStartOfInterruptionNotification), (intptr_t) (1) },
+    { "sendMediaSessionStartOfInterruptionNotification", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaSessionStartOfInterruptionNotification), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SESSION)
-    { "sendMediaSessionEndOfInterruptionNotification", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaSessionEndOfInterruptionNotification), (intptr_t) (1) },
+    { "sendMediaSessionEndOfInterruptionNotification", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaSessionEndOfInterruptionNotification), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SESSION)
-    { "mediaSessionCurrentState", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaSessionCurrentState), (intptr_t) (1) },
+    { "mediaSessionCurrentState", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaSessionCurrentState), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SESSION)
-    { "mediaElementPlayerVolume", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaElementPlayerVolume), (intptr_t) (1) },
+    { "mediaElementPlayerVolume", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionMediaElementPlayerVolume), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_SESSION)
-    { "sendMediaControlEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaControlEvent), (intptr_t) (1) },
+    { "sendMediaControlEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSendMediaControlEvent), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "applicationWillEnterForeground", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionApplicationWillEnterForeground), (intptr_t) (0) },
+    { "applicationDidEnterForeground", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionApplicationDidEnterForeground), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "applicationWillEnterBackground", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionApplicationWillEnterBackground), (intptr_t) (0) },
+    { "applicationWillEnterBackground", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionApplicationWillEnterBackground), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "setMediaSessionRestrictions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMediaSessionRestrictions), (intptr_t) (2) },
+    { "setMediaSessionRestrictions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMediaSessionRestrictions), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "setMediaElementRestrictions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMediaElementRestrictions), (intptr_t) (2) },
+    { "setMediaElementRestrictions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMediaElementRestrictions), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(WEB_AUDIO)
-    { "setAudioContextRestrictions", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAudioContextRestrictions), (intptr_t) (2) },
+    { "setAudioContextRestrictions", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetAudioContextRestrictions), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "postRemoteControlCommand", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPostRemoteControlCommand), (intptr_t) (1) },
+    { "postRemoteControlCommand", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPostRemoteControlCommand), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+    { "setMockMediaPlaybackTargetPickerEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerEnabled), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+    { "setMockMediaPlaybackTargetPickerState", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerState), (intptr_t) (2) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(MEDIA_STREAM)
+    { "setMockMediaCaptureDevicesEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetMockMediaCaptureDevicesEnabled), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "simulateSystemSleep", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateSystemSleep), (intptr_t) (0) },
+    { "simulateSystemSleep", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateSystemSleep), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "simulateSystemWake", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateSystemWake), (intptr_t) (0) },
+    { "simulateSystemWake", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSimulateSystemWake), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO)
-    { "elementIsBlockingDisplaySleep", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementIsBlockingDisplaySleep), (intptr_t) (1) },
+    { "elementIsBlockingDisplaySleep", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionElementIsBlockingDisplaySleep), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "installMockPageOverlay", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInstallMockPageOverlay), (intptr_t) (1) },
-    { "pageOverlayLayerTreeAsText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageOverlayLayerTreeAsText), (intptr_t) (0) },
-    { "setPageMuted", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageMuted), (intptr_t) (1) },
-    { "isPagePlayingAudio", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPagePlayingAudio), (intptr_t) (0) },
-    { "createFile", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateFile), (intptr_t) (1) },
-    { "queueMicroTask", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionQueueMicroTask), (intptr_t) (1) },
-    { "testPreloaderSettingViewport", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTestPreloaderSettingViewport), (intptr_t) (0) },
-    { "pathStringWithShrinkWrappedRects", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPathStringWithShrinkWrappedRects), (intptr_t) (2) },
+    { "installMockPageOverlay", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionInstallMockPageOverlay), (intptr_t) (1) } },
+    { "pageOverlayLayerTreeAsText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPageOverlayLayerTreeAsText), (intptr_t) (0) } },
+    { "setPageMuted", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageMuted), (intptr_t) (1) } },
+    { "isPagePlayingAudio", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsPagePlayingAudio), (intptr_t) (0) } },
+    { "setPageDefersLoading", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetPageDefersLoading), (intptr_t) (1) } },
+    { "createFile", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionCreateFile), (intptr_t) (1) } },
+    { "queueMicroTask", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionQueueMicroTask), (intptr_t) (1) } },
+    { "testPreloaderSettingViewport", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionTestPreloaderSettingViewport), (intptr_t) (0) } },
+    { "pathStringWithShrinkWrappedRects", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionPathStringWithShrinkWrappedRects), (intptr_t) (2) } },
+#if ENABLE(VIDEO)
+    { "getCurrentMediaControlsStatusForElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionGetCurrentMediaControlsStatusForElement), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+    { "userVisibleString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionUserVisibleString), (intptr_t) (1) } },
+    { "setShowAllPlugins", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionSetShowAllPlugins), (intptr_t) (1) } },
+#if ENABLE(STREAMS_API)
+    { "isReadableStreamDisturbed", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalsPrototypeFunctionIsReadableStreamDisturbed), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
 };
 
 const ClassInfo JSInternalsPrototype::s_info = { "InternalsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSInternalsPrototype) };
@@ -734,9 +786,8 @@ void JSInternalsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSInternals::s_info = { "Internals", &Base::s_info, 0, CREATE_METHOD_TABLE(JSInternals) };
 
-JSInternals::JSInternals(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Internals>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSInternals::JSInternals(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Internals>&& impl)
+    : JSDOMWrapper<Internals>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -756,3030 +807,3082 @@ void JSInternals::destroy(JSC::JSCell* cell)
     thisObject->JSInternals::~JSInternals();
 }
 
-JSInternals::~JSInternals()
+EncodedJSValue jsInternalsSettings(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsInternalsSettings(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSInternalsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Internals", "settings");
-        return throwGetterTypeError(*exec, "Internals", "settings");
+            return reportDeprecatedGetterError(*state, "Internals", "settings");
+        return throwGetterTypeError(*state, "Internals", "settings");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.settings()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.settings()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsInternalsWorkerThreadCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsInternalsWorkerThreadCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSInternalsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Internals", "workerThreadCount");
-        return throwGetterTypeError(*exec, "Internals", "workerThreadCount");
+            return reportDeprecatedGetterError(*state, "Internals", "workerThreadCount");
+        return throwGetterTypeError(*state, "Internals", "workerThreadCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.workerThreadCount());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsInternalsConsoleProfiles(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsInternalsConsoleProfiles(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSInternalsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Internals", "consoleProfiles");
-        return throwGetterTypeError(*exec, "Internals", "consoleProfiles");
+            return reportDeprecatedGetterError(*state, "Internals", "consoleProfiles");
+        return throwGetterTypeError(*state, "Internals", "consoleProfiles");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.consoleProfiles());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.consoleProfiles());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsInternalsLayoutCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsInternalsLayoutCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSInternalsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Internals", "layoutCount");
-        return throwGetterTypeError(*exec, "Internals", "layoutCount");
+            return reportDeprecatedGetterError(*state, "Internals", "layoutCount");
+        return throwGetterTypeError(*state, "Internals", "layoutCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.layoutCount());
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(CONTENT_FILTERING)
-EncodedJSValue jsInternalsMockContentFilterSettings(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsInternalsMockContentFilterSettings(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSInternalsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Internals", "mockContentFilterSettings");
-        return throwGetterTypeError(*exec, "Internals", "mockContentFilterSettings");
+            return reportDeprecatedGetterError(*state, "Internals", "mockContentFilterSettings");
+        return throwGetterTypeError(*state, "Internals", "mockContentFilterSettings");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.mockContentFilterSettings()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.mockContentFilterSettings()));
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAddress(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAddress(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "address");
+        return throwThisTypeError(*state, "Internals", "address");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.address(node));
+    JSValue result = jsStringWithCache(state, impl.address(node));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNodeNeedsStyleRecalc(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNodeNeedsStyleRecalc(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "nodeNeedsStyleRecalc");
+        return throwThisTypeError(*state, "Internals", "nodeNeedsStyleRecalc");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.nodeNeedsStyleRecalc(node, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDescription(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDescription(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "description");
+        return throwThisTypeError(*state, "Internals", "description");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Deprecated::ScriptValue value = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Deprecated::ScriptValue value = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.description(value));
+    JSValue result = jsStringWithCache(state, impl.description(value));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasPausedImageAnimations(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasPausedImageAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "hasPausedImageAnimations");
+        return throwThisTypeError(*state, "Internals", "hasPausedImageAnimations");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasPausedImageAnimations(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementRenderTreeAsText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementRenderTreeAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "elementRenderTreeAsText");
+        return throwThisTypeError(*state, "Internals", "elementRenderTreeAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.elementRenderTreeAsText(element, ec));
+    JSValue result = jsStringWithCache(state, impl.elementRenderTreeAsText(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPreloaded(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPreloaded(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isPreloaded");
+        return throwThisTypeError(*state, "Internals", "isPreloaded");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPreloaded(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsLoadingFromMemoryCache(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsLoadingFromMemoryCache(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isLoadingFromMemoryCache");
+        return throwThisTypeError(*state, "Internals", "isLoadingFromMemoryCache");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isLoadingFromMemoryCache(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionXhrResponseSource(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionXhrResponseSource(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "xhrResponseSource");
+        return throwThisTypeError(*state, "Internals", "xhrResponseSource");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    XMLHttpRequest* xhr = JSXMLHttpRequest::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    XMLHttpRequest* xhr = JSXMLHttpRequest::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.xhrResponseSource(xhr));
+    JSValue result = jsStringWithCache(state, impl.xhrResponseSource(xhr));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsSharingStyleSheetContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsSharingStyleSheetContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isSharingStyleSheetContents");
+        return throwThisTypeError(*state, "Internals", "isSharingStyleSheetContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* linkA = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* linkA = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* linkB = JSElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Element* linkB = JSElement::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isSharingStyleSheetContents(linkA, linkB));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsStyleSheetLoadingSubresources(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsStyleSheetLoadingSubresources(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isStyleSheetLoadingSubresources");
+        return throwThisTypeError(*state, "Internals", "isStyleSheetLoadingSubresources");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* link = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* link = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isStyleSheetLoadingSubresources(link));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClearMemoryCache(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClearMemoryCache(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "clearMemoryCache");
+        return throwThisTypeError(*state, "Internals", "clearMemoryCache");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.clearMemoryCache();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPruneMemoryCacheToSize(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPruneMemoryCacheToSize(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pruneMemoryCacheToSize");
+        return throwThisTypeError(*state, "Internals", "pruneMemoryCacheToSize");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int size = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int size = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.pruneMemoryCacheToSize(size);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMemoryCacheSize(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMemoryCacheSize(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "memoryCacheSize");
+        return throwThisTypeError(*state, "Internals", "memoryCacheSize");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.memoryCacheSize());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetOverrideCachePolicy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetOverrideCachePolicy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setOverrideCachePolicy");
+        return throwThisTypeError(*state, "Internals", "setOverrideCachePolicy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* policyString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* policyString = state->argument(0).toString(state);
+    auto& policy = policyString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& policy = policyString->value(exec);
     if (policy != "UseProtocolCachePolicy" && policy != "ReloadIgnoringCacheData" && policy != "ReturnCacheDataElseLoad" && policy != "ReturnCacheDataDontLoad")
-        return throwArgumentMustBeEnumError(*exec, 0, "policy", "Internals", "setOverrideCachePolicy", "\"UseProtocolCachePolicy\", \"ReloadIgnoringCacheData\", \"ReturnCacheDataElseLoad\", \"ReturnCacheDataDontLoad\"");
+        return throwArgumentMustBeEnumError(*state, 0, "policy", "Internals", "setOverrideCachePolicy", "\"UseProtocolCachePolicy\", \"ReloadIgnoringCacheData\", \"ReturnCacheDataElseLoad\", \"ReturnCacheDataDontLoad\"");
     impl.setOverrideCachePolicy(policy);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetOverrideResourceLoadPriority(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetOverrideResourceLoadPriority(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setOverrideResourceLoadPriority");
+        return throwThisTypeError(*state, "Internals", "setOverrideResourceLoadPriority");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* priorityString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* priorityString = state->argument(0).toString(state);
+    auto& priority = priorityString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& priority = priorityString->value(exec);
     if (priority != "ResourceLoadPriorityVeryLow" && priority != "ResourceLoadPriorityLow" && priority != "ResourceLoadPriorityMedium" && priority != "ResourceLoadPriorityHigh" && priority != "ResourceLoadPriorityVeryHigh")
-        return throwArgumentMustBeEnumError(*exec, 0, "priority", "Internals", "setOverrideResourceLoadPriority", "\"ResourceLoadPriorityVeryLow\", \"ResourceLoadPriorityLow\", \"ResourceLoadPriorityMedium\", \"ResourceLoadPriorityHigh\", \"ResourceLoadPriorityVeryHigh\"");
+        return throwArgumentMustBeEnumError(*state, 0, "priority", "Internals", "setOverrideResourceLoadPriority", "\"ResourceLoadPriorityVeryLow\", \"ResourceLoadPriorityLow\", \"ResourceLoadPriorityMedium\", \"ResourceLoadPriorityHigh\", \"ResourceLoadPriorityVeryHigh\"");
     impl.setOverrideResourceLoadPriority(priority);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetStrictRawResourceValidationPolicyDisabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetStrictRawResourceValidationPolicyDisabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setStrictRawResourceValidationPolicyDisabled");
+        return throwThisTypeError(*state, "Internals", "setStrictRawResourceValidationPolicyDisabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool disabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool disabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStrictRawResourceValidationPolicyDisabled(disabled);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClearPageCache(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClearPageCache(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "clearPageCache");
+        return throwThisTypeError(*state, "Internals", "clearPageCache");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.clearPageCache();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageCacheSize(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageCacheSize(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pageCacheSize");
+        return throwThisTypeError(*state, "Internals", "pageCacheSize");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.pageCacheSize());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionComputedStyleIncludingVisitedInfo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionComputedStyleIncludingVisitedInfo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "computedStyleIncludingVisitedInfo");
+        return throwThisTypeError(*state, "Internals", "computedStyleIncludingVisitedInfo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.computedStyleIncludingVisitedInfo(node, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.computedStyleIncludingVisitedInfo(node, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnsureShadowRoot(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnsureShadowRoot(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "ensureShadowRoot");
+        return throwThisTypeError(*state, "Internals", "ensureShadowRoot");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* host = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* host = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ensureShadowRoot(host, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.ensureShadowRoot(host, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnsureUserAgentShadowRoot(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnsureUserAgentShadowRoot(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "ensureUserAgentShadowRoot");
+        return throwThisTypeError(*state, "Internals", "ensureUserAgentShadowRoot");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* host = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* host = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ensureUserAgentShadowRoot(host, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.ensureUserAgentShadowRoot(host, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateShadowRoot(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateShadowRoot(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "createShadowRoot");
+        return throwThisTypeError(*state, "Internals", "createShadowRoot");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* host = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* host = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createShadowRoot(host, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createShadowRoot(host, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowRoot(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowRoot(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "shadowRoot");
+        return throwThisTypeError(*state, "Internals", "shadowRoot");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* host = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* host = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.shadowRoot(host, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.shadowRoot(host, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowRootType(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowRootType(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "shadowRootType");
+        return throwThisTypeError(*state, "Internals", "shadowRootType");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* root = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* root = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.shadowRootType(root, ec));
+    JSValue result = jsStringWithCache(state, impl.shadowRootType(root, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIncluderFor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIncluderFor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "includerFor");
+        return throwThisTypeError(*state, "Internals", "includerFor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.includerFor(node, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.includerFor(node, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowPseudoId(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShadowPseudoId(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "shadowPseudoId");
+        return throwThisTypeError(*state, "Internals", "shadowPseudoId");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.shadowPseudoId(element, ec));
+    JSValue result = jsStringWithCache(state, impl.shadowPseudoId(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShadowPseudoId(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShadowPseudoId(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setShadowPseudoId");
+        return throwThisTypeError(*state, "Internals", "setShadowPseudoId");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String id = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String id = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShadowPseudoId(element, id, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTreeScopeRootNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTreeScopeRootNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "treeScopeRootNode");
+        return throwThisTypeError(*state, "Internals", "treeScopeRootNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.treeScopeRootNode(node, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.treeScopeRootNode(node, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionParentTreeScope(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionParentTreeScope(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "parentTreeScope");
+        return throwThisTypeError(*state, "Internals", "parentTreeScope");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentTreeScope(node, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.parentTreeScope(node, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpatialNavigationCandidateCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpatialNavigationCandidateCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "lastSpatialNavigationCandidateCount");
+        return throwThisTypeError(*state, "Internals", "lastSpatialNavigationCandidateCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.lastSpatialNavigationCandidateCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfActiveAnimations(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfActiveAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "numberOfActiveAnimations");
+        return throwThisTypeError(*state, "Internals", "numberOfActiveAnimations");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberOfActiveAnimations());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSuspendAnimations(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSuspendAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "suspendAnimations");
+        return throwThisTypeError(*state, "Internals", "suspendAnimations");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.suspendAnimations(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionResumeAnimations(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionResumeAnimations(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "resumeAnimations");
+        return throwThisTypeError(*state, "Internals", "resumeAnimations");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.resumeAnimations(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAnimationsAreSuspended(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAnimationsAreSuspended(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "animationsAreSuspended");
+        return throwThisTypeError(*state, "Internals", "animationsAreSuspended");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsBoolean(impl.animationsAreSuspended(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseAnimationAtTimeOnElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseAnimationAtTimeOnElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pauseAnimationAtTimeOnElement");
+        return throwThisTypeError(*state, "Internals", "pauseAnimationAtTimeOnElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String animationName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String animationName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double pauseTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pauseTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* element = JSElement::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.pauseAnimationAtTimeOnElement(animationName, pauseTime, element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseAnimationAtTimeOnPseudoElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseAnimationAtTimeOnPseudoElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pauseAnimationAtTimeOnPseudoElement");
+        return throwThisTypeError(*state, "Internals", "pauseAnimationAtTimeOnPseudoElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String animationName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String animationName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double pauseTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pauseTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* element = JSElement::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String pseudoId = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String pseudoId = state->argument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.pauseAnimationAtTimeOnPseudoElement(animationName, pauseTime, element, pseudoId, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtTimeOnElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtTimeOnElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pauseTransitionAtTimeOnElement");
+        return throwThisTypeError(*state, "Internals", "pauseTransitionAtTimeOnElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String propertyName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double pauseTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pauseTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* element = JSElement::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.pauseTransitionAtTimeOnElement(propertyName, pauseTime, element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtTimeOnPseudoElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPauseTransitionAtTimeOnPseudoElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pauseTransitionAtTimeOnPseudoElement");
+        return throwThisTypeError(*state, "Internals", "pauseTransitionAtTimeOnPseudoElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String property = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String property = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double pauseTime = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pauseTime = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* element = JSElement::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String pseudoId = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String pseudoId = state->argument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.pauseTransitionAtTimeOnPseudoElement(property, pauseTime, element, pseudoId, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAttached(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAttached(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "attached");
+        return throwThisTypeError(*state, "Internals", "attached");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.attached(node, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionVisiblePlaceholder(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionVisiblePlaceholder(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "visiblePlaceholder");
+        return throwThisTypeError(*state, "Internals", "visiblePlaceholder");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.visiblePlaceholder(element));
+    JSValue result = jsStringWithCache(state, impl.visiblePlaceholder(element));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionFormControlStateOfPreviousHistoryItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSelectColorInColorChooser(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "formControlStateOfPreviousHistoryItem");
+        return throwThisTypeError(*state, "Internals", "selectColorInColorChooser");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.formControlStateOfPreviousHistoryItem(ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFormControlStateOfPreviousHistoryItem(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setFormControlStateOfPreviousHistoryItem");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Vector<String> values = toNativeArray<String>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    impl.setFormControlStateOfPreviousHistoryItem(values, ec);
-    setDOMException(exec, ec);
+    String colorValue = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.selectColorInColorChooser(element, colorValue);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAbsoluteCaretBounds(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionFormControlStateOfPreviousHistoryItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "absoluteCaretBounds");
+        return throwThisTypeError(*state, "Internals", "formControlStateOfPreviousHistoryItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.absoluteCaretBounds(ec)));
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.formControlStateOfPreviousHistoryItem(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBoundingBox(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFormControlStateOfPreviousHistoryItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "boundingBox");
+        return throwThisTypeError(*state, "Internals", "setFormControlStateOfPreviousHistoryItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Vector<String> values = toNativeArray<String>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.boundingBox(element, ec)));
+    impl.setFormControlStateOfPreviousHistoryItem(values, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
 
-    setDOMException(exec, ec);
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAbsoluteCaretBounds(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "absoluteCaretBounds");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.absoluteCaretBounds(ec)));
+
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInspectorHighlightRects(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBoundingBox(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "inspectorHighlightRects");
+        return throwThisTypeError(*state, "Internals", "boundingBox");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.inspectorHighlightRects(ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInspectorHighlightObject(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "inspectorHighlightObject");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.inspectorHighlightObject(ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerCountForNode(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "markerCountForNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String markerType = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.boundingBox(element, ec)));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInspectorHighlightRects(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "inspectorHighlightRects");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.inspectorHighlightRects(ec)));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInspectorHighlightObject(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "inspectorHighlightObject");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
+    JSValue result = jsStringWithCache(state, impl.inspectorHighlightObject(ec));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerCountForNode(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "markerCountForNode");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String markerType = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.markerCountForNode(node, markerType, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerRangeForNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerRangeForNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "markerRangeForNode");
+        return throwThisTypeError(*state, "Internals", "markerRangeForNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String markerType = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String markerType = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.markerRangeForNode(node, markerType, index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.markerRangeForNode(node, markerType, index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerDescriptionForNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerDescriptionForNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "markerDescriptionForNode");
+        return throwThisTypeError(*state, "Internals", "markerDescriptionForNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String markerType = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String markerType = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.markerDescriptionForNode(node, markerType, index, ec));
+    JSValue result = jsStringWithCache(state, impl.markerDescriptionForNode(node, markerType, index, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAddTextMatchMarker(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDumpMarkerRects(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "addTextMatchMarker");
+        return throwThisTypeError(*state, "Internals", "dumpMarkerRects");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Range* range = JSRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String markerType = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool isActive = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    JSValue result = jsStringWithCache(state, impl.dumpMarkerRects(markerType, ec));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAddTextMatchMarker(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "addTextMatchMarker");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Range* range = JSRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    bool isActive = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.addTextMatchMarker(range, isActive);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMarkedTextMatchesAreHighlighted(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMarkedTextMatchesAreHighlighted(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setMarkedTextMatchesAreHighlighted");
+        return throwThisTypeError(*state, "Internals", "setMarkedTextMatchesAreHighlighted");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool flag = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool flag = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMarkedTextMatchesAreHighlighted(flag, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInvalidateFontCache(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInvalidateFontCache(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "invalidateFontCache");
+        return throwThisTypeError(*state, "Internals", "invalidateFontCache");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.invalidateFontCache();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetScrollViewPosition(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetScrollViewPosition(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setScrollViewPosition");
+        return throwThisTypeError(*state, "Internals", "setScrollViewPosition");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setScrollViewPosition(x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetViewBaseBackgroundColor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetViewBaseBackgroundColor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setViewBaseBackgroundColor");
+        return throwThisTypeError(*state, "Internals", "setViewBaseBackgroundColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String colorValue = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String colorValue = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setViewBaseBackgroundColor(colorValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPagination(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPagination(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setPagination");
+        return throwThisTypeError(*state, "Internals", "setPagination");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String mode = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String mode = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int gap = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int gap = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 2) {
         impl.setPagination(mode, gap, ec);
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(jsUndefined());
     }
 
-    int pageLength = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageLength = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPagination(mode, gap, pageLength, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionConfigurationForViewport(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionConfigurationForViewport(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "configurationForViewport");
+        return throwThisTypeError(*state, "Internals", "configurationForViewport");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float devicePixelRatio = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float devicePixelRatio = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int deviceWidth = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int deviceWidth = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int deviceHeight = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int deviceHeight = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int availableWidth = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int availableWidth = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int availableHeight = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int availableHeight = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.configurationForViewport(devicePixelRatio, deviceWidth, deviceHeight, availableWidth, availableHeight, ec));
+    JSValue result = jsStringWithCache(state, impl.configurationForViewport(devicePixelRatio, deviceWidth, deviceHeight, availableWidth, availableHeight, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWasLastChangeUserEdit(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWasLastChangeUserEdit(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "wasLastChangeUserEdit");
+        return throwThisTypeError(*state, "Internals", "wasLastChangeUserEdit");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* textField = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* textField = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.wasLastChangeUserEdit(textField, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementShouldAutoComplete(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementShouldAutoComplete(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "elementShouldAutoComplete");
+        return throwThisTypeError(*state, "Internals", "elementShouldAutoComplete");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* inputElement = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* inputElement = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.elementShouldAutoComplete(inputElement, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetEditingValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetEditingValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setEditingValue");
+        return throwThisTypeError(*state, "Internals", "setEditingValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* inputElement = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* inputElement = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String value = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String value = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setEditingValue(inputElement, value, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutofilled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutofilled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutofilled");
+        return throwThisTypeError(*state, "Internals", "setAutofilled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* inputElement = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* inputElement = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool enabled = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutofilled(inputElement, enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShowAutoFillButton(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShowAutoFillButton(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setShowAutoFillButton");
+        return throwThisTypeError(*state, "Internals", "setShowAutoFillButton");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* inputElement = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* inputElement = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool enabled = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShowAutoFillButton(inputElement, enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCountMatchesForText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCountMatchesForText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "countMatchesForText");
+        return throwThisTypeError(*state, "Internals", "countMatchesForText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String text = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String text = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned findOptions = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned findOptions = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String markMatches = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String markMatches = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.countMatchesForText(text, findOptions, markMatches, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPaintControlTints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPaintControlTints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "paintControlTints");
+        return throwThisTypeError(*state, "Internals", "paintControlTints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.paintControlTints(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionScrollElementToRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionScrollElementToRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "scrollElementToRect");
+        return throwThisTypeError(*state, "Internals", "scrollElementToRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int w = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int w = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int h = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int h = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.scrollElementToRect(element, x, y, w, h, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeFromLocationAndLength(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeFromLocationAndLength(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "rangeFromLocationAndLength");
+        return throwThisTypeError(*state, "Internals", "rangeFromLocationAndLength");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* scope = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* scope = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int rangeLocation = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int rangeLocation = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int rangeLength = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int rangeLength = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rangeFromLocationAndLength(scope, rangeLocation, rangeLength, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.rangeFromLocationAndLength(scope, rangeLocation, rangeLength, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLocationFromRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLocationFromRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "locationFromRange");
+        return throwThisTypeError(*state, "Internals", "locationFromRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* scope = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* scope = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Range* range = JSRange::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Range* range = JSRange::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.locationFromRange(scope, range, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLengthFromRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLengthFromRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "lengthFromRange");
+        return throwThisTypeError(*state, "Internals", "lengthFromRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* scope = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* scope = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Range* range = JSRange::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Range* range = JSRange::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.lengthFromRange(scope, range, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeAsText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "rangeAsText");
+        return throwThisTypeError(*state, "Internals", "rangeAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Range* range = JSRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Range* range = JSRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.rangeAsText(range, ec));
+    JSValue result = jsStringWithCache(state, impl.rangeAsText(range, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSubrange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSubrange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "subrange");
+        return throwThisTypeError(*state, "Internals", "subrange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Range* range = JSRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Range* range = JSRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int rangeLocation = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int rangeLocation = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int rangeLength = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int rangeLength = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.subrange(range, rangeLocation, rangeLength, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.subrange(range, rangeLocation, rangeLength, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeForDictionaryLookupAtLocation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRangeForDictionaryLookupAtLocation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "rangeForDictionaryLookupAtLocation");
+        return throwThisTypeError(*state, "Internals", "rangeForDictionaryLookupAtLocation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rangeForDictionaryLookupAtLocation(x, y, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.rangeForDictionaryLookupAtLocation(x, y, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetDelegatesScrolling(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetDelegatesScrolling(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setDelegatesScrolling");
+        return throwThisTypeError(*state, "Internals", "setDelegatesScrolling");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setDelegatesScrolling(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpellCheckRequestSequence(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpellCheckRequestSequence(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "lastSpellCheckRequestSequence");
+        return throwThisTypeError(*state, "Internals", "lastSpellCheckRequestSequence");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.lastSpellCheckRequestSequence(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpellCheckProcessedSequence(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLastSpellCheckProcessedSequence(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "lastSpellCheckProcessedSequence");
+        return throwThisTypeError(*state, "Internals", "lastSpellCheckProcessedSequence");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.lastSpellCheckProcessedSequence(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserPreferredLanguages(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserPreferredLanguages(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "userPreferredLanguages");
+        return throwThisTypeError(*state, "Internals", "userPreferredLanguages");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.userPreferredLanguages());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.userPreferredLanguages());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUserPreferredLanguages(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUserPreferredLanguages(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setUserPreferredLanguages");
+        return throwThisTypeError(*state, "Internals", "setUserPreferredLanguages");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Vector<String> languages = toNativeArray<String>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Vector<String> languages = toNativeArray<String>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUserPreferredLanguages(languages);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserPreferredAudioCharacteristics(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserPreferredAudioCharacteristics(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "userPreferredAudioCharacteristics");
+        return throwThisTypeError(*state, "Internals", "userPreferredAudioCharacteristics");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.userPreferredAudioCharacteristics());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.userPreferredAudioCharacteristics());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUserPreferredAudioCharacteristic(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUserPreferredAudioCharacteristic(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setUserPreferredAudioCharacteristic");
+        return throwThisTypeError(*state, "Internals", "setUserPreferredAudioCharacteristic");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String characteristic = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String characteristic = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUserPreferredAudioCharacteristic(characteristic);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWheelEventHandlerCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWheelEventHandlerCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "wheelEventHandlerCount");
+        return throwThisTypeError(*state, "Internals", "wheelEventHandlerCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.wheelEventHandlerCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTouchEventHandlerCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTouchEventHandlerCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "touchEventHandlerCount");
+        return throwThisTypeError(*state, "Internals", "touchEventHandlerCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.touchEventHandlerCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNodesFromRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNodesFromRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "nodesFromRect");
+        return throwThisTypeError(*state, "Internals", "nodesFromRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 10))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 10))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Document* document = JSDocument::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Document* document = JSDocument::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned topPadding = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned topPadding = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned rightPadding = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned rightPadding = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned bottomPadding = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned bottomPadding = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned leftPadding = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned leftPadding = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool ignoreClipping = exec->argument(7).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool ignoreClipping = state->argument(7).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool allowShadowContent = exec->argument(8).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool allowShadowContent = state->argument(8).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool allowChildFrameContent = exec->argument(9).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool allowChildFrameContent = state->argument(9).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nodesFromRect(document, x, y, topPadding, rightPadding, bottomPadding, leftPadding, ignoreClipping, allowShadowContent, allowChildFrameContent, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.nodesFromRect(document, x, y, topPadding, rightPadding, bottomPadding, leftPadding, ignoreClipping, allowShadowContent, allowChildFrameContent, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionParserMetaData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionParserMetaData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "parserMetaData");
+        return throwThisTypeError(*state, "Internals", "parserMetaData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
-        JSValue result = jsStringWithCache(exec, impl.parserMetaData());
+        JSValue result = jsStringWithCache(state, impl.parserMetaData());
         return JSValue::encode(result);
     }
 
-    Deprecated::ScriptValue func = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue func = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.parserMetaData(func));
+    JSValue result = jsStringWithCache(state, impl.parserMetaData(func));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUpdateEditorUINowIfScheduled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUpdateEditorUINowIfScheduled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "updateEditorUINowIfScheduled");
+        return throwThisTypeError(*state, "Internals", "updateEditorUINowIfScheduled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.updateEditorUINowIfScheduled();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasSpellingMarker(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasSpellingMarker(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "hasSpellingMarker");
+        return throwThisTypeError(*state, "Internals", "hasSpellingMarker");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int from = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int from = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int length = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int length = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasSpellingMarker(from, length, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasGrammarMarker(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasGrammarMarker(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "hasGrammarMarker");
+        return throwThisTypeError(*state, "Internals", "hasGrammarMarker");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int from = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int from = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int length = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int length = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasGrammarMarker(from, length, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasAutocorrectedMarker(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionHasAutocorrectedMarker(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "hasAutocorrectedMarker");
+        return throwThisTypeError(*state, "Internals", "hasAutocorrectedMarker");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int from = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int from = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int length = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int length = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasAutocorrectedMarker(from, length, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetContinuousSpellCheckingEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetContinuousSpellCheckingEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setContinuousSpellCheckingEnabled");
+        return throwThisTypeError(*state, "Internals", "setContinuousSpellCheckingEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setContinuousSpellCheckingEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticQuoteSubstitutionEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticQuoteSubstitutionEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutomaticQuoteSubstitutionEnabled");
+        return throwThisTypeError(*state, "Internals", "setAutomaticQuoteSubstitutionEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutomaticQuoteSubstitutionEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticLinkDetectionEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticLinkDetectionEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutomaticLinkDetectionEnabled");
+        return throwThisTypeError(*state, "Internals", "setAutomaticLinkDetectionEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutomaticLinkDetectionEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticDashSubstitutionEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticDashSubstitutionEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutomaticDashSubstitutionEnabled");
+        return throwThisTypeError(*state, "Internals", "setAutomaticDashSubstitutionEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutomaticDashSubstitutionEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticTextReplacementEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticTextReplacementEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutomaticTextReplacementEnabled");
+        return throwThisTypeError(*state, "Internals", "setAutomaticTextReplacementEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutomaticTextReplacementEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticSpellingCorrectionEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAutomaticSpellingCorrectionEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAutomaticSpellingCorrectionEnabled");
+        return throwThisTypeError(*state, "Internals", "setAutomaticSpellingCorrectionEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutomaticSpellingCorrectionEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsOverwriteModeEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsOverwriteModeEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isOverwriteModeEnabled");
+        return throwThisTypeError(*state, "Internals", "isOverwriteModeEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsBoolean(impl.isOverwriteModeEnabled(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionToggleOverwriteModeEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionToggleOverwriteModeEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "toggleOverwriteModeEnabled");
+        return throwThisTypeError(*state, "Internals", "toggleOverwriteModeEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.toggleOverwriteModeEnabled(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfScrollableAreas(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfScrollableAreas(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "numberOfScrollableAreas");
+        return throwThisTypeError(*state, "Internals", "numberOfScrollableAreas");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.numberOfScrollableAreas(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPageBoxVisible(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPageBoxVisible(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isPageBoxVisible");
+        return throwThisTypeError(*state, "Internals", "isPageBoxVisible");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int pageNumber = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageNumber = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPageBoxVisible(pageNumber, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLayerTreeAsText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLayerTreeAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "layerTreeAsText");
+        return throwThisTypeError(*state, "Internals", "layerTreeAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Document* document = JSDocument::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Document* document = JSDocument::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
-        JSValue result = jsStringWithCache(exec, impl.layerTreeAsText(document, ec));
+        JSValue result = jsStringWithCache(state, impl.layerTreeAsText(document, ec));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    uint16_t flags = toUInt16(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t flags = toUInt16(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.layerTreeAsText(document, flags, ec));
+    JSValue result = jsStringWithCache(state, impl.layerTreeAsText(document, flags, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionScrollingStateTreeAsText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionScrollingStateTreeAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "scrollingStateTreeAsText");
+        return throwThisTypeError(*state, "Internals", "scrollingStateTreeAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.scrollingStateTreeAsText(ec));
+    JSValue result = jsStringWithCache(state, impl.scrollingStateTreeAsText(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMainThreadScrollingReasons(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMainThreadScrollingReasons(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "mainThreadScrollingReasons");
+        return throwThisTypeError(*state, "Internals", "mainThreadScrollingReasons");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.mainThreadScrollingReasons(ec));
+    JSValue result = jsStringWithCache(state, impl.mainThreadScrollingReasons(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNonFastScrollableRects(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNonFastScrollableRects(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "nonFastScrollableRects");
+        return throwThisTypeError(*state, "Internals", "nonFastScrollableRects");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nonFastScrollableRects(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.nonFastScrollableRects(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRepaintRectsAsText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRepaintRectsAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "repaintRectsAsText");
+        return throwThisTypeError(*state, "Internals", "repaintRectsAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.repaintRectsAsText(ec));
+    JSValue result = jsStringWithCache(state, impl.repaintRectsAsText(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGarbageCollectDocumentResources(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGarbageCollectDocumentResources(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "garbageCollectDocumentResources");
+        return throwThisTypeError(*state, "Internals", "garbageCollectDocumentResources");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.garbageCollectDocumentResources(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAllowRoundingHacks(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAllowRoundingHacks(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "allowRoundingHacks");
+        return throwThisTypeError(*state, "Internals", "allowRoundingHacks");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.allowRoundingHacks();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertAuthorCSS(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertAuthorCSS(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "insertAuthorCSS");
+        return throwThisTypeError(*state, "Internals", "insertAuthorCSS");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String css = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String css = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.insertAuthorCSS(css, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertUserCSS(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInsertUserCSS(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "insertUserCSS");
+        return throwThisTypeError(*state, "Internals", "insertUserCSS");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String css = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String css = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.insertUserCSS(css, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveNodes(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveNodes(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "numberOfLiveNodes");
+        return throwThisTypeError(*state, "Internals", "numberOfLiveNodes");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberOfLiveNodes());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveDocuments(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfLiveDocuments(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "numberOfLiveDocuments");
+        return throwThisTypeError(*state, "Internals", "numberOfLiveDocuments");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberOfLiveDocuments());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionConsoleMessageArgumentCounts(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionOpenDummyInspectorFrontend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "consoleMessageArgumentCounts");
+        return throwThisTypeError(*state, "Internals", "openDummyInspectorFrontend");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.consoleMessageArgumentCounts());
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionOpenDummyInspectorFrontend(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "openDummyInspectorFrontend");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openDummyInspectorFrontend(url)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openDummyInspectorFrontend(url)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCloseDummyInspectorFrontend(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCloseDummyInspectorFrontend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "closeDummyInspectorFrontend");
+        return throwThisTypeError(*state, "Internals", "closeDummyInspectorFrontend");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.closeDummyInspectorFrontend();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetJavaScriptProfilingEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetJavaScriptProfilingEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setJavaScriptProfilingEnabled");
+        return throwThisTypeError(*state, "Internals", "setJavaScriptProfilingEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool creates = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool creates = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setJavaScriptProfilingEnabled(creates, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetInspectorIsUnderTest(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetInspectorIsUnderTest(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setInspectorIsUnderTest");
+        return throwThisTypeError(*state, "Internals", "setInspectorIsUnderTest");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool isUnderTest = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool isUnderTest = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setInspectorIsUnderTest(isUnderTest, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCounterValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCounterValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "counterValue");
+        return throwThisTypeError(*state, "Internals", "counterValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.counterValue(element));
+    JSValue result = jsStringWithCache(state, impl.counterValue(element));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageNumber(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageNumber(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pageNumber");
+        return throwThisTypeError(*state, "Internals", "pageNumber");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         JSValue result = jsNumber(impl.pageNumber(element));
         return JSValue::encode(result);
     }
 
-    float pageWidth = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float pageWidth = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 2) {
         JSValue result = jsNumber(impl.pageNumber(element, pageWidth));
         return JSValue::encode(result);
     }
 
-    float pageHeight = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float pageHeight = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.pageNumber(element, pageWidth, pageHeight));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShortcutIconURLs(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionShortcutIconURLs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "shortcutIconURLs");
+        return throwThisTypeError(*state, "Internals", "shortcutIconURLs");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.shortcutIconURLs());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.shortcutIconURLs());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfPages(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionNumberOfPages(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "numberOfPages");
+        return throwThisTypeError(*state, "Internals", "numberOfPages");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
         JSValue result = jsNumber(impl.numberOfPages());
         return JSValue::encode(result);
     }
 
-    double pageWidthInPixels = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pageWidthInPixels = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 1) {
         JSValue result = jsNumber(impl.numberOfPages(pageWidthInPixels));
         return JSValue::encode(result);
     }
 
-    double pageHeightInPixels = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double pageHeightInPixels = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.numberOfPages(pageWidthInPixels, pageHeightInPixels));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageProperty(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageProperty(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pageProperty");
+        return throwThisTypeError(*state, "Internals", "pageProperty");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String propertyName = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String propertyName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int pageNumber = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageNumber = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.pageProperty(propertyName, pageNumber, ec));
+    JSValue result = jsStringWithCache(state, impl.pageProperty(propertyName, pageNumber, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageSizeAndMarginsInPixels(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageSizeAndMarginsInPixels(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pageSizeAndMarginsInPixels");
+        return throwThisTypeError(*state, "Internals", "pageSizeAndMarginsInPixels");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int pageIndex = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageIndex = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int marginTop = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int marginTop = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int marginRight = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int marginRight = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int marginBottom = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int marginBottom = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int marginLeft = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int marginLeft = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.pageSizeAndMarginsInPixels(pageIndex, width, height, marginTop, marginRight, marginBottom, marginLeft, ec));
+    JSValue result = jsStringWithCache(state, impl.pageSizeAndMarginsInPixels(pageIndex, width, height, marginTop, marginRight, marginBottom, marginLeft, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageScaleFactor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageScaleFactor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setPageScaleFactor");
+        return throwThisTypeError(*state, "Internals", "setPageScaleFactor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float scaleFactor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float scaleFactor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPageScaleFactor(scaleFactor, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageZoomFactor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageZoomFactor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setPageZoomFactor");
+        return throwThisTypeError(*state, "Internals", "setPageZoomFactor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float zoomFactor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float zoomFactor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPageZoomFactor(zoomFactor, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetTextZoomFactor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetTextZoomFactor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setTextZoomFactor");
+        return throwThisTypeError(*state, "Internals", "setTextZoomFactor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float zoomFactor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float zoomFactor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTextZoomFactor(zoomFactor, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUseFixedLayout(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUseFixedLayout(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setUseFixedLayout");
+        return throwThisTypeError(*state, "Internals", "setUseFixedLayout");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool useFixedLayout = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool useFixedLayout = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUseFixedLayout(useFixedLayout, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFixedLayoutSize(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFixedLayoutSize(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setFixedLayoutSize");
+        return throwThisTypeError(*state, "Internals", "setFixedLayoutSize");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int width = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFixedLayoutSize(width, height, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetHeaderHeight(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetHeaderHeight(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setHeaderHeight");
+        return throwThisTypeError(*state, "Internals", "setHeaderHeight");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float height = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float height = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setHeaderHeight(height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFooterHeight(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetFooterHeight(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setFooterHeight");
+        return throwThisTypeError(*state, "Internals", "setFooterHeight");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float height = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float height = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFooterHeight(height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetTopContentInset(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetTopContentInset(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setTopContentInset");
+        return throwThisTypeError(*state, "Internals", "setTopContentInset");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float contentInset = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float contentInset = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTopContentInset(contentInset);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitWillEnterFullScreenForElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitWillEnterFullScreenForElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "webkitWillEnterFullScreenForElement");
+        return throwThisTypeError(*state, "Internals", "webkitWillEnterFullScreenForElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.webkitWillEnterFullScreenForElement(element);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitDidEnterFullScreenForElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitDidEnterFullScreenForElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "webkitDidEnterFullScreenForElement");
+        return throwThisTypeError(*state, "Internals", "webkitDidEnterFullScreenForElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.webkitDidEnterFullScreenForElement(element);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitWillExitFullScreenForElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitWillExitFullScreenForElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "webkitWillExitFullScreenForElement");
+        return throwThisTypeError(*state, "Internals", "webkitWillExitFullScreenForElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.webkitWillExitFullScreenForElement(element);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitDidExitFullScreenForElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionWebkitDidExitFullScreenForElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "webkitDidExitFullScreenForElement");
+        return throwThisTypeError(*state, "Internals", "webkitDidExitFullScreenForElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.webkitDidExitFullScreenForElement(element);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetApplicationCacheOriginQuota(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetApplicationCacheOriginQuota(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setApplicationCacheOriginQuota");
+        return throwThisTypeError(*state, "Internals", "setApplicationCacheOriginQuota");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned long long quota = toUInt64(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned long long quota = toUInt64(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setApplicationCacheOriginQuota(quota);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRegisterURLSchemeAsBypassingContentSecurityPolicy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRegisterURLSchemeAsBypassingContentSecurityPolicy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "registerURLSchemeAsBypassingContentSecurityPolicy");
+        return throwThisTypeError(*state, "Internals", "registerURLSchemeAsBypassingContentSecurityPolicy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String scheme = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String scheme = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.registerURLSchemeAsBypassingContentSecurityPolicy(scheme);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRemoveURLSchemeRegisteredAsBypassingContentSecurityPolicy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionRemoveURLSchemeRegisteredAsBypassingContentSecurityPolicy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "removeURLSchemeRegisteredAsBypassingContentSecurityPolicy");
+        return throwThisTypeError(*state, "Internals", "removeURLSchemeRegisteredAsBypassingContentSecurityPolicy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String scheme = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String scheme = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.removeURLSchemeRegisteredAsBypassingContentSecurityPolicy(scheme);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMallocStatistics(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMallocStatistics(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "mallocStatistics");
+        return throwThisTypeError(*state, "Internals", "mallocStatistics");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.mallocStatistics()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.mallocStatistics()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTypeConversions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTypeConversions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "typeConversions");
+        return throwThisTypeError(*state, "Internals", "typeConversions");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.typeConversions()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.typeConversions()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMemoryInfo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMemoryInfo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "memoryInfo");
+        return throwThisTypeError(*state, "Internals", "memoryInfo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.memoryInfo()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.memoryInfo()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetReferencedFilePaths(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetReferencedFilePaths(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "getReferencedFilePaths");
+        return throwThisTypeError(*state, "Internals", "getReferencedFilePaths");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getReferencedFilePaths());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.getReferencedFilePaths());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingRepaints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingRepaints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "startTrackingRepaints");
+        return throwThisTypeError(*state, "Internals", "startTrackingRepaints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.startTrackingRepaints(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStopTrackingRepaints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStopTrackingRepaints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "stopTrackingRepaints");
+        return throwThisTypeError(*state, "Internals", "stopTrackingRepaints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.stopTrackingRepaints(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingLayerFlushes(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingLayerFlushes(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "startTrackingLayerFlushes");
+        return throwThisTypeError(*state, "Internals", "startTrackingLayerFlushes");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.startTrackingLayerFlushes(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLayerFlushCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionLayerFlushCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "layerFlushCount");
+        return throwThisTypeError(*state, "Internals", "layerFlushCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.layerFlushCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsTimerThrottled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsTimerThrottled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isTimerThrottled");
+        return throwThisTypeError(*state, "Internals", "isTimerThrottled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int timerHandle = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int timerHandle = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isTimerThrottled(timerHandle, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsRequestAnimationFrameThrottled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsRequestAnimationFrameThrottled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isRequestAnimationFrameThrottled");
+        return throwThisTypeError(*state, "Internals", "isRequestAnimationFrameThrottled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.isRequestAnimationFrameThrottled());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAreTimersThrottled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionAreTimersThrottled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "areTimersThrottled");
+        return throwThisTypeError(*state, "Internals", "areTimersThrottled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.areTimersThrottled());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingStyleRecalcs(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingStyleRecalcs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "startTrackingStyleRecalcs");
+        return throwThisTypeError(*state, "Internals", "startTrackingStyleRecalcs");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.startTrackingStyleRecalcs(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStyleRecalcCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStyleRecalcCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "styleRecalcCount");
+        return throwThisTypeError(*state, "Internals", "styleRecalcCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.styleRecalcCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingCompositingUpdates(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionStartTrackingCompositingUpdates(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "startTrackingCompositingUpdates");
+        return throwThisTypeError(*state, "Internals", "startTrackingCompositingUpdates");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.startTrackingCompositingUpdates(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCompositingUpdateCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCompositingUpdateCount(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "compositingUpdateCount");
+        return throwThisTypeError(*state, "Internals", "compositingUpdateCount");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     JSValue result = jsNumber(impl.compositingUpdateCount(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUpdateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUpdateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks");
+        return throwThisTypeError(*state, "Internals", "updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
         impl.updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks(ec);
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(jsUndefined());
     }
 
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.updateLayoutIgnorePendingStylesheetsAndRunPostLayoutTasks(node, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetCurrentCursorInfo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetCurrentCursorInfo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "getCurrentCursorInfo");
+        return throwThisTypeError(*state, "Internals", "getCurrentCursorInfo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.getCurrentCursorInfo(ec));
+    JSValue result = jsStringWithCache(state, impl.getCurrentCursorInfo(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerTextForListItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMarkerTextForListItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "markerTextForListItem");
+        return throwThisTypeError(*state, "Internals", "markerTextForListItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.markerTextForListItem(element, ec));
+    JSValue result = jsStringWithCache(state, impl.markerTextForListItem(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionToolTipFromElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionToolTipFromElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "toolTipFromElement");
+        return throwThisTypeError(*state, "Internals", "toolTipFromElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.toolTipFromElement(element, ec));
+    JSValue result = jsStringWithCache(state, impl.toolTipFromElement(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDeserializeBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionDeserializeBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "deserializeBuffer");
+        return throwThisTypeError(*state, "Internals", "deserializeBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ArrayBuffer* buffer = toArrayBuffer(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ArrayBuffer* buffer = toArrayBuffer(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = impl.deserializeBuffer(buffer) ? impl.deserializeBuffer(buffer)->deserialize(exec, castedThis->globalObject(), 0) : jsNull();
+    JSValue result = impl.deserializeBuffer(buffer) ? impl.deserializeBuffer(buffer)->deserialize(state, castedThis->globalObject(), 0) : jsNull();
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSerializeObject(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSerializeObject(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "serializeObject");
+        return throwThisTypeError(*state, "Internals", "serializeObject");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<SerializedScriptValue> obj = SerializedScriptValue::create(exec, exec->argument(0), 0, 0);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    RefPtr<SerializedScriptValue> obj = SerializedScriptValue::create(state, state->argument(0), 0, 0);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.serializeObject(obj)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.serializeObject(obj)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsFromCurrentWorld(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsFromCurrentWorld(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isFromCurrentWorld");
+        return throwThisTypeError(*state, "Internals", "isFromCurrentWorld");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Deprecated::ScriptValue obj = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Deprecated::ScriptValue obj = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isFromCurrentWorld(obj));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUsesOverlayScrollbars(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetUsesOverlayScrollbars(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setUsesOverlayScrollbars");
+        return throwThisTypeError(*state, "Internals", "setUsesOverlayScrollbars");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUsesOverlayScrollbars(enabled);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionForceReload(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionForceReload(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "forceReload");
+        return throwThisTypeError(*state, "Internals", "forceReload");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool endToEnd = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool endToEnd = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.forceReload(endToEnd);
     return JSValue::encode(jsUndefined());
 }
 
-#if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateAudioInterruption(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnableAutoSizeMode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "simulateAudioInterruption");
+        return throwThisTypeError(*state, "Internals", "enableAutoSizeMode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    int minimumWidth = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    int minimumHeight = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    int maximumWidth = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    int maximumHeight = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.enableAutoSizeMode(enabled, minimumWidth, minimumHeight, maximumWidth, maximumHeight);
+    return JSValue::encode(jsUndefined());
+}
+
+#if ENABLE(VIDEO)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateAudioInterruption(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "simulateAudioInterruption");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.simulateAudioInterruption(node);
     return JSValue::encode(jsUndefined());
@@ -3788,40 +3891,40 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateAudioInterrupti
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementHasCharacteristic(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementHasCharacteristic(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "mediaElementHasCharacteristic");
+        return throwThisTypeError(*state, "Internals", "mediaElementHasCharacteristic");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String characteristic = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String characteristic = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.mediaElementHasCharacteristic(node, characteristic, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockCDM(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockCDM(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "initializeMockCDM");
+        return throwThisTypeError(*state, "Internals", "initializeMockCDM");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.initializeMockCDM();
     return JSValue::encode(jsUndefined());
 }
@@ -3829,163 +3932,163 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockCDM(ExecS
 #endif
 
 #if ENABLE(SPEECH_SYNTHESIS)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnableMockSpeechSynthesizer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEnableMockSpeechSynthesizer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "enableMockSpeechSynthesizer");
+        return throwThisTypeError(*state, "Internals", "enableMockSpeechSynthesizer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.enableMockSpeechSynthesizer();
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetImageSourceURL(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetImageSourceURL(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "getImageSourceURL");
+        return throwThisTypeError(*state, "Internals", "getImageSourceURL");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.getImageSourceURL(element, ec));
+    JSValue result = jsStringWithCache(state, impl.getImageSourceURL(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCaptionsStyleSheetOverride(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCaptionsStyleSheetOverride(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "captionsStyleSheetOverride");
+        return throwThisTypeError(*state, "Internals", "captionsStyleSheetOverride");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.captionsStyleSheetOverride(ec));
+    JSValue result = jsStringWithCache(state, impl.captionsStyleSheetOverride(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetCaptionsStyleSheetOverride(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetCaptionsStyleSheetOverride(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setCaptionsStyleSheetOverride");
+        return throwThisTypeError(*state, "Internals", "setCaptionsStyleSheetOverride");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String override = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String override = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCaptionsStyleSheetOverride(override, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPrimaryAudioTrackLanguageOverride(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPrimaryAudioTrackLanguageOverride(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setPrimaryAudioTrackLanguageOverride");
+        return throwThisTypeError(*state, "Internals", "setPrimaryAudioTrackLanguageOverride");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String language = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String language = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPrimaryAudioTrackLanguageOverride(language, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetCaptionDisplayMode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetCaptionDisplayMode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setCaptionDisplayMode");
+        return throwThisTypeError(*state, "Internals", "setCaptionDisplayMode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String mode = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String mode = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCaptionDisplayMode(mode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateTimeRanges(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateTimeRanges(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "createTimeRanges");
+        return throwThisTypeError(*state, "Internals", "createTimeRanges");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    RefPtr<Float32Array> startTimes = toFloat32Array(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    RefPtr<Float32Array> startTimes = toFloat32Array(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> endTimes = toFloat32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> endTimes = toFloat32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createTimeRanges(startTimes.get(), endTimes.get())));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createTimeRanges(startTimes.get(), endTimes.get())));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClosestTimeToTimeRanges(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClosestTimeToTimeRanges(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "closestTimeToTimeRanges");
+        return throwThisTypeError(*state, "Internals", "closestTimeToTimeRanges");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    double time = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    double time = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    TimeRanges* ranges = JSTimeRanges::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    TimeRanges* ranges = JSTimeRanges::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.closestTimeToTimeRanges(time, ranges));
     return JSValue::encode(result);
@@ -3993,87 +4096,87 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionClosestTimeToTimeRanges
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsSelectPopupVisible(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsSelectPopupVisible(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isSelectPopupVisible");
+        return throwThisTypeError(*state, "Internals", "isSelectPopupVisible");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Node* node = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Node* node = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isSelectPopupVisible(node));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPluginUnavailabilityIndicatorObscured(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPluginUnavailabilityIndicatorObscured(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isPluginUnavailabilityIndicatorObscured");
+        return throwThisTypeError(*state, "Internals", "isPluginUnavailabilityIndicatorObscured");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPluginUnavailabilityIndicatorObscured(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPluginSnapshotted(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPluginSnapshotted(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isPluginSnapshotted");
+        return throwThisTypeError(*state, "Internals", "isPluginSnapshotted");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPluginSnapshotted(element, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSelectionBounds(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSelectionBounds(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "selectionBounds");
+        return throwThisTypeError(*state, "Internals", "selectionBounds");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.selectionBounds(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.selectionBounds(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #if ENABLE(MEDIA_SOURCE)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockMediaSource(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockMediaSource(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "initializeMockMediaSource");
+        return throwThisTypeError(*state, "Internals", "initializeMockMediaSource");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.initializeMockMediaSource();
     return JSValue::encode(jsUndefined());
 }
@@ -4081,44 +4184,44 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInitializeMockMediaSour
 #endif
 
 #if ENABLE(MEDIA_SOURCE)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBufferedSamplesForTrackID(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBufferedSamplesForTrackID(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "bufferedSamplesForTrackID");
+        return throwThisTypeError(*state, "Internals", "bufferedSamplesForTrackID");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    SourceBuffer* buffer = JSSourceBuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    SourceBuffer* buffer = JSSourceBuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String trackID = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String trackID = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.bufferedSamplesForTrackID(buffer, trackID));
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.bufferedSamplesForTrackID(buffer, trackID));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(MEDIA_SOURCE)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShouldGenerateTimestamps(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShouldGenerateTimestamps(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setShouldGenerateTimestamps");
+        return throwThisTypeError(*state, "Internals", "setShouldGenerateTimestamps");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    SourceBuffer* buffer = JSSourceBuffer::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    SourceBuffer* buffer = JSSourceBuffer::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool flag = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool flag = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShouldGenerateTimestamps(buffer, flag);
     return JSValue::encode(jsUndefined());
@@ -4127,33 +4230,40 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShouldGenerateTimest
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBeginMediaSessionInterruption(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionBeginMediaSessionInterruption(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "beginMediaSessionInterruption");
+        return throwThisTypeError(*state, "Internals", "beginMediaSessionInterruption");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    impl.beginMediaSessionInterruption();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String interruptionType = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.beginMediaSessionInterruption(interruptionType, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEndMediaSessionInterruption(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEndMediaSessionInterruption(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "endMediaSessionInterruption");
+        return throwThisTypeError(*state, "Internals", "endMediaSessionInterruption");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String flags = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String flags = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.endMediaSessionInterruption(flags);
     return JSValue::encode(jsUndefined());
@@ -4162,23 +4272,23 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionEndMediaSessionInterrup
 #endif
 
 #if ENABLE(MEDIA_SESSION)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionStartOfInterruptionNotification(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionStartOfInterruptionNotification(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "sendMediaSessionStartOfInterruptionNotification");
+        return throwThisTypeError(*state, "Internals", "sendMediaSessionStartOfInterruptionNotification");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* categoryString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* categoryString = state->argument(0).toString(state);
+    auto& category = categoryString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& category = categoryString->value(exec);
     if (category != "content" && category != "transient" && category != "transient-solo")
-        return throwArgumentMustBeEnumError(*exec, 0, "category", "Internals", "sendMediaSessionStartOfInterruptionNotification", "\"content\", \"transient\", \"transient-solo\"");
+        return throwArgumentMustBeEnumError(*state, 0, "category", "Internals", "sendMediaSessionStartOfInterruptionNotification", "\"content\", \"transient\", \"transient-solo\"");
     impl.sendMediaSessionStartOfInterruptionNotification(category);
     return JSValue::encode(jsUndefined());
 }
@@ -4186,23 +4296,23 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionStartOf
 #endif
 
 #if ENABLE(MEDIA_SESSION)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionEndOfInterruptionNotification(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionEndOfInterruptionNotification(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "sendMediaSessionEndOfInterruptionNotification");
+        return throwThisTypeError(*state, "Internals", "sendMediaSessionEndOfInterruptionNotification");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* categoryString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* categoryString = state->argument(0).toString(state);
+    auto& category = categoryString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& category = categoryString->value(exec);
     if (category != "content" && category != "transient" && category != "transient-solo")
-        return throwArgumentMustBeEnumError(*exec, 0, "category", "Internals", "sendMediaSessionEndOfInterruptionNotification", "\"content\", \"transient\", \"transient-solo\"");
+        return throwArgumentMustBeEnumError(*state, 0, "category", "Internals", "sendMediaSessionEndOfInterruptionNotification", "\"content\", \"transient\", \"transient-solo\"");
     impl.sendMediaSessionEndOfInterruptionNotification(category);
     return JSValue::encode(jsUndefined());
 }
@@ -4210,38 +4320,38 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaSessionEndOfIn
 #endif
 
 #if ENABLE(MEDIA_SESSION)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaSessionCurrentState(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaSessionCurrentState(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "mediaSessionCurrentState");
+        return throwThisTypeError(*state, "Internals", "mediaSessionCurrentState");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    MediaSession* session = JSMediaSession::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    MediaSession* session = JSMediaSession::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.mediaSessionCurrentState(session));
+    JSValue result = jsStringWithCache(state, impl.mediaSessionCurrentState(session));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(MEDIA_SESSION)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementPlayerVolume(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementPlayerVolume(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "mediaElementPlayerVolume");
+        return throwThisTypeError(*state, "Internals", "mediaElementPlayerVolume");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    HTMLMediaElement* element = JSHTMLMediaElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    HTMLMediaElement* element = JSHTMLMediaElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.mediaElementPlayerVolume(element));
     return JSValue::encode(result);
@@ -4250,23 +4360,23 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionMediaElementPlayerVolum
 #endif
 
 #if ENABLE(MEDIA_SESSION)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaControlEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaControlEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "sendMediaControlEvent");
+        return throwThisTypeError(*state, "Internals", "sendMediaControlEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* eventString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* eventString = state->argument(0).toString(state);
+    auto& event = eventString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& event = eventString->value(exec);
     if (event != "play-pause" && event != "next-track" && event != "previous-track")
-        return throwArgumentMustBeEnumError(*exec, 0, "event", "Internals", "sendMediaControlEvent", "\"play-pause\", \"next-track\", \"previous-track\"");
+        return throwArgumentMustBeEnumError(*state, 0, "event", "Internals", "sendMediaControlEvent", "\"play-pause\", \"next-track\", \"previous-track\"");
     impl.sendMediaControlEvent(event);
     return JSValue::encode(jsUndefined());
 }
@@ -4274,29 +4384,29 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSendMediaControlEvent(E
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterForeground(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationDidEnterForeground(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "applicationWillEnterForeground");
+        return throwThisTypeError(*state, "Internals", "applicationDidEnterForeground");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    impl.applicationWillEnterForeground();
+    auto& impl = castedThis->wrapped();
+    impl.applicationDidEnterForeground();
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterBackground(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterBackground(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "applicationWillEnterBackground");
+        return throwThisTypeError(*state, "Internals", "applicationWillEnterBackground");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.applicationWillEnterBackground();
     return JSValue::encode(jsUndefined());
 }
@@ -4304,111 +4414,176 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionApplicationWillEnterBac
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMediaSessionRestrictions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMediaSessionRestrictions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setMediaSessionRestrictions");
+        return throwThisTypeError(*state, "Internals", "setMediaSessionRestrictions");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String mediaType = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String mediaType = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String restrictions = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String restrictions = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMediaSessionRestrictions(mediaType, restrictions, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMediaElementRestrictions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMediaElementRestrictions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setMediaElementRestrictions");
+        return throwThisTypeError(*state, "Internals", "setMediaElementRestrictions");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLMediaElement* element = JSHTMLMediaElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLMediaElement* element = JSHTMLMediaElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String restrictions = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String restrictions = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMediaElementRestrictions(element, restrictions, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(WEB_AUDIO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAudioContextRestrictions(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetAudioContextRestrictions(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setAudioContextRestrictions");
+        return throwThisTypeError(*state, "Internals", "setAudioContextRestrictions");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    AudioContext* context = JSAudioContext::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    AudioContext* context = JSAudioContext::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String restrictions = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String restrictions = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAudioContextRestrictions(context, restrictions, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPostRemoteControlCommand(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPostRemoteControlCommand(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "postRemoteControlCommand");
+        return throwThisTypeError(*state, "Internals", "postRemoteControlCommand");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.postRemoteControlCommand(command, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+#endif
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerEnabled(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "setMockMediaPlaybackTargetPickerEnabled");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setMockMediaPlaybackTargetPickerEnabled(enabled);
+    return JSValue::encode(jsUndefined());
+}
+
+#endif
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaPlaybackTargetPickerState(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "setMockMediaPlaybackTargetPickerState");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String deviceName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String deviceState = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setMockMediaPlaybackTargetPickerState(deviceName, deviceState, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetMockMediaCaptureDevicesEnabled(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "setMockMediaCaptureDevicesEnabled");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setMockMediaCaptureDevicesEnabled(enabled);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemSleep(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemSleep(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "simulateSystemSleep");
+        return throwThisTypeError(*state, "Internals", "simulateSystemSleep");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.simulateSystemSleep();
     return JSValue::encode(jsUndefined());
 }
@@ -4416,14 +4591,14 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemSleep(Exe
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemWake(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemWake(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "simulateSystemWake");
+        return throwThisTypeError(*state, "Internals", "simulateSystemWake");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.simulateSystemWake();
     return JSValue::encode(jsUndefined());
 }
@@ -4431,18 +4606,18 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSimulateSystemWake(Exec
 #endif
 
 #if ENABLE(VIDEO)
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementIsBlockingDisplaySleep(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementIsBlockingDisplaySleep(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "elementIsBlockingDisplaySleep");
+        return throwThisTypeError(*state, "Internals", "elementIsBlockingDisplaySleep");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.elementIsBlockingDisplaySleep(element));
     return JSValue::encode(result);
@@ -4450,145 +4625,239 @@ EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionElementIsBlockingDispla
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInstallMockPageOverlay(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionInstallMockPageOverlay(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "installMockPageOverlay");
+        return throwThisTypeError(*state, "Internals", "installMockPageOverlay");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* typeString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* typeString = state->argument(0).toString(state);
+    auto& type = typeString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& type = typeString->value(exec);
     if (type != "view" && type != "document")
-        return throwArgumentMustBeEnumError(*exec, 0, "type", "Internals", "installMockPageOverlay", "\"view\", \"document\"");
-    impl.installMockPageOverlay(type, ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
+        return throwArgumentMustBeEnumError(*state, 0, "type", "Internals", "installMockPageOverlay", "\"view\", \"document\"");
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.installMockPageOverlay(type, ec)));
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageOverlayLayerTreeAsText(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pageOverlayLayerTreeAsText");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.pageOverlayLayerTreeAsText(ec));
-
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageMuted(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPageOverlayLayerTreeAsText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "setPageMuted");
+        return throwThisTypeError(*state, "Internals", "pageOverlayLayerTreeAsText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool muted = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
+    JSValue result = jsStringWithCache(state, impl.pageOverlayLayerTreeAsText(ec));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageMuted(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "setPageMuted");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool muted = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPageMuted(muted);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPagePlayingAudio(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsPagePlayingAudio(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "isPagePlayingAudio");
+        return throwThisTypeError(*state, "Internals", "isPagePlayingAudio");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.isPagePlayingAudio());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateFile(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetPageDefersLoading(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "createFile");
+        return throwThisTypeError(*state, "Internals", "setPageDefersLoading");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool defersLoading = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createFile(url)));
+    impl.setPageDefersLoading(defersLoading);
+    return JSValue::encode(jsUndefined());
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionCreateFile(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "createFile");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createFile(url)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionQueueMicroTask(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionQueueMicroTask(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "queueMicroTask");
+        return throwThisTypeError(*state, "Internals", "queueMicroTask");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int testNumber = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int testNumber = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.queueMicroTask(testNumber);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTestPreloaderSettingViewport(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionTestPreloaderSettingViewport(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "testPreloaderSettingViewport");
+        return throwThisTypeError(*state, "Internals", "testPreloaderSettingViewport");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.testPreloaderSettingViewport());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPathStringWithShrinkWrappedRects(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionPathStringWithShrinkWrappedRects(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Internals", "pathStringWithShrinkWrappedRects");
+        return throwThisTypeError(*state, "Internals", "pathStringWithShrinkWrappedRects");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Vector<double> rectComponents = toNativeArray<double>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Vector<double> rectComponents = toNativeArray<double>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double radius = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double radius = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(radius)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = jsStringWithCache(exec, impl.pathStringWithShrinkWrappedRects(rectComponents, radius, ec));
+    JSValue result = jsStringWithCache(state, impl.pathStringWithShrinkWrappedRects(rectComponents, radius, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
+
+#if ENABLE(VIDEO)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionGetCurrentMediaControlsStatusForElement(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "getCurrentMediaControlsStatusForElement");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    HTMLMediaElement* element = JSHTMLMediaElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsStringWithCache(state, impl.getCurrentMediaControlsStatusForElement(element));
+    return JSValue::encode(result);
+}
+
+#endif
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionUserVisibleString(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "userVisibleString");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMURL* url = JSDOMURL::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsStringWithCache(state, impl.userVisibleString(url));
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionSetShowAllPlugins(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "setShowAllPlugins");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool showAll = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setShowAllPlugins(showAll);
+    return JSValue::encode(jsUndefined());
+}
+
+#if ENABLE(STREAMS_API)
+EncodedJSValue JSC_HOST_CALL jsInternalsPrototypeFunctionIsReadableStreamDisturbed(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternals* castedThis = jsDynamicCast<JSInternals*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Internals", "isReadableStreamDisturbed");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternals::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Deprecated::ScriptValue stream = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsBoolean(impl.isReadableStreamDisturbed(*state, stream));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    return JSValue::encode(result);
+}
+
+#endif
 
 bool JSInternalsOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
@@ -4601,7 +4870,7 @@ void JSInternalsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsInternals = jsCast<JSInternals*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsInternals->impl(), jsInternals);
+    uncacheWrapper(world, &jsInternals->wrapped(), jsInternals);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -4612,6 +4881,14 @@ extern "C" { extern void (*const __identifier("??_7Internals@WebCore@@6B@")[])()
 extern "C" { extern void* _ZTVN7WebCore9InternalsE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Internals* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSInternals>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Internals* impl)
 {
     if (!impl)
@@ -4643,7 +4920,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Internals* i
 Internals* JSInternals::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSInternals*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

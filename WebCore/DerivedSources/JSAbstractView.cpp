@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSAbstractView.h"
 
-#include "DOMWindow.h"
 #include "Document.h"
 #include "JSDOMBinding.h"
 #include "JSDocument.h"
@@ -67,8 +66,8 @@ private:
 
 static const HashTableValue JSAbstractViewPrototypeTableValues[] =
 {
-    { "document", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAbstractViewDocument), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "styleMedia", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAbstractViewStyleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "document", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAbstractViewDocument), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "styleMedia", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAbstractViewStyleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSAbstractViewPrototype::s_info = { "AbstractViewPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAbstractViewPrototype) };
@@ -81,9 +80,8 @@ void JSAbstractViewPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAbstractView::s_info = { "AbstractView", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAbstractView) };
 
-JSAbstractView::JSAbstractView(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMWindow>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSAbstractView::JSAbstractView(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMWindow>&& impl)
+    : JSDOMWrapper<DOMWindow>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -103,41 +101,36 @@ void JSAbstractView::destroy(JSC::JSCell* cell)
     thisObject->JSAbstractView::~JSAbstractView();
 }
 
-JSAbstractView::~JSAbstractView()
+EncodedJSValue jsAbstractViewDocument(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsAbstractViewDocument(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAbstractView* castedThis = jsDynamicCast<JSAbstractView*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAbstractViewPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AbstractView", "document");
-        return throwGetterTypeError(*exec, "AbstractView", "document");
+            return reportDeprecatedGetterError(*state, "AbstractView", "document");
+        return throwGetterTypeError(*state, "AbstractView", "document");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.document()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.document()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAbstractViewStyleMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAbstractViewStyleMedia(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAbstractView* castedThis = jsDynamicCast<JSAbstractView*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAbstractViewPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AbstractView", "styleMedia");
-        return throwGetterTypeError(*exec, "AbstractView", "styleMedia");
+            return reportDeprecatedGetterError(*state, "AbstractView", "styleMedia");
+        return throwGetterTypeError(*state, "AbstractView", "styleMedia");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.styleMedia()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.styleMedia()));
     return JSValue::encode(result);
 }
 
@@ -153,13 +146,13 @@ void JSAbstractViewOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsAbstractView = jsCast<JSAbstractView*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsAbstractView->impl(), jsAbstractView);
+    uncacheWrapper(world, &jsAbstractView->wrapped(), jsAbstractView);
 }
 
 DOMWindow* JSAbstractView::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSAbstractView*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

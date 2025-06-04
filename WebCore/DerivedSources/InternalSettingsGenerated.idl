@@ -50,7 +50,6 @@
     void setAlwaysUseAcceleratedOverflowScroll(in boolean alwaysUseAcceleratedOverflowScroll);
     void setAntialiased2dCanvasEnabled(in boolean antialiased2dCanvasEnabled);
     void setAppleMailPaginationQuirkEnabled(in boolean appleMailPaginationQuirkEnabled);
-    void setApplyDeviceScaleFactorInCompositor(in boolean applyDeviceScaleFactorInCompositor);
     void setAsynchronousSpellCheckingEnabled(in boolean asynchronousSpellCheckingEnabled);
     void setAttachmentElementEnabled(in boolean attachmentElementEnabled);
     void setAudioPlaybackRequiresUserGesture(in boolean audioPlaybackRequiresUserGesture);
@@ -90,11 +89,12 @@
     void setFullScreenEnabled(in boolean fullScreenEnabled);
     void setHttpEquivEnabled(in boolean httpEquivEnabled);
     void setHyperlinkAuditingEnabled(in boolean hyperlinkAuditingEnabled);
-    void setIgnoreViewportScalingConstraints(in boolean ignoreViewportScalingConstraints);
     void setImageControlsEnabled(in boolean imageControlsEnabled);
     void setImageSubsamplingEnabled(in boolean imageSubsamplingEnabled);
     void setIncrementalRenderingSuppressionTimeoutInSeconds(in double incrementalRenderingSuppressionTimeoutInSeconds);
+    void setInlineMediaPlaybackRequiresPlaysInlineAttribute(in boolean inlineMediaPlaybackRequiresPlaysInlineAttribute);
     void setInteractiveFormValidationEnabled(in boolean interactiveFormValidationEnabled);
+    void setInvisibleAutoplayNotPermitted(in boolean invisibleAutoplayNotPermitted);
     void setJavaScriptCanAccessClipboard(in boolean javaScriptCanAccessClipboard);
     void setJavaScriptCanOpenWindowsAutomatically(in boolean javaScriptCanOpenWindowsAutomatically);
     void setLayoutFallbackWidth(in long layoutFallbackWidth);
@@ -104,7 +104,6 @@
     void setLocalStorageDatabasePath(in DOMString localStorageDatabasePath);
     void setLocalStorageEnabled(in boolean localStorageEnabled);
     void setLogsPageMessagesToSystemConsoleEnabled(in boolean logsPageMessagesToSystemConsoleEnabled);
-    void setLongMousePressEnabled(in boolean longMousePressEnabled);
     void setMaxParseDuration(in double maxParseDuration);
     void setMaximumHTMLParserDOMTreeDepth(in unsigned long maximumHTMLParserDOMTreeDepth);
     void setMaximumPlugInSnapshotAttempts(in unsigned long maximumPlugInSnapshotAttempts);
@@ -132,7 +131,6 @@
     void setPlugInSnapshottingEnabled(in boolean plugInSnapshottingEnabled);
     void setPreventKeyboardDOMEventDispatch(in boolean preventKeyboardDOMEventDispatch);
     void setPrimaryPlugInSnapshotDetectionEnabled(in boolean primaryPlugInSnapshotDetectionEnabled);
-    void setPrivilegedWebGLExtensionsEnabled(in boolean privilegedWebGLExtensionsEnabled);
     void setRequestAnimationFrameEnabled(in boolean requestAnimationFrameEnabled);
     void setRequiresUserGestureForMediaPlayback(in boolean requiresUserGestureForMediaPlayback);
     void setRubberBandingForSubScrollableRegionsEnabled(in boolean rubberBandingForSubScrollableRegionsEnabled);
@@ -173,6 +171,7 @@
     void setTreatsAnyTextCSSLinkAsStylesheet(in boolean treatsAnyTextCSSLinkAsStylesheet);
     void setUnifiedTextCheckerEnabled(in boolean unifiedTextCheckerEnabled);
     void setUnsafePluginPastingEnabled(in boolean unsafePluginPastingEnabled);
+    void setUseGiantTiles(in boolean useGiantTiles);
     void setUseImageDocumentForSubframePDF(in boolean useImageDocumentForSubframePDF);
     void setUseLegacyBackgroundSizeShorthandBehavior(in boolean useLegacyBackgroundSizeShorthandBehavior);
     void setUseLegacyTextAlignPositionedElementBehavior(in boolean useLegacyTextAlignPositionedElementBehavior);

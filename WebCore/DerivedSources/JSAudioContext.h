@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSAudioContext : public JSDOMWrapper {
+class WEBCORE_EXPORT JSAudioContext : public JSDOMWrapper<AudioContext> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<AudioContext> Base;
     static JSAudioContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioContext>&& impl)
     {
-        JSAudioContext* ptr = new (NotNull, JSC::allocateCell<JSAudioContext>(globalObject->vm().heap)) JSAudioContext(structure, globalObject, WTF::move(impl));
+        JSAudioContext* ptr = new (NotNull, JSC::allocateCell<JSAudioContext>(globalObject->vm().heap)) JSAudioContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioContext* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSAudioContext();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    AudioContext& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioContext* m_impl;
 protected:
-    JSAudioContext(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioContext>&&);
+    JSAudioContext(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioContext*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioContext& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioContext& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioContext*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSAudioContext(JSC::ExecState*);

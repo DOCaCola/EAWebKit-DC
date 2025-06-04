@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSSQLResultSetRowList : public JSDOMWrapper {
+class JSSQLResultSetRowList : public JSDOMWrapper<SQLResultSetRowList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SQLResultSetRowList> Base;
     static JSSQLResultSetRowList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSetRowList>&& impl)
     {
-        JSSQLResultSetRowList* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSetRowList>(globalObject->vm().heap)) JSSQLResultSetRowList(structure, globalObject, WTF::move(impl));
+        JSSQLResultSetRowList* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSetRowList>(globalObject->vm().heap)) JSSQLResultSetRowList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static SQLResultSetRowList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSQLResultSetRowList();
 
     DECLARE_INFO;
 
@@ -53,16 +52,11 @@ public:
 
 
     // Custom functions
-    JSC::JSValue item(JSC::ExecState*);
-    SQLResultSetRowList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLResultSetRowList* m_impl;
+    JSC::JSValue item(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSQLResultSetRowList(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLResultSetRowList>&&);
+    JSSQLResultSetRowList(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLResultSetRowList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLResultSetRowList*
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSetRowList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLResultSetRowList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLResultSetRowList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSetRowList*);
 
 
 } // namespace WebCore

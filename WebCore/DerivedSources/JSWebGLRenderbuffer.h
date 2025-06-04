@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLRenderbuffer : public JSDOMWrapper {
+class JSWebGLRenderbuffer : public JSDOMWrapper<WebGLRenderbuffer> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLRenderbuffer> Base;
     static JSWebGLRenderbuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderbuffer>&& impl)
     {
-        JSWebGLRenderbuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderbuffer>(globalObject->vm().heap)) JSWebGLRenderbuffer(structure, globalObject, WTF::move(impl));
+        JSWebGLRenderbuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderbuffer>(globalObject->vm().heap)) JSWebGLRenderbuffer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLRenderbuffer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLRenderbuffer();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLRenderbuffer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLRenderbuffer* m_impl;
 protected:
-    JSWebGLRenderbuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLRenderbuffer>&&);
+    JSWebGLRenderbuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLRenderbuffer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLRenderbuffer*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLRenderbuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLRenderbuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLRenderbuffer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLRenderbuffer*);
 
 
 } // namespace WebCore

@@ -22,7 +22,6 @@
 #include "JSInternalSettings.h"
 
 #include "ExceptionCode.h"
-#include "InternalSettings.h"
 #include "JSDOMBinding.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -69,6 +68,8 @@ JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetAutoscro
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetBackgroundShouldExtendBeyondPage(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetScrollingTreeIncludesFrames(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetMinimumTimerInterval(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetAllowsInlineMediaPlayback(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetInlineMediaPlaybackRequiresPlaysInlineAttribute(JSC::ExecState*);
 
 class JSInternalSettingsPrototype : public JSC::JSNonFinalObject {
 public:
@@ -99,46 +100,48 @@ private:
 
 static const HashTableValue JSInternalSettingsPrototypeTableValues[] =
 {
-    { "setTouchEventEmulationEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTouchEventEmulationEnabled), (intptr_t) (1) },
-    { "setStandardFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetStandardFontFamily), (intptr_t) (2) },
-    { "setSerifFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetSerifFontFamily), (intptr_t) (2) },
-    { "setSansSerifFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetSansSerifFontFamily), (intptr_t) (2) },
-    { "setFixedFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFixedFontFamily), (intptr_t) (2) },
-    { "setCursiveFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCursiveFontFamily), (intptr_t) (2) },
-    { "setFantasyFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFantasyFontFamily), (intptr_t) (2) },
-    { "setPictographFontFamily", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetPictographFontFamily), (intptr_t) (2) },
-    { "setFontFallbackPrefersPictographs", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFontFallbackPrefersPictographs), (intptr_t) (1) },
-    { "setTextAutosizingEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingEnabled), (intptr_t) (1) },
-    { "setTextAutosizingWindowSizeOverride", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingWindowSizeOverride), (intptr_t) (2) },
-    { "setTextAutosizingFontScaleFactor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingFontScaleFactor), (intptr_t) (1) },
-    { "setCSSShapesEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCSSShapesEnabled), (intptr_t) (1) },
-    { "setCanStartMedia", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCanStartMedia), (intptr_t) (1) },
+    { "setTouchEventEmulationEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTouchEventEmulationEnabled), (intptr_t) (1) } },
+    { "setStandardFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetStandardFontFamily), (intptr_t) (2) } },
+    { "setSerifFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetSerifFontFamily), (intptr_t) (2) } },
+    { "setSansSerifFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetSansSerifFontFamily), (intptr_t) (2) } },
+    { "setFixedFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFixedFontFamily), (intptr_t) (2) } },
+    { "setCursiveFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCursiveFontFamily), (intptr_t) (2) } },
+    { "setFantasyFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFantasyFontFamily), (intptr_t) (2) } },
+    { "setPictographFontFamily", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetPictographFontFamily), (intptr_t) (2) } },
+    { "setFontFallbackPrefersPictographs", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetFontFallbackPrefersPictographs), (intptr_t) (1) } },
+    { "setTextAutosizingEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingEnabled), (intptr_t) (1) } },
+    { "setTextAutosizingWindowSizeOverride", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingWindowSizeOverride), (intptr_t) (2) } },
+    { "setTextAutosizingFontScaleFactor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTextAutosizingFontScaleFactor), (intptr_t) (1) } },
+    { "setCSSShapesEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCSSShapesEnabled), (intptr_t) (1) } },
+    { "setCanStartMedia", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetCanStartMedia), (intptr_t) (1) } },
 #if ENABLE(VIDEO_TRACK)
-    { "setShouldDisplayTrackKind", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetShouldDisplayTrackKind), (intptr_t) (2) },
+    { "setShouldDisplayTrackKind", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetShouldDisplayTrackKind), (intptr_t) (2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_TRACK)
-    { "shouldDisplayTrackKind", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionShouldDisplayTrackKind), (intptr_t) (1) },
+    { "shouldDisplayTrackKind", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionShouldDisplayTrackKind), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "setDefaultVideoPosterURL", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetDefaultVideoPosterURL), (intptr_t) (1) },
-    { "setTimeWithoutMouseMovementBeforeHidingControls", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTimeWithoutMouseMovementBeforeHidingControls), (intptr_t) (1) },
-    { "setMediaTypeOverride", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetMediaTypeOverride), (intptr_t) (1) },
-    { "setWirelessPlaybackDisabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetWirelessPlaybackDisabled), (intptr_t) (1) },
-    { "setForcePendingWebGLPolicy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetForcePendingWebGLPolicy), (intptr_t) (1) },
-    { "setPluginReplacementEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetPluginReplacementEnabled), (intptr_t) (1) },
-    { "setEditingBehavior", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetEditingBehavior), (intptr_t) (1) },
-    { "setShouldConvertPositionStyleOnCopy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetShouldConvertPositionStyleOnCopy), (intptr_t) (1) },
-    { "setLangAttributeAwareFormControlUIEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetLangAttributeAwareFormControlUIEnabled), (intptr_t) (1) },
-    { "setStorageBlockingPolicy", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetStorageBlockingPolicy), (intptr_t) (1) },
-    { "setImagesEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetImagesEnabled), (intptr_t) (1) },
-    { "setUseLegacyBackgroundSizeShorthandBehavior", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetUseLegacyBackgroundSizeShorthandBehavior), (intptr_t) (1) },
-    { "setAutoscrollForDragAndDropEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetAutoscrollForDragAndDropEnabled), (intptr_t) (1) },
-    { "setBackgroundShouldExtendBeyondPage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetBackgroundShouldExtendBeyondPage), (intptr_t) (1) },
-    { "setScrollingTreeIncludesFrames", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetScrollingTreeIncludesFrames), (intptr_t) (1) },
-    { "setMinimumTimerInterval", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetMinimumTimerInterval), (intptr_t) (1) },
+    { "setDefaultVideoPosterURL", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetDefaultVideoPosterURL), (intptr_t) (1) } },
+    { "setTimeWithoutMouseMovementBeforeHidingControls", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetTimeWithoutMouseMovementBeforeHidingControls), (intptr_t) (1) } },
+    { "setMediaTypeOverride", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetMediaTypeOverride), (intptr_t) (1) } },
+    { "setWirelessPlaybackDisabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetWirelessPlaybackDisabled), (intptr_t) (1) } },
+    { "setForcePendingWebGLPolicy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetForcePendingWebGLPolicy), (intptr_t) (1) } },
+    { "setPluginReplacementEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetPluginReplacementEnabled), (intptr_t) (1) } },
+    { "setEditingBehavior", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetEditingBehavior), (intptr_t) (1) } },
+    { "setShouldConvertPositionStyleOnCopy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetShouldConvertPositionStyleOnCopy), (intptr_t) (1) } },
+    { "setLangAttributeAwareFormControlUIEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetLangAttributeAwareFormControlUIEnabled), (intptr_t) (1) } },
+    { "setStorageBlockingPolicy", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetStorageBlockingPolicy), (intptr_t) (1) } },
+    { "setImagesEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetImagesEnabled), (intptr_t) (1) } },
+    { "setUseLegacyBackgroundSizeShorthandBehavior", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetUseLegacyBackgroundSizeShorthandBehavior), (intptr_t) (1) } },
+    { "setAutoscrollForDragAndDropEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetAutoscrollForDragAndDropEnabled), (intptr_t) (1) } },
+    { "setBackgroundShouldExtendBeyondPage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetBackgroundShouldExtendBeyondPage), (intptr_t) (1) } },
+    { "setScrollingTreeIncludesFrames", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetScrollingTreeIncludesFrames), (intptr_t) (1) } },
+    { "setMinimumTimerInterval", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetMinimumTimerInterval), (intptr_t) (1) } },
+    { "setAllowsInlineMediaPlayback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetAllowsInlineMediaPlayback), (intptr_t) (1) } },
+    { "setInlineMediaPlaybackRequiresPlaysInlineAttribute", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsInternalSettingsPrototypeFunctionSetInlineMediaPlaybackRequiresPlaysInlineAttribute), (intptr_t) (1) } },
 };
 
 const ClassInfo JSInternalSettingsPrototype::s_info = { "InternalSettingsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSInternalSettingsPrototype) };
@@ -151,7 +154,7 @@ void JSInternalSettingsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSInternalSettings::s_info = { "InternalSettings", &Base::s_info, 0, CREATE_METHOD_TABLE(JSInternalSettings) };
 
-JSInternalSettings::JSInternalSettings(Structure* structure, JSDOMGlobalObject* globalObject, Ref<InternalSettings>&& impl)
+JSInternalSettings::JSInternalSettings(Structure* structure, JSDOMGlobalObject& globalObject, Ref<InternalSettings>&& impl)
     : JSInternalSettingsGenerated(structure, globalObject, WTF::move(impl))
 {
 }
@@ -166,639 +169,677 @@ JSObject* JSInternalSettings::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSInternalSettings>(vm, globalObject);
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTouchEventEmulationEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTouchEventEmulationEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setTouchEventEmulationEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setTouchEventEmulationEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTouchEventEmulationEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetStandardFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetStandardFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setStandardFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setStandardFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStandardFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetSerifFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetSerifFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setSerifFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setSerifFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setSerifFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetSansSerifFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetSansSerifFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setSansSerifFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setSansSerifFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setSansSerifFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFixedFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFixedFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setFixedFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setFixedFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFixedFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCursiveFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCursiveFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setCursiveFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setCursiveFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCursiveFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFantasyFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFantasyFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setFantasyFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setFantasyFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFantasyFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetPictographFontFamily(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetPictographFontFamily(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setPictographFontFamily");
+        return throwThisTypeError(*state, "InternalSettings", "setPictographFontFamily");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String family = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String family = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String script = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String script = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPictographFontFamily(family, script, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFontFallbackPrefersPictographs(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetFontFallbackPrefersPictographs(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setFontFallbackPrefersPictographs");
+        return throwThisTypeError(*state, "InternalSettings", "setFontFallbackPrefersPictographs");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool preferPictographs = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool preferPictographs = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFontFallbackPrefersPictographs(preferPictographs, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setTextAutosizingEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setTextAutosizingEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTextAutosizingEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingWindowSizeOverride(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingWindowSizeOverride(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setTextAutosizingWindowSizeOverride");
+        return throwThisTypeError(*state, "InternalSettings", "setTextAutosizingWindowSizeOverride");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int width = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTextAutosizingWindowSizeOverride(width, height, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingFontScaleFactor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTextAutosizingFontScaleFactor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setTextAutosizingFontScaleFactor");
+        return throwThisTypeError(*state, "InternalSettings", "setTextAutosizingFontScaleFactor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float fontScaleFactor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float fontScaleFactor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTextAutosizingFontScaleFactor(fontScaleFactor, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCSSShapesEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCSSShapesEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setCSSShapesEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setCSSShapesEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCSSShapesEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCanStartMedia(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetCanStartMedia(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setCanStartMedia");
+        return throwThisTypeError(*state, "InternalSettings", "setCanStartMedia");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCanStartMedia(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetShouldDisplayTrackKind(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetShouldDisplayTrackKind(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setShouldDisplayTrackKind");
+        return throwThisTypeError(*state, "InternalSettings", "setShouldDisplayTrackKind");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String kind = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String kind = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool enabled = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShouldDisplayTrackKind(kind, enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
 #endif
 
 #if ENABLE(VIDEO_TRACK)
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionShouldDisplayTrackKind(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionShouldDisplayTrackKind(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "shouldDisplayTrackKind");
+        return throwThisTypeError(*state, "InternalSettings", "shouldDisplayTrackKind");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String trackKind = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String trackKind = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.shouldDisplayTrackKind(trackKind, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetDefaultVideoPosterURL(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetDefaultVideoPosterURL(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setDefaultVideoPosterURL");
+        return throwThisTypeError(*state, "InternalSettings", "setDefaultVideoPosterURL");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String poster = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String poster = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setDefaultVideoPosterURL(poster, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTimeWithoutMouseMovementBeforeHidingControls(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetTimeWithoutMouseMovementBeforeHidingControls(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setTimeWithoutMouseMovementBeforeHidingControls");
+        return throwThisTypeError(*state, "InternalSettings", "setTimeWithoutMouseMovementBeforeHidingControls");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    double time = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double time = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTimeWithoutMouseMovementBeforeHidingControls(time, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetMediaTypeOverride(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetMediaTypeOverride(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setMediaTypeOverride");
+        return throwThisTypeError(*state, "InternalSettings", "setMediaTypeOverride");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String mediaTypeOverride = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String mediaTypeOverride = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMediaTypeOverride(mediaTypeOverride, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetWirelessPlaybackDisabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetWirelessPlaybackDisabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setWirelessPlaybackDisabled");
+        return throwThisTypeError(*state, "InternalSettings", "setWirelessPlaybackDisabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool available = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool available = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setWirelessPlaybackDisabled(available);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetForcePendingWebGLPolicy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetForcePendingWebGLPolicy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setForcePendingWebGLPolicy");
+        return throwThisTypeError(*state, "InternalSettings", "setForcePendingWebGLPolicy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool forced = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool forced = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setForcePendingWebGLPolicy(forced, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetPluginReplacementEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetPluginReplacementEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setPluginReplacementEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setPluginReplacementEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setPluginReplacementEnabled(enabled);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetEditingBehavior(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetEditingBehavior(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setEditingBehavior");
+        return throwThisTypeError(*state, "InternalSettings", "setEditingBehavior");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String behavior = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String behavior = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setEditingBehavior(behavior, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetShouldConvertPositionStyleOnCopy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetShouldConvertPositionStyleOnCopy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setShouldConvertPositionStyleOnCopy");
+        return throwThisTypeError(*state, "InternalSettings", "setShouldConvertPositionStyleOnCopy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool convert = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool convert = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShouldConvertPositionStyleOnCopy(convert, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetLangAttributeAwareFormControlUIEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetLangAttributeAwareFormControlUIEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setLangAttributeAwareFormControlUIEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setLangAttributeAwareFormControlUIEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setLangAttributeAwareFormControlUIEnabled(enabled);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetStorageBlockingPolicy(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetStorageBlockingPolicy(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setStorageBlockingPolicy");
+        return throwThisTypeError(*state, "InternalSettings", "setStorageBlockingPolicy");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String policy = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String policy = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStorageBlockingPolicy(policy, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetImagesEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetImagesEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setImagesEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setImagesEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setImagesEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetUseLegacyBackgroundSizeShorthandBehavior(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetUseLegacyBackgroundSizeShorthandBehavior(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setUseLegacyBackgroundSizeShorthandBehavior");
+        return throwThisTypeError(*state, "InternalSettings", "setUseLegacyBackgroundSizeShorthandBehavior");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setUseLegacyBackgroundSizeShorthandBehavior(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetAutoscrollForDragAndDropEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetAutoscrollForDragAndDropEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setAutoscrollForDragAndDropEnabled");
+        return throwThisTypeError(*state, "InternalSettings", "setAutoscrollForDragAndDropEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAutoscrollForDragAndDropEnabled(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetBackgroundShouldExtendBeyondPage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetBackgroundShouldExtendBeyondPage(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setBackgroundShouldExtendBeyondPage");
+        return throwThisTypeError(*state, "InternalSettings", "setBackgroundShouldExtendBeyondPage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool hasExtendedBackground = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool hasExtendedBackground = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setBackgroundShouldExtendBeyondPage(hasExtendedBackground, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetScrollingTreeIncludesFrames(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetScrollingTreeIncludesFrames(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setScrollingTreeIncludesFrames");
+        return throwThisTypeError(*state, "InternalSettings", "setScrollingTreeIncludesFrames");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    bool enabled = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool enabled = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setScrollingTreeIncludesFrames(enabled, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetMinimumTimerInterval(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetMinimumTimerInterval(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "InternalSettings", "setMinimumTimerInterval");
+        return throwThisTypeError(*state, "InternalSettings", "setMinimumTimerInterval");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    double intervalInSeconds = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double intervalInSeconds = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMinimumTimerInterval(intervalInSeconds, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetAllowsInlineMediaPlayback(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "InternalSettings", "setAllowsInlineMediaPlayback");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    bool allows = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setAllowsInlineMediaPlayback(allows, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+EncodedJSValue JSC_HOST_CALL jsInternalSettingsPrototypeFunctionSetInlineMediaPlaybackRequiresPlaysInlineAttribute(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSInternalSettings* castedThis = jsDynamicCast<JSInternalSettings*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "InternalSettings", "setInlineMediaPlaybackRequiresPlaysInlineAttribute");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSInternalSettings::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    bool requires = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.setInlineMediaPlaybackRequiresPlaysInlineAttribute(requires, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
@@ -810,6 +851,14 @@ extern "C" { extern void (*const __identifier("??_7InternalSettings@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16InternalSettingsE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, InternalSettings* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSInternalSettings>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, InternalSettings* impl)
 {
     if (!impl)

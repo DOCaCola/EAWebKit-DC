@@ -1,5 +1,9 @@
 set(JavaScriptCore_OUTPUT_NAME javascriptcoregtk-${WEBKITGTK_API_VERSION})
 
+list(APPEND JavaScriptCore_INCLUDE_DIRECTORIES
+    "${WTF_DIR}"
+)
+
 configure_file(javascriptcoregtk.pc.in ${CMAKE_BINARY_DIR}/Source/JavaScriptCore/javascriptcoregtk-${WEBKITGTK_API_VERSION}.pc @ONLY)
 configure_file(JavaScriptCore.gir.in ${CMAKE_BINARY_DIR}/JavaScriptCore-${WEBKITGTK_API_VERSION}.gir @ONLY)
 
@@ -34,7 +38,14 @@ if (ENABLE_INTROSPECTION)
     )
 endif ()
 
+if (ENABLE_FTL_JIT)
+    install(TARGETS llvmForJSC
+            DESTINATION "${LIB_INSTALL_DIR}/javascriptcoregtk-${WEBKITGTK_API_VERSION}"
+    )
+endif ()
+
 add_definitions(-DSTATICALLY_LINKED_WITH_WTF)
+add_definitions(-DLIBDIR="${LIB_INSTALL_DIR}")
 
 list(APPEND JavaScriptCore_LIBRARIES
     ${GLIB_LIBRARIES}

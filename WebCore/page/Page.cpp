@@ -32,8 +32,8 @@
 #include "ContextMenuClient.h"
 #include "ContextMenuController.h"
 #include "DatabaseProvider.h"
+#include "DocumentLoader.h"
 #include "DocumentMarkerController.h"
-#include "DocumentStyleSheetCollection.h"
 #include "DragController.h"
 #include "Editor.h"
 #include "EditorClient.h"
@@ -41,6 +41,7 @@
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "ExceptionCodePlaceholder.h"
+#include "ExtensionStyleSheets.h"
 #include "FileSystem.h"
 #include "FocusController.h"
 #include "FrameLoader.h"
@@ -74,6 +75,7 @@
 #include "RenderTheme.h"
 #include "RenderView.h"
 #include "RenderWidget.h"
+#include "ResourceUsageOverlay.h"
 #include "RuntimeEnabledFeatures.h"
 #include "SchemeRegistry.h"
 #include "ScriptController.h"
@@ -118,6 +120,11 @@
 #include "MediaSessionManager.h"
 #endif
 
+#if ENABLE(INDEXED_DATABASE)
+#include "IDBConnectionToServer.h"
+#include "InProcessIDBServer.h"
+#endif
+
 namespace WebCore {
 
 static HashSet<Page*>* allPages;
@@ -141,6 +148,7 @@ static void networkStateChanged(bool isOnLine)
 }
 
 static const ViewState::Flags PageInitialViewState = ViewState::IsVisible | ViewState::IsInWindow;
+bool Page::s_tabSuspensionIsEnabled = false;
 
 Page::Page(PageConfiguration& pageConfiguration)
     : m_chrome(std::make_unique<Chrome>(*this, *pageConfiguration.chromeClient))
@@ -162,7 +170,7 @@ Page::Page(PageConfiguration& pageConfiguration)
 #endif
     , m_settings(Settings::create(this))
     , m_progress(std::make_unique<ProgressTracker>(*pageConfiguration.progressTrackerClient))
-    , m_backForwardController(std::make_unique<BackForwardController>(*this, pageConfiguration.backForwardClient))
+    , m_backForwardController(std::make_unique<BackForwardController>(*this, WTF::move(pageConfiguration.backForwardClient)))
     , m_mainFrame(MainFrame::create(*this, pageConfiguration))
     , m_theme(RenderTheme::themeForPage(this))
     , m_editorClient(*pageConfiguration.editorClient)
@@ -179,7 +187,6 @@ Page::Page(PageConfiguration& pageConfiguration)
     , m_muted(false)
     , m_pageScaleFactor(1)
     , m_zoomedOutPageScaleFactor(0)
-    , m_deviceScaleFactor(1)
     , m_topContentInset(0)
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     , m_textAutosizingWidth(0)
@@ -214,7 +221,7 @@ Page::Page(PageConfiguration& pageConfiguration)
     , m_inspectorDebuggable(std::make_unique<PageDebuggable>(*this))
 #endif
     , m_lastSpatialNavigationCandidatesCount(0) // NOTE: Only called from Internals for Spatial Navigation testing.
-    , m_framesHandlingBeforeUnloadEvent(0)
+    , m_forbidPromptsDepth(0)
     , m_applicationCacheStorage(pageConfiguration.applicationCacheStorage ? *WTF::move(pageConfiguration.applicationCacheStorage) : ApplicationCacheStorage::singleton())
     , m_databaseProvider(*WTF::move(pageConfiguration.databaseProvider))
     , m_storageNamespaceProvider(*WTF::move(pageConfiguration.storageNamespaceProvider))
@@ -222,6 +229,7 @@ Page::Page(PageConfiguration& pageConfiguration)
     , m_visitedLinkStore(*WTF::move(pageConfiguration.visitedLinkStore))
     , m_sessionID(SessionID::defaultSessionID())
     , m_isClosing(false)
+    , m_tabSuspensionTimer(*this, &Page::tabSuspensionTimerFired)
 {
     setTimerThrottlingEnabled(m_viewState & ViewState::IsVisuallyIdle);
 
@@ -248,6 +256,10 @@ Page::Page(PageConfiguration& pageConfiguration)
 #if ENABLE(REMOTE_INSPECTOR)
     m_inspectorDebuggable->init();
 #endif
+
+#if PLATFORM(COCOA)
+    platformInitialize();
+#endif
 }
 
 Page::~Page()
@@ -257,6 +269,8 @@ Page::~Page()
     allPages->remove(this);
     
     m_settings->pageDestroyed();
+
+    m_inspectorController->inspectedPageDestroyed();
 
     for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
         frame->willDetachPage();
@@ -268,8 +282,6 @@ Page::~Page()
         m_plugInClient->pageDestroyed();
     if (m_alternativeTextClient)
         m_alternativeTextClient->pageDestroyed();
-
-    m_inspectorController->inspectedPageDestroyed();
 
     if (m_scrollingCoordinator)
         m_scrollingCoordinator->pageDestroyed();
@@ -513,6 +525,19 @@ PluginData& Page::pluginData() const
     if (!m_pluginData)
         m_pluginData = PluginData::create(this);
     return *m_pluginData;
+}
+
+bool Page::showAllPlugins() const
+{
+    if (m_showAllPlugins)
+        return true;
+
+    if (Document* document = mainFrame().document()) {
+        if (SecurityOrigin* securityOrigin = document->securityOrigin())
+            return securityOrigin->isLocal();
+    }
+
+    return false;
 }
 
 inline MediaCanStartListener* Page::takeAnyMediaCanStartListener()
@@ -1012,13 +1037,13 @@ void Page::userStyleSheetLocationChanged()
         m_didLoadUserStyleSheet = true;
 
         Vector<char> styleSheetAsUTF8;
-        if (base64Decode(decodeURLEscapeSequences(url.string().substring(35)), styleSheetAsUTF8, Base64IgnoreSpacesAndNewLines))
+        if (base64Decode(decodeURLEscapeSequences(url.string().substring(35)), styleSheetAsUTF8, Base64IgnoreWhitespace))
             m_userStyleSheet = String::fromUTF8(styleSheetAsUTF8.data(), styleSheetAsUTF8.size());
     }
 
     for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (frame->document())
-            frame->document()->styleSheetCollection().updatePageUserSheet();
+            frame->document()->extensionStyleSheets().updatePageUserSheet();
     }
 }
 
@@ -1229,6 +1254,12 @@ void Page::handleMediaEvent(MediaEventType eventType)
         break;
     }
 }
+
+void Page::setVolumeOfMediaElement(double volume, uint64_t elementID)
+{
+    if (HTMLMediaElement* element = HTMLMediaElement::elementWithID(elementID))
+        element->setVolume(volume, ASSERT_NO_EXCEPTION);
+}
 #endif
 
 #if !ASSERT_DISABLED
@@ -1277,6 +1308,11 @@ void Page::setViewState(ViewState::Flags viewState)
 void Page::setPageActivityState(PageActivityState::Flags activityState)
 {
     chrome().client().setPageActivityState(activityState);
+    
+    if (activityState == PageActivityState::NoFlags && !isVisible())
+        scheduleTabSuspension(true);
+    else
+        scheduleTabSuspension(false);
 }
 
 void Page::setIsVisible(bool isVisible)
@@ -1296,6 +1332,9 @@ void Page::setIsVisibleInternal(bool isVisible)
         m_isPrerender = false;
 
         resumeScriptedAnimations();
+#if PLATFORM(IOS)
+        resumeDeviceMotionAndOrientationUpdates();
+#endif
 
         if (FrameView* view = mainFrame().view())
             view->show();
@@ -1317,11 +1356,16 @@ void Page::setIsVisibleInternal(bool isVisible)
         if (m_settings->hiddenPageCSSAnimationSuspensionEnabled())
             mainFrame().animation().suspendAnimations();
 
+#if PLATFORM(IOS)
+        suspendDeviceMotionAndOrientationUpdates();
+#endif
         suspendScriptedAnimations();
 
         if (FrameView* view = mainFrame().view())
             view->hide();
     }
+
+    scheduleTabSuspension(!isVisible);
 }
 
 void Page::setIsPrerender()
@@ -1381,6 +1425,16 @@ bool Page::remoteInspectionAllowed() const
 void Page::setRemoteInspectionAllowed(bool allowed)
 {
     m_inspectorDebuggable->setRemoteDebuggingAllowed(allowed);
+}
+
+String Page::remoteInspectionNameOverride() const
+{
+    return m_inspectorDebuggable->nameOverride();
+}
+
+void Page::setRemoteInspectionNameOverride(const String& name)
+{
+    m_inspectorDebuggable->setNameOverride(name);
 }
 
 void Page::remoteInspectorInformationDidChange() const
@@ -1530,6 +1584,22 @@ void Page::addRelevantUnpaintedObject(RenderObject* object, const LayoutRect& ob
     m_relevantUnpaintedRegion.unite(snappedIntRect(objectPaintRect));
 }
 
+void Page::suspendDeviceMotionAndOrientationUpdates()
+{
+    for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
+        if (Document* document = frame->document())
+            document->suspendDeviceMotionAndOrientationUpdates();
+    }
+}
+
+void Page::resumeDeviceMotionAndOrientationUpdates()
+{
+    for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
+        if (Document* document = frame->document())
+            document->resumeDeviceMotionAndOrientationUpdates();
+    }
+}
+
 void Page::suspendActiveDOMObjectsAndAnimations()
 {
     for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext())
@@ -1602,20 +1672,20 @@ void Page::captionPreferencesChanged()
 }
 #endif
 
-void Page::incrementFrameHandlingBeforeUnloadEventCount()
+void Page::forbidPrompts()
 {
-    ++m_framesHandlingBeforeUnloadEvent;
+    ++m_forbidPromptsDepth;
 }
 
-void Page::decrementFrameHandlingBeforeUnloadEventCount()
+void Page::allowPrompts()
 {
-    ASSERT(m_framesHandlingBeforeUnloadEvent);
-    --m_framesHandlingBeforeUnloadEvent;
+    ASSERT(m_forbidPromptsDepth);
+    --m_forbidPromptsDepth;
 }
 
-bool Page::isAnyFrameHandlingBeforeUnloadEvent()
+bool Page::arePromptsAllowed()
 {
-    return m_framesHandlingBeforeUnloadEvent;
+    return !m_forbidPromptsDepth;
 }
 
 void Page::setUserContentController(UserContentController* userContentController)
@@ -1630,7 +1700,7 @@ void Page::setUserContentController(UserContentController* userContentController
 
     for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (Document *document = frame->document()) {
-            document->styleSheetCollection().invalidateInjectedStyleSheetCache();
+            document->extensionStyleSheets().invalidateInjectedStyleSheetCache();
             document->styleResolverChanged(DeferRecalcStyle);
         }
     }
@@ -1714,6 +1784,16 @@ void Page::playbackTargetPickerClientStateDidChange(uint64_t contextId, MediaPro
     chrome().client().playbackTargetPickerClientStateDidChange(contextId, state);
 }
 
+void Page::setMockMediaPlaybackTargetPickerEnabled(bool enabled)
+{
+    chrome().client().setMockMediaPlaybackTargetPickerEnabled(enabled);
+}
+
+void Page::setMockMediaPlaybackTargetPickerState(const String& name, MediaPlaybackTargetContext::State state)
+{
+    chrome().client().setMockMediaPlaybackTargetPickerState(name, state);
+}
+
 void Page::setPlaybackTarget(uint64_t contextId, Ref<MediaPlaybackTarget>&& target)
 {
     for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext())
@@ -1756,5 +1836,77 @@ void Page::setAllowsMediaDocumentInlinePlayback(bool flag)
         document->allowsMediaDocumentInlinePlaybackChanged();
 }
 #endif
+
+#if ENABLE(INDEXED_DATABASE)
+IDBClient::IDBConnectionToServer& Page::idbConnection()
+{
+    if (!m_idbIDBConnectionToServer) {
+        if (usesEphemeralSession()) {
+            auto inProcessServer = InProcessIDBServer::create();
+            m_idbIDBConnectionToServer = &inProcessServer->connectionToServer();
+        } else
+            m_idbIDBConnectionToServer = &databaseProvider().idbConnectionToServerForSession(m_sessionID);
+    }
+    
+    return *m_idbIDBConnectionToServer;
+}
+#endif
+
+#if ENABLE(RESOURCE_USAGE_OVERLAY)
+void Page::setResourceUsageOverlayVisible(bool visible)
+{
+    if (!visible) {
+        m_resourceUsageOverlay = nullptr;
+        return;
+    }
+
+    if (!m_resourceUsageOverlay)
+        m_resourceUsageOverlay = std::make_unique<ResourceUsageOverlay>(*this);
+}
+#endif
+
+bool Page::canTabSuspend()
+{
+    return s_tabSuspensionIsEnabled && !m_isPrerender && (m_pageThrottler.activityState() == PageActivityState::NoFlags) && PageCache::singleton().canCache(this);
+}
+
+void Page::setIsTabSuspended(bool shouldSuspend)
+{
+    for (Frame* frame = &mainFrame(); frame; frame = frame->tree().traverseNext()) {
+        if (auto* document = frame->document()) {
+            if (shouldSuspend)
+                document->suspend();
+            else
+                document->resume();
+        }
+    }
+}
+
+void Page::setTabSuspensionEnabled(bool enable)
+{
+    s_tabSuspensionIsEnabled = enable;
+}
+
+void Page::scheduleTabSuspension(bool shouldSuspend)
+{
+    if (m_shouldTabSuspend == shouldSuspend)
+        return;
+    
+    if (shouldSuspend && canTabSuspend()) {
+        m_shouldTabSuspend = shouldSuspend;
+        m_tabSuspensionTimer.startOneShot(0);
+    } else {
+        m_tabSuspensionTimer.stop();
+        if (!shouldSuspend) {
+            m_shouldTabSuspend = shouldSuspend;
+            setIsTabSuspended(false);
+        }
+    }
+}
+
+void Page::tabSuspensionTimerFired()
+{
+    setIsTabSuspended(true);
+}
 
 } // namespace WebCore

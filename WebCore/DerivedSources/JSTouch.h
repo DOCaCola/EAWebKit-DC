@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTouch : public JSDOMWrapper {
+class JSTouch : public JSDOMWrapper<Touch> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Touch> Base;
     static JSTouch* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Touch>&& impl)
     {
-        JSTouch* ptr = new (NotNull, JSC::allocateCell<JSTouch>(globalObject->vm().heap)) JSTouch(structure, globalObject, WTF::move(impl));
+        JSTouch* ptr = new (NotNull, JSC::allocateCell<JSTouch>(globalObject->vm().heap)) JSTouch(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static Touch* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTouch();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Touch& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Touch* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTouch(JSC::Structure*, JSDOMGlobalObject*, Ref<Touch>&&);
+    JSTouch(JSC::Structure*, JSDOMGlobalObject&, Ref<Touch>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,7 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Touch*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Touch*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Touch& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Touch& impl) { return toJS(state, globalObject, &impl); }
 JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Touch*);
 
 

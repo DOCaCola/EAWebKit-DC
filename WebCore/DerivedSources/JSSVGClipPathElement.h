@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGClipPathElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGClipPathElement>&& impl)
     {
-        JSSVGClipPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGClipPathElement>(globalObject->vm().heap)) JSSVGClipPathElement(structure, globalObject, WTF::move(impl));
+        JSSVGClipPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGClipPathElement>(globalObject->vm().heap)) JSSVGClipPathElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGClipPathElement& impl() const
+    SVGClipPathElement& wrapped() const
     {
-        return static_cast<SVGClipPathElement&>(Base::impl());
+        return static_cast<SVGClipPathElement&>(Base::wrapped());
     }
 protected:
-    JSSVGClipPathElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGClipPathElement>&&);
+    JSSVGClipPathElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGClipPathElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLDebugRendererInfo : public JSDOMWrapper {
+class JSWebGLDebugRendererInfo : public JSDOMWrapper<WebGLDebugRendererInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLDebugRendererInfo> Base;
     static JSWebGLDebugRendererInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDebugRendererInfo>&& impl)
     {
-        JSWebGLDebugRendererInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugRendererInfo>(globalObject->vm().heap)) JSWebGLDebugRendererInfo(structure, globalObject, WTF::move(impl));
+        JSWebGLDebugRendererInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLDebugRendererInfo>(globalObject->vm().heap)) JSWebGLDebugRendererInfo(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLDebugRendererInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLDebugRendererInfo();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLDebugRendererInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLDebugRendererInfo* m_impl;
 protected:
-    JSWebGLDebugRendererInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLDebugRendererInfo>&&);
+    JSWebGLDebugRendererInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLDebugRendererInfo>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLDebugRendererIn
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugRendererInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLDebugRendererInfo*);
 
 
 } // namespace WebCore

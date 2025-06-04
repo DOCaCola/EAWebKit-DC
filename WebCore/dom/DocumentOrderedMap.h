@@ -33,6 +33,7 @@
 
 #include <wtf/HashCountedSet.h>
 #include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
 #include <wtf/Vector.h>
 #include <wtf/text/AtomicStringImpl.h>
 
@@ -72,18 +73,18 @@ private:
     Element* get(const AtomicStringImpl&, const TreeScope&, const KeyMatchingFunction&) const;
 
     struct MapEntry {
-        MapEntry()
-            : element(0)
-            , count(0)
-        { }
+        MapEntry() { }
         explicit MapEntry(Element* firstElement)
             : element(firstElement)
             , count(1)
         { }
 
-        Element* element;
-        unsigned count;
+        Element* element { nullptr };
+        unsigned count { 0 };
         Vector<Element*> orderedList;
+#if !ASSERT_DISABLED || ENABLE(SECURITY_ASSERTIONS)
+        HashSet<Element*> registeredElements;
+#endif
     };
 
     typedef HashMap<const AtomicStringImpl*, MapEntry> Map;

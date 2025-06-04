@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLSync : public JSDOMWrapper {
+class JSWebGLSync : public JSDOMWrapper<WebGLSync> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLSync> Base;
     static JSWebGLSync* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLSync>&& impl)
     {
-        JSWebGLSync* ptr = new (NotNull, JSC::allocateCell<JSWebGLSync>(globalObject->vm().heap)) JSWebGLSync(structure, globalObject, WTF::move(impl));
+        JSWebGLSync* ptr = new (NotNull, JSC::allocateCell<JSWebGLSync>(globalObject->vm().heap)) JSWebGLSync(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLSync* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLSync();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLSync& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLSync* m_impl;
 protected:
-    JSWebGLSync(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLSync>&&);
+    JSWebGLSync(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLSync>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLSync*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLSync*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLSync& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLSync& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLSync*);
 
 
 } // namespace WebCore

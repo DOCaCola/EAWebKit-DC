@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGPolylineElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPolylineElement>&& impl)
     {
-        JSSVGPolylineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolylineElement>(globalObject->vm().heap)) JSSVGPolylineElement(structure, globalObject, WTF::move(impl));
+        JSSVGPolylineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolylineElement>(globalObject->vm().heap)) JSSVGPolylineElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPolylineElement& impl() const
+    SVGPolylineElement& wrapped() const
     {
-        return static_cast<SVGPolylineElement&>(Base::impl());
+        return static_cast<SVGPolylineElement&>(Base::wrapped());
     }
 protected:
-    JSSVGPolylineElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPolylineElement>&&);
+    JSSVGPolylineElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPolylineElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

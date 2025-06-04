@@ -24,9 +24,10 @@
 
 #include "JSSVGAltGlyphElement.h"
 
+#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGAltGlyphElement.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -69,51 +70,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAltGlyphElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGAltGlyphElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGAltGlyphElement> JSSVGAltGlyphElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAltGlyphElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAltGlyphElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphElementConstructor>(vm.heap)) JSSVGAltGlyphElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAltGlyphElementConstructor::s_info = { "SVGAltGlyphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphElementConstructor) };
-
-JSSVGAltGlyphElementConstructor::JSSVGAltGlyphElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGAltGlyphElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGAltGlyphElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAltGlyphElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAltGlyphElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAltGlyphElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAltGlyphElementConstructor::s_info = { "SVGAltGlyphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAltGlyphElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "glyphRef", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementGlyphRef), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAltGlyphElementGlyphRef) },
-    { "format", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementFormat), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAltGlyphElementFormat) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "glyphRef", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementGlyphRef), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAltGlyphElementGlyphRef) } },
+    { "format", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementFormat), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAltGlyphElementFormat) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAltGlyphElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGAltGlyphElementPrototype::s_info = { "SVGAltGlyphElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphElementPrototype) };
@@ -126,7 +101,7 @@ void JSSVGAltGlyphElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAltGlyphElement::s_info = { "SVGAltGlyphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAltGlyphElement) };
 
-JSSVGAltGlyphElement::JSSVGAltGlyphElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAltGlyphElement>&& impl)
+JSSVGAltGlyphElement::JSSVGAltGlyphElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAltGlyphElement>&& impl)
     : JSSVGTextPositioningElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -141,113 +116,113 @@ JSObject* JSSVGAltGlyphElement::getPrototype(VM& vm, JSGlobalObject* globalObjec
     return getDOMPrototype<JSSVGAltGlyphElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGAltGlyphElementGlyphRef(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAltGlyphElementGlyphRef(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAltGlyphElement* castedThis = jsDynamicCast<JSSVGAltGlyphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAltGlyphElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAltGlyphElement", "glyphRef");
-        return throwGetterTypeError(*exec, "SVGAltGlyphElement", "glyphRef");
+            return reportDeprecatedGetterError(*state, "SVGAltGlyphElement", "glyphRef");
+        return throwGetterTypeError(*state, "SVGAltGlyphElement", "glyphRef");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.glyphRef());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.glyphRef());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAltGlyphElementFormat(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAltGlyphElementFormat(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAltGlyphElement* castedThis = jsDynamicCast<JSSVGAltGlyphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAltGlyphElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAltGlyphElement", "format");
-        return throwGetterTypeError(*exec, "SVGAltGlyphElement", "format");
+            return reportDeprecatedGetterError(*state, "SVGAltGlyphElement", "format");
+        return throwGetterTypeError(*state, "SVGAltGlyphElement", "format");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.format());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.format());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAltGlyphElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAltGlyphElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAltGlyphElement* castedThis = jsDynamicCast<JSSVGAltGlyphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAltGlyphElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAltGlyphElement", "href");
-        return throwGetterTypeError(*exec, "SVGAltGlyphElement", "href");
+            return reportDeprecatedGetterError(*state, "SVGAltGlyphElement", "href");
+        return throwGetterTypeError(*state, "SVGAltGlyphElement", "href");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAltGlyphElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAltGlyphElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGAltGlyphElementPrototype* domObject = jsDynamicCast<JSSVGAltGlyphElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAltGlyphElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGAltGlyphElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGAltGlyphElementGlyphRef(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGAltGlyphElementGlyphRef(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGAltGlyphElement* castedThis = jsDynamicCast<JSSVGAltGlyphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAltGlyphElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGAltGlyphElement", "glyphRef");
+            reportDeprecatedSetterError(*state, "SVGAltGlyphElement", "glyphRef");
         else
-            throwSetterTypeError(*exec, "SVGAltGlyphElement", "glyphRef");
+            throwSetterTypeError(*state, "SVGAltGlyphElement", "glyphRef");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setGlyphRef(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSSVGAltGlyphElementFormat(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGAltGlyphElementFormat(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGAltGlyphElement* castedThis = jsDynamicCast<JSSVGAltGlyphElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAltGlyphElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGAltGlyphElement", "format");
+            reportDeprecatedSetterError(*state, "SVGAltGlyphElement", "format");
         else
-            throwSetterTypeError(*exec, "SVGAltGlyphElement", "format");
+            throwSetterTypeError(*state, "SVGAltGlyphElement", "format");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setFormat(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSSVGAltGlyphElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGAltGlyphElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGAltGlyphElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

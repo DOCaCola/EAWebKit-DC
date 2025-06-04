@@ -34,7 +34,7 @@ public:
     typedef JSEventTarget Base;
     static JSIDBTransaction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBTransaction>&& impl)
     {
-        JSIDBTransaction* ptr = new (NotNull, JSC::allocateCell<JSIDBTransaction>(globalObject->vm().heap)) JSIDBTransaction(structure, globalObject, WTF::move(impl));
+        JSIDBTransaction* ptr = new (NotNull, JSC::allocateCell<JSIDBTransaction>(globalObject->vm().heap)) JSIDBTransaction(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -53,12 +53,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    IDBTransaction& impl() const
+    IDBTransaction& wrapped() const
     {
-        return static_cast<IDBTransaction&>(Base::impl());
+        return static_cast<IDBTransaction&>(Base::wrapped());
     }
 protected:
-    JSIDBTransaction(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBTransaction>&&);
+    JSIDBTransaction(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBTransaction>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBTransaction*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBTransaction*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBTransaction& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBTransaction& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBTransaction*);
 
 
 } // namespace WebCore

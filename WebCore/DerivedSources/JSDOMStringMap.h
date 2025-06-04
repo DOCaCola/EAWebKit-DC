@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMStringMap : public JSDOMWrapper {
+class JSDOMStringMap : public JSDOMWrapper<DOMStringMap> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMStringMap> Base;
     static JSDOMStringMap* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMStringMap>&& impl)
     {
-        JSDOMStringMap* ptr = new (NotNull, JSC::allocateCell<JSDOMStringMap>(globalObject->vm().heap)) JSDOMStringMap(structure, globalObject, WTF::move(impl));
+        JSDOMStringMap* ptr = new (NotNull, JSC::allocateCell<JSDOMStringMap>(globalObject->vm().heap)) JSDOMStringMap(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,7 +47,6 @@ public:
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMStringMap();
 
     DECLARE_INFO;
 
@@ -60,15 +59,10 @@ public:
     static bool deletePropertyByIndex(JSC::JSCell*, JSC::ExecState*, unsigned);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMStringMap& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMStringMap* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMStringMap(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMStringMap>&&);
+    JSDOMStringMap(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMStringMap>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -91,7 +85,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMStringMap*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMStringMap*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMStringMap& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMStringMap& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMStringMap*);
 
 
 } // namespace WebCore

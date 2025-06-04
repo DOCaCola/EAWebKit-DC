@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLFieldSetElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFieldSetElement>&& impl)
     {
-        JSHTMLFieldSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFieldSetElement>(globalObject->vm().heap)) JSHTMLFieldSetElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFieldSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFieldSetElement>(globalObject->vm().heap)) JSHTMLFieldSetElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFieldSetElement& impl() const
+    HTMLFieldSetElement& wrapped() const
     {
-        return static_cast<HTMLFieldSetElement&>(Base::impl());
+        return static_cast<HTMLFieldSetElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLFieldSetElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFieldSetElement>&&);
+    JSHTMLFieldSetElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFieldSetElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

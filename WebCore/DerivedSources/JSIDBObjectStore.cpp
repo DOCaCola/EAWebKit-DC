@@ -28,10 +28,10 @@
 #include "ExceptionCode.h"
 #include "IDBAny.h"
 #include "IDBIndex.h"
-#include "IDBObjectStore.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMStringList.h"
 #include "JSIDBAny.h"
 #include "JSIDBIndex.h"
@@ -94,63 +94,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBObjectStoreConstructor : public DOMConstructorObject {
-private:
-    JSIDBObjectStoreConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSIDBObjectStore> JSIDBObjectStoreConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBObjectStoreConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBObjectStoreConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBObjectStoreConstructor>(vm.heap)) JSIDBObjectStoreConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBObjectStoreConstructor::s_info = { "IDBObjectStoreConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBObjectStoreConstructor) };
-
-JSIDBObjectStoreConstructor::JSIDBObjectStoreConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSIDBObjectStoreConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSIDBObjectStoreConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBObjectStore::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBObjectStore::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBObjectStore"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBObjectStoreConstructor::s_info = { "IDBObjectStoreConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBObjectStoreConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBObjectStorePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "keyPath", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreKeyPath), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "indexNames", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreIndexNames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "transaction", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreTransaction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "autoIncrement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreAutoIncrement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "put", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionPut), (intptr_t) (1) },
-    { "add", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionAdd), (intptr_t) (1) },
-    { "delete", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionDelete), (intptr_t) (1) },
-    { "get", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionGet), (intptr_t) (1) },
-    { "clear", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionClear), (intptr_t) (0) },
-    { "openCursor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionOpenCursor), (intptr_t) (0) },
-    { "createIndex", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionCreateIndex), (intptr_t) (2) },
-    { "index", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionIndex), (intptr_t) (1) },
-    { "deleteIndex", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionDeleteIndex), (intptr_t) (1) },
-    { "count", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionCount), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "keyPath", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreKeyPath), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "indexNames", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreIndexNames), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "transaction", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreTransaction), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "autoIncrement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBObjectStoreAutoIncrement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "put", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionPut), (intptr_t) (1) } },
+    { "add", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionAdd), (intptr_t) (1) } },
+    { "delete", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionDelete), (intptr_t) (1) } },
+    { "get", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionGet), (intptr_t) (1) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionClear), (intptr_t) (0) } },
+    { "openCursor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionOpenCursor), (intptr_t) (0) } },
+    { "createIndex", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionCreateIndex), (intptr_t) (2) } },
+    { "index", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionIndex), (intptr_t) (1) } },
+    { "deleteIndex", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionDeleteIndex), (intptr_t) (1) } },
+    { "count", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsIDBObjectStorePrototypeFunctionCount), (intptr_t) (0) } },
 };
 
 const ClassInfo JSIDBObjectStorePrototype::s_info = { "IDBObjectStorePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBObjectStorePrototype) };
@@ -163,9 +137,8 @@ void JSIDBObjectStorePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBObjectStore::s_info = { "IDBObjectStore", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBObjectStore) };
 
-JSIDBObjectStore::JSIDBObjectStore(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBObjectStore>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBObjectStore::JSIDBObjectStore(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBObjectStore>&& impl)
+    : JSDOMWrapper<IDBObjectStore>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -185,514 +158,457 @@ void JSIDBObjectStore::destroy(JSC::JSCell* cell)
     thisObject->JSIDBObjectStore::~JSIDBObjectStore();
 }
 
-JSIDBObjectStore::~JSIDBObjectStore()
+EncodedJSValue jsIDBObjectStoreName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsIDBObjectStoreName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBObjectStorePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBObjectStore", "name");
-        return throwGetterTypeError(*exec, "IDBObjectStore", "name");
+            return reportDeprecatedGetterError(*state, "IDBObjectStore", "name");
+        return throwGetterTypeError(*state, "IDBObjectStore", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.name());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.name());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBObjectStoreKeyPath(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBObjectStoreKeyPath(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBObjectStorePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBObjectStore", "keyPath");
-        return throwGetterTypeError(*exec, "IDBObjectStore", "keyPath");
+            return reportDeprecatedGetterError(*state, "IDBObjectStore", "keyPath");
+        return throwGetterTypeError(*state, "IDBObjectStore", "keyPath");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.keyPathAny()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.keyPathAny()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBObjectStoreIndexNames(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBObjectStoreIndexNames(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBObjectStorePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBObjectStore", "indexNames");
-        return throwGetterTypeError(*exec, "IDBObjectStore", "indexNames");
+            return reportDeprecatedGetterError(*state, "IDBObjectStore", "indexNames");
+        return throwGetterTypeError(*state, "IDBObjectStore", "indexNames");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.indexNames()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.indexNames()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBObjectStoreTransaction(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBObjectStoreTransaction(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBObjectStorePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBObjectStore", "transaction");
-        return throwGetterTypeError(*exec, "IDBObjectStore", "transaction");
+            return reportDeprecatedGetterError(*state, "IDBObjectStore", "transaction");
+        return throwGetterTypeError(*state, "IDBObjectStore", "transaction");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.transaction()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.transaction()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBObjectStoreAutoIncrement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBObjectStoreAutoIncrement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBObjectStorePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBObjectStore", "autoIncrement");
-        return throwGetterTypeError(*exec, "IDBObjectStore", "autoIncrement");
+            return reportDeprecatedGetterError(*state, "IDBObjectStore", "autoIncrement");
+        return throwGetterTypeError(*state, "IDBObjectStore", "autoIncrement");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.autoIncrement());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBObjectStoreConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBObjectStoreConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSIDBObjectStorePrototype* domObject = jsDynamicCast<JSIDBObjectStorePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBObjectStore::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSIDBObjectStore::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSIDBObjectStore::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBObjectStoreConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBObjectStoreConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionPut(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionPut(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "put");
+        return throwThisTypeError(*state, "IDBObjectStore", "put");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Deprecated::ScriptValue value = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.put(exec, value, ec)));
-
-        setDOMException(exec, ec);
-        if (UNLIKELY(exec->hadException()))
-            return JSValue::encode(jsUndefined());
-        return JSValue::encode(result);
-    }
-
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.put(exec, value, key, ec)));
-
-    setDOMException(exec, ec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    return JSValue::encode(result);
+    return JSValue::encode(castedThis->putFunction(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionAdd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionAdd(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "add");
+        return throwThisTypeError(*state, "IDBObjectStore", "add");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    Deprecated::ScriptValue value = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-
-    size_t argsCount = exec->argumentCount();
-    if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.add(exec, value, ec)));
-
-        setDOMException(exec, ec);
-        if (UNLIKELY(exec->hadException()))
-            return JSValue::encode(jsUndefined());
-        return JSValue::encode(result);
-    }
-
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(1) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.add(exec, value, key, ec)));
-
-    setDOMException(exec, ec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    return JSValue::encode(result);
+    return JSValue::encode(castedThis->add(*state));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "delete");
+        return throwThisTypeError(*state, "IDBObjectStore", "delete");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    IDBKeyRange* keyRange = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    IDBKeyRange* keyRange = JSIDBKeyRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.deleteFunction(scriptContext, keyRange, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.deleteFunction(scriptContext, keyRange, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "delete");
+        return throwThisTypeError(*state, "IDBObjectStore", "delete");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue key = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.deleteFunction(scriptContext, key, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.deleteFunction(scriptContext, key, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDelete(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBObjectStorePrototypeFunctionDelete1(exec);
+        return jsIDBObjectStorePrototypeFunctionDelete1(state);
     if (argsCount == 1)
-        return jsIDBObjectStorePrototypeFunctionDelete2(exec);
+        return jsIDBObjectStorePrototypeFunctionDelete2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "get");
+        return throwThisTypeError(*state, "IDBObjectStore", "get");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    IDBKeyRange* key = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    IDBKeyRange* key = JSIDBKeyRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "get");
+        return throwThisTypeError(*state, "IDBObjectStore", "get");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue key = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.get(scriptContext, key, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionGet(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBObjectStorePrototypeFunctionGet1(exec);
+        return jsIDBObjectStorePrototypeFunctionGet1(state);
     if (argsCount == 1)
-        return jsIDBObjectStorePrototypeFunctionGet2(exec);
+        return jsIDBObjectStorePrototypeFunctionGet2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionClear(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionClear(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "clear");
+        return throwThisTypeError(*state, "IDBObjectStore", "clear");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.clear(scriptContext, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.clear(scriptContext, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "openCursor");
+        return throwThisTypeError(*state, "IDBObjectStore", "openCursor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, ec)));
+        JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    IDBKeyRange* range = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    IDBKeyRange* range = JSIDBKeyRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, ec)));
+        JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String direction = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, direction, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, range, direction, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "openCursor");
+        return throwThisTypeError(*state, "IDBObjectStore", "openCursor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue key = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, ec)));
+        JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    String direction = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String direction = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, direction, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.openCursor(scriptContext, key, direction, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionOpenCursor(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if (argsCount == 0 || (argsCount == 1 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))) || (argsCount == 2 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBObjectStorePrototypeFunctionOpenCursor1(exec);
+        return jsIDBObjectStorePrototypeFunctionOpenCursor1(state);
     if (argsCount == 1 || argsCount == 2)
-        return jsIDBObjectStorePrototypeFunctionOpenCursor2(exec);
-    return throwVMTypeError(exec);
+        return jsIDBObjectStorePrototypeFunctionOpenCursor2(state);
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCreateIndex(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCreateIndex(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "createIndex");
+        return throwThisTypeError(*state, "IDBObjectStore", "createIndex");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    return JSValue::encode(castedThis->createIndex(exec));
+    return JSValue::encode(castedThis->createIndex(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionIndex(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionIndex(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "index");
+        return throwThisTypeError(*state, "IDBObjectStore", "index");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    String name = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.index(name, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.index(name, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDeleteIndex(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionDeleteIndex(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "deleteIndex");
+        return throwThisTypeError(*state, "IDBObjectStore", "deleteIndex");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    String name = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteIndex(name, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "count");
+        return throwThisTypeError(*state, "IDBObjectStore", "count");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
-        JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, ec)));
+        JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    IDBKeyRange* range = JSIDBKeyRange::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    IDBKeyRange* range = JSIDBKeyRange::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, range, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, range, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSIDBObjectStore* castedThis = jsDynamicCast<JSIDBObjectStore*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "IDBObjectStore", "count");
+        return throwThisTypeError(*state, "IDBObjectStore", "count");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSIDBObjectStore::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    ExceptionCode ec = 0;
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCodeWithMessage ec;
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    Deprecated::ScriptValue key = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    Deprecated::ScriptValue key = { state->vm(), state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, key, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.count(scriptContext, key, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsIDBObjectStorePrototypeFunctionCount(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if (argsCount == 0 || (argsCount == 1 && (arg0.isUndefined() || arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSIDBKeyRange::info())))))
-        return jsIDBObjectStorePrototypeFunctionCount1(exec);
+        return jsIDBObjectStorePrototypeFunctionCount1(state);
     if (argsCount == 1)
-        return jsIDBObjectStorePrototypeFunctionCount2(exec);
-    return throwVMTypeError(exec);
+        return jsIDBObjectStorePrototypeFunctionCount2(state);
+    return throwVMTypeError(state);
 }
 
 bool JSIDBObjectStoreOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -706,7 +622,14 @@ void JSIDBObjectStoreOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsIDBObjectStore = jsCast<JSIDBObjectStore*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBObjectStore->impl(), jsIDBObjectStore);
+    uncacheWrapper(world, &jsIDBObjectStore->wrapped(), jsIDBObjectStore);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBObjectStore* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSIDBObjectStore>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBObjectStore* impl)
@@ -715,20 +638,13 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, IDBObjectSto
         return jsNull();
     if (JSValue result = getExistingWrapper<JSIDBObjectStore>(globalObject, impl))
         return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to IDBObjectStore.
-    COMPILE_ASSERT(!__is_polymorphic(IDBObjectStore), IDBObjectStore_is_polymorphic_but_idl_claims_not_to_be);
-#endif
     return createNewWrapper<JSIDBObjectStore>(globalObject, impl);
 }
 
 IDBObjectStore* JSIDBObjectStore::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSIDBObjectStore*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

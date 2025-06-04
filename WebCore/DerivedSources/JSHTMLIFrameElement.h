@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLIFrameElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLIFrameElement>&& impl)
     {
-        JSHTMLIFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLIFrameElement>(globalObject->vm().heap)) JSHTMLIFrameElement(structure, globalObject, WTF::move(impl));
+        JSHTMLIFrameElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLIFrameElement>(globalObject->vm().heap)) JSHTMLIFrameElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,14 +48,14 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLIFrameElement& impl() const
+    HTMLIFrameElement& wrapped() const
     {
-        return static_cast<HTMLIFrameElement&>(Base::impl());
+        return static_cast<HTMLIFrameElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLIFrameElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLIFrameElement>&&);
+    JSHTMLIFrameElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLIFrameElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -23,6 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSWebKitCSSMatrix.h"
 #include "URL.h"
 #include "WebKitCSSMatrix.h"
@@ -120,104 +121,69 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitCSSMatrixConstructor : public DOMConstructorObject {
-private:
-    JSWebKitCSSMatrixConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSWebKitCSSMatrix> JSWebKitCSSMatrixConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitCSSMatrixConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitCSSMatrixConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSMatrixConstructor>(vm.heap)) JSWebKitCSSMatrixConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitCSSMatrix(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSWebKitCSSMatrixConstructor::constructJSWebKitCSSMatrix(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSWebKitCSSMatrixConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSWebKitCSSMatrixConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSWebKitCSSMatrixConstructor*>(state->callee());
     ExceptionCode ec = 0;
-    String cssValue = exec->argumentCount() <= 0 ? String() : exec->uncheckedArgument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String cssValue = state->argument(0).isUndefined() ? String() : state->uncheckedArgument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<WebKitCSSMatrix> object = WebKitCSSMatrix::create(cssValue, ec);
     if (ec) {
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(JSValue());
     }
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSWebKitCSSMatrixConstructor::s_info = { "WebKitCSSMatrixConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSMatrixConstructor) };
-
-JSWebKitCSSMatrixConstructor::JSWebKitCSSMatrixConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebKitCSSMatrixConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebKitCSSMatrixConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSMatrix::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitCSSMatrix::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitCSSMatrix"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSWebKitCSSMatrixConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWebKitCSSMatrix;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSWebKitCSSMatrixConstructor::s_info = { "WebKitCSSMatrixConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSMatrixConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitCSSMatrixPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "a", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixA), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixA) },
-    { "b", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixB) },
-    { "c", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixC), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixC) },
-    { "d", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixD), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixD) },
-    { "e", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixE), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixE) },
-    { "f", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixF), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixF) },
-    { "m11", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM11), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM11) },
-    { "m12", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM12), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM12) },
-    { "m13", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM13), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM13) },
-    { "m14", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM14), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM14) },
-    { "m21", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM21), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM21) },
-    { "m22", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM22), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM22) },
-    { "m23", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM23), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM23) },
-    { "m24", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM24), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM24) },
-    { "m31", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM31), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM31) },
-    { "m32", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM32), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM32) },
-    { "m33", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM33), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM33) },
-    { "m34", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM34), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM34) },
-    { "m41", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM41), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM41) },
-    { "m42", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM42), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM42) },
-    { "m43", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM43), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM43) },
-    { "m44", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM44), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM44) },
-    { "setMatrixValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSetMatrixValue), (intptr_t) (0) },
-    { "multiply", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionMultiply), (intptr_t) (0) },
-    { "inverse", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionInverse), (intptr_t) (0) },
-    { "translate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionTranslate), (intptr_t) (0) },
-    { "scale", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionScale), (intptr_t) (0) },
-    { "rotate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionRotate), (intptr_t) (0) },
-    { "rotateAxisAngle", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionRotateAxisAngle), (intptr_t) (0) },
-    { "skewX", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSkewX), (intptr_t) (0) },
-    { "skewY", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSkewY), (intptr_t) (0) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "a", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixA), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixA) } },
+    { "b", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixB) } },
+    { "c", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixC), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixC) } },
+    { "d", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixD), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixD) } },
+    { "e", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixE), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixE) } },
+    { "f", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixF), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixF) } },
+    { "m11", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM11), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM11) } },
+    { "m12", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM12), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM12) } },
+    { "m13", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM13), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM13) } },
+    { "m14", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM14), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM14) } },
+    { "m21", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM21), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM21) } },
+    { "m22", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM22), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM22) } },
+    { "m23", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM23), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM23) } },
+    { "m24", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM24), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM24) } },
+    { "m31", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM31), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM31) } },
+    { "m32", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM32), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM32) } },
+    { "m33", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM33), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM33) } },
+    { "m34", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM34), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM34) } },
+    { "m41", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM41), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM41) } },
+    { "m42", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM42), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM42) } },
+    { "m43", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM43), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM43) } },
+    { "m44", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitCSSMatrixM44), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWebKitCSSMatrixM44) } },
+    { "setMatrixValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSetMatrixValue), (intptr_t) (0) } },
+    { "multiply", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionMultiply), (intptr_t) (0) } },
+    { "inverse", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionInverse), (intptr_t) (0) } },
+    { "translate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionTranslate), (intptr_t) (0) } },
+    { "scale", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionScale), (intptr_t) (0) } },
+    { "rotate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionRotate), (intptr_t) (0) } },
+    { "rotateAxisAngle", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionRotateAxisAngle), (intptr_t) (0) } },
+    { "skewX", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSkewX), (intptr_t) (0) } },
+    { "skewY", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionSkewY), (intptr_t) (0) } },
+    { "toString", DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebKitCSSMatrixPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSWebKitCSSMatrixPrototype::s_info = { "WebKitCSSMatrixPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSMatrixPrototype) };
@@ -230,9 +196,8 @@ void JSWebKitCSSMatrixPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitCSSMatrix::s_info = { "WebKitCSSMatrix", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitCSSMatrix) };
 
-JSWebKitCSSMatrix::JSWebKitCSSMatrix(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSMatrix>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebKitCSSMatrix::JSWebKitCSSMatrix(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitCSSMatrix>&& impl)
+    : JSDOMWrapper<WebKitCSSMatrix>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -252,828 +217,823 @@ void JSWebKitCSSMatrix::destroy(JSC::JSCell* cell)
     thisObject->JSWebKitCSSMatrix::~JSWebKitCSSMatrix();
 }
 
-JSWebKitCSSMatrix::~JSWebKitCSSMatrix()
+EncodedJSValue jsWebKitCSSMatrixA(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsWebKitCSSMatrixA(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "a");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "a");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "a");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "a");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.a());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixB(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixB(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "b");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "b");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "b");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "b");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.b());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixC(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixC(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "c");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "c");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "c");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "c");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.c());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixD(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixD(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "d");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "d");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "d");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "d");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.d());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixE(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixE(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "e");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "e");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "e");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "e");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.e());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixF(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixF(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "f");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "f");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "f");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "f");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.f());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM11(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM11(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m11");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m11");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m11");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m11");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m11());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM12(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM12(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m12");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m12");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m12");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m12");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m12());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM13(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM13(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m13");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m13");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m13");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m13");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m13());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM14(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM14(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m14");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m14");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m14");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m14");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m14());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM21(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM21(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m21");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m21");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m21");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m21");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m21());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM22(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM22(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m22");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m22");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m22");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m22");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m22());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM23(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM23(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m23");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m23");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m23");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m23");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m23());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM24(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM24(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m24");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m24");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m24");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m24");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m24());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM31(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM31(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m31");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m31");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m31");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m31");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m31());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM32(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM32(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m32");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m32");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m32");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m32");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m32());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM33(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM33(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m33");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m33");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m33");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m33");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m33());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM34(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM34(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m34");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m34");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m34");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m34");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m34());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM41(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM41(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m41");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m41");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m41");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m41");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m41());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM42(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM42(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m42");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m42");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m42");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m42");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m42());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM43(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM43(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m43");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m43");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m43");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m43");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m43());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixM44(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixM44(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitCSSMatrix", "m44");
-        return throwGetterTypeError(*exec, "WebKitCSSMatrix", "m44");
+            return reportDeprecatedGetterError(*state, "WebKitCSSMatrix", "m44");
+        return throwGetterTypeError(*state, "WebKitCSSMatrix", "m44");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.m44());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitCSSMatrixConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebKitCSSMatrixConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebKitCSSMatrixPrototype* domObject = jsDynamicCast<JSWebKitCSSMatrixPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitCSSMatrix::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebKitCSSMatrix::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSWebKitCSSMatrixA(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixA(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "a");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "a");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "a");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "a");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setA(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixB(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixB(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "b");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "b");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "b");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "b");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setB(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixC(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixC(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "c");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "c");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "c");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "c");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setC(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixD(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixD(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "d");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "d");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "d");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "d");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setD(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixE(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixE(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "e");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "e");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "e");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "e");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setE(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixF(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixF(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "f");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "f");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "f");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "f");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setF(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM11(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM11(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m11");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m11");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m11");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m11");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM11(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM12(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM12(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m12");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m12");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m12");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m12");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM12(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM13(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM13(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m13");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m13");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m13");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m13");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM13(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM14(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM14(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m14");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m14");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m14");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m14");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM14(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM21(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM21(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m21");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m21");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m21");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m21");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM21(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM22(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM22(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m22");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m22");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m22");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m22");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM22(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM23(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM23(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m23");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m23");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m23");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m23");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM23(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM24(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM24(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m24");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m24");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m24");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m24");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM24(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM31(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM31(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m31");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m31");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m31");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m31");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM31(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM32(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM32(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m32");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m32");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m32");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m32");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM32(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM33(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM33(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m33");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m33");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m33");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m33");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM33(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM34(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM34(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m34");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m34");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m34");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m34");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM34(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM41(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM41(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m41");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m41");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m41");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m41");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM41(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM42(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM42(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m42");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m42");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m42");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m42");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM42(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM43(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM43(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m43");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m43");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m43");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m43");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM43(nativeValue);
 }
 
 
-void setJSWebKitCSSMatrixM44(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWebKitCSSMatrixM44(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitCSSMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "WebKitCSSMatrix", "m44");
+            reportDeprecatedSetterError(*state, "WebKitCSSMatrix", "m44");
         else
-            throwSetterTypeError(*exec, "WebKitCSSMatrix", "m44");
+            throwSetterTypeError(*state, "WebKitCSSMatrix", "m44");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setM44(nativeValue);
 }
@@ -1081,182 +1041,182 @@ void setJSWebKitCSSMatrixM44(ExecState* exec, JSObject* baseObject, EncodedJSVal
 
 JSValue JSWebKitCSSMatrix::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebKitCSSMatrixConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitCSSMatrixConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSetMatrixValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSetMatrixValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "setMatrixValue");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "setMatrixValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String string = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String string = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMatrixValue(string, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionMultiply(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionMultiply(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "multiply");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "multiply");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    WebKitCSSMatrix* secondMatrix = JSWebKitCSSMatrix::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    WebKitCSSMatrix* secondMatrix = JSWebKitCSSMatrix::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.multiply(secondMatrix)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.multiply(secondMatrix)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionInverse(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionInverse(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "inverse");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "inverse");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.inverse(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.inverse(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionTranslate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionTranslate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "translate");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "translate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double x = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double x = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double y = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double y = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double z = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double z = state->argument(2).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.translate(x, y, z)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.translate(x, y, z)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionScale(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionScale(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "scale");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "scale");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double scaleX = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double scaleX = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double scaleY = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double scaleY = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double scaleZ = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double scaleZ = state->argument(2).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.scale(scaleX, scaleY, scaleZ)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.scale(scaleX, scaleY, scaleZ)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionRotate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionRotate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "rotate");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "rotate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double rotX = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double rotX = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double rotY = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double rotY = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double rotZ = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double rotZ = state->argument(2).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rotate(rotX, rotY, rotZ)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.rotate(rotX, rotY, rotZ)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionRotateAxisAngle(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionRotateAxisAngle(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "rotateAxisAngle");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "rotateAxisAngle");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double x = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double x = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double y = exec->argument(1).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double y = state->argument(1).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double z = exec->argument(2).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double z = state->argument(2).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    double angle = exec->argument(3).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double angle = state->argument(3).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rotateAxisAngle(x, y, z, angle)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.rotateAxisAngle(x, y, z, angle)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSkewX(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSkewX(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "skewX");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "skewX");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double angle = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double angle = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.skewX(angle)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.skewX(angle)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSkewY(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionSkewY(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "skewY");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "skewY");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    double angle = exec->argument(0).toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double angle = state->argument(0).toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.skewY(angle)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.skewY(angle)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebKitCSSMatrixPrototypeFunctionToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebKitCSSMatrix* castedThis = jsDynamicCast<JSWebKitCSSMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebKitCSSMatrix", "toString");
+        return throwThisTypeError(*state, "WebKitCSSMatrix", "toString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebKitCSSMatrix::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.toString());
     return JSValue::encode(result);
 }
 
@@ -1271,7 +1231,14 @@ void JSWebKitCSSMatrixOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsWebKitCSSMatrix = jsCast<JSWebKitCSSMatrix*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebKitCSSMatrix->impl(), jsWebKitCSSMatrix);
+    uncacheWrapper(world, &jsWebKitCSSMatrix->wrapped(), jsWebKitCSSMatrix);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitCSSMatrix* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebKitCSSMatrix>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitCSSMatrix* impl)
@@ -1293,7 +1260,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitCSSMat
 WebKitCSSMatrix* JSWebKitCSSMatrix::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebKitCSSMatrix*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

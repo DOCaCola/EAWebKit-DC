@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSHTMLSpanElement.h"
 
-#include "HTMLSpanElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLSpanElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLSpanElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLSpanElement> JSHTMLSpanElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLSpanElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLSpanElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLSpanElementConstructor>(vm.heap)) JSHTMLSpanElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLSpanElementConstructor::s_info = { "HTMLSpanElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSpanElementConstructor) };
-
-JSHTMLSpanElementConstructor::JSHTMLSpanElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLSpanElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLSpanElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLSpanElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLSpanElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLSpanElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLSpanElementConstructor::s_info = { "HTMLSpanElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSpanElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLSpanElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSpanElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLSpanElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLSpanElementPrototype::s_info = { "HTMLSpanElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSpanElementPrototype) };
@@ -112,7 +86,7 @@ void JSHTMLSpanElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLSpanElement::s_info = { "HTMLSpanElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLSpanElement) };
 
-JSHTMLSpanElement::JSHTMLSpanElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSpanElement>&& impl)
+JSHTMLSpanElement::JSHTMLSpanElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLSpanElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,17 @@ JSObject* JSHTMLSpanElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLSpanElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLSpanElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLSpanElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLSpanElementPrototype* domObject = jsDynamicCast<JSHTMLSpanElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLSpanElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLSpanElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSHTMLSpanElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLSpanElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLSpanElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

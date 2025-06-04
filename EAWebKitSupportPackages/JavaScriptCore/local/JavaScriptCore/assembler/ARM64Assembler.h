@@ -38,6 +38,7 @@
 #define DATASIZE_OF(datasize) ((datasize == 64) ? Datasize_64 : Datasize_32)
 #define MEMOPSIZE_OF(datasize) ((datasize == 8 || datasize == 128) ? MemOpSize_8_or_128 : (datasize == 16) ? MemOpSize_16 : (datasize == 32) ? MemOpSize_32 : MemOpSize_64)
 #define CHECK_DATASIZE() CHECK_DATASIZE_OF(datasize)
+#define CHECK_VECTOR_DATASIZE() ASSERT(datasize == 64 || datasize == 128)
 #define DATASIZE DATASIZE_OF(datasize)
 #define MEMOPSIZE MEMOPSIZE_OF(datasize)
 #define CHECK_FP_MEMOP_DATASIZE() ASSERT(datasize == 8 || datasize == 16 || datasize == 32 || datasize == 64 || datasize == 128)
@@ -388,105 +389,138 @@ inline uint16_t getHalfword(uint64_t value, int which)
 }
 
 namespace ARM64Registers {
-    typedef enum {
-        // ￼Parameter/result registers
-        x0,
-        x1,
-        x2,
-        x3,
-        x4,
-        x5,
-        x6,
-        x7,
-        // Indirect result location register
-        x8,
-        // Temporary registers
-        x9,
-        x10,
-        x11,
-        x12,
-        x13,
-        x14,
-        x15,
-        // Intra-procedure-call scratch registers (temporary)
-        x16, ip0 = x16,
-        x17, ip1 = x17,
-        // Platform Register (temporary)
-        x18,
-        // Callee-saved
-        x19,
-        x20,
-        x21,
-        x22,
-        x23,
-        x24,
-        x25,
-        x26,
-        x27,
-        x28,
-        // Special
-        x29, fp = x29,
-        x30, lr = x30,
-        sp,
-        zr = 0x3f,
-    } RegisterID;
 
-    typedef enum {
-        // Parameter/result registers
-        q0,
-        q1,
-        q2,
-        q3,
-        q4,
-        q5,
-        q6,
-        q7,
-        // Callee-saved (up to 64-bits only!)
-        q8,
-        q9,
-        q10,
-        q11,
-        q12,
-        q13,
-        q14,
-        q15,
-        // Temporary registers
-        q16,
-        q17,
-        q18,
-        q19,
-        q20,
-        q21,
-        q22,
-        q23,
-        q24,
-        q25,
-        q26,
-        q27,
-        q28,
-        q29,
-        q30,
-        q31,
-    } FPRegisterID;
+#define FOR_EACH_CPU_REGISTER(V) \
+    FOR_EACH_CPU_GPREGISTER(V) \
+    FOR_EACH_CPU_SPECIAL_REGISTER(V) \
+    FOR_EACH_CPU_FPREGISTER(V)
 
-    static bool isSp(RegisterID reg) { return reg == sp; }
-    static bool isZr(RegisterID reg) { return reg == zr; }
-}
+// The following are defined as pairs of the following value:
+// 1. type of the storage needed to save the register value by the JIT probe.
+// 2. name of the register.
+#define FOR_EACH_CPU_GPREGISTER(V) \
+    /* Parameter/result registers */ \
+    V(void*, x0) \
+    V(void*, x1) \
+    V(void*, x2) \
+    V(void*, x3) \
+    V(void*, x4) \
+    V(void*, x5) \
+    V(void*, x6) \
+    V(void*, x7) \
+    /* Indirect result location register */ \
+    V(void*, x8) \
+    /* Temporary registers */ \
+    V(void*, x9) \
+    V(void*, x10) \
+    V(void*, x11) \
+    V(void*, x12) \
+    V(void*, x13) \
+    V(void*, x14) \
+    V(void*, x15) \
+    /* Intra-procedure-call scratch registers (temporary) */ \
+    V(void*, x16) \
+    V(void*, x17) \
+    /* Platform Register (temporary) */ \
+    V(void*, x18) \
+    /* Callee-saved */ \
+    V(void*, x19) \
+    V(void*, x20) \
+    V(void*, x21) \
+    V(void*, x22) \
+    V(void*, x23) \
+    V(void*, x24) \
+    V(void*, x25) \
+    V(void*, x26) \
+    V(void*, x27) \
+    V(void*, x28) \
+    /* Special */ \
+    V(void*, fp) \
+    V(void*, lr) \
+    V(void*, sp)
+
+#define FOR_EACH_CPU_SPECIAL_REGISTER(V) \
+    V(void*, pc) \
+    V(void*, nzcv) \
+    V(void*, fpsr) \
+
+// ARM64 always has 32 FPU registers 128-bits each. See http://llvm.org/devmtg/2012-11/Northover-AArch64.pdf
+// and Section 5.1.2 in http://infocenter.arm.com/help/topic/com.arm.doc.ihi0055b/IHI0055B_aapcs64.pdf.
+// However, we only use them for 64-bit doubles.
+#define FOR_EACH_CPU_FPREGISTER(V) \
+    /* Parameter/result registers */ \
+    V(double, q0) \
+    V(double, q1) \
+    V(double, q2) \
+    V(double, q3) \
+    V(double, q4) \
+    V(double, q5) \
+    V(double, q6) \
+    V(double, q7) \
+    /* Callee-saved (up to 64-bits only!) */ \
+    V(double, q8) \
+    V(double, q9) \
+    V(double, q10) \
+    V(double, q11) \
+    V(double, q12) \
+    V(double, q13) \
+    V(double, q14) \
+    V(double, q15) \
+    /* Temporary registers */ \
+    V(double, q16) \
+    V(double, q17) \
+    V(double, q18) \
+    V(double, q19) \
+    V(double, q20) \
+    V(double, q21) \
+    V(double, q22) \
+    V(double, q23) \
+    V(double, q24) \
+    V(double, q25) \
+    V(double, q26) \
+    V(double, q27) \
+    V(double, q28) \
+    V(double, q29) \
+    V(double, q30) \
+    V(double, q31)
+
+typedef enum {
+    #define DECLARE_REGISTER(_type, _regName) _regName,
+    FOR_EACH_CPU_GPREGISTER(DECLARE_REGISTER)
+    #undef DECLARE_REGISTER
+
+    ip0 = x16,
+    ip1 = x17,
+    x29 = fp,
+    x30 = lr,
+    zr = 0x3f,
+} RegisterID;
+
+typedef enum {
+    #define DECLARE_REGISTER(_type, _regName) _regName,
+    FOR_EACH_CPU_FPREGISTER(DECLARE_REGISTER)
+    #undef DECLARE_REGISTER
+} FPRegisterID;
+
+static constexpr bool isSp(RegisterID reg) { return reg == sp; }
+static constexpr bool isZr(RegisterID reg) { return reg == zr; }
+
+} // namespace ARM64Registers
 
 class ARM64Assembler {
 public:
     typedef ARM64Registers::RegisterID RegisterID;
     typedef ARM64Registers::FPRegisterID FPRegisterID;
     
-    static RegisterID firstRegister() { return ARM64Registers::x0; }
-    static RegisterID lastRegister() { return ARM64Registers::sp; }
+    static constexpr RegisterID firstRegister() { return ARM64Registers::x0; }
+    static constexpr RegisterID lastRegister() { return ARM64Registers::sp; }
     
-    static FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
-    static FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
+    static constexpr FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
+    static constexpr FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
 
 private:
-    static bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
-    static bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
+    static constexpr bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
+    static constexpr bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
 
 public:
     ARM64Assembler()
@@ -826,6 +860,10 @@ private:
         FPDataOp_FMAXNM,
         FPDataOp_FMINNM,
         FPDataOp_FNMUL
+    };
+
+    enum SIMD3Same {
+        SIMD_LogicalOp_AND = 0x03
     };
 
     enum FPIntConvOp {
@@ -2385,6 +2423,13 @@ public:
     }
 
     template<int datasize>
+    ALWAYS_INLINE void vand(FPRegisterID vd, FPRegisterID vn, FPRegisterID vm)
+    {
+        CHECK_VECTOR_DATASIZE();
+        insn(vectorDataProcessing2Source(SIMD_LogicalOp_AND, vm, vn, vd));
+    }
+
+    template<int datasize>
     ALWAYS_INLINE void frinta(FPRegisterID vd, FPRegisterID vn)
     {
         CHECK_DATASIZE();
@@ -3439,6 +3484,18 @@ private:
         const int S = 0;
         return (0x1e200800 | M << 31 | S << 29 | type << 22 | rm << 16 | opcode << 12 | rn << 5 | rd);
     }
+
+    ALWAYS_INLINE static int vectorDataProcessing2Source(SIMD3Same opcode, unsigned size, FPRegisterID vm, FPRegisterID vn, FPRegisterID vd)
+    {
+        const int Q = 0;
+        return (0xe201c00 | Q << 30 | size << 22 | vm << 16 | opcode << 11 | vn << 5 | vd);
+    }
+
+    ALWAYS_INLINE static int vectorDataProcessing2Source(SIMD3Same opcode, FPRegisterID vm, FPRegisterID vn, FPRegisterID vd)
+    {
+        return vectorDataProcessing2Source(opcode, 0, vm, vn, vd);
+    }
+
 
     // 'o1' means negate
     ALWAYS_INLINE static int floatingPointDataProcessing3Source(Datasize type, bool o1, FPRegisterID rm, AddOp o2, FPRegisterID ra, FPRegisterID rn, FPRegisterID rd)

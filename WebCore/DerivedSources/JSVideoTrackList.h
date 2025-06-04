@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSVideoTrackList : public JSDOMWrapper {
+class JSVideoTrackList : public JSDOMWrapper<VideoTrackList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<VideoTrackList> Base;
     static JSVideoTrackList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoTrackList>&& impl)
     {
-        JSVideoTrackList* ptr = new (NotNull, JSC::allocateCell<JSVideoTrackList>(globalObject->vm().heap)) JSVideoTrackList(structure, globalObject, WTF::move(impl));
+        JSVideoTrackList* ptr = new (NotNull, JSC::allocateCell<JSVideoTrackList>(globalObject->vm().heap)) JSVideoTrackList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSVideoTrackList();
 
     DECLARE_INFO;
 
@@ -58,15 +57,10 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    VideoTrackList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VideoTrackList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSVideoTrackList(JSC::Structure*, JSDOMGlobalObject*, Ref<VideoTrackList>&&);
+    JSVideoTrackList(JSC::Structure*, JSDOMGlobalObject&, Ref<VideoTrackList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -89,7 +83,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VideoTrackList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoTrackList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VideoTrackList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VideoTrackList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, VideoTrackList*);
 
 
 } // namespace WebCore

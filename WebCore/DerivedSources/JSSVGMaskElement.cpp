@@ -23,11 +23,11 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGStringList.h"
-#include "SVGMaskElement.h"
 #include "SVGStringList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -79,59 +79,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGMaskElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGMaskElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGMaskElement> JSSVGMaskElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGMaskElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGMaskElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGMaskElementConstructor>(vm.heap)) JSSVGMaskElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGMaskElementConstructor::s_info = { "SVGMaskElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMaskElementConstructor) };
-
-JSSVGMaskElementConstructor::JSSVGMaskElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGMaskElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGMaskElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGMaskElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGMaskElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGMaskElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGMaskElementConstructor::s_info = { "SVGMaskElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMaskElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGMaskElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "maskUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementMaskUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "maskContentUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementMaskContentUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredFeatures", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredExtensions", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "systemLanguage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "hasExtension", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMaskElementPrototypeFunctionHasExtension), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "maskUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementMaskUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "maskContentUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementMaskContentUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredFeatures", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredExtensions", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "systemLanguage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMaskElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "hasExtension", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMaskElementPrototypeFunctionHasExtension), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGMaskElementPrototype::s_info = { "SVGMaskElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMaskElementPrototype) };
@@ -144,7 +118,7 @@ void JSSVGMaskElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGMaskElement::s_info = { "SVGMaskElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMaskElement) };
 
-JSSVGMaskElement::JSSVGMaskElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMaskElement>&& impl)
+JSSVGMaskElement::JSSVGMaskElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGMaskElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -159,206 +133,206 @@ JSObject* JSSVGMaskElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGMaskElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGMaskElementMaskUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementMaskUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "maskUnits");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "maskUnits");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "maskUnits");
+        return throwGetterTypeError(*state, "SVGMaskElement", "maskUnits");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.maskUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementMaskContentUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementMaskContentUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "maskContentUnits");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "maskContentUnits");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "maskContentUnits");
+        return throwGetterTypeError(*state, "SVGMaskElement", "maskContentUnits");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.maskContentUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "x");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "x");
+        return throwGetterTypeError(*state, "SVGMaskElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "y");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "y");
+        return throwGetterTypeError(*state, "SVGMaskElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "width");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "width");
+        return throwGetterTypeError(*state, "SVGMaskElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "height");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "height");
+        return throwGetterTypeError(*state, "SVGMaskElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGMaskElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementRequiredFeatures(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementRequiredFeatures(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "requiredFeatures");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "requiredFeatures");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "requiredFeatures");
+        return throwGetterTypeError(*state, "SVGMaskElement", "requiredFeatures");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredFeatures())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredFeatures())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementRequiredExtensions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementRequiredExtensions(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "requiredExtensions");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "requiredExtensions");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "requiredExtensions");
+        return throwGetterTypeError(*state, "SVGMaskElement", "requiredExtensions");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredExtensions())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredExtensions())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementSystemLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMaskElementSystemLanguage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMaskElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMaskElement", "systemLanguage");
-        return throwGetterTypeError(*exec, "SVGMaskElement", "systemLanguage");
+            return reportDeprecatedGetterError(*state, "SVGMaskElement", "systemLanguage");
+        return throwGetterTypeError(*state, "SVGMaskElement", "systemLanguage");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.systemLanguage())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.systemLanguage())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMaskElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGMaskElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGMaskElementPrototype* domObject = jsDynamicCast<JSSVGMaskElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGMaskElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGMaskElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGMaskElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGMaskElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGMaskElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMaskElementPrototypeFunctionHasExtension(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMaskElementPrototypeFunctionHasExtension(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMaskElement* castedThis = jsDynamicCast<JSSVGMaskElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMaskElement", "hasExtension");
+        return throwThisTypeError(*state, "SVGMaskElement", "hasExtension");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMaskElement::info());
-    auto& impl = castedThis->impl();
-    String extension = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String extension = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasExtension(extension));
     return JSValue::encode(result);

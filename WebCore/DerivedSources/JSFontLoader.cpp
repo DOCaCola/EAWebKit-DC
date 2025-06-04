@@ -27,7 +27,6 @@
 #include "Dictionary.h"
 #include "Event.h"
 #include "ExceptionCode.h"
-#include "FontLoader.h"
 #include "JSDOMBinding.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
@@ -91,18 +90,18 @@ private:
 
 static const HashTableValue JSFontLoaderPrototypeTableValues[] =
 {
-    { "onloading", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloading) },
-    { "onloadingdone", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloadingdone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloadingdone) },
-    { "onloadstart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloadstart) },
-    { "onload", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnload) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnerror) },
-    { "loading", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderLoading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "checkFont", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionCheckFont), (intptr_t) (1) },
-    { "loadFont", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionLoadFont), (intptr_t) (1) },
-    { "notifyWhenFontsReady", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionNotifyWhenFontsReady), (intptr_t) (1) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "onloading", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloading) } },
+    { "onloadingdone", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloadingdone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloadingdone) } },
+    { "onloadstart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnloadstart) } },
+    { "onload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnload) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSFontLoaderOnerror) } },
+    { "loading", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsFontLoaderLoading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "checkFont", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionCheckFont), (intptr_t) (1) } },
+    { "loadFont", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionLoadFont), (intptr_t) (1) } },
+    { "notifyWhenFontsReady", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionNotifyWhenFontsReady), (intptr_t) (1) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsFontLoaderPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSFontLoaderPrototype::s_info = { "FontLoaderPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFontLoaderPrototype) };
@@ -115,9 +114,8 @@ void JSFontLoaderPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSFontLoader::s_info = { "FontLoader", &Base::s_info, 0, CREATE_METHOD_TABLE(JSFontLoader) };
 
-JSFontLoader::JSFontLoader(Structure* structure, JSDOMGlobalObject* globalObject, Ref<FontLoader>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSFontLoader::JSFontLoader(Structure* structure, JSDOMGlobalObject& globalObject, Ref<FontLoader>&& impl)
+    : JSDOMWrapper<FontLoader>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,289 +135,284 @@ void JSFontLoader::destroy(JSC::JSCell* cell)
     thisObject->JSFontLoader::~JSFontLoader();
 }
 
-JSFontLoader::~JSFontLoader()
+EncodedJSValue jsFontLoaderOnloading(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsFontLoaderOnloading(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "onloading");
-        return throwGetterTypeError(*exec, "FontLoader", "onloading");
+            return reportDeprecatedGetterError(*state, "FontLoader", "onloading");
+        return throwGetterTypeError(*state, "FontLoader", "onloading");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadingEvent));
 }
 
 
-EncodedJSValue jsFontLoaderOnloadingdone(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFontLoaderOnloadingdone(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "onloadingdone");
-        return throwGetterTypeError(*exec, "FontLoader", "onloadingdone");
+            return reportDeprecatedGetterError(*state, "FontLoader", "onloadingdone");
+        return throwGetterTypeError(*state, "FontLoader", "onloadingdone");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadingdoneEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadingdoneEvent));
 }
 
 
-EncodedJSValue jsFontLoaderOnloadstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFontLoaderOnloadstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "onloadstart");
-        return throwGetterTypeError(*exec, "FontLoader", "onloadstart");
+            return reportDeprecatedGetterError(*state, "FontLoader", "onloadstart");
+        return throwGetterTypeError(*state, "FontLoader", "onloadstart");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadstartEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadstartEvent));
 }
 
 
-EncodedJSValue jsFontLoaderOnload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFontLoaderOnload(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "onload");
-        return throwGetterTypeError(*exec, "FontLoader", "onload");
+            return reportDeprecatedGetterError(*state, "FontLoader", "onload");
+        return throwGetterTypeError(*state, "FontLoader", "onload");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadEvent));
 }
 
 
-EncodedJSValue jsFontLoaderOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFontLoaderOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "onerror");
-        return throwGetterTypeError(*exec, "FontLoader", "onerror");
+            return reportDeprecatedGetterError(*state, "FontLoader", "onerror");
+        return throwGetterTypeError(*state, "FontLoader", "onerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsFontLoaderLoading(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsFontLoaderLoading(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "FontLoader", "loading");
-        return throwGetterTypeError(*exec, "FontLoader", "loading");
+            return reportDeprecatedGetterError(*state, "FontLoader", "loading");
+        return throwGetterTypeError(*state, "FontLoader", "loading");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.loading());
     return JSValue::encode(result);
 }
 
 
-void setJSFontLoaderOnloading(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSFontLoaderOnloading(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "FontLoader", "onloading");
+            reportDeprecatedSetterError(*state, "FontLoader", "onloading");
         else
-            throwSetterTypeError(*exec, "FontLoader", "onloading");
+            throwSetterTypeError(*state, "FontLoader", "onloading");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadingEvent, value);
 }
 
 
-void setJSFontLoaderOnloadingdone(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSFontLoaderOnloadingdone(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "FontLoader", "onloadingdone");
+            reportDeprecatedSetterError(*state, "FontLoader", "onloadingdone");
         else
-            throwSetterTypeError(*exec, "FontLoader", "onloadingdone");
+            throwSetterTypeError(*state, "FontLoader", "onloadingdone");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadingdoneEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadingdoneEvent, value);
 }
 
 
-void setJSFontLoaderOnloadstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSFontLoaderOnloadstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "FontLoader", "onloadstart");
+            reportDeprecatedSetterError(*state, "FontLoader", "onloadstart");
         else
-            throwSetterTypeError(*exec, "FontLoader", "onloadstart");
+            throwSetterTypeError(*state, "FontLoader", "onloadstart");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadstartEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadstartEvent, value);
 }
 
 
-void setJSFontLoaderOnload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSFontLoaderOnload(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "FontLoader", "onload");
+            reportDeprecatedSetterError(*state, "FontLoader", "onload");
         else
-            throwSetterTypeError(*exec, "FontLoader", "onload");
+            throwSetterTypeError(*state, "FontLoader", "onload");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadEvent, value);
 }
 
 
-void setJSFontLoaderOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSFontLoaderOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSFontLoaderPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "FontLoader", "onerror");
+            reportDeprecatedSetterError(*state, "FontLoader", "onerror");
         else
-            throwSetterTypeError(*exec, "FontLoader", "onerror");
+            throwSetterTypeError(*state, "FontLoader", "onerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().errorEvent, value);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionCheckFont(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionCheckFont(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "checkFont");
+        return throwThisTypeError(*state, "FontLoader", "checkFont");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String font = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String font = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String text = exec->argumentCount() <= 1 ? String() : exec->uncheckedArgument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String text = state->argument(1).isUndefined() ? String() : state->uncheckedArgument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.checkFont(font, text));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionLoadFont(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionLoadFont(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "loadFont");
+        return throwThisTypeError(*state, "FontLoader", "loadFont");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Dictionary params = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Dictionary params = { state, state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.loadFont(params);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionNotifyWhenFontsReady(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionNotifyWhenFontsReady(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "notifyWhenFontsReady");
+        return throwThisTypeError(*state, "FontLoader", "notifyWhenFontsReady");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isFunction())
-        return throwArgumentMustBeFunctionError(*exec, 0, "callback", "FontLoader", "notifyWhenFontsReady");
-    RefPtr<VoidCallback> callback = JSVoidCallback::create(asObject(exec->uncheckedArgument(0)), castedThis->globalObject());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isFunction())
+        return throwArgumentMustBeFunctionError(*state, 0, "callback", "FontLoader", "notifyWhenFontsReady");
+    RefPtr<VoidCallback> callback = JSVoidCallback::create(asObject(state->uncheckedArgument(0)), castedThis->globalObject());
     impl.notifyWhenFontsReady(callback);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "addEventListener");
+        return throwThisTypeError(*state, "FontLoader", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "removeEventListener");
+        return throwThisTypeError(*state, "FontLoader", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsFontLoaderPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSFontLoader* castedThis = jsDynamicCast<JSFontLoader*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "FontLoader", "dispatchEvent");
+        return throwThisTypeError(*state, "FontLoader", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSFontLoader::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -428,17 +421,17 @@ void JSFontLoader::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSFontLoader*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSFontLoaderOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsFontLoader = jsCast<JSFontLoader*>(handle.slot()->asCell());
-    if (jsFontLoader->impl().hasPendingActivity())
+    if (jsFontLoader->wrapped().hasPendingActivity())
         return true;
-    if (jsFontLoader->impl().isFiringEventListeners())
+    if (jsFontLoader->wrapped().isFiringEventListeners())
         return true;
-    Document* root = WTF::getPtr(jsFontLoader->impl().document());
+    Document* root = WTF::getPtr(jsFontLoader->wrapped().document());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -448,7 +441,7 @@ void JSFontLoaderOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context
 {
     auto* jsFontLoader = jsCast<JSFontLoader*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsFontLoader->impl(), jsFontLoader);
+    uncacheWrapper(world, &jsFontLoader->wrapped(), jsFontLoader);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -459,6 +452,14 @@ extern "C" { extern void (*const __identifier("??_7FontLoader@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10FontLoaderE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, FontLoader* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSFontLoader>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, FontLoader* impl)
 {
     if (!impl)
@@ -490,7 +491,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, FontLoader* 
 FontLoader* JSFontLoader::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSFontLoader*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

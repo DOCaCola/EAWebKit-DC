@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSDocumentFragment* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentFragment>&& impl)
     {
-        JSDocumentFragment* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragment>(globalObject->vm().heap)) JSDocumentFragment(structure, globalObject, WTF::move(impl));
+        JSDocumentFragment* ptr = new (NotNull, JSC::allocateCell<JSDocumentFragment>(globalObject->vm().heap)) JSDocumentFragment(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,14 +49,14 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    DocumentFragment& impl() const
+    JSC::JSValue prepend(JSC::ExecState&);
+    JSC::JSValue append(JSC::ExecState&);
+    DocumentFragment& wrapped() const
     {
-        return static_cast<DocumentFragment&>(Base::impl());
+        return static_cast<DocumentFragment&>(Base::wrapped());
     }
 protected:
-    JSDocumentFragment(JSC::Structure*, JSDOMGlobalObject*, Ref<DocumentFragment>&&);
+    JSDocumentFragment(JSC::Structure*, JSDOMGlobalObject&, Ref<DocumentFragment>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -66,6 +66,9 @@ protected:
 
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DocumentFragment*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DocumentFragment& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DocumentFragment*);
 
 
 } // namespace WebCore

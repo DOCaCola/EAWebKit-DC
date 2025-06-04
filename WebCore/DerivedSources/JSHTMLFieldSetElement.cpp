@@ -22,12 +22,12 @@
 #include "JSHTMLFieldSetElement.h"
 
 #include "ExceptionCode.h"
-#include "HTMLCollection.h"
-#include "HTMLFieldSetElement.h"
+#include "HTMLFormControlsCollection.h"
 #include "HTMLFormElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
-#include "JSHTMLCollection.h"
+#include "JSDOMConstructor.h"
+#include "JSHTMLFormControlsCollection.h"
 #include "JSHTMLFormElement.h"
 #include "JSValidityState.h"
 #include "URL.h"
@@ -84,58 +84,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLFieldSetElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLFieldSetElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLFieldSetElement> JSHTMLFieldSetElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLFieldSetElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLFieldSetElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLFieldSetElementConstructor>(vm.heap)) JSHTMLFieldSetElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLFieldSetElementConstructor::s_info = { "HTMLFieldSetElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFieldSetElementConstructor) };
-
-JSHTMLFieldSetElementConstructor::JSHTMLFieldSetElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLFieldSetElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLFieldSetElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLFieldSetElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLFieldSetElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLFieldSetElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLFieldSetElementConstructor::s_info = { "HTMLFieldSetElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFieldSetElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLFieldSetElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFieldSetElementDisabled) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFieldSetElementName) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "elements", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementElements), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "willValidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validationMessage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFieldSetElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
-    { "setCustomValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFieldSetElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFieldSetElementDisabled) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFieldSetElementName) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "elements", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementElements), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "willValidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validationMessage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFieldSetElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFieldSetElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "setCustomValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFieldSetElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) } },
 };
 
 const ClassInfo JSHTMLFieldSetElementPrototype::s_info = { "HTMLFieldSetElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFieldSetElementPrototype) };
@@ -148,7 +122,7 @@ void JSHTMLFieldSetElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLFieldSetElement::s_info = { "HTMLFieldSetElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFieldSetElement) };
 
-JSHTMLFieldSetElement::JSHTMLFieldSetElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFieldSetElement>&& impl)
+JSHTMLFieldSetElement::JSHTMLFieldSetElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLFieldSetElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -163,185 +137,185 @@ JSObject* JSHTMLFieldSetElement::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSHTMLFieldSetElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLFieldSetElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementDisabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "disabled");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "disabled");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "disabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementForm(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "form");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "form");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "form");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "form");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.form()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "name");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "name");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "name");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getNameAttribute());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "type");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "type");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.type());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementElements(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementElements(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "elements");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "elements");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "elements");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "elements");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.elements()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.elements()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementWillValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementWillValidate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "willValidate");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "willValidate");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "willValidate");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "willValidate");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.willValidate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementValidity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementValidity(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "validity");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "validity");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "validity");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "validity");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.validity()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.validity()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementValidationMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementValidationMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFieldSetElement", "validationMessage");
-        return throwGetterTypeError(*exec, "HTMLFieldSetElement", "validationMessage");
+            return reportDeprecatedGetterError(*state, "HTMLFieldSetElement", "validationMessage");
+        return throwGetterTypeError(*state, "HTMLFieldSetElement", "validationMessage");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.validationMessage());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.validationMessage());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFieldSetElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLFieldSetElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLFieldSetElementPrototype* domObject = jsDynamicCast<JSHTMLFieldSetElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLFieldSetElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLFieldSetElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLFieldSetElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLFieldSetElementDisabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLFieldSetElement", "disabled");
+            reportDeprecatedSetterError(*state, "HTMLFieldSetElement", "disabled");
         else
-            throwSetterTypeError(*exec, "HTMLFieldSetElement", "disabled");
+            throwSetterTypeError(*state, "HTMLFieldSetElement", "disabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
 }
 
 
-void setJSHTMLFieldSetElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLFieldSetElementName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFieldSetElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLFieldSetElement", "name");
+            reportDeprecatedSetterError(*state, "HTMLFieldSetElement", "name");
         else
-            throwSetterTypeError(*exec, "HTMLFieldSetElement", "name");
+            throwSetterTypeError(*state, "HTMLFieldSetElement", "name");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
 }
@@ -349,33 +323,33 @@ void setJSHTMLFieldSetElementName(ExecState* exec, JSObject* baseObject, Encoded
 
 JSValue JSHTMLFieldSetElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLFieldSetElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLFieldSetElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFieldSetElementPrototypeFunctionCheckValidity(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLFieldSetElementPrototypeFunctionCheckValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFieldSetElement", "checkValidity");
+        return throwThisTypeError(*state, "HTMLFieldSetElement", "checkValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFieldSetElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.checkValidity());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFieldSetElementPrototypeFunctionSetCustomValidity(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLFieldSetElementPrototypeFunctionSetCustomValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLFieldSetElement* castedThis = jsDynamicCast<JSHTMLFieldSetElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFieldSetElement", "setCustomValidity");
+        return throwThisTypeError(*state, "HTMLFieldSetElement", "setCustomValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFieldSetElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String error = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String error = valueToStringWithUndefinedOrNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCustomValidity(error);
     return JSValue::encode(jsUndefined());

@@ -144,10 +144,10 @@ public:
 
     virtual void setSize(const IntSize&) = 0;
 
-    virtual void paint(GraphicsContext*, const FloatRect&) = 0;
+    virtual void paint(GraphicsContext&, const FloatRect&) = 0;
 
-    virtual void paintCurrentFrameInContext(GraphicsContext* c, const FloatRect& r) { paint(c, r); }
-    virtual bool copyVideoTextureToPlatformTexture(GraphicsContext3D*, Platform3DObject, GC3Dint, GC3Denum, GC3Denum, bool, bool) { return false; }
+    virtual void paintCurrentFrameInContext(GraphicsContext& c, const FloatRect& r) { paint(c, r); }
+    virtual bool copyVideoTextureToPlatformTexture(GraphicsContext3D*, Platform3DObject, GC3Denum, GC3Dint, GC3Denum, GC3Denum, GC3Denum, bool, bool) { return false; }
     virtual PassNativeImagePtr nativeImageForCurrentTime() { return nullptr; }
 
     virtual void setPreload(MediaPlayer::Preload) { }
@@ -230,7 +230,7 @@ public:
 #endif
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)
-    virtual std::unique_ptr<CDMSession> createSession(const String&) { return nullptr; }
+    virtual std::unique_ptr<CDMSession> createSession(const String&, CDMSessionClient*) { return nullptr; }
     virtual void setCDMSession(CDMSession*) { }
     virtual void keyAdded() { }
 #endif
@@ -240,11 +240,6 @@ public:
     virtual void setTextTrackRepresentation(TextTrackRepresentation*) { }
     virtual void syncTextTrackBounds() { };
     virtual void tracksChanged() { };
-#endif
-
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-    virtual bool implementsTextTrackControls() const { return false; }
-    virtual PassRefPtr<PlatformTextTrackMenuInterface> textTrackMenu() { return 0; }
 #endif
 
 #if USE(GSTREAMER)
@@ -264,6 +259,8 @@ public:
     }
 
     virtual unsigned long long fileSize() const { return 0; }
+
+    virtual bool ended() const { return false; }
 
 #if ENABLE(MEDIA_SOURCE)
     virtual unsigned long totalVideoFrames() { return 0; }

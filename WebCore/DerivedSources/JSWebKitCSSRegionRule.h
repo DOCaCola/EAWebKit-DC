@@ -33,7 +33,7 @@ public:
     typedef JSCSSRule Base;
     static JSWebKitCSSRegionRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSRegionRule>&& impl)
     {
-        JSWebKitCSSRegionRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRule>(globalObject->vm().heap)) JSWebKitCSSRegionRule(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSRegionRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSRegionRule>(globalObject->vm().heap)) JSWebKitCSSRegionRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSRegionRule& impl() const
+    WebKitCSSRegionRule& wrapped() const
     {
-        return static_cast<WebKitCSSRegionRule&>(Base::impl());
+        return static_cast<WebKitCSSRegionRule&>(Base::wrapped());
     }
 protected:
-    JSWebKitCSSRegionRule(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSRegionRule>&&);
+    JSWebKitCSSRegionRule(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSRegionRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

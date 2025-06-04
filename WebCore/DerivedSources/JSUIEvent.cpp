@@ -24,9 +24,9 @@
 #include "DOMWindow.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMWindow.h"
 #include "JSDictionary.h"
-#include "UIEvent.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -76,53 +76,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSUIEventConstructor : public DOMConstructorObject {
-private:
-    JSUIEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSUIEvent> JSUIEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSUIEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSUIEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSUIEventConstructor>(vm.heap)) JSUIEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSUIEvent(JSC::ExecState*);
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-};
-
-EncodedJSValue JSC_HOST_CALL JSUIEventConstructor::constructJSUIEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSUIEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSUIEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSUIEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     UIEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillUIEventInit(eventInit, dictionary))
@@ -130,7 +108,7 @@ EncodedJSValue JSC_HOST_CALL JSUIEventConstructor::constructJSUIEvent(ExecState*
     }
 
     RefPtr<UIEvent> event = UIEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillUIEventInit(UIEventInit& eventInit, JSDictionary& dictionary)
@@ -145,45 +123,41 @@ bool fillUIEventInit(UIEventInit& eventInit, JSDictionary& dictionary)
     return true;
 }
 
-const ClassInfo JSUIEventConstructor::s_info = { "UIEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIEventConstructor) };
-
-JSUIEventConstructor::JSUIEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSUIEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSUIEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSUIEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSUIEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("UIEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-ConstructType JSUIEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
+template<> ConstructType JSUIEventConstructor::getConstructData(JSCell* cell, ConstructData& constructData)
 {
-    constructData.native.function = constructJSUIEvent;
+#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
+    UNUSED_PARAM(cell);
+    constructData.native.function = construct;
     return ConstructTypeHost;
+#else
+    return Base::getConstructData(cell, constructData);
+#endif
 }
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
+
+template<> const ClassInfo JSUIEventConstructor::s_info = { "UIEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSUIEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "view", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "detail", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventDetail), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "keyCode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventKeyCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "charCode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventCharCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "layerX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventLayerX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "layerY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventLayerY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pageX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventPageX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pageY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventPageY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "which", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventWhich), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "initUIEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsUIEventPrototypeFunctionInitUIEvent), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "view", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "detail", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventDetail), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "keyCode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventKeyCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "charCode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventCharCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "layerX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventLayerX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "layerY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventLayerY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pageX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventPageX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pageY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventPageY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "which", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIEventWhich), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initUIEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsUIEventPrototypeFunctionInitUIEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSUIEventPrototype::s_info = { "UIEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIEventPrototype) };
@@ -196,7 +170,7 @@ void JSUIEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSUIEvent::s_info = { "UIEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIEvent) };
 
-JSUIEvent::JSUIEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<UIEvent>&& impl)
+JSUIEvent::JSUIEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<UIEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -211,194 +185,194 @@ JSObject* JSUIEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSUIEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsUIEventView(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventView(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "view");
-        return throwGetterTypeError(*exec, "UIEvent", "view");
+            return reportDeprecatedGetterError(*state, "UIEvent", "view");
+        return throwGetterTypeError(*state, "UIEvent", "view");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.view()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.view()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventDetail(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventDetail(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "detail");
-        return throwGetterTypeError(*exec, "UIEvent", "detail");
+            return reportDeprecatedGetterError(*state, "UIEvent", "detail");
+        return throwGetterTypeError(*state, "UIEvent", "detail");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.detail());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventKeyCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventKeyCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "keyCode");
-        return throwGetterTypeError(*exec, "UIEvent", "keyCode");
+            return reportDeprecatedGetterError(*state, "UIEvent", "keyCode");
+        return throwGetterTypeError(*state, "UIEvent", "keyCode");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.keyCode());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventCharCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventCharCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "charCode");
-        return throwGetterTypeError(*exec, "UIEvent", "charCode");
+            return reportDeprecatedGetterError(*state, "UIEvent", "charCode");
+        return throwGetterTypeError(*state, "UIEvent", "charCode");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.charCode());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventLayerX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventLayerX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "layerX");
-        return throwGetterTypeError(*exec, "UIEvent", "layerX");
+            return reportDeprecatedGetterError(*state, "UIEvent", "layerX");
+        return throwGetterTypeError(*state, "UIEvent", "layerX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.layerX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventLayerY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventLayerY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "layerY");
-        return throwGetterTypeError(*exec, "UIEvent", "layerY");
+            return reportDeprecatedGetterError(*state, "UIEvent", "layerY");
+        return throwGetterTypeError(*state, "UIEvent", "layerY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.layerY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventPageX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventPageX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "pageX");
-        return throwGetterTypeError(*exec, "UIEvent", "pageX");
+            return reportDeprecatedGetterError(*state, "UIEvent", "pageX");
+        return throwGetterTypeError(*state, "UIEvent", "pageX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.pageX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventPageY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventPageY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "pageY");
-        return throwGetterTypeError(*exec, "UIEvent", "pageY");
+            return reportDeprecatedGetterError(*state, "UIEvent", "pageY");
+        return throwGetterTypeError(*state, "UIEvent", "pageY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.pageY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventWhich(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIEventWhich(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIEvent", "which");
-        return throwGetterTypeError(*exec, "UIEvent", "which");
+            return reportDeprecatedGetterError(*state, "UIEvent", "which");
+        return throwGetterTypeError(*state, "UIEvent", "which");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.which());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsUIEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSUIEventPrototype* domObject = jsDynamicCast<JSUIEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSUIEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSUIEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSUIEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSUIEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSUIEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsUIEventPrototypeFunctionInitUIEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsUIEventPrototypeFunctionInitUIEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSUIEvent* castedThis = jsDynamicCast<JSUIEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "UIEvent", "initUIEvent");
+        return throwThisTypeError(*state, "UIEvent", "initUIEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSUIEvent::info());
-    auto& impl = castedThis->impl();
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String type = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool canBubble = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool canBubble = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool cancelable = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool cancelable = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    DOMWindow* view = JSDOMWindow::toWrapped(exec->argument(3));
-    if (UNLIKELY(exec->hadException()))
+    DOMWindow* view = JSDOMWindow::toWrapped(state->argument(3));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int detail = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int detail = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.initUIEvent(type, canBubble, cancelable, view, detail);
     return JSValue::encode(jsUndefined());

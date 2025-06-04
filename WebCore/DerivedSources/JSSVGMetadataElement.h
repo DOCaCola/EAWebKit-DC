@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGMetadataElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMetadataElement>&& impl)
     {
-        JSSVGMetadataElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMetadataElement>(globalObject->vm().heap)) JSSVGMetadataElement(structure, globalObject, WTF::move(impl));
+        JSSVGMetadataElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMetadataElement>(globalObject->vm().heap)) JSSVGMetadataElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMetadataElement& impl() const
+    SVGMetadataElement& wrapped() const
     {
-        return static_cast<SVGMetadataElement&>(Base::impl());
+        return static_cast<SVGMetadataElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMetadataElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMetadataElement>&&);
+    JSSVGMetadataElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMetadataElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

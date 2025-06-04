@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSXMLHttpRequest : public JSDOMWrapper {
+class WEBCORE_EXPORT JSXMLHttpRequest : public JSDOMWrapper<XMLHttpRequest> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XMLHttpRequest> Base;
     static JSXMLHttpRequest* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequest>&& impl)
     {
-        JSXMLHttpRequest* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequest>(globalObject->vm().heap)) JSXMLHttpRequest(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequest* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequest>(globalObject->vm().heap)) JSXMLHttpRequest(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static XMLHttpRequest* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSXMLHttpRequest();
 
     DECLARE_INFO;
 
@@ -52,27 +51,22 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_response;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_response;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue responseText(JSC::ExecState*) const;
-    JSC::JSValue response(JSC::ExecState*) const;
+    JSC::JSValue responseText(JSC::ExecState&) const;
+    JSC::JSValue response(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue send(JSC::ExecState*);
-    XMLHttpRequest& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLHttpRequest* m_impl;
+    JSC::JSValue open(JSC::ExecState&);
+    JSC::JSValue send(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXMLHttpRequest(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequest>&&);
+    JSXMLHttpRequest(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequest>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -95,7 +89,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLHttpRequest*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequest*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLHttpRequest& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLHttpRequest& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequest*);
 
 
 } // namespace WebCore

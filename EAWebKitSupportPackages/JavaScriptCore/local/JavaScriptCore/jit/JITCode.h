@@ -29,10 +29,9 @@
 #include "ArityCheckMode.h"
 #include "CallFrame.h"
 #include "Disassembler.h"
-#include "JITStubs.h"
 #include "JSCJSValue.h"
 #include "MacroAssemblerCodeRef.h"
-#include "RegisterPreservationMode.h"
+#include "RegisterSet.h"
 
 namespace JSC {
 
@@ -121,7 +120,7 @@ public:
             return false;
         }
     }
-    
+
     static bool isLowerTier(JITType expectedLower, JITType expectedHigher)
     {
         RELEASE_ASSERT(isExecutableScript(expectedLower));
@@ -173,7 +172,7 @@ public:
         return jitCode->jitType();
     }
     
-    virtual CodePtr addressForCall(VM&, ExecutableBase*, ArityCheckMode, RegisterPreservationMode) = 0;
+    virtual CodePtr addressForCall(ArityCheckMode) = 0;
     virtual void* executableAddressAtOffset(size_t offset) = 0;
     void* executableAddress() { return executableAddressAtOffset(0); }
     virtual void* dataAddressAtOffset(size_t offset) = 0;
@@ -193,6 +192,10 @@ public:
     void* end() { return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(start()) + size()); }
     
     virtual bool contains(void*) = 0;
+
+#if ENABLE(JIT)
+    virtual RegisterSet liveRegistersToPreserveAtExceptionHandlingCallSite(CodeBlock*, CallSiteIndex);
+#endif
 
 private:
     JITType m_jitType;
@@ -224,19 +227,10 @@ public:
     
     void initializeCodeRef(CodeRef, CodePtr withArityCheck);
 
-    virtual CodePtr addressForCall(VM&, ExecutableBase*, ArityCheckMode, RegisterPreservationMode) override;
+    virtual CodePtr addressForCall(ArityCheckMode) override;
 
 private:
-    struct RegisterPreservationWrappers {
-        CodeRef withoutArityCheck;
-        CodeRef withArityCheck;
-    };
-
-    RegisterPreservationWrappers* ensureWrappers();
-    
     CodePtr m_withArityCheck;
-    
-    std::unique_ptr<RegisterPreservationWrappers> m_wrappers;
 };
 
 class NativeJITCode : public JITCodeWithCodeRef {
@@ -247,7 +241,7 @@ public:
     
     void initializeCodeRef(CodeRef);
 
-    virtual CodePtr addressForCall(VM&, ExecutableBase*, ArityCheckMode, RegisterPreservationMode) override;
+    virtual CodePtr addressForCall(ArityCheckMode) override;
 };
 
 } // namespace JSC

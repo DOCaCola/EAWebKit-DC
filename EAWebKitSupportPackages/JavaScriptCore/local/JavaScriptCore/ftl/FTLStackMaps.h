@@ -122,11 +122,28 @@ struct StackMaps {
     void dump(PrintStream&) const;
     void dumpMultiline(PrintStream&, const char* prefix) const;
     
-    typedef HashMap<uint32_t, Vector<Record>, WTF::IntHash<uint32_t>, WTF::UnsignedWithZeroKeyHashTraits<uint32_t>> RecordMap;
+    struct RecordAndIndex {
+        Record record;
+        uint32_t index;
+    };
+    typedef HashMap<uint32_t, Vector<RecordAndIndex>, WTF::IntHash<uint32_t>, WTF::UnsignedWithZeroKeyHashTraits<uint32_t>> RecordMap;
     
     RecordMap computeRecordMap() const;
 
     unsigned stackSize() const;
+
+    unsigned stackSizeForLocals() const
+    {
+#if CPU(X86_64)
+        // LLVM will store fp in the call frame
+        return stackSize() - sizeof(void*);
+#elif CPU(ARM64)
+        // LLVM will store fp & lr in the call frame
+        return stackSize() - 2 * sizeof(void*);
+#else
+        UNREACHABLE_FOR_PLATFORM();
+#endif
+    }
 };
 
 } } // namespace JSC::FTL

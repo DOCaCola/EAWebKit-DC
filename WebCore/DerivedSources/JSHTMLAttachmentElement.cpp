@@ -25,8 +25,8 @@
 #include "JSHTMLAttachmentElement.h"
 
 #include "File.h"
-#include "HTMLAttachmentElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSFile.h"
 #include <wtf/GetPtr.h>
 
@@ -65,49 +65,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLAttachmentElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLAttachmentElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLAttachmentElement> JSHTMLAttachmentElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLAttachmentElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLAttachmentElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLAttachmentElementConstructor>(vm.heap)) JSHTMLAttachmentElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLAttachmentElementConstructor::s_info = { "HTMLAttachmentElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementConstructor) };
-
-JSHTMLAttachmentElementConstructor::JSHTMLAttachmentElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLAttachmentElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLAttachmentElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLAttachmentElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLAttachmentElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLAttachmentElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLAttachmentElementConstructor::s_info = { "HTMLAttachmentElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLAttachmentElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "file", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAttachmentElementFile) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "file", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAttachmentElementFile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAttachmentElementFile) } },
 };
 
 const ClassInfo JSHTMLAttachmentElementPrototype::s_info = { "HTMLAttachmentElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElementPrototype) };
@@ -120,7 +94,7 @@ void JSHTMLAttachmentElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLAttachmentElement::s_info = { "HTMLAttachmentElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAttachmentElement) };
 
-JSHTMLAttachmentElement::JSHTMLAttachmentElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAttachmentElement>&& impl)
+JSHTMLAttachmentElement::JSHTMLAttachmentElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLAttachmentElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -135,46 +109,46 @@ JSObject* JSHTMLAttachmentElement::getPrototype(VM& vm, JSGlobalObject* globalOb
     return getDOMPrototype<JSHTMLAttachmentElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLAttachmentElementFile(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAttachmentElementFile(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAttachmentElement* castedThis = jsDynamicCast<JSHTMLAttachmentElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAttachmentElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAttachmentElement", "file");
-        return throwGetterTypeError(*exec, "HTMLAttachmentElement", "file");
+            return reportDeprecatedGetterError(*state, "HTMLAttachmentElement", "file");
+        return throwGetterTypeError(*state, "HTMLAttachmentElement", "file");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.file()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.file()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAttachmentElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLAttachmentElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLAttachmentElementPrototype* domObject = jsDynamicCast<JSHTMLAttachmentElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLAttachmentElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLAttachmentElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLAttachmentElementFile(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAttachmentElementFile(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAttachmentElement* castedThis = jsDynamicCast<JSHTMLAttachmentElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAttachmentElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAttachmentElement", "file");
+            reportDeprecatedSetterError(*state, "HTMLAttachmentElement", "file");
         else
-            throwSetterTypeError(*exec, "HTMLAttachmentElement", "file");
+            throwSetterTypeError(*state, "HTMLAttachmentElement", "file");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     File* nativeValue = JSFile::toWrapped(value);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setFile(nativeValue);
 }
@@ -182,7 +156,7 @@ void setJSHTMLAttachmentElementFile(ExecState* exec, JSObject* baseObject, Encod
 
 JSValue JSHTMLAttachmentElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLAttachmentElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLAttachmentElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

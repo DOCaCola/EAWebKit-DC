@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSBarProp : public JSDOMWrapper {
+class JSBarProp : public JSDOMWrapper<BarProp> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<BarProp> Base;
     static JSBarProp* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BarProp>&& impl)
     {
-        JSBarProp* ptr = new (NotNull, JSC::allocateCell<JSBarProp>(globalObject->vm().heap)) JSBarProp(structure, globalObject, WTF::move(impl));
+        JSBarProp* ptr = new (NotNull, JSC::allocateCell<JSBarProp>(globalObject->vm().heap)) JSBarProp(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static BarProp* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSBarProp();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    BarProp& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    BarProp* m_impl;
 protected:
-    JSBarProp(JSC::Structure*, JSDOMGlobalObject*, Ref<BarProp>&&);
+    JSBarProp(JSC::Structure*, JSDOMGlobalObject&, Ref<BarProp>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, BarProp*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, BarProp*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, BarProp& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, BarProp& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, BarProp*);
 
 
 } // namespace WebCore

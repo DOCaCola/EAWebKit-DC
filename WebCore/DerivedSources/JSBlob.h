@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSBlob : public JSDOMWrapper {
+class JSBlob : public JSDOMWrapper<Blob> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Blob> Base;
     static JSBlob* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Blob>&& impl)
     {
-        JSBlob* ptr = new (NotNull, JSC::allocateCell<JSBlob>(globalObject->vm().heap)) JSBlob(structure, globalObject, WTF::move(impl));
+        JSBlob* ptr = new (NotNull, JSC::allocateCell<JSBlob>(globalObject->vm().heap)) JSBlob(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Blob* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSBlob();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Blob& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Blob* m_impl;
 protected:
-    JSBlob(JSC::Structure*, JSDOMGlobalObject*, Ref<Blob>&&);
+    JSBlob(JSC::Structure*, JSDOMGlobalObject&, Ref<Blob>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Blob*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Blob*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Blob& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Blob& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Blob*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSBlob(JSC::ExecState*);

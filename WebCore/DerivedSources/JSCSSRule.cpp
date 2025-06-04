@@ -23,9 +23,11 @@
 
 #include "CSSRule.h"
 #include "CSSStyleSheet.h"
+#include "ExceptionCode.h"
 #include "JSCSSRule.h"
 #include "JSCSSStyleSheet.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <wtf/GetPtr.h>
 
@@ -67,44 +69,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSRuleConstructor>(vm.heap)) JSCSSRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSCSSRule> JSCSSRuleConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSCSSRuleConstructorTableValues[] =
 {
-    { "UNKNOWN_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "STYLE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CHARSET_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "IMPORT_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "MEDIA_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "FONT_FACE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "PAGE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "SUPPORTS_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "WEBKIT_REGION_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "WEBKIT_KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "WEBKIT_KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
+    { "UNKNOWN_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "STYLE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CHARSET_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "IMPORT_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "MEDIA_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "FONT_FACE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "PAGE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "SUPPORTS_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "WEBKIT_REGION_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "WEBKIT_KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "WEBKIT_KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
 };
 
 
@@ -122,45 +105,38 @@ COMPILE_ASSERT(16 == CSSRule::WEBKIT_REGION_RULE, CSSRuleEnumWEBKIT_REGION_RULEI
 COMPILE_ASSERT(7 == CSSRule::WEBKIT_KEYFRAMES_RULE, CSSRuleEnumWEBKIT_KEYFRAMES_RULEIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(8 == CSSRule::WEBKIT_KEYFRAME_RULE, CSSRuleEnumWEBKIT_KEYFRAME_RULEIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSCSSRuleConstructor::s_info = { "CSSRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRuleConstructor) };
-
-JSCSSRuleConstructor::JSCSSRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSRule::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSCSSRuleConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSCSSRuleConstructor::s_info = { "CSSRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRuleConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cssText", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSRuleCssText) },
-    { "parentStyleSheet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleParentStyleSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "parentRule", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleParentRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "UNKNOWN_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "STYLE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CHARSET_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "IMPORT_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "MEDIA_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "FONT_FACE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "PAGE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "SUPPORTS_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "WEBKIT_REGION_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "WEBKIT_KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "WEBKIT_KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cssText", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleCssText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSRuleCssText) } },
+    { "parentStyleSheet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleParentStyleSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "parentRule", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleParentRule), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "UNKNOWN_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "STYLE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CHARSET_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "IMPORT_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "MEDIA_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "FONT_FACE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "PAGE_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "SUPPORTS_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "WEBKIT_REGION_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "WEBKIT_KEYFRAMES_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "WEBKIT_KEYFRAME_RULE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
 };
 
 const ClassInfo JSCSSRulePrototype::s_info = { "CSSRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRulePrototype) };
@@ -173,9 +149,8 @@ void JSCSSRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSRule::s_info = { "CSSRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRule) };
 
-JSCSSRule::JSCSSRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSRule>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCSSRule::JSCSSRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSRule>&& impl)
+    : JSDOMWrapper<CSSRule>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -195,112 +170,107 @@ void JSCSSRule::destroy(JSC::JSCell* cell)
     thisObject->JSCSSRule::~JSCSSRule();
 }
 
-JSCSSRule::~JSCSSRule()
+EncodedJSValue jsCSSRuleType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsCSSRuleType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSRule* castedThis = jsDynamicCast<JSCSSRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSRule", "type");
-        return throwGetterTypeError(*exec, "CSSRule", "type");
+            return reportDeprecatedGetterError(*state, "CSSRule", "type");
+        return throwGetterTypeError(*state, "CSSRule", "type");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.type());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSRuleCssText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSRuleCssText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSRule* castedThis = jsDynamicCast<JSCSSRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSRule", "cssText");
-        return throwGetterTypeError(*exec, "CSSRule", "cssText");
+            return reportDeprecatedGetterError(*state, "CSSRule", "cssText");
+        return throwGetterTypeError(*state, "CSSRule", "cssText");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.cssText());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.cssText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSRuleParentStyleSheet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSRuleParentStyleSheet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSRule* castedThis = jsDynamicCast<JSCSSRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSRule", "parentStyleSheet");
-        return throwGetterTypeError(*exec, "CSSRule", "parentStyleSheet");
+            return reportDeprecatedGetterError(*state, "CSSRule", "parentStyleSheet");
+        return throwGetterTypeError(*state, "CSSRule", "parentStyleSheet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentStyleSheet()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.parentStyleSheet()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSRuleParentRule(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSRuleParentRule(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSRule* castedThis = jsDynamicCast<JSCSSRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSRule", "parentRule");
-        return throwGetterTypeError(*exec, "CSSRule", "parentRule");
+            return reportDeprecatedGetterError(*state, "CSSRule", "parentRule");
+        return throwGetterTypeError(*state, "CSSRule", "parentRule");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentRule()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.parentRule()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSRuleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSRulePrototype* domObject = jsDynamicCast<JSCSSRulePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSRule::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSRule::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCSSRuleCssText(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCSSRuleCssText(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCSSRule* castedThis = jsDynamicCast<JSCSSRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSRulePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSRule", "cssText");
+            reportDeprecatedSetterError(*state, "CSSRule", "cssText");
         else
-            throwSetterTypeError(*exec, "CSSRule", "cssText");
+            throwSetterTypeError(*state, "CSSRule", "cssText");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCssText(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSCSSRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSRuleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 void JSCSSRule::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -314,7 +284,7 @@ void JSCSSRule::visitChildren(JSCell* cell, SlotVisitor& visitor)
 bool JSCSSRuleOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsCSSRule = jsCast<JSCSSRule*>(handle.slot()->asCell());
-    void* root = WebCore::root(&jsCSSRule->impl());
+    void* root = WebCore::root(&jsCSSRule->wrapped());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -322,13 +292,13 @@ void JSCSSRuleOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsCSSRule = jsCast<JSCSSRule*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCSSRule->impl(), jsCSSRule);
+    uncacheWrapper(world, &jsCSSRule->wrapped(), jsCSSRule);
 }
 
 CSSRule* JSCSSRule::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCSSRule*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

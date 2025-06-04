@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSCanvasRenderingContext.h"
 
-#include "CanvasRenderingContext.h"
 #include "Element.h"
 #include "HTMLCanvasElement.h"
 #include "JSDOMBinding.h"
@@ -66,7 +65,7 @@ private:
 
 static const HashTableValue JSCanvasRenderingContextPrototypeTableValues[] =
 {
-    { "canvas", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContextCanvas), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "canvas", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContextCanvas), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCanvasRenderingContextPrototype::s_info = { "CanvasRenderingContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasRenderingContextPrototype) };
@@ -79,9 +78,8 @@ void JSCanvasRenderingContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCanvasRenderingContext::s_info = { "CanvasRenderingContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasRenderingContext) };
 
-JSCanvasRenderingContext::JSCanvasRenderingContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasRenderingContext>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCanvasRenderingContext::JSCanvasRenderingContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CanvasRenderingContext>&& impl)
+    : JSDOMWrapper<CanvasRenderingContext>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -101,24 +99,19 @@ void JSCanvasRenderingContext::destroy(JSC::JSCell* cell)
     thisObject->JSCanvasRenderingContext::~JSCanvasRenderingContext();
 }
 
-JSCanvasRenderingContext::~JSCanvasRenderingContext()
+EncodedJSValue jsCanvasRenderingContextCanvas(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsCanvasRenderingContextCanvas(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext* castedThis = jsDynamicCast<JSCanvasRenderingContext*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContextPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext", "canvas");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext", "canvas");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext", "canvas");
+        return throwGetterTypeError(*state, "CanvasRenderingContext", "canvas");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.canvas()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.canvas()));
     return JSValue::encode(result);
 }
 
@@ -134,7 +127,7 @@ void JSCanvasRenderingContext::visitChildren(JSCell* cell, SlotVisitor& visitor)
 bool JSCanvasRenderingContextOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsCanvasRenderingContext = jsCast<JSCanvasRenderingContext*>(handle.slot()->asCell());
-    void* root = WebCore::root(jsCanvasRenderingContext->impl().canvas());
+    void* root = WebCore::root(jsCanvasRenderingContext->wrapped().canvas());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -142,13 +135,13 @@ void JSCanvasRenderingContextOwner::finalize(JSC::Handle<JSC::Unknown> handle, v
 {
     auto* jsCanvasRenderingContext = jsCast<JSCanvasRenderingContext*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCanvasRenderingContext->impl(), jsCanvasRenderingContext);
+    uncacheWrapper(world, &jsCanvasRenderingContext->wrapped(), jsCanvasRenderingContext);
 }
 
 CanvasRenderingContext* JSCanvasRenderingContext::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCanvasRenderingContext*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

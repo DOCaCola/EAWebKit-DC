@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCSSValue : public JSDOMWrapper {
+class JSCSSValue : public JSDOMWrapper<CSSValue> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CSSValue> Base;
     static JSCSSValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSValue>&& impl)
     {
-        JSCSSValue* ptr = new (NotNull, JSC::allocateCell<JSCSSValue>(globalObject->vm().heap)) JSCSSValue(structure, globalObject, WTF::move(impl));
+        JSCSSValue* ptr = new (NotNull, JSC::allocateCell<JSCSSValue>(globalObject->vm().heap)) JSCSSValue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CSSValue* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCSSValue();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSValue& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CSSValue* m_impl;
 protected:
-    JSCSSValue(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSValue>&&);
+    JSCSSValue(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSValue>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CSSValue*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CSSValue*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CSSValue& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSValue& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CSSValue*);
 
 
 } // namespace WebCore

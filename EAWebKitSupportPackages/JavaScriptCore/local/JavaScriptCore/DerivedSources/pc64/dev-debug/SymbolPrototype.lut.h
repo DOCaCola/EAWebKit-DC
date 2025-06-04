@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/SymbolPrototype.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/SymbolPrototype.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -13,20 +11,12 @@ static const struct CompactHashIndex symbolPrototypeTableIndex[4] = {
     { -1, -1 },
 };
 
-
 static const struct HashTableValue symbolPrototypeTableValues[2] = {
- #if JSC_BUILTIN_EXISTS(SYMBOLPROTOTYPETOSTRING)
-   { "toString", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(symbolPrototypeToStringCodeGenerator), (intptr_t)0 },
- #else
-   { "toString", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(symbolProtoFuncToString), (intptr_t)(0) },
- #endif
- #if JSC_BUILTIN_EXISTS(SYMBOLPROTOTYPEVALUEOF)
-   { "valueOf", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(symbolPrototypeValueOfCodeGenerator), (intptr_t)0 },
- #else
-   { "valueOf", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(symbolProtoFuncValueOf), (intptr_t)(0) },
- #endif
+   { "toString", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(symbolProtoFuncToString), (intptr_t)(0) } },
+   { "valueOf", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(symbolProtoFuncValueOf), (intptr_t)(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable symbolPrototypeTable =
-    { 2, 3, false, symbolPrototypeTableValues, 0, symbolPrototypeTableIndex };
-} // namespace
+static const struct HashTable symbolPrototypeTable =
+    { 2, 3, false, symbolPrototypeTableValues, symbolPrototypeTableIndex };
+
+} // namespace JSC

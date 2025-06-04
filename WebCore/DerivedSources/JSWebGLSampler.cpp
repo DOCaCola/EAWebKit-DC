@@ -25,7 +25,7 @@
 #include "JSWebGLSampler.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLSampler.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLSamplerConstructor : public DOMConstructorObject {
-private:
-    JSWebGLSamplerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLSampler> JSWebGLSamplerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLSamplerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLSamplerConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLSamplerConstructor>(vm.heap)) JSWebGLSamplerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLSamplerConstructor::s_info = { "WebGLSamplerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSamplerConstructor) };
-
-JSWebGLSamplerConstructor::JSWebGLSamplerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLSamplerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLSamplerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLSampler::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLSampler::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLSampler"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLSamplerConstructor::s_info = { "WebGLSamplerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSamplerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLSamplerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLSamplerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLSamplerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLSamplerPrototype::s_info = { "WebGLSamplerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSamplerPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLSamplerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLSampler::s_info = { "WebGLSampler", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSampler) };
 
-JSWebGLSampler::JSWebGLSampler(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLSampler>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLSampler::JSWebGLSampler(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLSampler>&& impl)
+    : JSDOMWrapper<WebGLSampler>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLSampler::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLSampler::~JSWebGLSampler();
 }
 
-JSWebGLSampler::~JSWebGLSampler()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLSamplerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLSamplerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLSamplerPrototype* domObject = jsDynamicCast<JSWebGLSamplerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLSampler::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLSampler::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLSampler::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLSamplerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLSamplerConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLSamplerOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLSamplerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsWebGLSampler = jsCast<JSWebGLSampler*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLSampler->impl(), jsWebGLSampler);
+    uncacheWrapper(world, &jsWebGLSampler->wrapped(), jsWebGLSampler);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLSampler@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12WebGLSamplerE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSampler* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLSampler>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSampler* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSampler
 WebGLSampler* JSWebGLSampler::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLSampler*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

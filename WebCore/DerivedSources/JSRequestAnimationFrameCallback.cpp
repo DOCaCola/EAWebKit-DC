@@ -34,7 +34,7 @@ namespace WebCore {
 JSRequestAnimationFrameCallback::JSRequestAnimationFrameCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : RequestAnimationFrameCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -48,12 +48,42 @@ JSRequestAnimationFrameCallback::~JSRequestAnimationFrameCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
 
 // Functions
+
+bool JSRequestAnimationFrameCallback::handleEvent(double highResTime)
+{
+    if (!canInvokeCallback())
+        return true;
+
+    Ref<JSRequestAnimationFrameCallback> protect(*this);
+
+    JSLockHolder lock(m_data->globalObject()->vm());
+
+    ExecState* state = m_data->globalObject()->globalExec();
+    MarkedArgumentBuffer args;
+    args.append(jsNumber(highResTime));
+
+    NakedPtr<Exception> returnedException;
+    UNUSED_PARAM(state);
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RequestAnimationFrameCallback* impl)
+{
+    if (!impl || !static_cast<JSRequestAnimationFrameCallback&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSRequestAnimationFrameCallback&>(*impl).callbackData()->callback();
+
+}
 
 }
 

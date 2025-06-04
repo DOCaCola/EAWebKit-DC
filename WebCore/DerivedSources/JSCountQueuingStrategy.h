@@ -23,27 +23,23 @@
 
 #if ENABLE(STREAMS_API)
 
-#include "CountQueuingStrategy.h"
 #include "JSDOMWrapper.h"
-#include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
 
-class JSCountQueuingStrategy : public JSDOMWrapper {
+class JSCountQueuingStrategy : public JSDOMObject {
 public:
-    typedef JSDOMWrapper Base;
-    static JSCountQueuingStrategy* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CountQueuingStrategy>&& impl)
+    typedef JSDOMObject Base;
+    static JSCountQueuingStrategy* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject)
     {
-        JSCountQueuingStrategy* ptr = new (NotNull, JSC::allocateCell<JSCountQueuingStrategy>(globalObject->vm().heap)) JSCountQueuingStrategy(structure, globalObject, WTF::move(impl));
+        JSCountQueuingStrategy* ptr = new (NotNull, JSC::allocateCell<JSCountQueuingStrategy>(globalObject->vm().heap)) JSCountQueuingStrategy(structure, *globalObject);
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static CountQueuingStrategy* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCountQueuingStrategy();
 
     DECLARE_INFO;
 
@@ -53,43 +49,13 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CountQueuingStrategy& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
+    static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-private:
-    CountQueuingStrategy* m_impl;
 protected:
-    JSCountQueuingStrategy(JSC::Structure*, JSDOMGlobalObject*, Ref<CountQueuingStrategy>&&);
-
-    void finishCreation(JSC::VM& vm)
-    {
-        Base::finishCreation(vm);
-        ASSERT(inherits(info()));
-    }
+    JSCountQueuingStrategy(JSC::Structure*, JSDOMGlobalObject&);
 
 };
 
-class JSCountQueuingStrategyOwner : public JSC::WeakHandleOwner {
-public:
-    virtual bool isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown>, void* context, JSC::SlotVisitor&);
-    virtual void finalize(JSC::Handle<JSC::Unknown>, void* context);
-};
-
-inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CountQueuingStrategy*)
-{
-    static NeverDestroyed<JSCountQueuingStrategyOwner> owner;
-    return &owner.get();
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CountQueuingStrategy*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CountQueuingStrategy& impl) { return toJS(exec, globalObject, &impl); }
-
-// Functions
-
-JSC::EncodedJSValue JSC_HOST_CALL jsCountQueuingStrategyPrototypeFunctionSize(JSC::ExecState*);
-
-// Custom constructor
-JSC::EncodedJSValue JSC_HOST_CALL constructJSCountQueuingStrategy(JSC::ExecState*);
 
 
 } // namespace WebCore

@@ -30,6 +30,7 @@
 
 #include "DFGGraph.h"
 #include "DFGInsertionSet.h"
+#include "DFGNaturalLoops.h"
 #include "DFGPhase.h"
 #include "FTLCapabilities.h"
 #include "JSCInlines.h"
@@ -52,19 +53,19 @@ public:
         
         if (m_graph.m_profiledBlock->m_didFailFTLCompilation)
             return false;
-        
+
 #if ENABLE(FTL_JIT)
         FTL::CapabilityLevel level = FTL::canCompile(m_graph);
         if (level == FTL::CannotCompile)
             return false;
         
-        if (!Options::enableOSREntryToFTL())
+        if (!Options::useOSREntryToFTL())
             level = FTL::CanCompile;
 
         // First we find all the loops that contain a LoopHint for which we cannot OSR enter.
         // We use that information to decide if we need CheckTierUpAndOSREnter or CheckTierUpWithNestedTriggerAndOSREnter.
-        NaturalLoops& naturalLoops = m_graph.m_naturalLoops;
-        naturalLoops.computeIfNecessary(m_graph);
+        m_graph.ensureNaturalLoops();
+        NaturalLoops& naturalLoops = *m_graph.m_naturalLoops;
 
         HashSet<const NaturalLoop*> loopsContainingLoopHintWithoutOSREnter = findLoopsContainingLoopHintWithoutOSREnter(naturalLoops, level);
         
@@ -92,7 +93,7 @@ public:
             }
             
             NodeAndIndex terminal = block->findTerminal();
-            if (terminal.node->op() == Return) {
+            if (terminal.node->isFunctionTerminal()) {
                 insertionSet.insertNode(
                     terminal.index, SpecNone, CheckTierUpAtReturn, terminal.node->origin);
             }

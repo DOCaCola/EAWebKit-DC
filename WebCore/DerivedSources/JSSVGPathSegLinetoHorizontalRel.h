@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegLinetoHorizontalRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoHorizontalRel>&& impl)
     {
-        JSSVGPathSegLinetoHorizontalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoHorizontalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoHorizontalRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoHorizontalRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoHorizontalRel>(globalObject->vm().heap)) JSSVGPathSegLinetoHorizontalRel(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoHorizontalRel& impl() const
+    SVGPathSegLinetoHorizontalRel& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoHorizontalRel&>(Base::impl());
+        return static_cast<SVGPathSegLinetoHorizontalRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoHorizontalRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoHorizontalRel>&&);
+    JSSVGPathSegLinetoHorizontalRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoHorizontalRel>&&);
 
     void finishCreation(JSC::VM& vm)
     {

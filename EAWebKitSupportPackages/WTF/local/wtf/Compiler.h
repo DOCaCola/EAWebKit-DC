@@ -68,25 +68,21 @@
 #define WTF_COMPILER_GCC 1
 #define WTF_COMPILER_SUPPORTS_CXX_CONSTEXPR 1
 #define WTF_COMPILER_SUPPORTS_CXX_USER_LITERALS 1
+#define WTF_COMPILER_SUPPORTS_CXX_REFERENCE_QUALIFIED_FUNCTIONS 1
 
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #define GCC_VERSION_AT_LEAST(major, minor, patch) (GCC_VERSION >= (major * 10000 + minor * 100 + patch))
 
-#if !GCC_VERSION_AT_LEAST(4, 7, 0)
-#error "Please use a newer version of GCC. WebKit requires GCC 4.7.0 or newer to compile."
+#if !GCC_VERSION_AT_LEAST(4, 9, 0)
+#error "Please use a newer version of GCC. WebKit requires GCC 4.9.0 or newer to compile."
 #endif
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #define WTF_COMPILER_SUPPORTS_C_STATIC_ASSERT 1
 #endif
 
-#if GCC_VERSION_AT_LEAST(4, 8, 0)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
 
-#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || (defined(__cplusplus) && __cplusplus >= 201103L))
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
 #endif /* COMPILER(GCC) */
 
 /* COMPILER(MINGW) - MinGW GCC */

@@ -32,7 +32,7 @@ public:
     typedef JSSVGAnimationElement Base;
     static JSSVGAnimateColorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateColorElement>&& impl)
     {
-        JSSVGAnimateColorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateColorElement>(globalObject->vm().heap)) JSSVGAnimateColorElement(structure, globalObject, WTF::move(impl));
+        JSSVGAnimateColorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateColorElement>(globalObject->vm().heap)) JSSVGAnimateColorElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimateColorElement& impl() const
+    SVGAnimateColorElement& wrapped() const
     {
-        return static_cast<SVGAnimateColorElement&>(Base::impl());
+        return static_cast<SVGAnimateColorElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAnimateColorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimateColorElement>&&);
+    JSSVGAnimateColorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimateColorElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -22,9 +22,10 @@
 #include "JSLocation.h"
 
 #include "DOMStringList.h"
+#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMStringList.h"
-#include "Location.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -60,26 +61,7 @@ JSC::EncodedJSValue jsLocationOrigin(JSC::ExecState*, JSC::JSObject*, JSC::Encod
 JSC::EncodedJSValue jsLocationAncestorOrigins(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsLocationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
-class JSLocationConstructor : public DOMConstructorObject {
-private:
-    JSLocationConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSLocationConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSLocationConstructor* ptr = new (NotNull, JSC::allocateCell<JSLocationConstructor>(vm.heap)) JSLocationConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSLocation> JSLocationConstructor;
 
 /* Hash table */
 
@@ -88,7 +70,7 @@ static const struct CompactHashIndex JSLocationTableIndex[35] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { -1, -1 },
+    { 9, -1 },
     { -1, -1 },
     { -1, -1 },
     { 8, -1 },
@@ -97,7 +79,7 @@ static const struct CompactHashIndex JSLocationTableIndex[35] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { -1, -1 },
+    { 10, -1 },
     { -1, -1 },
     { -1, -1 },
     { 4, -1 },
@@ -124,44 +106,37 @@ static const struct CompactHashIndex JSLocationTableIndex[35] = {
 
 static const HashTableValue JSLocationTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHref) },
-    { "protocol", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationProtocol) },
-    { "host", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHost) },
-    { "hostname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHostname) },
-    { "port", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationPort) },
-    { "pathname", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationPathname) },
-    { "search", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationSearch) },
-    { "hash", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHash) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHref) } },
+    { "protocol", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationProtocol), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationProtocol) } },
+    { "host", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHost), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHost) } },
+    { "hostname", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHostname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHostname) } },
+    { "port", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationPort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationPort) } },
+    { "pathname", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationPathname), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationPathname) } },
+    { "search", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationSearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationSearch) } },
+    { "hash", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationHash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSLocationHash) } },
+    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ancestorOrigins", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationAncestorOrigins), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSLocationTable = { 9, 31, true, JSLocationTableValues, 0, JSLocationTableIndex };
-const ClassInfo JSLocationConstructor::s_info = { "LocationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSLocationConstructor) };
-
-JSLocationConstructor::JSLocationConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSLocationTable = { 11, 31, true, JSLocationTableValues, JSLocationTableIndex };
+template<> void JSLocationConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSLocationConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSLocation::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSLocation::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Location"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSLocationConstructor::s_info = { "LocationConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSLocationConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSLocationPrototypeTableValues[] =
 {
-    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ancestorOrigins", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsLocationAncestorOrigins), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "assign", DontDelete | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionAssign), (intptr_t) (0) },
-    { "replace", DontDelete | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionReplace), (intptr_t) (0) },
-    { "reload", DontDelete | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionReload), (intptr_t) (0) },
-    { "toString", DontDelete | DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionToString), (intptr_t) (0) },
+    { "assign", DontDelete | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionAssign), (intptr_t) (0) } },
+    { "replace", DontDelete | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionReplace), (intptr_t) (0) } },
+    { "reload", DontDelete | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionReload), (intptr_t) (0) } },
+    { "toString", DontDelete | DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsLocationPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSLocationPrototype::s_info = { "LocationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSLocationPrototype) };
@@ -172,19 +147,18 @@ void JSLocationPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSLocationPrototypeTableValues, *this);
 }
 
-void JSLocationPrototype::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSLocationPrototype::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSLocationPrototype*>(cell);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
 const ClassInfo JSLocation::s_info = { "Location", &Base::s_info, &JSLocationTable, CREATE_METHOD_TABLE(JSLocation) };
 
-JSLocation::JSLocation(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Location>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSLocation::JSLocation(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Location>&& impl)
+    : JSDOMWrapper<Location>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -204,333 +178,366 @@ void JSLocation::destroy(JSC::JSCell* cell)
     thisObject->JSLocation::~JSLocation();
 }
 
-JSLocation::~JSLocation()
-{
-    releaseImpl();
-}
-
-bool JSLocation::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSLocation::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSLocation*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSLocation, Base>(exec, JSLocationTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSLocation, Base>(state, JSLocationTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSLocation::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSLocation::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSLocation*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsLocationHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.href());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.href());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationProtocol(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationProtocol(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.protocol());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.protocol());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationHost(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationHost(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.host());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.host());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationHostname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationHostname(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hostname());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.hostname());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationPort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationPort(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.port());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.port());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationPathname(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationPathname(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.pathname());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.pathname());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationSearch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationSearch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.search());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.search());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationHash(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationHash(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.hash());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.hash());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationOrigin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    JSLocation* castedThis = jsDynamicCast<JSLocation*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSLocationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Location", "origin");
-        return throwGetterTypeError(*exec, "Location", "origin");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.origin());
+    auto* castedThis = jsCast<JSLocation*>(slotBase);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.origin());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationAncestorOrigins(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationAncestorOrigins(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    JSLocation* castedThis = jsDynamicCast<JSLocation*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSLocationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Location", "ancestorOrigins");
-        return throwGetterTypeError(*exec, "Location", "ancestorOrigins");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.ancestorOrigins()));
+    auto* castedThis = jsCast<JSLocation*>(slotBase);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.ancestorOrigins()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsLocationConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsLocationConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSLocation* domObject = jsDynamicCast<JSLocation*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSLocation::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSLocation::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSLocation::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSLocation::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSLocation*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSLocation::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSLocation::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSLocation*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSLocationHref(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationHref(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setHref(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setHref(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationProtocol(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationProtocol(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setProtocol(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setProtocol(activeDOMWindow(state), firstDOMWindow(state), nativeValue, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSLocationHost(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationHost(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setHost(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setHost(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationHostname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationHostname(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setHostname(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setHostname(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationPort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationPort(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setPort(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setPort(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationPathname(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationPathname(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setPathname(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setPathname(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationSearch(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationSearch(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setSearch(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setSearch(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSLocationHash(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSLocationHash(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSLocation*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setHash(exec, value);
+    UNUSED_PARAM(state);
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setHash(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
 JSValue JSLocation::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSLocationConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSLocationConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionAssign(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionAssign(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSLocation* castedThis = jsDynamicCast<JSLocation*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Location", "assign");
+        return throwThisTypeError(*state, "Location", "assign");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSLocation::info());
-    return JSValue::encode(castedThis->assign(exec));
+    auto& impl = castedThis->wrapped();
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.assign(activeDOMWindow(state), firstDOMWindow(state), url);
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionReplace(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionReplace(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSLocation* castedThis = jsDynamicCast<JSLocation*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Location", "replace");
+        return throwThisTypeError(*state, "Location", "replace");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSLocation::info());
-    return JSValue::encode(castedThis->replace(exec));
+    auto& impl = castedThis->wrapped();
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    impl.replace(activeDOMWindow(state), firstDOMWindow(state), url);
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionReload(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionReload(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSLocation* castedThis = jsDynamicCast<JSLocation*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Location", "reload");
+        return throwThisTypeError(*state, "Location", "reload");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSLocation::info());
-    return JSValue::encode(castedThis->reload(exec));
+    auto& impl = castedThis->wrapped();
+    impl.reload(activeDOMWindow(state));
+    return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsLocationPrototypeFunctionToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSLocation* castedThis = jsDynamicCast<JSLocation*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Location", "toString");
+        return throwThisTypeError(*state, "Location", "toString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSLocation::info());
-    return JSValue::encode(castedThis->toStringFunction(exec));
+    return JSValue::encode(castedThis->toStringFunction(*state));
 }
 
 bool JSLocationOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsLocation = jsCast<JSLocation*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsLocation->impl().frame());
+    Frame* root = WTF::getPtr(jsLocation->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -540,7 +547,7 @@ void JSLocationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsLocation = jsCast<JSLocation*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsLocation->impl(), jsLocation);
+    uncacheWrapper(world, &jsLocation->wrapped(), jsLocation);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -551,6 +558,14 @@ extern "C" { extern void (*const __identifier("??_7Location@WebCore@@6B@")[])();
 extern "C" { extern void* _ZTVN7WebCore8LocationE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Location* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSLocation>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Location* impl)
 {
     if (!impl)
@@ -582,7 +597,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Location* im
 Location* JSLocation::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSLocation*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSIDBKeyRange : public JSDOMWrapper {
+class JSIDBKeyRange : public JSDOMWrapper<IDBKeyRange> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<IDBKeyRange> Base;
     static JSIDBKeyRange* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBKeyRange>&& impl)
     {
-        JSIDBKeyRange* ptr = new (NotNull, JSC::allocateCell<JSIDBKeyRange>(globalObject->vm().heap)) JSIDBKeyRange(structure, globalObject, WTF::move(impl));
+        JSIDBKeyRange* ptr = new (NotNull, JSC::allocateCell<JSIDBKeyRange>(globalObject->vm().heap)) JSIDBKeyRange(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBKeyRange* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBKeyRange();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBKeyRange& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBKeyRange* m_impl;
 protected:
-    JSIDBKeyRange(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBKeyRange>&&);
+    JSIDBKeyRange(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBKeyRange>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBKeyRange*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBKeyRange*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBKeyRange& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBKeyRange& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBKeyRange*);
 
 
 } // namespace WebCore

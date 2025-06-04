@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSNamedNodeMap : public JSDOMWrapper {
+class JSNamedNodeMap : public JSDOMWrapper<NamedNodeMap> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<NamedNodeMap> Base;
     static JSNamedNodeMap* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NamedNodeMap>&& impl)
     {
-        JSNamedNodeMap* ptr = new (NotNull, JSC::allocateCell<JSNamedNodeMap>(globalObject->vm().heap)) JSNamedNodeMap(structure, globalObject, WTF::move(impl));
+        JSNamedNodeMap* ptr = new (NotNull, JSC::allocateCell<JSNamedNodeMap>(globalObject->vm().heap)) JSNamedNodeMap(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSNamedNodeMap();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    NamedNodeMap& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NamedNodeMap* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSNamedNodeMap(JSC::Structure*, JSDOMGlobalObject*, Ref<NamedNodeMap>&&);
+    JSNamedNodeMap(JSC::Structure*, JSDOMGlobalObject&, Ref<NamedNodeMap>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,8 +65,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, NamedNodeMap*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSNamedNodeMapOwner : public JSC::WeakHandleOwner {
@@ -88,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NamedNodeMap*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NamedNodeMap*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NamedNodeMap& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NamedNodeMap& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, NamedNodeMap*);
 
 
 } // namespace WebCore

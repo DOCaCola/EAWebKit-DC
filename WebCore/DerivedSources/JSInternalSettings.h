@@ -31,7 +31,7 @@ public:
     typedef JSInternalSettingsGenerated Base;
     static JSInternalSettings* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<InternalSettings>&& impl)
     {
-        JSInternalSettings* ptr = new (NotNull, JSC::allocateCell<JSInternalSettings>(globalObject->vm().heap)) JSInternalSettings(structure, globalObject, WTF::move(impl));
+        JSInternalSettings* ptr = new (NotNull, JSC::allocateCell<JSInternalSettings>(globalObject->vm().heap)) JSInternalSettings(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -46,12 +46,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    InternalSettings& impl() const
+    InternalSettings& wrapped() const
     {
-        return static_cast<InternalSettings&>(Base::impl());
+        return static_cast<InternalSettings&>(Base::wrapped());
     }
 protected:
-    JSInternalSettings(JSC::Structure*, JSDOMGlobalObject*, Ref<InternalSettings>&&);
+    JSInternalSettings(JSC::Structure*, JSDOMGlobalObject&, Ref<InternalSettings>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -62,7 +62,8 @@ protected:
 };
 
 WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InternalSettings*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, InternalSettings& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, InternalSettings& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, InternalSettings*);
 
 
 } // namespace WebCore

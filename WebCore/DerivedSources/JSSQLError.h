@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSSQLError : public JSDOMWrapper {
+class JSSQLError : public JSDOMWrapper<SQLError> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SQLError> Base;
     static JSSQLError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLError>&& impl)
     {
-        JSSQLError* ptr = new (NotNull, JSC::allocateCell<JSSQLError>(globalObject->vm().heap)) JSSQLError(structure, globalObject, WTF::move(impl));
+        JSSQLError* ptr = new (NotNull, JSC::allocateCell<JSSQLError>(globalObject->vm().heap)) JSSQLError(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static SQLError* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSQLError();
 
     DECLARE_INFO;
 
@@ -51,15 +50,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    SQLError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLError* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSQLError(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLError>&&);
+    JSSQLError(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLError>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLError*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLError& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLError& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SQLError*);
 
 
 } // namespace WebCore

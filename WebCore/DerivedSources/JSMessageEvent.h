@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSMessageEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageEvent>&& impl)
     {
-        JSMessageEvent* ptr = new (NotNull, JSC::allocateCell<JSMessageEvent>(globalObject->vm().heap)) JSMessageEvent(structure, globalObject, WTF::move(impl));
+        JSMessageEvent* ptr = new (NotNull, JSC::allocateCell<JSMessageEvent>(globalObject->vm().heap)) JSMessageEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,24 +50,24 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_data;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_data;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue data(JSC::ExecState*) const;
+    JSC::JSValue data(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue initMessageEvent(JSC::ExecState*);
-    JSC::JSValue webkitInitMessageEvent(JSC::ExecState*);
-    MessageEvent& impl() const
+    JSC::JSValue initMessageEvent(JSC::ExecState&);
+    JSC::JSValue webkitInitMessageEvent(JSC::ExecState&);
+    MessageEvent& wrapped() const
     {
-        return static_cast<MessageEvent&>(Base::impl());
+        return static_cast<MessageEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSMessageEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MessageEvent>&&);
+    JSMessageEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MessageEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

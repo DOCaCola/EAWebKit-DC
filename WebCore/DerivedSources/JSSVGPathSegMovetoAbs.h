@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegMovetoAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegMovetoAbs>&& impl)
     {
-        JSSVGPathSegMovetoAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegMovetoAbs>(globalObject->vm().heap)) JSSVGPathSegMovetoAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegMovetoAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegMovetoAbs>(globalObject->vm().heap)) JSSVGPathSegMovetoAbs(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegMovetoAbs& impl() const
+    SVGPathSegMovetoAbs& wrapped() const
     {
-        return static_cast<SVGPathSegMovetoAbs&>(Base::impl());
+        return static_cast<SVGPathSegMovetoAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegMovetoAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegMovetoAbs>&&);
+    JSSVGPathSegMovetoAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegMovetoAbs>&&);
 
     void finishCreation(JSC::VM& vm)
     {

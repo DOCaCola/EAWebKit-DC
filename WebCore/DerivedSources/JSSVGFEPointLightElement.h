@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEPointLightElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEPointLightElement>&& impl)
     {
-        JSSVGFEPointLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEPointLightElement>(globalObject->vm().heap)) JSSVGFEPointLightElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEPointLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEPointLightElement>(globalObject->vm().heap)) JSSVGFEPointLightElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEPointLightElement& impl() const
+    SVGFEPointLightElement& wrapped() const
     {
-        return static_cast<SVGFEPointLightElement&>(Base::impl());
+        return static_cast<SVGFEPointLightElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEPointLightElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEPointLightElement>&&);
+    JSSVGFEPointLightElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEPointLightElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

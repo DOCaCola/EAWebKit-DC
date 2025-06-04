@@ -23,7 +23,6 @@
 
 #include "JSDOMBinding.h"
 #include "JSScriptProfileNode.h"
-#include "ScriptProfile.h"
 #include "ScriptProfileNode.h"
 #include "URL.h"
 #include <runtime/JSString.h>
@@ -68,9 +67,9 @@ private:
 
 static const HashTableValue JSScriptProfilePrototypeTableValues[] =
 {
-    { "title", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "uid", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileUid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rootNode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileRootNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "title", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "uid", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileUid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rootNode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileRootNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSScriptProfilePrototype::s_info = { "ScriptProfilePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProfilePrototype) };
@@ -83,9 +82,8 @@ void JSScriptProfilePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSScriptProfile::s_info = { "ScriptProfile", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProfile) };
 
-JSScriptProfile::JSScriptProfile(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ScriptProfile>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSScriptProfile::JSScriptProfile(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ScriptProfile>&& impl)
+    : JSDOMWrapper<ScriptProfile>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -105,58 +103,53 @@ void JSScriptProfile::destroy(JSC::JSCell* cell)
     thisObject->JSScriptProfile::~JSScriptProfile();
 }
 
-JSScriptProfile::~JSScriptProfile()
+EncodedJSValue jsScriptProfileTitle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsScriptProfileTitle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfile* castedThis = jsDynamicCast<JSScriptProfile*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfile", "title");
-        return throwGetterTypeError(*exec, "ScriptProfile", "title");
+            return reportDeprecatedGetterError(*state, "ScriptProfile", "title");
+        return throwGetterTypeError(*state, "ScriptProfile", "title");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.title());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.title());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileUid(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileUid(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfile* castedThis = jsDynamicCast<JSScriptProfile*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfile", "uid");
-        return throwGetterTypeError(*exec, "ScriptProfile", "uid");
+            return reportDeprecatedGetterError(*state, "ScriptProfile", "uid");
+        return throwGetterTypeError(*state, "ScriptProfile", "uid");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.uid());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileRootNode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileRootNode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfile* castedThis = jsDynamicCast<JSScriptProfile*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfilePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfile", "rootNode");
-        return throwGetterTypeError(*exec, "ScriptProfile", "rootNode");
+            return reportDeprecatedGetterError(*state, "ScriptProfile", "rootNode");
+        return throwGetterTypeError(*state, "ScriptProfile", "rootNode");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.rootNode()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.rootNode()));
     return JSValue::encode(result);
 }
 
@@ -172,7 +165,14 @@ void JSScriptProfileOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsScriptProfile = jsCast<JSScriptProfile*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsScriptProfile->impl(), jsScriptProfile);
+    uncacheWrapper(world, &jsScriptProfile->wrapped(), jsScriptProfile);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfile* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSScriptProfile>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfile* impl)
@@ -187,7 +187,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfil
 ScriptProfile* JSScriptProfile::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSScriptProfile*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -121,8 +121,6 @@ RenderView::RenderView(Document& document, Ref<RenderStyle>&& style)
     , m_selectionUnsplitEnd(nullptr)
     , m_selectionUnsplitStartPos(-1)
     , m_selectionUnsplitEndPos(-1)
-    , m_rendererCount(0)
-    , m_maximalOutlineSize(0)
     , m_lazyRepaintTimer(*this, &RenderView::lazyRepaintTimerFired)
     , m_pageLogicalHeight(0)
     , m_pageLogicalHeightChanged(false)
@@ -206,8 +204,8 @@ bool RenderView::hitTest(const HitTestRequest& request, const HitTestLocation& l
     if (request.allowsFrameScrollbars()) {
         // ScrollView scrollbars are not the same as RenderLayer scrollbars tested by RenderLayer::hitTestOverflowControls,
         // so we need to test ScrollView scrollbars separately here.
-        Scrollbar* frameScrollbar = frameView().scrollbarAtPoint(location.roundedPoint());
-        if (frameScrollbar) {
+        IntPoint windowPoint = frameView().contentsToWindow(location.roundedPoint());
+        if (Scrollbar* frameScrollbar = frameView().scrollbarAtPoint(windowPoint)) {
             result.setScrollbar(frameScrollbar);
             return true;
         }
@@ -429,13 +427,6 @@ LayoutUnit RenderView::clientLogicalHeightForFixedPosition() const
     return clientLogicalHeight();
 }
 
-#if PLATFORM(IOS)
-static inline LayoutSize fixedPositionOffset(const FrameView& frameView)
-{
-    return frameView.useCustomFixedPositionLayoutRect() ? (frameView.customFixedPositionLayoutRect().location() - LayoutPoint()) : frameView.scrollOffset();
-}
-#endif
-
 void RenderView::mapLocalToContainer(const RenderLayerModelObject* repaintContainer, TransformState& transformState, MapCoordinatesFlags mode, bool* wasFixed) const
 {
     // If a container was specified, and was not nullptr or the RenderView,
@@ -450,11 +441,7 @@ void RenderView::mapLocalToContainer(const RenderLayerModelObject* repaintContai
     }
     
     if (mode & IsFixed)
-#if PLATFORM(IOS)
-        transformState.move(fixedPositionOffset(m_frameView));
-#else
-        transformState.move(frameView().scrollOffsetForFixedPosition());
-#endif
+        transformState.move(toLayoutSize(frameView().scrollPositionRespectingCustomFixedPosition()));
 }
 
 const RenderObject* RenderView::pushMappingToContainer(const RenderLayerModelObject* ancestorToStopAt, RenderGeometryMap& geometryMap) const
@@ -463,18 +450,14 @@ const RenderObject* RenderView::pushMappingToContainer(const RenderLayerModelObj
     // then we should have found it by now.
     ASSERT_ARG(ancestorToStopAt, !ancestorToStopAt || ancestorToStopAt == this);
 
-#if PLATFORM(IOS)
-    LayoutSize scrollOffset = fixedPositionOffset(frameView());
-#else
-    LayoutSize scrollOffset = frameView().scrollOffsetForFixedPosition();
-#endif
+    LayoutPoint scrollPosition = frameView().scrollPositionRespectingCustomFixedPosition();
 
     if (!ancestorToStopAt && shouldUseTransformFromContainer(nullptr)) {
         TransformationMatrix t;
         getTransformFromContainer(nullptr, LayoutSize(), t);
-        geometryMap.pushView(this, scrollOffset, &t);
+        geometryMap.pushView(this, toLayoutSize(scrollPosition), &t);
     } else
-        geometryMap.pushView(this, scrollOffset);
+        geometryMap.pushView(this, toLayoutSize(scrollPosition));
 
     return nullptr;
 }
@@ -482,11 +465,7 @@ const RenderObject* RenderView::pushMappingToContainer(const RenderLayerModelObj
 void RenderView::mapAbsoluteToLocalPoint(MapCoordinatesFlags mode, TransformState& transformState) const
 {
     if (mode & IsFixed)
-#if PLATFORM(IOS)
-        transformState.move(fixedPositionOffset(frameView()));
-#else
-        transformState.move(frameView().scrollOffsetForFixedPosition());
-#endif
+        transformState.move(toLayoutSize(frameView().scrollPositionRespectingCustomFixedPosition()));
 
     if (mode & UseTransforms && shouldUseTransformFromContainer(nullptr)) {
         TransformationMatrix t;
@@ -519,14 +498,9 @@ void RenderView::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 
     // This avoids painting garbage between columns if there is a column gap.
     if (frameView().pagination().mode != Pagination::Unpaginated && paintInfo.shouldPaintWithinRoot(*this))
-        paintInfo.context->fillRect(paintInfo.rect, frameView().baseBackgroundColor(), ColorSpaceDeviceRGB);
+        paintInfo.context().fillRect(paintInfo.rect, frameView().baseBackgroundColor());
 
     paintObject(paintInfo, paintOffset);
-}
-
-static inline bool isComposited(RenderElement* object)
-{
-    return object->hasLayer() && downcast<RenderLayerModelObject>(*object).layer()->isComposited();
 }
 
 static inline bool rendererObscuresBackground(RenderElement* rootObject)
@@ -540,7 +514,7 @@ static inline bool rendererObscuresBackground(RenderElement* rootObject)
         || style.hasTransform())
         return false;
     
-    if (isComposited(rootObject))
+    if (rootObject->isComposited())
         return false;
 
     if (rootObject->rendererForRootBackground().style().backgroundClip() == TextFillBox)
@@ -615,12 +589,12 @@ void RenderView::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint&)
         Color documentBackgroundColor = frameView().documentBackgroundColor();
         Color backgroundColor = (backgroundShouldExtendBeyondPage && documentBackgroundColor.isValid()) ? documentBackgroundColor : frameView().baseBackgroundColor();
         if (backgroundColor.alpha()) {
-            CompositeOperator previousOperator = paintInfo.context->compositeOperation();
-            paintInfo.context->setCompositeOperation(CompositeCopy);
-            paintInfo.context->fillRect(paintInfo.rect, backgroundColor, style().colorSpace());
-            paintInfo.context->setCompositeOperation(previousOperator);
+            CompositeOperator previousOperator = paintInfo.context().compositeOperation();
+            paintInfo.context().setCompositeOperation(CompositeCopy);
+            paintInfo.context().fillRect(paintInfo.rect, backgroundColor);
+            paintInfo.context().setCompositeOperation(previousOperator);
         } else
-            paintInfo.context->clearRect(paintInfo.rect);
+            paintInfo.context().clearRect(paintInfo.rect);
     }
 }
 
@@ -703,35 +677,32 @@ LayoutRect RenderView::visualOverflowRect() const
     return RenderBlockFlow::visualOverflowRect();
 }
 
-void RenderView::computeRectForRepaint(const RenderLayerModelObject* repaintContainer, LayoutRect& rect, bool fixed) const
+LayoutRect RenderView::computeRectForRepaint(const LayoutRect& rect, const RenderLayerModelObject* repaintContainer, bool fixed) const
 {
     // If a container was specified, and was not nullptr or the RenderView,
     // then we should have found it by now.
     ASSERT_ARG(repaintContainer, !repaintContainer || repaintContainer == this);
 
     if (printing())
-        return;
-
+        return rect;
+    
+    LayoutRect adjustedRect = rect;
     if (style().isFlippedBlocksWritingMode()) {
         // We have to flip by hand since the view's logical height has not been determined.  We
         // can use the viewport width and height.
         if (style().isHorizontalWritingMode())
-            rect.setY(viewHeight() - rect.maxY());
+            adjustedRect.setY(viewHeight() - adjustedRect.maxY());
         else
-            rect.setX(viewWidth() - rect.maxX());
+            adjustedRect.setX(viewWidth() - adjustedRect.maxX());
     }
 
-    if (fixed) {
-#if PLATFORM(IOS)
-        rect.move(fixedPositionOffset(frameView()));
-#else
-        rect.move(frameView().scrollOffsetForFixedPosition());
-#endif
-    }
-        
+    if (fixed)
+        adjustedRect.moveBy(frameView().scrollPositionRespectingCustomFixedPosition());
+    
     // Apply our transform if we have one (because of full page zooming).
     if (!repaintContainer && layer() && layer()->transform())
-        rect = LayoutRect(layer()->transform()->mapRect(snapRectToDevicePixels(rect, document().deviceScaleFactor())));
+        adjustedRect = LayoutRect(layer()->transform()->mapRect(snapRectToDevicePixels(adjustedRect, document().deviceScaleFactor())));
+    return adjustedRect;
 }
 
 bool RenderView::isScrollableOrRubberbandableBox() const
@@ -854,14 +825,15 @@ void RenderView::repaintSubtreeSelection(const SelectionSubtreeRoot& root) const
 // Compositing layer dimensions take outline size into account, so we have to recompute layer
 // bounds when it changes.
 // FIXME: This is ugly; it would be nice to have a better way to do this.
-void RenderView::setMaximalOutlineSize(int o)
+void RenderView::setMaximalOutlineSize(float outlineSize)
 {
-    if (o != m_maximalOutlineSize) {
-        m_maximalOutlineSize = o;
-
-        // maximalOutlineSize affects compositing layer dimensions.
-        compositor().setCompositingLayersNeedRebuild();    // FIXME: this really just needs to be a geometry update.
-    }
+    if (outlineSize == m_maximalOutlineSize)
+        return;
+    
+    m_maximalOutlineSize = outlineSize;
+    // maximalOutlineSize affects compositing layer dimensions.
+    // FIXME: this really just needs to be a geometry update.
+    compositor().setCompositingLayersNeedRebuild();
 }
 
 void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* end, int endPos, SelectionRepaintMode blockRepaintMode)
@@ -1364,6 +1336,26 @@ ImageQualityController& RenderView::imageQualityController()
     if (!m_imageQualityController)
         m_imageQualityController = std::make_unique<ImageQualityController>(*this);
     return *m_imageQualityController;
+}
+
+void RenderView::registerForVisibleInViewportCallback(RenderElement& renderer)
+{
+    ASSERT(!m_visibleInViewportRenderers.contains(&renderer));
+    m_visibleInViewportRenderers.add(&renderer);
+}
+
+void RenderView::unregisterForVisibleInViewportCallback(RenderElement& renderer)
+{
+    ASSERT(m_visibleInViewportRenderers.contains(&renderer));
+    m_visibleInViewportRenderers.remove(&renderer);
+}
+
+void RenderView::updateVisibleViewportRect(const IntRect& visibleRect)
+{
+    resumePausedImageAnimationsIfNeeded(visibleRect);
+
+    for (auto* renderer : m_visibleInViewportRenderers)
+        renderer->visibleInViewportStateChanged(visibleRect.intersects(enclosingIntRect(renderer->absoluteClippedOverflowRect())) ? RenderElement::VisibleInViewport : RenderElement::NotVisibleInViewport);
 }
 
 void RenderView::addRendererWithPausedImageAnimations(RenderElement& renderer)

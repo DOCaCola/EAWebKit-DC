@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLParagraphElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLParagraphElement>&& impl)
     {
-        JSHTMLParagraphElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElement>(globalObject->vm().heap)) JSHTMLParagraphElement(structure, globalObject, WTF::move(impl));
+        JSHTMLParagraphElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLParagraphElement>(globalObject->vm().heap)) JSHTMLParagraphElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLParagraphElement& impl() const
+    HTMLParagraphElement& wrapped() const
     {
-        return static_cast<HTMLParagraphElement&>(Base::impl());
+        return static_cast<HTMLParagraphElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLParagraphElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLParagraphElement>&&);
+    JSHTMLParagraphElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLParagraphElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -67,6 +67,7 @@
 #include "ShadowRoot.h"
 #include "SimpleLineLayoutResolver.h"
 #include "StyleProperties.h"
+#include "TextStream.h"
 #include <wtf/HexNumber.h>
 #include <wtf/Vector.h>
 #include <wtf/unicode/CharacterNames.h>
@@ -393,8 +394,13 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
         }
     }
     
+    writeDebugInfo(ts, o, behavior);
+}
+
+void writeDebugInfo(TextStream& ts, const RenderObject& object, RenderAsTextBehavior behavior)
+{
     if (behavior & RenderAsTextShowIDAndClass) {
-        if (Element* element = is<Element>(o.node()) ? downcast<Element>(o.node()) : nullptr) {
+        if (Element* element = is<Element>(object.node()) ? downcast<Element>(object.node()) : nullptr) {
             if (element->hasID())
                 ts << " id=\"" + element->getIdAttribute() + "\"";
 
@@ -409,33 +415,33 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
             }
         }
     }
-    
+
     if (behavior & RenderAsTextShowLayoutState) {
-        bool needsLayout = o.selfNeedsLayout() || o.needsPositionedMovementLayout() || o.posChildNeedsLayout() || o.normalChildNeedsLayout();
+        bool needsLayout = object.selfNeedsLayout() || object.needsPositionedMovementLayout() || object.posChildNeedsLayout() || object.normalChildNeedsLayout();
         if (needsLayout)
             ts << " (needs layout:";
         
         bool havePrevious = false;
-        if (o.selfNeedsLayout()) {
+        if (object.selfNeedsLayout()) {
             ts << " self";
             havePrevious = true;
         }
 
-        if (o.needsPositionedMovementLayout()) {
+        if (object.needsPositionedMovementLayout()) {
             if (havePrevious)
                 ts << ",";
             havePrevious = true;
             ts << " positioned movement";
         }
 
-        if (o.normalChildNeedsLayout()) {
+        if (object.normalChildNeedsLayout()) {
             if (havePrevious)
                 ts << ",";
             havePrevious = true;
             ts << " child";
         }
 
-        if (o.posChildNeedsLayout()) {
+        if (object.posChildNeedsLayout()) {
             if (havePrevious)
                 ts << ",";
             ts << " positioned child";
@@ -444,9 +450,9 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
         if (needsLayout)
             ts << ")";
     }
-    
-    if (behavior & RenderAsTextShowOverflow && is<RenderBox>(o)) {
-        const auto& box = downcast<RenderBox>(o);
+
+    if (behavior & RenderAsTextShowOverflow && is<RenderBox>(object)) {
+        const auto& box = downcast<RenderBox>(object);
         if (box.hasRenderOverflow()) {
             LayoutRect layoutOverflow = box.layoutOverflowRect();
             ts << " (layout overflow " << layoutOverflow.x().toInt() << "," << layoutOverflow.y().toInt() << " " << layoutOverflow.width().toInt() << "x" << layoutOverflow.height().toInt() << ")";
@@ -469,7 +475,7 @@ static void writeTextRun(TextStream& ts, const RenderText& o, const InlineTextBo
 
     // FIXME: Table cell adjustment is temporary until results can be updated.
     if (is<RenderTableCell>(*o.containingBlock()))
-        y -= downcast<RenderTableCell>(*o.containingBlock()).intrinsicPaddingBefore();
+        y -= floorToInt(downcast<RenderTableCell>(*o.containingBlock()).intrinsicPaddingBefore());
         
     ts << "text run at (" << x << "," << y << ") width " << logicalWidth;
     if (!run.isLeftToRightDirection() || run.dirOverride()) {
@@ -484,14 +490,14 @@ static void writeTextRun(TextStream& ts, const RenderText& o, const InlineTextBo
     ts << "\n";
 }
 
-static void writeSimpleLine(TextStream& ts, const RenderText& o, const LayoutRect& rect, StringView text)
+static void writeSimpleLine(TextStream& ts, const RenderText& o, const FloatRect& rect, StringView text)
 {
     int x = rect.x();
     int y = rect.y();
     int logicalWidth = ceilf(rect.x() + rect.width()) - x;
 
     if (is<RenderTableCell>(*o.containingBlock()))
-        y -= downcast<RenderTableCell>(*o.containingBlock()).intrinsicPaddingBefore();
+        y -= floorToInt(downcast<RenderTableCell>(*o.containingBlock()).intrinsicPaddingBefore());
         
     ts << "text run at (" << x << "," << y << ") width " << logicalWidth;
     ts << ": "
@@ -502,35 +508,35 @@ static void writeSimpleLine(TextStream& ts, const RenderText& o, const LayoutRec
 void write(TextStream& ts, const RenderObject& o, int indent, RenderAsTextBehavior behavior)
 {
     if (is<RenderSVGShape>(o)) {
-        write(ts, downcast<RenderSVGShape>(o), indent);
+        write(ts, downcast<RenderSVGShape>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGGradientStop>(o)) {
-        writeSVGGradientStop(ts, downcast<RenderSVGGradientStop>(o), indent);
+        writeSVGGradientStop(ts, downcast<RenderSVGGradientStop>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGResourceContainer>(o)) {
-        writeSVGResourceContainer(ts, downcast<RenderSVGResourceContainer>(o), indent);
+        writeSVGResourceContainer(ts, downcast<RenderSVGResourceContainer>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGContainer>(o)) {
-        writeSVGContainer(ts, downcast<RenderSVGContainer>(o), indent);
+        writeSVGContainer(ts, downcast<RenderSVGContainer>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGRoot>(o)) {
-        write(ts, downcast<RenderSVGRoot>(o), indent);
+        write(ts, downcast<RenderSVGRoot>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGText>(o)) {
-        writeSVGText(ts, downcast<RenderSVGText>(o), indent);
+        writeSVGText(ts, downcast<RenderSVGText>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGInlineText>(o)) {
-        writeSVGInlineText(ts, downcast<RenderSVGInlineText>(o), indent);
+        writeSVGInlineText(ts, downcast<RenderSVGInlineText>(o), indent, behavior);
         return;
     }
     if (is<RenderSVGImage>(o)) {
-        writeSVGImage(ts, downcast<RenderSVGImage>(o), indent);
+        writeSVGImage(ts, downcast<RenderSVGImage>(o), indent, behavior);
         return;
     }
 
@@ -549,7 +555,7 @@ void write(TextStream& ts, const RenderObject& o, int indent, RenderAsTextBehavi
                 writeSimpleLine(ts, text, run.rect(), run.text());
             }
         } else {
-            for (auto box = text.firstTextBox(); box; box = box->nextTextBox()) {
+            for (auto* box = text.firstTextBox(); box; box = box->nextTextBox()) {
                 writeIndent(ts, indent + 1);
                 writeTextRun(ts, text, *box);
             }
@@ -611,10 +617,10 @@ static void write(TextStream& ts, RenderLayer& l,
     }
 
     if (l.renderer().hasOverflowClip()) {
-        if (l.scrollXOffset())
-            ts << " scrollX " << l.scrollXOffset();
-        if (l.scrollYOffset())
-            ts << " scrollY " << l.scrollYOffset();
+        if (l.scrollOffset().x())
+            ts << " scrollX " << l.scrollOffset().x();
+        if (l.scrollOffset().y())
+            ts << " scrollY " << l.scrollOffset().y();
         if (l.renderBox() && roundToInt(l.renderBox()->clientWidth()) != l.scrollWidth())
             ts << " scrollWidth " << l.scrollWidth();
         if (l.renderBox() && roundToInt(l.renderBox()->clientHeight()) != l.scrollHeight())

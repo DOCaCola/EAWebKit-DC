@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSPerformanceNavigation : public JSDOMWrapper {
+class JSPerformanceNavigation : public JSDOMWrapper<PerformanceNavigation> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<PerformanceNavigation> Base;
     static JSPerformanceNavigation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PerformanceNavigation>&& impl)
     {
-        JSPerformanceNavigation* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigation>(globalObject->vm().heap)) JSPerformanceNavigation(structure, globalObject, WTF::move(impl));
+        JSPerformanceNavigation* ptr = new (NotNull, JSC::allocateCell<JSPerformanceNavigation>(globalObject->vm().heap)) JSPerformanceNavigation(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static PerformanceNavigation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPerformanceNavigation();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PerformanceNavigation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PerformanceNavigation* m_impl;
 protected:
-    JSPerformanceNavigation(JSC::Structure*, JSDOMGlobalObject*, Ref<PerformanceNavigation>&&);
+    JSPerformanceNavigation(JSC::Structure*, JSDOMGlobalObject&, Ref<PerformanceNavigation>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PerformanceNavigatio
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PerformanceNavigation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PerformanceNavigation& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PerformanceNavigation& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, PerformanceNavigation*);
 
 
 } // namespace WebCore

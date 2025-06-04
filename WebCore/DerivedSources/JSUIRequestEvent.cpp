@@ -26,9 +26,9 @@
 
 #include "EventTarget.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "JSEventTarget.h"
-#include "UIRequestEvent.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -66,51 +66,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSUIRequestEventConstructor : public DOMConstructorObject {
-private:
-    JSUIRequestEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSUIRequestEvent> JSUIRequestEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSUIRequestEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSUIRequestEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSUIRequestEventConstructor>(vm.heap)) JSUIRequestEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSUIRequestEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSUIRequestEventConstructor::constructJSUIRequestEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSUIRequestEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSUIRequestEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSUIRequestEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     UIRequestEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillUIRequestEventInit(eventInit, dictionary))
@@ -118,7 +98,7 @@ EncodedJSValue JSC_HOST_CALL JSUIRequestEventConstructor::constructJSUIRequestEv
     }
 
     RefPtr<UIRequestEvent> event = UIRequestEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillUIRequestEventInit(UIRequestEventInit& eventInit, JSDictionary& dictionary)
@@ -129,34 +109,21 @@ bool fillUIRequestEventInit(UIRequestEventInit& eventInit, JSDictionary& diction
     return true;
 }
 
-const ClassInfo JSUIRequestEventConstructor::s_info = { "UIRequestEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIRequestEventConstructor) };
-
-JSUIRequestEventConstructor::JSUIRequestEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSUIRequestEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSUIRequestEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSUIRequestEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSUIRequestEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("UIRequestEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSUIRequestEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSUIRequestEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSUIRequestEventConstructor::s_info = { "UIRequestEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIRequestEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSUIRequestEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIRequestEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "receiver", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIRequestEventReceiver), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIRequestEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "receiver", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUIRequestEventReceiver), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSUIRequestEventPrototype::s_info = { "UIRequestEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIRequestEventPrototype) };
@@ -169,7 +136,7 @@ void JSUIRequestEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSUIRequestEvent::s_info = { "UIRequestEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUIRequestEvent) };
 
-JSUIRequestEvent::JSUIRequestEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<UIRequestEvent>&& impl)
+JSUIRequestEvent::JSUIRequestEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<UIRequestEvent>&& impl)
     : JSUIEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -184,34 +151,34 @@ JSObject* JSUIRequestEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSUIRequestEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsUIRequestEventReceiver(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUIRequestEventReceiver(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSUIRequestEvent* castedThis = jsDynamicCast<JSUIRequestEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSUIRequestEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "UIRequestEvent", "receiver");
-        return throwGetterTypeError(*exec, "UIRequestEvent", "receiver");
+            return reportDeprecatedGetterError(*state, "UIRequestEvent", "receiver");
+        return throwGetterTypeError(*state, "UIRequestEvent", "receiver");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.receiver()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.receiver()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsUIRequestEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsUIRequestEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSUIRequestEventPrototype* domObject = jsDynamicCast<JSUIRequestEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSUIRequestEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSUIRequestEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSUIRequestEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSUIRequestEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSUIRequestEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

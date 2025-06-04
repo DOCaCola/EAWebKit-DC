@@ -25,7 +25,7 @@
 #include "JSSVGFontFaceNameElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGFontFaceNameElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFontFaceNameElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFontFaceNameElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFontFaceNameElement> JSSVGFontFaceNameElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFontFaceNameElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFontFaceNameElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceNameElementConstructor>(vm.heap)) JSSVGFontFaceNameElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFontFaceNameElementConstructor::s_info = { "SVGFontFaceNameElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceNameElementConstructor) };
-
-JSSVGFontFaceNameElementConstructor::JSSVGFontFaceNameElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFontFaceNameElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFontFaceNameElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFontFaceNameElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFontFaceNameElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFontFaceNameElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFontFaceNameElementConstructor::s_info = { "SVGFontFaceNameElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceNameElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFontFaceNameElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontFaceNameElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFontFaceNameElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFontFaceNameElementPrototype::s_info = { "SVGFontFaceNameElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceNameElementPrototype) };
@@ -115,7 +89,7 @@ void JSSVGFontFaceNameElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFontFaceNameElement::s_info = { "SVGFontFaceNameElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFontFaceNameElement) };
 
-JSSVGFontFaceNameElement::JSSVGFontFaceNameElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFontFaceNameElement>&& impl)
+JSSVGFontFaceNameElement::JSSVGFontFaceNameElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFontFaceNameElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,17 +104,17 @@ JSObject* JSSVGFontFaceNameElement::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSSVGFontFaceNameElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFontFaceNameElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFontFaceNameElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFontFaceNameElementPrototype* domObject = jsDynamicCast<JSSVGFontFaceNameElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFontFaceNameElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFontFaceNameElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFontFaceNameElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFontFaceNameElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFontFaceNameElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

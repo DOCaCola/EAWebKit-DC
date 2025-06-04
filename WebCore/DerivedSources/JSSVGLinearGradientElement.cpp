@@ -22,8 +22,8 @@
 #include "JSSVGLinearGradientElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedLength.h"
-#include "SVGLinearGradientElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -63,52 +63,26 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGLinearGradientElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGLinearGradientElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGLinearGradientElement> JSSVGLinearGradientElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGLinearGradientElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGLinearGradientElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGLinearGradientElementConstructor>(vm.heap)) JSSVGLinearGradientElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGLinearGradientElementConstructor::s_info = { "SVGLinearGradientElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLinearGradientElementConstructor) };
-
-JSSVGLinearGradientElementConstructor::JSSVGLinearGradientElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGLinearGradientElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGLinearGradientElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGLinearGradientElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGLinearGradientElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGLinearGradientElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGLinearGradientElementConstructor::s_info = { "SVGLinearGradientElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLinearGradientElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGLinearGradientElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementX1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementY1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementX2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementY2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementX1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementY1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementX2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLinearGradientElementY2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGLinearGradientElementPrototype::s_info = { "SVGLinearGradientElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLinearGradientElementPrototype) };
@@ -121,7 +95,7 @@ void JSSVGLinearGradientElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGLinearGradientElement::s_info = { "SVGLinearGradientElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLinearGradientElement) };
 
-JSSVGLinearGradientElement::JSSVGLinearGradientElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLinearGradientElement>&& impl)
+JSSVGLinearGradientElement::JSSVGLinearGradientElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGLinearGradientElement>&& impl)
     : JSSVGGradientElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,89 +110,89 @@ JSObject* JSSVGLinearGradientElement::getPrototype(VM& vm, JSGlobalObject* globa
     return getDOMPrototype<JSSVGLinearGradientElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGLinearGradientElementX1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLinearGradientElementX1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLinearGradientElement* castedThis = jsDynamicCast<JSSVGLinearGradientElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLinearGradientElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLinearGradientElement", "x1");
-        return throwGetterTypeError(*exec, "SVGLinearGradientElement", "x1");
+            return reportDeprecatedGetterError(*state, "SVGLinearGradientElement", "x1");
+        return throwGetterTypeError(*state, "SVGLinearGradientElement", "x1");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.x1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLinearGradientElementY1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLinearGradientElementY1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLinearGradientElement* castedThis = jsDynamicCast<JSSVGLinearGradientElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLinearGradientElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLinearGradientElement", "y1");
-        return throwGetterTypeError(*exec, "SVGLinearGradientElement", "y1");
+            return reportDeprecatedGetterError(*state, "SVGLinearGradientElement", "y1");
+        return throwGetterTypeError(*state, "SVGLinearGradientElement", "y1");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.y1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLinearGradientElementX2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLinearGradientElementX2(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLinearGradientElement* castedThis = jsDynamicCast<JSSVGLinearGradientElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLinearGradientElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLinearGradientElement", "x2");
-        return throwGetterTypeError(*exec, "SVGLinearGradientElement", "x2");
+            return reportDeprecatedGetterError(*state, "SVGLinearGradientElement", "x2");
+        return throwGetterTypeError(*state, "SVGLinearGradientElement", "x2");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.x2Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLinearGradientElementY2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLinearGradientElementY2(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLinearGradientElement* castedThis = jsDynamicCast<JSSVGLinearGradientElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLinearGradientElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLinearGradientElement", "y2");
-        return throwGetterTypeError(*exec, "SVGLinearGradientElement", "y2");
+            return reportDeprecatedGetterError(*state, "SVGLinearGradientElement", "y2");
+        return throwGetterTypeError(*state, "SVGLinearGradientElement", "y2");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.y2Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLinearGradientElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGLinearGradientElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGLinearGradientElementPrototype* domObject = jsDynamicCast<JSSVGLinearGradientElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGLinearGradientElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGLinearGradientElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGLinearGradientElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGLinearGradientElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGLinearGradientElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -22,7 +22,7 @@
 #include "JSSVGAnimateColorElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGAnimateColorElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAnimateColorElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGAnimateColorElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGAnimateColorElement> JSSVGAnimateColorElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAnimateColorElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAnimateColorElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateColorElementConstructor>(vm.heap)) JSSVGAnimateColorElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAnimateColorElementConstructor::s_info = { "SVGAnimateColorElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateColorElementConstructor) };
-
-JSSVGAnimateColorElementConstructor::JSSVGAnimateColorElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGAnimateColorElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGAnimateColorElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateColorElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimateColorElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAnimateColorElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAnimateColorElementConstructor::s_info = { "SVGAnimateColorElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateColorElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnimateColorElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateColorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimateColorElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGAnimateColorElementPrototype::s_info = { "SVGAnimateColorElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateColorElementPrototype) };
@@ -112,7 +86,7 @@ void JSSVGAnimateColorElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAnimateColorElement::s_info = { "SVGAnimateColorElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimateColorElement) };
 
-JSSVGAnimateColorElement::JSSVGAnimateColorElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateColorElement>&& impl)
+JSSVGAnimateColorElement::JSSVGAnimateColorElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAnimateColorElement>&& impl)
     : JSSVGAnimationElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,17 @@ JSObject* JSSVGAnimateColorElement::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSSVGAnimateColorElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGAnimateColorElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAnimateColorElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGAnimateColorElementPrototype* domObject = jsDynamicCast<JSSVGAnimateColorElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAnimateColorElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGAnimateColorElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGAnimateColorElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGAnimateColorElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGAnimateColorElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -32,7 +32,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLAppletElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAppletElement>&& impl)
     {
-        JSHTMLAppletElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAppletElement>(globalObject->vm().heap)) JSHTMLAppletElement(structure, globalObject, WTF::move(impl));
+        JSHTMLAppletElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLAppletElement>(globalObject->vm().heap)) JSHTMLAppletElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -56,14 +56,14 @@ public:
     static JSC::CallType getCallData(JSC::JSCell*, JSC::CallData&);
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLAppletElement& impl() const
+    HTMLAppletElement& wrapped() const
     {
-        return static_cast<HTMLAppletElement&>(Base::impl());
+        return static_cast<HTMLAppletElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::TypeOfShouldCallGetCallData | Base::StructureFlags;
 protected:
-    JSHTMLAppletElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLAppletElement>&&);
+    JSHTMLAppletElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLAppletElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

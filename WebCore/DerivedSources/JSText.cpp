@@ -24,6 +24,7 @@
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSText.h"
 #include "Text.h"
 #include "URL.h"
@@ -70,74 +71,39 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTextConstructor : public DOMConstructorObject {
-private:
-    JSTextConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSText> JSTextConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTextConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTextConstructor* ptr = new (NotNull, JSC::allocateCell<JSTextConstructor>(vm.heap)) JSTextConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSText(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSTextConstructor::constructJSText(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSTextConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSTextConstructor*>(exec->callee());
-    String data = exec->argumentCount() <= 0 ? String() : exec->uncheckedArgument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* castedThis = jsCast<JSTextConstructor*>(state->callee());
+    String data = state->argument(0).isUndefined() ? String() : state->uncheckedArgument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "Text");
+        return throwConstructorDocumentUnavailableError(*state, "Text");
     auto& document = downcast<Document>(*context);
     RefPtr<Text> object = Text::create(document, data);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSTextConstructor::s_info = { "TextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextConstructor) };
-
-JSTextConstructor::JSTextConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSTextConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTextConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSText::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSText::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Text"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSTextConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSText;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSTextConstructor::s_info = { "TextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTextPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "wholeText", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextWholeText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "splitText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextPrototypeFunctionSplitText), (intptr_t) (1) },
-    { "replaceWholeText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTextPrototypeFunctionReplaceWholeText), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "wholeText", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTextWholeText), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "splitText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextPrototypeFunctionSplitText), (intptr_t) (1) } },
+    { "replaceWholeText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTextPrototypeFunctionReplaceWholeText), (intptr_t) (0) } },
 };
 
 const ClassInfo JSTextPrototype::s_info = { "TextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTextPrototype) };
@@ -150,7 +116,7 @@ void JSTextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSText::s_info = { "Text", &Base::s_info, 0, CREATE_METHOD_TABLE(JSText) };
 
-JSText::JSText(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Text>&& impl)
+JSText::JSText(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Text>&& impl)
     : JSCharacterData(structure, globalObject, WTF::move(impl))
 {
 }
@@ -165,71 +131,71 @@ JSObject* JSText::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSText>(vm, globalObject);
 }
 
-EncodedJSValue jsTextWholeText(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTextWholeText(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSText* castedThis = jsDynamicCast<JSText*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTextPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Text", "wholeText");
-        return throwGetterTypeError(*exec, "Text", "wholeText");
+            return reportDeprecatedGetterError(*state, "Text", "wholeText");
+        return throwGetterTypeError(*state, "Text", "wholeText");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.wholeText());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.wholeText());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTextConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTextConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTextPrototype* domObject = jsDynamicCast<JSTextPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSText::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSText::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSText::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTextConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTextConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextPrototypeFunctionSplitText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTextPrototypeFunctionSplitText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSText* castedThis = jsDynamicCast<JSText*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Text", "splitText");
+        return throwThisTypeError(*state, "Text", "splitText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSText::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned offset = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned offset = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.splitText(offset, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.splitText(offset, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTextPrototypeFunctionReplaceWholeText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTextPrototypeFunctionReplaceWholeText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSText* castedThis = jsDynamicCast<JSText*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Text", "replaceWholeText");
+        return throwThisTypeError(*state, "Text", "replaceWholeText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSText::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String content = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String content = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.replaceWholeText(content, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.replaceWholeText(content, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 

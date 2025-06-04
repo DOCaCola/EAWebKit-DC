@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSGeoposition : public JSDOMWrapper {
+class JSGeoposition : public JSDOMWrapper<Geoposition> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Geoposition> Base;
     static JSGeoposition* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Geoposition>&& impl)
     {
-        JSGeoposition* ptr = new (NotNull, JSC::allocateCell<JSGeoposition>(globalObject->vm().heap)) JSGeoposition(structure, globalObject, WTF::move(impl));
+        JSGeoposition* ptr = new (NotNull, JSC::allocateCell<JSGeoposition>(globalObject->vm().heap)) JSGeoposition(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Geoposition* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSGeoposition();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Geoposition& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Geoposition* m_impl;
 protected:
-    JSGeoposition(JSC::Structure*, JSDOMGlobalObject*, Ref<Geoposition>&&);
+    JSGeoposition(JSC::Structure*, JSDOMGlobalObject&, Ref<Geoposition>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Geoposition*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Geoposition*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Geoposition& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Geoposition& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Geoposition*);
 
 
 } // namespace WebCore

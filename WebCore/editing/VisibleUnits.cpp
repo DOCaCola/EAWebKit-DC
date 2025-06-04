@@ -133,11 +133,13 @@ private:
     const Vector<InlineBox*>& collectBoxes(const RootInlineBox*);
     int boxIndexInLeaves(const InlineTextBox*) const;
 
-    const RootInlineBox* m_rootInlineBox;
+    const RootInlineBox* m_rootInlineBox { nullptr };
     Vector<InlineBox*> m_leafBoxes;
 };
 
-CachedLogicallyOrderedLeafBoxes::CachedLogicallyOrderedLeafBoxes() : m_rootInlineBox(0) { };
+CachedLogicallyOrderedLeafBoxes::CachedLogicallyOrderedLeafBoxes()
+{
+}
 
 const InlineBox* CachedLogicallyOrderedLeafBoxes::previousTextOrLineBreakBox(const RootInlineBox* root, const InlineTextBox* box)
 {
@@ -346,9 +348,9 @@ static VisiblePosition visualWordPosition(const VisiblePosition& visiblePosition
         return VisiblePosition();
 
     TextDirection blockDirection = directionOfEnclosingBlock(visiblePosition.deepEquivalent());
-    InlineBox* previouslyVisitedBox = 0;
+    InlineBox* previouslyVisitedBox = nullptr;
     VisiblePosition current = visiblePosition;
-    TextBreakIterator* iter = 0;
+    TextBreakIterator* iter = nullptr;
 
     CachedLogicallyOrderedLeafBoxes leafBoxes;
     Vector<UChar, 1024> string;
@@ -536,10 +538,11 @@ static VisiblePosition previousBoundary(const VisiblePosition& c, BoundarySearch
     if (!next)
         return VisiblePosition(it.atEnd() ? searchRange->startPosition() : pos, DOWNSTREAM);
 
-    Node* node = it.atEnd() ? searchRange->startContainer() : it.range()->startContainer();
-    if ((node->isTextNode() && static_cast<int>(next) <= node->maxCharacterOffset()) || (node->renderer() && node->renderer()->isBR() && !next))
+    Node& node = it.atEnd() ? searchRange->startContainer() : it.range()->startContainer();
+    if ((node.isTextNode() && static_cast<int>(next) <= node.maxCharacterOffset()) || (node.renderer() && node.renderer()->isBR() && !next)) {
         // The next variable contains a usable index into a text node
-        return VisiblePosition(createLegacyEditingPosition(node, next), DOWNSTREAM);
+        return VisiblePosition(createLegacyEditingPosition(&node, next), DOWNSTREAM);
+    }
 
     // Use the character iterator to translate the next value into a DOM position.
     BackwardsCharacterIterator charIt(*searchRange);
@@ -956,7 +959,7 @@ VisiblePosition previousLinePosition(const VisiblePosition& visiblePosition, int
     if (!renderer)
         return VisiblePosition();
 
-    RootInlineBox* root = 0;
+    RootInlineBox* root = nullptr;
     InlineBox* box;
     int ignoredCaretOffset;
     visiblePosition.getInlineBoxAndOffset(box, ignoredCaretOffset);
@@ -965,7 +968,7 @@ VisiblePosition previousLinePosition(const VisiblePosition& visiblePosition, int
         // We want to skip zero height boxes.
         // This could happen in case it is a TrailingFloatsRootInlineBox.
         if (!root || !root->logicalHeight() || !root->firstLeafChild())
-            root = 0;
+            root = nullptr;
     }
 
     if (!root) {
@@ -1011,7 +1014,7 @@ VisiblePosition nextLinePosition(const VisiblePosition& visiblePosition, int lin
     if (!renderer)
         return VisiblePosition();
 
-    RootInlineBox* root = 0;
+    RootInlineBox* root = nullptr;
     InlineBox* box;
     int ignoredCaretOffset;
     visiblePosition.getInlineBoxAndOffset(box, ignoredCaretOffset);
@@ -1020,7 +1023,7 @@ VisiblePosition nextLinePosition(const VisiblePosition& visiblePosition, int lin
         // We want to skip zero height boxes.
         // This could happen in case it is a TrailingFloatsRootInlineBox.
         if (!root || !root->logicalHeight() || !root->firstLeafChild())
-            root = 0;
+            root = nullptr;
     }
 
     if (!root) {

@@ -31,7 +31,7 @@ public:
     typedef JSCSSValueList Base;
     static JSWebKitCSSFilterValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSFilterValue>&& impl)
     {
-        JSWebKitCSSFilterValue* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSFilterValue>(globalObject->vm().heap)) JSWebKitCSSFilterValue(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSFilterValue* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSFilterValue>(globalObject->vm().heap)) JSWebKitCSSFilterValue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSFilterValue& impl() const
+    WebKitCSSFilterValue& wrapped() const
     {
-        return static_cast<WebKitCSSFilterValue&>(Base::impl());
+        return static_cast<WebKitCSSFilterValue&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSWebKitCSSFilterValue(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSFilterValue>&&);
+    JSWebKitCSSFilterValue(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSFilterValue>&&);
 
     void finishCreation(JSC::VM& vm)
     {

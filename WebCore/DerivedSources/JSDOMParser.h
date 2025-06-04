@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMParser : public JSDOMWrapper {
+class JSDOMParser : public JSDOMWrapper<DOMParser> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMParser> Base;
     static JSDOMParser* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMParser>&& impl)
     {
-        JSDOMParser* ptr = new (NotNull, JSC::allocateCell<JSDOMParser>(globalObject->vm().heap)) JSDOMParser(structure, globalObject, WTF::move(impl));
+        JSDOMParser* ptr = new (NotNull, JSC::allocateCell<JSDOMParser>(globalObject->vm().heap)) JSDOMParser(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMParser* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMParser();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMParser& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMParser* m_impl;
 protected:
-    JSDOMParser(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMParser>&&);
+    JSDOMParser(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMParser>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMParser*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMParser*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMParser& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMParser& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMParser*);
 
 
 } // namespace WebCore

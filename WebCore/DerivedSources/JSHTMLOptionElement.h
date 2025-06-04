@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLOptionElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptionElement>&& impl)
     {
-        JSHTMLOptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionElement>(globalObject->vm().heap)) JSHTMLOptionElement(structure, globalObject, WTF::move(impl));
+        JSHTMLOptionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionElement>(globalObject->vm().heap)) JSHTMLOptionElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSValue getNamedConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLOptionElement& impl() const
+    HTMLOptionElement& wrapped() const
     {
-        return static_cast<HTMLOptionElement&>(Base::impl());
+        return static_cast<HTMLOptionElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLOptionElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptionElement>&&);
+    JSHTMLOptionElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptionElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

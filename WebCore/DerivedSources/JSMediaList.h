@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSMediaList : public JSDOMWrapper {
+class JSMediaList : public JSDOMWrapper<MediaList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaList> Base;
     static JSMediaList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaList>&& impl)
     {
-        JSMediaList* ptr = new (NotNull, JSC::allocateCell<JSMediaList>(globalObject->vm().heap)) JSMediaList(structure, globalObject, WTF::move(impl));
+        JSMediaList* ptr = new (NotNull, JSC::allocateCell<JSMediaList>(globalObject->vm().heap)) JSMediaList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMediaList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSMediaList(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaList>&&);
+    JSMediaList(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaList*);
 
 
 } // namespace WebCore

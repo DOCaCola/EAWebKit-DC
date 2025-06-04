@@ -26,8 +26,8 @@
 #include "config.h"
 #include "CallFrame.h"
 
-#include "CallFrameInlines.h"
 #include "CodeBlock.h"
+#include "InlineCallFrame.h"
 #include "Interpreter.h"
 #include "JSLexicalEnvironment.h"
 #include "JSCInlines.h"
@@ -35,6 +35,68 @@
 #include <wtf/StringPrintStream.h>
 
 namespace JSC {
+
+bool CallFrame::callSiteBitsAreBytecodeOffset() const
+{
+    ASSERT(codeBlock());
+    switch (codeBlock()->jitType()) {
+    case JITCode::InterpreterThunk:
+    case JITCode::BaselineJIT:
+        return true;
+    case JITCode::None:
+    case JITCode::HostCallThunk:
+        RELEASE_ASSERT_NOT_REACHED();
+        return false;
+    default:
+        return false;
+    }
+
+    RELEASE_ASSERT_NOT_REACHED();
+    return false;
+}
+
+bool CallFrame::callSiteBitsAreCodeOriginIndex() const
+{
+    ASSERT(codeBlock());
+    switch (codeBlock()->jitType()) {
+    case JITCode::DFGJIT:
+    case JITCode::FTLJIT:
+        return true;
+    case JITCode::None:
+    case JITCode::HostCallThunk:
+        RELEASE_ASSERT_NOT_REACHED();
+        return false;
+    default:
+        return false;
+    }
+
+    RELEASE_ASSERT_NOT_REACHED();
+    return false;
+}
+
+unsigned CallFrame::callSiteAsRawBits() const
+{
+    return this[JSStack::ArgumentCount].tag();
+}
+
+CallSiteIndex CallFrame::callSiteIndex() const
+{
+    return CallSiteIndex(callSiteAsRawBits());
+}
+
+bool CallFrame::hasActivation() const
+{
+    JSValue activation = uncheckedActivation();
+    return !!activation && activation.isCell();
+}
+
+JSValue CallFrame::uncheckedActivation() const
+{
+    CodeBlock* codeBlock = this->codeBlock();
+    RELEASE_ASSERT(codeBlock->needsActivation());
+    VirtualRegister activationRegister = codeBlock->activationRegister();
+    return registers()[activationRegister.offset()].jsValue();
+}
 
 #ifndef NDEBUG
 JSStack* CallFrame::stack()
@@ -45,63 +107,63 @@ JSStack* CallFrame::stack()
 #endif
 
 #if USE(JSVALUE32_64)
-unsigned CallFrame::locationAsBytecodeOffset() const
-{
-    ASSERT(codeBlock());
-    ASSERT(hasLocationAsBytecodeOffset());
-    return currentVPC() - codeBlock()->instructions().begin();
-}
-
-void CallFrame::setLocationAsBytecodeOffset(unsigned offset)
-{
-    ASSERT(codeBlock());
-    setCurrentVPC(codeBlock()->instructions().begin() + offset);
-    ASSERT(hasLocationAsBytecodeOffset());
-}
-#else
 Instruction* CallFrame::currentVPC() const
 {
-    return codeBlock()->instructions().begin() + locationAsBytecodeOffset();
+    return bitwise_cast<Instruction*>(callSiteIndex().bits());
 }
+
 void CallFrame::setCurrentVPC(Instruction* vpc)
 {
-    setLocationAsBytecodeOffset(vpc - codeBlock()->instructions().begin());
+    CallSiteIndex callSite(vpc);
+    this[JSStack::ArgumentCount].tag() = callSite.bits();
 }
+
+unsigned CallFrame::callSiteBitsAsBytecodeOffset() const
+{
+    ASSERT(codeBlock());
+    ASSERT(callSiteBitsAreBytecodeOffset());
+    return currentVPC() - codeBlock()->instructions().begin();     
+}
+
+#else // USE(JSVALUE32_64)
+Instruction* CallFrame::currentVPC() const
+{
+    ASSERT(callSiteBitsAreBytecodeOffset());
+    return codeBlock()->instructions().begin() + callSiteBitsAsBytecodeOffset();
+}
+
+void CallFrame::setCurrentVPC(Instruction* vpc)
+{
+    CallSiteIndex callSite(vpc - codeBlock()->instructions().begin());
+    this[JSStack::ArgumentCount].tag() = static_cast<int32_t>(callSite.bits());
+}
+
+unsigned CallFrame::callSiteBitsAsBytecodeOffset() const
+{
+    ASSERT(codeBlock());
+    ASSERT(callSiteBitsAreBytecodeOffset());
+    return callSiteIndex().bits();
+}
+
 #endif
     
-#if ENABLE(DFG_JIT)
-unsigned CallFrame::bytecodeOffsetFromCodeOriginIndex()
-{
-    ASSERT(hasLocationAsCodeOriginIndex());
-    CodeBlock* codeBlock = this->codeBlock();
-    ASSERT(codeBlock);
-
-    CodeOrigin codeOrigin;
-    unsigned index = locationAsCodeOriginIndex();
-    ASSERT(codeBlock->canGetCodeOrigin(index));
-    codeOrigin = codeBlock->codeOrigin(index);
-
-    for (InlineCallFrame* inlineCallFrame = codeOrigin.inlineCallFrame; inlineCallFrame;) {
-        if (inlineCallFrame->baselineCodeBlock() == codeBlock)
-            return codeOrigin.bytecodeIndex;
-
-        codeOrigin = inlineCallFrame->caller;
-        inlineCallFrame = codeOrigin.inlineCallFrame;
-    }
-    return codeOrigin.bytecodeIndex;
-}
-
-#endif // ENABLE(DFG_JIT)
-
 unsigned CallFrame::bytecodeOffset()
 {
     if (!codeBlock())
         return 0;
 #if ENABLE(DFG_JIT)
-    if (hasLocationAsCodeOriginIndex())
-        return bytecodeOffsetFromCodeOriginIndex();
+    if (callSiteBitsAreCodeOriginIndex()) {
+        ASSERT(codeBlock());
+        CodeOrigin codeOrigin = this->codeOrigin();
+        for (InlineCallFrame* inlineCallFrame = codeOrigin.inlineCallFrame; inlineCallFrame;) {
+            codeOrigin = inlineCallFrame->directCaller;
+            inlineCallFrame = codeOrigin.inlineCallFrame;
+        }
+        return codeOrigin.bytecodeIndex;
+    }
 #endif
-    return locationAsBytecodeOffset();
+    ASSERT(callSiteBitsAreBytecodeOffset());
+    return callSiteBitsAsBytecodeOffset();
 }
 
 CodeOrigin CallFrame::codeOrigin()
@@ -109,13 +171,13 @@ CodeOrigin CallFrame::codeOrigin()
     if (!codeBlock())
         return CodeOrigin(0);
 #if ENABLE(DFG_JIT)
-    if (hasLocationAsCodeOriginIndex()) {
-        unsigned index = locationAsCodeOriginIndex();
+    if (callSiteBitsAreCodeOriginIndex()) {
+        CallSiteIndex index = callSiteIndex();
         ASSERT(codeBlock()->canGetCodeOrigin(index));
         return codeBlock()->codeOrigin(index);
     }
 #endif
-    return CodeOrigin(locationAsBytecodeOffset());
+    return CodeOrigin(callSiteBitsAsBytecodeOffset());
 }
 
 Register* CallFrame::topOfFrameInternal()
@@ -166,6 +228,29 @@ void CallFrame::setActivation(JSLexicalEnvironment* lexicalEnvironment)
     RELEASE_ASSERT(codeBlock->needsActivation());
     VirtualRegister activationRegister = codeBlock->activationRegister();
     registers()[activationRegister.offset()] = lexicalEnvironment;
+}
+
+String CallFrame::friendlyFunctionName()
+{
+    CodeBlock* codeBlock = this->codeBlock();
+    if (!codeBlock)
+        return emptyString();
+
+    switch (codeBlock->codeType()) {
+    case EvalCode:
+        return ASCIILiteral("eval code");
+    case ModuleCode:
+        return ASCIILiteral("module code");
+    case GlobalCode:
+        return ASCIILiteral("global code");
+    case FunctionCode:
+        if (callee())
+            return getCalculatedDisplayName(this, callee());
+        return emptyString();
+    }
+
+    ASSERT_NOT_REACHED();
+    return emptyString();
 }
 
 void CallFrame::dump(PrintStream& out)

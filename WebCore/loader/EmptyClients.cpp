@@ -37,6 +37,7 @@
 #include "FrameNetworkingContext.h"
 #include "HTMLFormElement.h"
 #include "IDBFactoryBackendInterface.h"
+#include "InProcessIDBServer.h"
 #include "PageConfiguration.h"
 #include "StorageArea.h"
 #include "StorageNamespace.h"
@@ -48,6 +49,13 @@ namespace WebCore {
 class EmptyDatabaseProvider final : public DatabaseProvider {
 #if ENABLE(INDEXED_DATABASE)
     virtual RefPtr<IDBFactoryBackendInterface> createIDBFactoryBackend() { return nullptr; }
+    virtual bool supportsModernIDB() const { return false; }
+    
+    virtual IDBClient::IDBConnectionToServer& idbConnectionToServerForSession(const SessionID&)
+    {
+        static NeverDestroyed<Ref<InProcessIDBServer>> sharedConnection(InProcessIDBServer::create());
+        return sharedConnection.get()->connectionToServer();
+    }
 #endif
 };
 
@@ -67,7 +75,7 @@ class EmptyStorageNamespaceProvider final : public StorageNamespaceProvider {
     };
 
     struct EmptyStorageNamespace final : public StorageNamespace {
-        virtual RefPtr<StorageArea> storageArea(PassRefPtr<SecurityOrigin>) override { return adoptRef(new EmptyStorageArea); }
+        virtual RefPtr<StorageArea> storageArea(RefPtr<SecurityOrigin>&&) override { return adoptRef(new EmptyStorageArea); }
         virtual RefPtr<StorageNamespace> copy(Page*) override { return adoptRef(new EmptyStorageNamespace); }
     };
 
@@ -138,8 +146,8 @@ public:
 class EmptySearchPopupMenu : public SearchPopupMenu {
 public:
     virtual PopupMenu* popupMenu() { return m_popup.get(); }
-    virtual void saveRecentSearches(const AtomicString&, const Vector<String>&) { }
-    virtual void loadRecentSearches(const AtomicString&, Vector<String>&) { }
+    virtual void saveRecentSearches(const AtomicString&, const Vector<RecentSearch>&) { }
+    virtual void loadRecentSearches(const AtomicString&, Vector<RecentSearch>&) { }
     virtual bool enabled() { return false; }
 
 private:
@@ -204,7 +212,7 @@ void EmptyFrameLoaderClient::recreatePlugin(Widget*)
 
 PassRefPtr<Widget> EmptyFrameLoaderClient::createJavaAppletWidget(const IntSize&, HTMLAppletElement*, const URL&, const Vector<String>&, const Vector<String>&)
 {
-    return 0;
+    return nullptr;
 }
 
 PassRefPtr<FrameNetworkingContext> EmptyFrameLoaderClient::createNetworkingContext()
@@ -223,14 +231,5 @@ void EmptyEditorClient::registerUndoStep(PassRefPtr<UndoStep>)
 void EmptyEditorClient::registerRedoStep(PassRefPtr<UndoStep>)
 {
 }
-
-#if ENABLE(CONTEXT_MENUS)
-#if USE(CROSS_PLATFORM_CONTEXT_MENUS)
-std::unique_ptr<ContextMenu> EmptyContextMenuClient::customizeMenu(std::unique_ptr<ContextMenu>)
-{
-    return nullptr;
-}
-#endif
-#endif
 
 }

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLTableSectionElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTableSectionElement>&& impl)
     {
-        JSHTMLTableSectionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableSectionElement>(globalObject->vm().heap)) JSHTMLTableSectionElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTableSectionElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableSectionElement>(globalObject->vm().heap)) JSHTMLTableSectionElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTableSectionElement& impl() const
+    HTMLTableSectionElement& wrapped() const
     {
-        return static_cast<HTMLTableSectionElement&>(Base::impl());
+        return static_cast<HTMLTableSectionElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTableSectionElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTableSectionElement>&&);
+    JSHTMLTableSectionElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTableSectionElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

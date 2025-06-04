@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCSessionDescription : public JSDOMWrapper {
+class JSRTCSessionDescription : public JSDOMWrapper<RTCSessionDescription> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCSessionDescription> Base;
     static JSRTCSessionDescription* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCSessionDescription>&& impl)
     {
-        JSRTCSessionDescription* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescription>(globalObject->vm().heap)) JSRTCSessionDescription(structure, globalObject, WTF::move(impl));
+        JSRTCSessionDescription* ptr = new (NotNull, JSC::allocateCell<JSRTCSessionDescription>(globalObject->vm().heap)) JSRTCSessionDescription(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCSessionDescription* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCSessionDescription();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    RTCSessionDescription& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCSessionDescription* m_impl;
 protected:
-    JSRTCSessionDescription(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCSessionDescription>&&);
+    JSRTCSessionDescription(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCSessionDescription>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCSessionDescriptio
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCSessionDescription*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCSessionDescription& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCSessionDescription& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCSessionDescription*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCSessionDescription(JSC::ExecState*);

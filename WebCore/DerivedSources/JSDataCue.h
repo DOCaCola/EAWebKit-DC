@@ -33,7 +33,7 @@ public:
     typedef JSTextTrackCue Base;
     static JSDataCue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataCue>&& impl)
     {
-        JSDataCue* ptr = new (NotNull, JSC::allocateCell<JSDataCue>(globalObject->vm().heap)) JSDataCue(structure, globalObject, WTF::move(impl));
+        JSDataCue* ptr = new (NotNull, JSC::allocateCell<JSDataCue>(globalObject->vm().heap)) JSDataCue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DataCue& impl() const
+    DataCue& wrapped() const
     {
-        return static_cast<DataCue&>(Base::impl());
+        return static_cast<DataCue&>(Base::wrapped());
     }
 protected:
-    JSDataCue(JSC::Structure*, JSDOMGlobalObject*, Ref<DataCue>&&);
+    JSDataCue(JSC::Structure*, JSDOMGlobalObject&, Ref<DataCue>&&);
 
     void finishCreation(JSC::VM& vm)
     {

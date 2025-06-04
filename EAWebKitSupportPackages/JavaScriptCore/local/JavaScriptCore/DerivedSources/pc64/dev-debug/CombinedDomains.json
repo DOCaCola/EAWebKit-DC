@@ -185,7 +185,10 @@
                 { "name": "sourceURL", "type": "string", "description": "Stylesheet resource URL."},
                 { "name": "origin", "$ref": "StyleSheetOrigin", "description": "Stylesheet origin."},
                 { "name": "title", "type": "string", "description": "Stylesheet title."},
-                { "name": "disabled", "type": "boolean", "description": "Denotes whether the stylesheet is disabled."}
+                { "name": "disabled", "type": "boolean", "description": "Denotes whether the stylesheet is disabled."},
+                { "name": "isInline", "type": "boolean", "description": "Whether this stylesheet is a <style> tag created by the parser. This is not set for document.written <style> tags." },
+                { "name": "startLine", "type": "number", "description": "Line offset of the stylesheet within the resource (zero based)." },
+                { "name": "startColumn", "type": "number", "description": "Column offset of the stylesheet within the resource (zero based)." }
             ],
             "description": "CSS stylesheet metainformation."
         },
@@ -419,15 +422,25 @@
             "description": "Modifies the rule selector."
         },
         {
+            "name": "createStyleSheet",
+            "parameters": [
+                { "name": "frameId", "$ref": "Network.FrameId", "description": "Identifier of the frame where the new \"inspector\" stylesheet should be created." }
+            ],
+            "returns": [
+                { "name": "styleSheetId", "$ref": "StyleSheetId", "description": "Identifier of the created \"inspector\" stylesheet." }
+            ],
+            "description": "Creates a new special \"inspector\" stylesheet in the frame with given <code>frameId</code>."
+        },
+        {
             "name": "addRule",
             "parameters": [
-                { "name": "contextNodeId", "$ref": "DOM.NodeId" },
+                { "name": "styleSheetId", "$ref": "StyleSheetId" },
                 { "name": "selector", "type": "string" }
             ],
             "returns": [
                 { "name": "rule", "$ref": "CSSRule", "description": "The newly created rule." }
             ],
-            "description": "Creates a new empty rule with the given <code>selector</code> in a special \"inspector\" stylesheet in the owner document of the context node."
+            "description": "Creates a new empty rule with the given <code>selector</code> in a stylesheet with given <code>styleSheetId</code>."
         },
         {
             "name": "getSupportedCSSProperties",
@@ -473,6 +486,20 @@
                 { "name": "styleSheetId", "$ref": "StyleSheetId" }
             ],
             "description": "Fired whenever a stylesheet is changed as a result of the client operation."
+        },
+        {
+            "name": "styleSheetAdded",
+            "parameters": [
+                { "name": "header", "$ref": "CSSStyleSheetHeader", "description": "Added stylesheet metainfo." }
+            ],
+            "description": "Fired whenever an active document stylesheet is added."
+        },
+        {
+            "name": "styleSheetRemoved",
+            "parameters": [
+                { "name": "styleSheetId", "$ref": "StyleSheetId", "description": "Identifier of the removed stylesheet." }
+            ],
+            "description": "Fired whenever an active document stylesheet is removed."
         },
         {
             "name": "namedFlowCreated",
@@ -581,9 +608,9 @@
         {
             "name": "addInspectedNode",
             "parameters": [
-                { "name": "nodeId", "$ref": "DOM.NodeId", "description": "DOM node id to be accessible by means of $x command line API." }
+                { "name": "nodeId", "$ref": "DOM.NodeId", "description": "DOM node id to be accessible by means of $0 command line API." }
             ],
-            "description": "Enables console to refer to the node with given id via $x (see Command Line API for more details $x functions)."
+            "description": "Enables console to refer to the node with given id via $0 (see Command Line API for more details)."
         }
     ],
     "events": [
@@ -690,6 +717,7 @@
                 { "name": "checked", "type": "string", "optional": true, "enum": ["true", "false", "mixed"], "description": "Checked state of certain form controls." },
                 { "name": "childNodeIds", "type": "array", "items": { "$ref": "NodeId" }, "optional": true, "description": "Array of <code>DOMNode</code> ids of the accessibility tree children if available." },
                 { "name": "controlledNodeIds", "type": "array", "items": { "$ref": "NodeId" }, "optional": true, "description": "Array of <code>DOMNode</code> ids of any nodes referenced via @aria-controls." },
+                { "name": "current", "type": "string", "optional": true, "enum": ["true", "false", "page", "step", "location", "date", "time"], "description": "Current item within a container or set of related elements." },
                 { "name": "disabled", "type": "boolean", "optional": true, "description": "Disabled state of form controls." },
                 { "name": "exists", "type": "boolean", "description": "Indicates whether there is an existing AX object for the DOM node. If this is false, all the other properties will be default values." },
                 { "name": "expanded", "type": "boolean", "optional": true, "description": "Expanded state." },
@@ -1449,7 +1477,8 @@
             "properties": [
                 { "name": "condition", "type": "string", "optional": true, "description": "Expression to use as a breakpoint condition. When specified, debugger will only stop on the breakpoint if this expression evaluates to true." },
                 { "name": "actions", "type": "array", "optional": true, "items": { "$ref": "BreakpointAction" }, "description": "Actions to perform automatically when the breakpoint is triggered." },
-                { "name": "autoContinue", "type": "boolean", "optional": true, "description": "Automatically continue after hitting this breakpoint and running actions." }
+                { "name": "autoContinue", "type": "boolean", "optional": true, "description": "Automatically continue after hitting this breakpoint and running actions." },
+                { "name": "ignoreCount", "type": "integer", "optional": true, "description": "Number of times to ignore this breakpoint, before stopping on the breakpoint and running actions." }
             ],
             "description": "Extra options that modify breakpoint behavior."
         },
@@ -1481,7 +1510,7 @@
             "id": "Scope",
             "type": "object",
             "properties": [
-                { "name": "type", "type": "string", "enum": ["global", "local", "with", "closure", "catch", "functionName"], "description": "Scope type." },
+                { "name": "type", "type": "string", "enum": ["global", "with", "closure", "catch", "functionName", "globalLexicalEnvironment", "nestedLexical"], "description": "Scope type." },
                 { "name": "object", "$ref": "Runtime.RemoteObject", "description": "Object representing the scope. For <code>global</code> and <code>with</code> scopes it represents the actual object; for the rest of the scopes, it is artificial transient object enumerating scope variables as its properties." }
             ],
             "description": "Scope description."
@@ -1753,6 +1782,46 @@
 }
 ,
 {
+    "domain": "Heap",
+    "description": "Heap domain exposes JavaScript heap attributes and capabilities.",
+    "types": [
+        {
+            "id": "GarbageCollection",
+            "description": "Information about a garbage collection.",
+            "type": "object",
+            "properties": [
+                { "name": "type", "type": "string", "enum": ["full", "partial"], "description": "The type of garbage collection." },
+                { "name": "startTime", "type": "number" },
+                { "name": "endTime", "type": "number" }
+            ]
+        }
+    ],
+    "commands": [
+        {
+            "name": "enable",
+            "description": "Enables Heap domain events."
+        },
+        {
+            "name": "disable",
+            "description": "Disables Heap domain events."
+        },
+        {
+            "name": "gc",
+            "description": "Trigger a full garbage collection."
+        }
+    ],
+    "events": [
+        {
+            "name": "garbageCollected",
+            "description": "Information about the garbage collection.",
+            "parameters": [
+                { "name": "collection", "type": "GarbageCollection" }
+            ]
+        }
+    ]
+}
+,
+{
     "domain": "Inspector",
     "types": [],
     "commands": [
@@ -1877,6 +1946,7 @@
                 { "name": "isolatesCompositedBlendingDescendants", "type": "boolean", "optional": true, "description": "Composition due to association with an element isolating compositing descendants having CSS blending applied." },
                 { "name": "perspective", "type": "boolean", "optional": true, "description": "Composition due to association with an element with perspective applied." },
                 { "name": "preserve3D", "type": "boolean", "optional": true, "description": "Composition due to association with an element with a \"transform-style: preserve-3d\" style." },
+                { "name": "willChange", "type": "boolean", "optional": true, "description": "Composition due to association with an element with a \"will-change\" style." },
                 { "name": "root", "type": "boolean", "optional": true, "description": "Composition due to association with the root element." },
                 { "name": "blending", "type": "boolean", "optional": true, "description": "Composition due to association with an element with a \"blend-mode\" style." }
             ]
@@ -2069,28 +2139,6 @@
                 { "name": "body", "type": "string", "description": "Response body." },
                 { "name": "base64Encoded", "type": "boolean", "description": "True, if content was sent as base64." }
             ]
-        },
-        {
-            "name": "canClearBrowserCache",
-            "description": "Tells whether clearing browser cache is supported.",
-            "returns": [
-                { "name": "result", "type": "boolean", "description": "True if browser cache can be cleared." }
-            ]
-        },
-        {
-            "name": "clearBrowserCache",
-            "description": "Clears browser cache."
-        },
-        {
-            "name": "canClearBrowserCookies",
-            "description": "Tells whether clearing browser cookies is supported.",
-            "returns": [
-                { "name": "result", "type": "boolean", "description": "True if browser cookies can be cleared." }
-            ]
-        },
-        {
-            "name": "clearBrowserCookies",
-            "description": "Clears browser cookies."
         },
         {
             "name": "setCacheDisabled",
@@ -2933,7 +2981,8 @@
             "properties": [
                 { "name": "startOffset", "type": "integer", "description": "Start offset of the basic block." },
                 { "name": "endOffset", "type": "integer", "description": "End offset of the basic block." },
-                { "name": "hasExecuted", "type": "boolean", "description": "Indicates if the basic block has executed before." }
+                { "name": "hasExecuted", "type": "boolean", "description": "Indicates if the basic block has executed before." },
+                { "name": "executionCount", "type": "integer", "description": "Indicates how many times the basic block has executed." }
             ]
         }
     ],
@@ -3049,10 +3098,6 @@
             "description": "Releases all remote objects that belong to a given group."
         },
         {
-            "name": "run",
-            "description": "Tells inspected instance(worker or page) that it can run in case it was started paused."
-        },
-        {
             "name": "enable",
             "description": "Enables reporting of execution contexts creation by means of <code>executionContextCreated</code> event. When the reporting gets enabled the event will be sent immediately for each existing execution context."
         },
@@ -3101,6 +3146,63 @@
 }
 ,
 {
+    "domain": "ScriptProfiler",
+    "description": "Profiler domain exposes JavaScript evaluation timing and profiling.",
+    "types": [
+        {
+            "id": "EventType",
+            "type": "string",
+            "enum": ["API", "Microtask", "Other"]
+        },
+        {
+            "id": "Event",
+            "type": "object",
+            "properties": [
+                { "name": "startTime", "type": "number" },
+                { "name": "endTime", "type": "number" },
+                { "name": "type", "$ref": "EventType" }
+            ]
+        }
+    ],
+    "commands": [
+        {
+            "name": "startTracking",
+            "description": "Start tracking script evaluations.",
+            "parameters": [
+                { "name": "profile", "type": "boolean", "optional": true, "description": "Profile script evaluations, defaults to false." }
+            ]
+        },
+        {
+            "name": "stopTracking",
+            "description": "Stop tracking script evaluations. This will produce a `trackingComplete` event."
+        }
+    ],
+    "events": [
+        {
+            "name": "trackingStart",
+            "description": "Tracking started.",
+            "parameters": [
+                { "name": "timestamp", "type": "number" }
+            ]
+        },
+        {
+            "name": "trackingUpdate",
+            "description": "While tracking is enabled the backend will periodically update the frontend with event data. The data includes tuples.",
+            "parameters": [
+                { "name": "event", "$ref": "Event" }
+            ]
+        },
+        {
+            "name": "trackingComplete",
+            "description": "When tracking is complete the backend will send any buffered data, such as profiling information.",
+            "parameters": [
+                { "name": "profiles", "type": "array", "items": { "type": "any" }, "optional": true }
+            ]
+        }
+    ]
+}
+,
+{
     "domain": "Timeline",
     "description": "Timeline provides its clients with instrumentation records that are generated during the page runtime. Timeline instrumentation can be started and stopped using corresponding commands. While timeline is started, it is generating timeline event records.",
     "availability": "web",
@@ -3117,30 +3219,19 @@
                 "Paint",
                 "Composite",
                 "RenderingFrame",
-                "ScrollLayer",
-                "ParseHTML",
                 "TimerInstall",
                 "TimerRemove",
                 "TimerFire",
                 "EvaluateScript",
-                "MarkLoad",
-                "MarkDOMContent",
                 "TimeStamp",
                 "Time",
                 "TimeEnd",
-                "XHRReadyStateChange",
-                "XHRLoad",
                 "FunctionCall",
                 "ProbeSample",
                 "ConsoleProfile",
-                "GCEvent",
                 "RequestAnimationFrame",
                 "CancelAnimationFrame",
-                "FireAnimationFrame",
-                "WebSocketCreate",
-                "WebSocketSendHandshakeRequest",
-                "WebSocketReceiveHandshakeResponse",
-                "WebSocketDestroy"
+                "FireAnimationFrame"
             ],
             "description": "Timeline record type."
         },
@@ -3223,78 +3314,6 @@
                 { "name": "endTime", "type": "number", "description": "End time of this recording." }
             ],
             "description": "Fired when recording has stopped."
-        }
-    ]
-}
-,
-{
-    "domain": "Worker",
-    "types": [],
-    "availability": "web",
-    "commands": [
-        {
-            "name": "enable"
-        },
-        {
-            "name": "disable"
-        },
-        {
-            "name": "sendMessageToWorker",
-            "parameters": [
-                { "name": "workerId", "type": "integer" },
-                { "name": "message", "type": "object" }
-            ]
-        },
-        {
-            "name": "canInspectWorkers",
-            "description": "Tells whether browser supports workers inspection.",
-            "returns": [
-                { "name": "result", "type": "boolean", "description": "True if browser has workers support." }
-            ]
-        },
-        {
-            "name": "connectToWorker",
-            "parameters": [
-                { "name": "workerId", "type": "integer" }
-            ]
-        },
-        {
-            "name": "disconnectFromWorker",
-            "parameters": [
-                { "name": "workerId", "type": "integer" }
-            ]
-        },
-        {
-            "name": "setAutoconnectToWorkers",
-            "parameters": [
-                { "name": "value", "type": "boolean" }
-            ]
-        }
-    ],
-    "events": [
-        {
-            "name": "workerCreated",
-            "parameters": [
-                { "name": "workerId", "type": "integer" },
-                { "name": "url", "type": "string" },
-                { "name": "inspectorConnected", "type": "boolean" }
-            ]
-        },
-        {
-            "name": "workerTerminated",
-            "parameters": [
-                { "name": "workerId", "type": "integer" }
-            ]
-        },
-        {
-            "name": "dispatchMessageFromWorker",
-            "parameters": [
-                { "name": "workerId", "type": "integer" },
-                { "name": "message", "type": "object" }
-            ]
-        },
-        {
-            "name": "disconnectedFromWorker"
         }
     ]
 }

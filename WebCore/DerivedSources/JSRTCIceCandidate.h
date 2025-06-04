@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCIceCandidate : public JSDOMWrapper {
+class JSRTCIceCandidate : public JSDOMWrapper<RTCIceCandidate> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCIceCandidate> Base;
     static JSRTCIceCandidate* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidate>&& impl)
     {
-        JSRTCIceCandidate* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidate>(globalObject->vm().heap)) JSRTCIceCandidate(structure, globalObject, WTF::move(impl));
+        JSRTCIceCandidate* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidate>(globalObject->vm().heap)) JSRTCIceCandidate(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCIceCandidate* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCIceCandidate();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    RTCIceCandidate& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCIceCandidate* m_impl;
 protected:
-    JSRTCIceCandidate(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceCandidate>&&);
+    JSRTCIceCandidate(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCIceCandidate>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCIceCandidate*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCIceCandidate*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCIceCandidate& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCIceCandidate& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCIceCandidate*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCIceCandidate(JSC::ExecState*);

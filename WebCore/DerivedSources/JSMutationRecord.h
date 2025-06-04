@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSMutationRecord : public JSDOMWrapper {
+class JSMutationRecord : public JSDOMWrapper<MutationRecord> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MutationRecord> Base;
     static JSMutationRecord* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationRecord>&& impl)
     {
-        JSMutationRecord* ptr = new (NotNull, JSC::allocateCell<JSMutationRecord>(globalObject->vm().heap)) JSMutationRecord(structure, globalObject, WTF::move(impl));
+        JSMutationRecord* ptr = new (NotNull, JSC::allocateCell<JSMutationRecord>(globalObject->vm().heap)) JSMutationRecord(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MutationRecord* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMutationRecord();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MutationRecord& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MutationRecord* m_impl;
 protected:
-    JSMutationRecord(JSC::Structure*, JSDOMGlobalObject*, Ref<MutationRecord>&&);
+    JSMutationRecord(JSC::Structure*, JSDOMGlobalObject&, Ref<MutationRecord>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MutationRecord*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MutationRecord*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MutationRecord& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MutationRecord& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MutationRecord*);
 
 
 } // namespace WebCore

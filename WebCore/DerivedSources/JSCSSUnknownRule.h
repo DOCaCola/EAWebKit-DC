@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSUnknownRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSUnknownRule>&& impl)
     {
-        JSCSSUnknownRule* ptr = new (NotNull, JSC::allocateCell<JSCSSUnknownRule>(globalObject->vm().heap)) JSCSSUnknownRule(structure, globalObject, WTF::move(impl));
+        JSCSSUnknownRule* ptr = new (NotNull, JSC::allocateCell<JSCSSUnknownRule>(globalObject->vm().heap)) JSCSSUnknownRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -46,12 +46,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    CSSUnknownRule& impl() const
+    CSSUnknownRule& wrapped() const
     {
-        return static_cast<CSSUnknownRule&>(Base::impl());
+        return static_cast<CSSUnknownRule&>(Base::wrapped());
     }
 protected:
-    JSCSSUnknownRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSUnknownRule>&&);
+    JSCSSUnknownRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSUnknownRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

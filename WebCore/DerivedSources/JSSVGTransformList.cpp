@@ -23,10 +23,10 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGMatrix.h"
 #include "JSSVGTransform.h"
 #include "SVGTransform.h"
-#include "SVGTransformList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -76,26 +76,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGTransformListConstructor : public DOMConstructorObject {
-private:
-    JSSVGTransformListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGTransformListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGTransformListConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGTransformListConstructor>(vm.heap)) JSSVGTransformListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGTransformList> JSSVGTransformListConstructor;
 
 /* Hash table */
 
@@ -107,40 +88,33 @@ static const struct CompactHashIndex JSSVGTransformListTableIndex[2] = {
 
 static const HashTableValue JSSVGTransformListTableValues[] =
 {
-    { "numberOfItems", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformListNumberOfItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "numberOfItems", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformListNumberOfItems), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSSVGTransformListTable = { 1, 1, true, JSSVGTransformListTableValues, 0, JSSVGTransformListTableIndex };
-const ClassInfo JSSVGTransformListConstructor::s_info = { "SVGTransformListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformListConstructor) };
-
-JSSVGTransformListConstructor::JSSVGTransformListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSSVGTransformListTable = { 1, 1, true, JSSVGTransformListTableValues, JSSVGTransformListTableIndex };
+template<> void JSSVGTransformListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGTransformListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGTransformList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGTransformList::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGTransformList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGTransformListConstructor::s_info = { "SVGTransformListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGTransformListPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clear", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionClear), (intptr_t) (0) },
-    { "initialize", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionInitialize), (intptr_t) (1) },
-    { "getItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionGetItem), (intptr_t) (1) },
-    { "insertItemBefore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionInsertItemBefore), (intptr_t) (2) },
-    { "replaceItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionReplaceItem), (intptr_t) (2) },
-    { "removeItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionRemoveItem), (intptr_t) (1) },
-    { "appendItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionAppendItem), (intptr_t) (1) },
-    { "createSVGTransformFromMatrix", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionCreateSVGTransformFromMatrix), (intptr_t) (1) },
-    { "consolidate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionConsolidate), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGTransformListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clear", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionClear), (intptr_t) (0) } },
+    { "initialize", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionInitialize), (intptr_t) (1) } },
+    { "getItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionGetItem), (intptr_t) (1) } },
+    { "insertItemBefore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionInsertItemBefore), (intptr_t) (2) } },
+    { "replaceItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionReplaceItem), (intptr_t) (2) } },
+    { "removeItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionRemoveItem), (intptr_t) (1) } },
+    { "appendItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionAppendItem), (intptr_t) (1) } },
+    { "createSVGTransformFromMatrix", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionCreateSVGTransformFromMatrix), (intptr_t) (1) } },
+    { "consolidate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGTransformListPrototypeFunctionConsolidate), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGTransformListPrototype::s_info = { "SVGTransformListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGTransformListPrototype) };
@@ -153,9 +127,8 @@ void JSSVGTransformListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGTransformList::s_info = { "SVGTransformList", &Base::s_info, &JSSVGTransformListTable, CREATE_METHOD_TABLE(JSSVGTransformList) };
 
-JSSVGTransformList::JSSVGTransformList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTransformListPropertyTearOff>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGTransformList::JSSVGTransformList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGTransformListPropertyTearOff>&& impl)
+    : JSDOMWrapper<SVGTransformListPropertyTearOff>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -175,224 +148,221 @@ void JSSVGTransformList::destroy(JSC::JSCell* cell)
     thisObject->JSSVGTransformList::~JSSVGTransformList();
 }
 
-JSSVGTransformList::~JSSVGTransformList()
-{
-    releaseImpl();
-}
-
-bool JSSVGTransformList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSSVGTransformList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSVGTransformList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSVGTransformList, Base>(exec, JSSVGTransformListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSSVGTransformList, Base>(state, JSSVGTransformListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsSVGTransformListNumberOfItems(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGTransformListNumberOfItems(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSVGTransformList*>(slotBase);
-    JSValue result =  jsNumber(castedThis->impl().numberOfItems());
+    JSValue result =  jsNumber(castedThis->wrapped().numberOfItems());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGTransformListConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGTransformListConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGTransformListPrototype* domObject = jsDynamicCast<JSSVGTransformListPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGTransformList::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGTransformList::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGTransformList::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGTransformListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGTransformListConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionClear(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionClear(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "clear");
+        return throwThisTypeError(*state, "SVGTransformList", "clear");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.clear(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionInitialize(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionInitialize(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "initialize");
+        return throwThisTypeError(*state, "SVGTransformList", "initialize");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGTransform::info()))
-        return throwArgumentTypeError(*exec, 0, "item", "SVGTransformList", "initialize", "SVGTransform");
-    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGTransform::info()))
+        return throwArgumentTypeError(*state, 0, "item", "SVGTransformList", "initialize", "SVGTransform");
+    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.initialize(item, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.initialize(item, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionGetItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionGetItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "getItem");
+        return throwThisTypeError(*state, "SVGTransformList", "getItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getItem(index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getItem(index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionInsertItemBefore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionInsertItemBefore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "insertItemBefore");
+        return throwThisTypeError(*state, "SVGTransformList", "insertItemBefore");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGTransform::info()))
-        return throwArgumentTypeError(*exec, 0, "item", "SVGTransformList", "insertItemBefore", "SVGTransform");
-    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGTransform::info()))
+        return throwArgumentTypeError(*state, 0, "item", "SVGTransformList", "insertItemBefore", "SVGTransform");
+    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.insertItemBefore(item, index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.insertItemBefore(item, index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionReplaceItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionReplaceItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "replaceItem");
+        return throwThisTypeError(*state, "SVGTransformList", "replaceItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGTransform::info()))
-        return throwArgumentTypeError(*exec, 0, "item", "SVGTransformList", "replaceItem", "SVGTransform");
-    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGTransform::info()))
+        return throwArgumentTypeError(*state, 0, "item", "SVGTransformList", "replaceItem", "SVGTransform");
+    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.replaceItem(item, index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.replaceItem(item, index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionRemoveItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionRemoveItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "removeItem");
+        return throwThisTypeError(*state, "SVGTransformList", "removeItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.removeItem(index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.removeItem(index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionAppendItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionAppendItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "appendItem");
+        return throwThisTypeError(*state, "SVGTransformList", "appendItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGTransform::info()))
-        return throwArgumentTypeError(*exec, 0, "item", "SVGTransformList", "appendItem", "SVGTransform");
-    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGTransform::info()))
+        return throwArgumentTypeError(*state, 0, "item", "SVGTransformList", "appendItem", "SVGTransform");
+    SVGPropertyTearOff<SVGTransform>* item = JSSVGTransform::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.appendItem(item, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.appendItem(item, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionCreateSVGTransformFromMatrix(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionCreateSVGTransformFromMatrix(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "createSVGTransformFromMatrix");
+        return throwThisTypeError(*state, "SVGTransformList", "createSVGTransformFromMatrix");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGMatrix::info()))
-        return throwArgumentTypeError(*exec, 0, "matrix", "SVGTransformList", "createSVGTransformFromMatrix", "SVGMatrix");
-    SVGPropertyTearOff<SVGMatrix>* matrix = JSSVGMatrix::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGMatrix::info()))
+        return throwArgumentTypeError(*state, 0, "matrix", "SVGTransformList", "createSVGTransformFromMatrix", "SVGMatrix");
+    SVGPropertyTearOff<SVGMatrix>* matrix = JSSVGMatrix::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSVGTransformFromMatrix(matrix, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createSVGTransformFromMatrix(matrix, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionConsolidate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGTransformListPrototypeFunctionConsolidate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGTransformList* castedThis = jsDynamicCast<JSSVGTransformList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGTransformList", "consolidate");
+        return throwThisTypeError(*state, "SVGTransformList", "consolidate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGTransformList::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.consolidate(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.consolidate(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -407,7 +377,7 @@ void JSSVGTransformListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsSVGTransformList = jsCast<JSSVGTransformList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGTransformList->impl(), jsSVGTransformList);
+    uncacheWrapper(world, &jsSVGTransformList->wrapped(), jsSVGTransformList);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -418,6 +388,14 @@ extern "C" { extern void (*const __identifier("??_7SVGTransformListPropertyTearO
 extern "C" { extern void* _ZTVN7WebCore31SVGTransformListPropertyTearOffE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGTransformListPropertyTearOff* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGTransformList>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGTransformListPropertyTearOff* impl)
 {
     if (!impl)
@@ -449,7 +427,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGTransform
 SVGTransformListPropertyTearOff* JSSVGTransformList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGTransformList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

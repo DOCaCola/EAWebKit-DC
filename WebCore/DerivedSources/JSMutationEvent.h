@@ -31,7 +31,7 @@ public:
     typedef JSEvent Base;
     static JSMutationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationEvent>&& impl)
     {
-        JSMutationEvent* ptr = new (NotNull, JSC::allocateCell<JSMutationEvent>(globalObject->vm().heap)) JSMutationEvent(structure, globalObject, WTF::move(impl));
+        JSMutationEvent* ptr = new (NotNull, JSC::allocateCell<JSMutationEvent>(globalObject->vm().heap)) JSMutationEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MutationEvent& impl() const
+    MutationEvent& wrapped() const
     {
-        return static_cast<MutationEvent&>(Base::impl());
+        return static_cast<MutationEvent&>(Base::wrapped());
     }
 protected:
-    JSMutationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MutationEvent>&&);
+    JSMutationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MutationEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

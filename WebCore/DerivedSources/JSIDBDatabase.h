@@ -34,7 +34,7 @@ public:
     typedef JSEventTarget Base;
     static JSIDBDatabase* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBDatabase>&& impl)
     {
-        JSIDBDatabase* ptr = new (NotNull, JSC::allocateCell<JSIDBDatabase>(globalObject->vm().heap)) JSIDBDatabase(structure, globalObject, WTF::move(impl));
+        JSIDBDatabase* ptr = new (NotNull, JSC::allocateCell<JSIDBDatabase>(globalObject->vm().heap)) JSIDBDatabase(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -55,13 +55,14 @@ public:
 
 
     // Custom functions
-    JSC::JSValue createObjectStore(JSC::ExecState*);
-    IDBDatabase& impl() const
+    JSC::JSValue createObjectStore(JSC::ExecState&);
+    JSC::JSValue transaction(JSC::ExecState&);
+    IDBDatabase& wrapped() const
     {
-        return static_cast<IDBDatabase&>(Base::impl());
+        return static_cast<IDBDatabase&>(Base::wrapped());
     }
 protected:
-    JSIDBDatabase(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBDatabase>&&);
+    JSIDBDatabase(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBDatabase>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +85,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBDatabase*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBDatabase*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBDatabase& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBDatabase& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBDatabase*);
 
 
 } // namespace WebCore

@@ -25,9 +25,10 @@
 #include "JSConvolverNode.h"
 
 #include "AudioBuffer.h"
-#include "ConvolverNode.h"
+#include "ExceptionCode.h"
 #include "JSAudioBuffer.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -67,50 +68,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSConvolverNodeConstructor : public DOMConstructorObject {
-private:
-    JSConvolverNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSConvolverNode> JSConvolverNodeConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSConvolverNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSConvolverNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSConvolverNodeConstructor>(vm.heap)) JSConvolverNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSConvolverNodeConstructor::s_info = { "ConvolverNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSConvolverNodeConstructor) };
-
-JSConvolverNodeConstructor::JSConvolverNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSConvolverNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSConvolverNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSConvolverNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSConvolverNode::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ConvolverNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSConvolverNodeConstructor::s_info = { "ConvolverNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSConvolverNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSConvolverNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "buffer", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSConvolverNodeBuffer) },
-    { "normalize", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeNormalize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSConvolverNodeNormalize) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "buffer", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSConvolverNodeBuffer) } },
+    { "normalize", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsConvolverNodeNormalize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSConvolverNodeNormalize) } },
 };
 
 const ClassInfo JSConvolverNodePrototype::s_info = { "ConvolverNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSConvolverNodePrototype) };
@@ -123,7 +98,7 @@ void JSConvolverNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSConvolverNode::s_info = { "ConvolverNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSConvolverNode) };
 
-JSConvolverNode::JSConvolverNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ConvolverNode>&& impl)
+JSConvolverNode::JSConvolverNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ConvolverNode>&& impl)
     : JSAudioNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -138,83 +113,85 @@ JSObject* JSConvolverNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSConvolverNode>(vm, globalObject);
 }
 
-EncodedJSValue jsConvolverNodeBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsConvolverNodeBuffer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSConvolverNode* castedThis = jsDynamicCast<JSConvolverNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSConvolverNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ConvolverNode", "buffer");
-        return throwGetterTypeError(*exec, "ConvolverNode", "buffer");
+            return reportDeprecatedGetterError(*state, "ConvolverNode", "buffer");
+        return throwGetterTypeError(*state, "ConvolverNode", "buffer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.buffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.buffer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsConvolverNodeNormalize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsConvolverNodeNormalize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSConvolverNode* castedThis = jsDynamicCast<JSConvolverNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSConvolverNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ConvolverNode", "normalize");
-        return throwGetterTypeError(*exec, "ConvolverNode", "normalize");
+            return reportDeprecatedGetterError(*state, "ConvolverNode", "normalize");
+        return throwGetterTypeError(*state, "ConvolverNode", "normalize");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.normalize());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsConvolverNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsConvolverNodeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSConvolverNodePrototype* domObject = jsDynamicCast<JSConvolverNodePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSConvolverNode::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSConvolverNode::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSConvolverNodeBuffer(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSConvolverNodeBuffer(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSConvolverNode* castedThis = jsDynamicCast<JSConvolverNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSConvolverNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "ConvolverNode", "buffer");
+            reportDeprecatedSetterError(*state, "ConvolverNode", "buffer");
         else
-            throwSetterTypeError(*exec, "ConvolverNode", "buffer");
+            throwSetterTypeError(*state, "ConvolverNode", "buffer");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    ExceptionCode ec = 0;
     AudioBuffer* nativeValue = JSAudioBuffer::toWrapped(value);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->hadException()))
         return;
-    impl.setBuffer(nativeValue);
+    impl.setBuffer(nativeValue, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSConvolverNodeNormalize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSConvolverNodeNormalize(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSConvolverNode* castedThis = jsDynamicCast<JSConvolverNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSConvolverNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "ConvolverNode", "normalize");
+            reportDeprecatedSetterError(*state, "ConvolverNode", "normalize");
         else
-            throwSetterTypeError(*exec, "ConvolverNode", "normalize");
+            throwSetterTypeError(*state, "ConvolverNode", "normalize");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setNormalize(nativeValue);
 }
@@ -222,7 +199,7 @@ void setJSConvolverNodeNormalize(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSConvolverNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSConvolverNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSConvolverNodeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -233,6 +210,14 @@ extern "C" { extern void (*const __identifier("??_7ConvolverNode@WebCore@@6B@")[
 extern "C" { extern void* _ZTVN7WebCore13ConvolverNodeE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ConvolverNode* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSConvolverNode>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ConvolverNode* impl)
 {
     if (!impl)

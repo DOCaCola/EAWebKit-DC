@@ -25,7 +25,7 @@
 #include "JSSVGVKernElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGVKernElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGVKernElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGVKernElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGVKernElement> JSSVGVKernElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGVKernElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGVKernElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGVKernElementConstructor>(vm.heap)) JSSVGVKernElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGVKernElementConstructor::s_info = { "SVGVKernElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGVKernElementConstructor) };
-
-JSSVGVKernElementConstructor::JSSVGVKernElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGVKernElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGVKernElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGVKernElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGVKernElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGVKernElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGVKernElementConstructor::s_info = { "SVGVKernElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGVKernElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGVKernElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGVKernElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGVKernElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGVKernElementPrototype::s_info = { "SVGVKernElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGVKernElementPrototype) };
@@ -115,7 +89,7 @@ void JSSVGVKernElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGVKernElement::s_info = { "SVGVKernElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGVKernElement) };
 
-JSSVGVKernElement::JSSVGVKernElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGVKernElement>&& impl)
+JSSVGVKernElement::JSSVGVKernElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGVKernElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,17 +104,17 @@ JSObject* JSSVGVKernElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGVKernElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGVKernElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGVKernElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGVKernElementPrototype* domObject = jsDynamicCast<JSSVGVKernElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGVKernElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGVKernElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGVKernElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGVKernElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGVKernElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

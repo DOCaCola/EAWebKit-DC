@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGSwitchElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGSwitchElement>&& impl)
     {
-        JSSVGSwitchElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSwitchElement>(globalObject->vm().heap)) JSSVGSwitchElement(structure, globalObject, WTF::move(impl));
+        JSSVGSwitchElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSwitchElement>(globalObject->vm().heap)) JSSVGSwitchElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGSwitchElement& impl() const
+    SVGSwitchElement& wrapped() const
     {
-        return static_cast<SVGSwitchElement&>(Base::impl());
+        return static_cast<SVGSwitchElement&>(Base::wrapped());
     }
 protected:
-    JSSVGSwitchElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGSwitchElement>&&);
+    JSSVGSwitchElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGSwitchElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

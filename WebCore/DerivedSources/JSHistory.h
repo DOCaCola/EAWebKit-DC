@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSHistory : public JSDOMWrapper {
+class JSHistory : public JSDOMWrapper<History> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<History> Base;
     static JSHistory* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<History>&& impl)
     {
-        JSHistory* ptr = new (NotNull, JSC::allocateCell<JSHistory>(globalObject->vm().heap)) JSHistory(structure, globalObject, WTF::move(impl));
+        JSHistory* ptr = new (NotNull, JSC::allocateCell<JSHistory>(globalObject->vm().heap)) JSHistory(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,7 +47,6 @@ public:
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSHistory();
 
     DECLARE_INFO;
 
@@ -60,25 +59,20 @@ public:
     static bool deletePropertyByIndex(JSC::JSCell*, JSC::ExecState*, unsigned);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    JSC::WriteBarrier<JSC::Unknown> m_state;
+    mutable JSC::WriteBarrier<JSC::Unknown> m_state;
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
 
     // Custom attributes
-    JSC::JSValue state(JSC::ExecState*) const;
+    JSC::JSValue state(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue pushState(JSC::ExecState*);
-    JSC::JSValue replaceState(JSC::ExecState*);
-    History& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    History* m_impl;
+    JSC::JSValue pushState(JSC::ExecState&);
+    JSC::JSValue replaceState(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHistory(JSC::Structure*, JSDOMGlobalObject*, Ref<History>&&);
+    JSHistory(JSC::Structure*, JSDOMGlobalObject&, Ref<History>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -101,7 +95,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, History*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, History*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, History& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, History& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, History*);
 
 // Functions
 

@@ -21,8 +21,9 @@
 #include "config.h"
 #include "JSHTMLProgressElement.h"
 
-#include "HTMLProgressElement.h"
+#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNodeList.h"
 #include "NameNodeList.h"
 #include "NodeList.h"
@@ -67,52 +68,26 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLProgressElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLProgressElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLProgressElement> JSHTMLProgressElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLProgressElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLProgressElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLProgressElementConstructor>(vm.heap)) JSHTMLProgressElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLProgressElementConstructor::s_info = { "HTMLProgressElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLProgressElementConstructor) };
-
-JSHTMLProgressElementConstructor::JSHTMLProgressElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLProgressElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLProgressElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLProgressElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLProgressElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLProgressElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLProgressElementConstructor::s_info = { "HTMLProgressElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLProgressElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLProgressElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLProgressElementValue) },
-    { "max", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementMax), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLProgressElementMax) },
-    { "position", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementPosition), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLProgressElementValue) } },
+    { "max", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementMax), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLProgressElementMax) } },
+    { "position", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementPosition), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLProgressElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLProgressElementPrototype::s_info = { "HTMLProgressElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLProgressElementPrototype) };
@@ -125,7 +100,7 @@ void JSHTMLProgressElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLProgressElement::s_info = { "HTMLProgressElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLProgressElement) };
 
-JSHTMLProgressElement::JSHTMLProgressElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLProgressElement>&& impl)
+JSHTMLProgressElement::JSHTMLProgressElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLProgressElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -140,129 +115,129 @@ JSObject* JSHTMLProgressElement::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSHTMLProgressElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLProgressElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLProgressElementValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLProgressElement", "value");
-        return throwGetterTypeError(*exec, "HTMLProgressElement", "value");
+            return reportDeprecatedGetterError(*state, "HTMLProgressElement", "value");
+        return throwGetterTypeError(*state, "HTMLProgressElement", "value");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.value());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLProgressElementMax(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLProgressElementMax(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLProgressElement", "max");
-        return throwGetterTypeError(*exec, "HTMLProgressElement", "max");
+            return reportDeprecatedGetterError(*state, "HTMLProgressElement", "max");
+        return throwGetterTypeError(*state, "HTMLProgressElement", "max");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.max());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLProgressElementPosition(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLProgressElementPosition(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLProgressElement", "position");
-        return throwGetterTypeError(*exec, "HTMLProgressElement", "position");
+            return reportDeprecatedGetterError(*state, "HTMLProgressElement", "position");
+        return throwGetterTypeError(*state, "HTMLProgressElement", "position");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.position());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLProgressElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLProgressElementLabels(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLProgressElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLProgressElement", "labels");
+            return reportDeprecatedGetterError(*state, "HTMLProgressElement", "labels");
+        return throwGetterTypeError(*state, "HTMLProgressElement", "labels");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.labels()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLProgressElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLProgressElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLProgressElementPrototype* domObject = jsDynamicCast<JSHTMLProgressElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLProgressElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLProgressElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLProgressElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLProgressElementValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLProgressElement", "value");
+            reportDeprecatedSetterError(*state, "HTMLProgressElement", "value");
         else
-            throwSetterTypeError(*exec, "HTMLProgressElement", "value");
+            throwSetterTypeError(*state, "HTMLProgressElement", "value");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setValue(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLProgressElementMax(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLProgressElementMax(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLProgressElement* castedThis = jsDynamicCast<JSHTMLProgressElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLProgressElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLProgressElement", "max");
+            reportDeprecatedSetterError(*state, "HTMLProgressElement", "max");
         else
-            throwSetterTypeError(*exec, "HTMLProgressElement", "max");
+            throwSetterTypeError(*state, "HTMLProgressElement", "max");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setMax(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSHTMLProgressElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLProgressElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLProgressElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

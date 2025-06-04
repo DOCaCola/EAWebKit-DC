@@ -108,7 +108,7 @@ void Widget::hide()
         platformWidget()->hide();
 }
 
-void Widget::paint(GraphicsContext*, const IntRect&)
+void Widget::paint(GraphicsContext&, const IntRect&)
 {
 }
 

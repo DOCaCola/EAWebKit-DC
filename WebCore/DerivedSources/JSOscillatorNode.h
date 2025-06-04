@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSOscillatorNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OscillatorNode>&& impl)
     {
-        JSOscillatorNode* ptr = new (NotNull, JSC::allocateCell<JSOscillatorNode>(globalObject->vm().heap)) JSOscillatorNode(structure, globalObject, WTF::move(impl));
+        JSOscillatorNode* ptr = new (NotNull, JSC::allocateCell<JSOscillatorNode>(globalObject->vm().heap)) JSOscillatorNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,15 +52,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setType(JSC::ExecState*, JSC::JSValue);
-    OscillatorNode& impl() const
+    void setType(JSC::ExecState&, JSC::JSValue);
+    OscillatorNode& wrapped() const
     {
-        return static_cast<OscillatorNode&>(Base::impl());
+        return static_cast<OscillatorNode&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSOscillatorNode(JSC::Structure*, JSDOMGlobalObject*, Ref<OscillatorNode>&&);
+    JSOscillatorNode(JSC::Structure*, JSDOMGlobalObject&, Ref<OscillatorNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,7 +71,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OscillatorNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OscillatorNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OscillatorNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OscillatorNode*);
 
 
 } // namespace WebCore

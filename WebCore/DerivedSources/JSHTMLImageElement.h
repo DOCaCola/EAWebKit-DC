@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLImageElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLImageElement>&& impl)
     {
-        JSHTMLImageElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElement>(globalObject->vm().heap)) JSHTMLImageElement(structure, globalObject, WTF::move(impl));
+        JSHTMLImageElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLImageElement>(globalObject->vm().heap)) JSHTMLImageElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLImageElement& impl() const
+    HTMLImageElement& wrapped() const
     {
-        return static_cast<HTMLImageElement&>(Base::impl());
+        return static_cast<HTMLImageElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLImageElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLImageElement>&&);
+    JSHTMLImageElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLImageElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

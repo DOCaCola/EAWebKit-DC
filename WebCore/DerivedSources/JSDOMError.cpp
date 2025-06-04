@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSDOMError.h"
 
-#include "DOMError.h"
 #include "JSDOMBinding.h"
 #include "URL.h"
 #include <runtime/JSString.h>
@@ -70,15 +69,15 @@ static const struct CompactHashIndex JSDOMErrorTableIndex[2] = {
 
 static const HashTableValue JSDOMErrorTableValues[] =
 {
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMErrorName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMErrorName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSDOMErrorTable = { 1, 1, true, JSDOMErrorTableValues, 0, JSDOMErrorTableIndex };
+static const HashTable JSDOMErrorTable = { 1, 1, true, JSDOMErrorTableValues, JSDOMErrorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMErrorPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSDOMErrorPrototype::s_info = { "DOMErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMErrorPrototype) };
@@ -91,9 +90,8 @@ void JSDOMErrorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMError::s_info = { "DOMError", &Base::s_info, &JSDOMErrorTable, CREATE_METHOD_TABLE(JSDOMError) };
 
-JSDOMError::JSDOMError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMError>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMError::JSDOMError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMError>&& impl)
+    : JSDOMWrapper<DOMError>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -113,26 +111,23 @@ void JSDOMError::destroy(JSC::JSCell* cell)
     thisObject->JSDOMError::~JSDOMError();
 }
 
-JSDOMError::~JSDOMError()
-{
-    releaseImpl();
-}
-
-bool JSDOMError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMError::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMError*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDOMError, Base>(exec, JSDOMErrorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDOMError, Base>(state, JSDOMErrorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsDOMErrorName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMErrorName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDOMError*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.name());
     return JSValue::encode(result);
 }
 
@@ -148,7 +143,14 @@ void JSDOMErrorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsDOMError = jsCast<JSDOMError*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMError->impl(), jsDOMError);
+    uncacheWrapper(world, &jsDOMError->wrapped(), jsDOMError);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMError* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMError>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMError* impl)
@@ -163,7 +165,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMError* im
 DOMError* JSDOMError::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMError*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

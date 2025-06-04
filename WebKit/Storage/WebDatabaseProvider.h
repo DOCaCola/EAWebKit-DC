@@ -33,6 +33,12 @@
 
 #include <DatabaseProvider.h>
 #include <wtf/Forward.h>
+#include <wtf/HashMap.h>
+#include <wtf/RefPtr.h>
+
+#if ENABLE(INDEXED_DATABASE)
+#include <InProcessIDBServer.h>
+#endif
 
 class WebDatabaseProvider final : public WebCore::DatabaseProvider {
     friend class NeverDestroyed<WebDatabaseProvider>;
@@ -40,11 +46,17 @@ public:
     static WebDatabaseProvider& singleton();
     virtual ~WebDatabaseProvider();
 
+#if ENABLE(INDEXED_DATABASE)
+    virtual bool supportsModernIDB() const override { return true; }
+    virtual WebCore::IDBClient::IDBConnectionToServer& idbConnectionToServerForSession(const WebCore::SessionID&) override;
+#endif
+
 private:
     explicit WebDatabaseProvider();
 
 #if ENABLE(INDEXED_DATABASE)
     virtual RefPtr<WebCore::IDBFactoryBackendInterface> createIDBFactoryBackend() override;
+    HashMap<uint64_t, RefPtr<WebCore::InProcessIDBServer>> m_idbServerMap;
 #endif
 };
 

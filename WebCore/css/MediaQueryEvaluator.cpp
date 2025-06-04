@@ -34,12 +34,8 @@
 #include "CSSToLengthConversionData.h"
 #include "CSSValueKeywords.h"
 #include "CSSValueList.h"
-#include "Chrome.h"
-#include "ChromeClient.h"
-#include "DOMWindow.h"
 #include "FloatRect.h"
 #include "FrameView.h"
-#include "InspectorInstrumentation.h"
 #include "IntRect.h"
 #include "MainFrame.h"
 #include "MediaFeatureNames.h"
@@ -61,7 +57,7 @@
 #endif
 
 #if PLATFORM(IOS)
-#include "WebCoreSystemInterface.h"
+#include "Device.h"
 #endif
 
 namespace WebCore {
@@ -162,6 +158,40 @@ bool MediaQueryEvaluator::eval(const MediaQuerySet* querySet, StyleResolver* sty
 
             // assume true if we are at the end of the list,
             // otherwise assume false
+            result = applyRestrictor(query->restrictor(), expressions.size() == j);
+        } else
+            result = applyRestrictor(query->restrictor(), false);
+    }
+
+    return result;
+}
+
+bool MediaQueryEvaluator::evalCheckingViewportDependentResults(const MediaQuerySet* querySet, Vector<std::unique_ptr<MediaQueryResult>>& results)
+{
+    if (!querySet)
+        return true;
+
+    auto& queries = querySet->queryVector();
+    if (!queries.size())
+        return true;
+
+    bool result = false;
+    for (size_t i = 0; i < queries.size() && !result; ++i) {
+        MediaQuery* query = queries[i].get();
+
+        if (query->ignored())
+            continue;
+
+        if (mediaTypeMatch(query->mediaType())) {
+            auto& expressions = query->expressions();
+            size_t j = 0;
+            for (; j < expressions.size(); ++j) {
+                bool exprResult = eval(expressions.at(j).get());
+                if (expressions.at(j)->isViewportDependent())
+                    results.append(std::make_unique<MediaQueryResult>(*expressions.at(j), exprResult));
+                if (!exprResult)
+                    break;
+            }
             result = applyRestrictor(query->restrictor(), expressions.size() == j);
         } else
             result = applyRestrictor(query->restrictor(), false);
@@ -635,8 +665,8 @@ static bool view_modeMediaFeatureEval(CSSValue* value, const CSSToLengthConversi
 static inline bool isRunningOnIPhoneOrIPod()
 {
 #if PLATFORM(IOS)
-    static wkDeviceClass deviceClass = iosDeviceClass();
-    return deviceClass == wkDeviceClassiPhone || deviceClass == wkDeviceClassiPod;
+    static bool runningOnIPhoneOrIPod = deviceClass() == MGDeviceClassiPhone || deviceClass() == MGDeviceClassiPod;
+    return runningOnIPhoneOrIPod;
 #else
     return false;
 #endif

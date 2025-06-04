@@ -33,7 +33,7 @@ public:
     typedef JSUIEvent Base;
     static JSMouseEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MouseEvent>&& impl)
     {
-        JSMouseEvent* ptr = new (NotNull, JSC::allocateCell<JSMouseEvent>(globalObject->vm().heap)) JSMouseEvent(structure, globalObject, WTF::move(impl));
+        JSMouseEvent* ptr = new (NotNull, JSC::allocateCell<JSMouseEvent>(globalObject->vm().heap)) JSMouseEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MouseEvent& impl() const
+    MouseEvent& wrapped() const
     {
-        return static_cast<MouseEvent&>(Base::impl());
+        return static_cast<MouseEvent&>(Base::wrapped());
     }
 protected:
-    JSMouseEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MouseEvent>&&);
+    JSMouseEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MouseEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

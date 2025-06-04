@@ -65,29 +65,28 @@ bool WillChangeData::containsProperty(CSSPropertyID property) const
 static bool propertyCreatesStackingContext(CSSPropertyID property)
 {
     switch (property) {
+    case CSSPropertyPerspective:
+    case CSSPropertyTransform:
+    case CSSPropertyTransformStyle:
+    case CSSPropertyWebkitTransformStyle:
     case CSSPropertyClipPath:
     case CSSPropertyWebkitClipPath:
     case CSSPropertyMask:
     case CSSPropertyOpacity:
     case CSSPropertyPosition:
     case CSSPropertyZIndex:
-    case CSSPropertyWebkitBackfaceVisibility:
     case CSSPropertyWebkitBoxReflect:
 #if ENABLE(CSS_COMPOSITING)
     case CSSPropertyMixBlendMode:
     case CSSPropertyIsolation:
 #endif
-    case CSSPropertyWebkitFilter:
+    case CSSPropertyFilter:
 #if ENABLE(FILTERS_LEVEL_2)
     case CSSPropertyWebkitBackdropFilter:
 #endif
     case CSSPropertyWebkitMask:
     case CSSPropertyWebkitMaskImage:
     case CSSPropertyWebkitMaskBoxImage:
-    case CSSPropertyPerspective:
-    case CSSPropertyTransform:
-    case CSSPropertyTransformStyle:
-    case CSSPropertyWebkitTransformStyle:
 #if ENABLE(CSS_REGIONS)
     case CSSPropertyWebkitFlowFrom:
 #endif
@@ -100,19 +99,44 @@ static bool propertyCreatesStackingContext(CSSPropertyID property)
     }
 }
 
-bool WillChangeData::createsStackingContext() const
+static bool propertyTriggersCompositing(CSSPropertyID property)
 {
-    for (const auto& feature : m_animatableFeatures) {
-        if (feature.feature() == Property && propertyCreatesStackingContext(feature.property()))
-            return true;
+    switch (property) {
+    case CSSPropertyOpacity:
+    case CSSPropertyFilter:
+#if ENABLE(FILTERS_LEVEL_2)
+    case CSSPropertyWebkitBackdropFilter:
+#endif
+        return true;
+    default:
+        return false;
     }
-    return false;
+}
+
+static bool propertyTriggersCompositingOnBoxesOnly(CSSPropertyID property)
+{
+    // Don't trigger for perspective and transform-style, because those
+    // only do compositing if they have a 3d-transformed descendant and
+    // we don't want to do compositing all the time.
+    // Similarly, we don't want -webkit-overflow-scrolling-touch to
+    // always composite if there's no scrollable overflow.
+    switch (property) {
+    case CSSPropertyTransform:
+        return true;
+    default:
+        return false;
+    }
 }
 
 void WillChangeData::addFeature(Feature feature, CSSPropertyID propertyID)
 {
     ASSERT(feature == Property || propertyID == CSSPropertyInvalid);
     m_animatableFeatures.append(AnimatableFeature(feature, propertyID));
+
+    m_canCreateStackingContext |= propertyCreatesStackingContext(propertyID);
+
+    m_canTriggerCompositingOnInline |= propertyTriggersCompositing(propertyID);
+    m_canTriggerCompositing |= m_canTriggerCompositingOnInline | propertyTriggersCompositingOnBoxesOnly(propertyID);
 }
 
 WillChangeData::FeaturePropertyPair WillChangeData::featureAt(size_t index) const

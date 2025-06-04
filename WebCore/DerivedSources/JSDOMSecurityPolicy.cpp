@@ -24,10 +24,10 @@
 
 #include "JSDOMSecurityPolicy.h"
 
-#include "DOMSecurityPolicy.h"
 #include "DOMStringList.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMStringList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -83,63 +83,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMSecurityPolicyConstructor : public DOMConstructorObject {
-private:
-    JSDOMSecurityPolicyConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSDOMSecurityPolicy> JSDOMSecurityPolicyConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMSecurityPolicyConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMSecurityPolicyConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMSecurityPolicyConstructor>(vm.heap)) JSDOMSecurityPolicyConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSDOMSecurityPolicyConstructor::s_info = { "SecurityPolicyConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSecurityPolicyConstructor) };
-
-JSDOMSecurityPolicyConstructor::JSDOMSecurityPolicyConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSDOMSecurityPolicyConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDOMSecurityPolicyConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMSecurityPolicy::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMSecurityPolicy::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SecurityPolicy"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMSecurityPolicyConstructor::s_info = { "SecurityPolicyConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSecurityPolicyConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMSecurityPolicyPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "allowsEval", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsEval), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "allowsInlineScript", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsInlineScript), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "allowsInlineStyle", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsInlineStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "isActive", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyIsActive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "reportURIs", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyReportURIs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "allowsConnectionTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsConnectionTo), (intptr_t) (1) },
-    { "allowsFontFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFontFrom), (intptr_t) (1) },
-    { "allowsFormAction", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFormAction), (intptr_t) (1) },
-    { "allowsFrameFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFrameFrom), (intptr_t) (1) },
-    { "allowsImageFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsImageFrom), (intptr_t) (1) },
-    { "allowsMediaFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsMediaFrom), (intptr_t) (1) },
-    { "allowsObjectFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsObjectFrom), (intptr_t) (1) },
-    { "allowsPluginType", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsPluginType), (intptr_t) (1) },
-    { "allowsScriptFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsScriptFrom), (intptr_t) (1) },
-    { "allowsStyleFrom", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsStyleFrom), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "allowsEval", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsEval), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "allowsInlineScript", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsInlineScript), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "allowsInlineStyle", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyAllowsInlineStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "isActive", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyIsActive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "reportURIs", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMSecurityPolicyReportURIs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "allowsConnectionTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsConnectionTo), (intptr_t) (1) } },
+    { "allowsFontFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFontFrom), (intptr_t) (1) } },
+    { "allowsFormAction", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFormAction), (intptr_t) (1) } },
+    { "allowsFrameFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsFrameFrom), (intptr_t) (1) } },
+    { "allowsImageFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsImageFrom), (intptr_t) (1) } },
+    { "allowsMediaFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsMediaFrom), (intptr_t) (1) } },
+    { "allowsObjectFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsObjectFrom), (intptr_t) (1) } },
+    { "allowsPluginType", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsPluginType), (intptr_t) (1) } },
+    { "allowsScriptFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsScriptFrom), (intptr_t) (1) } },
+    { "allowsStyleFrom", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMSecurityPolicyPrototypeFunctionAllowsStyleFrom), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDOMSecurityPolicyPrototype::s_info = { "SecurityPolicyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSecurityPolicyPrototype) };
@@ -152,9 +126,8 @@ void JSDOMSecurityPolicyPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMSecurityPolicy::s_info = { "SecurityPolicy", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMSecurityPolicy) };
 
-JSDOMSecurityPolicy::JSDOMSecurityPolicy(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMSecurityPolicy>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMSecurityPolicy::JSDOMSecurityPolicy(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMSecurityPolicy>&& impl)
+    : JSDOMWrapper<DOMSecurityPolicy>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -174,274 +147,269 @@ void JSDOMSecurityPolicy::destroy(JSC::JSCell* cell)
     thisObject->JSDOMSecurityPolicy::~JSDOMSecurityPolicy();
 }
 
-JSDOMSecurityPolicy::~JSDOMSecurityPolicy()
+EncodedJSValue jsDOMSecurityPolicyAllowsEval(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsDOMSecurityPolicyAllowsEval(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMSecurityPolicyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMSecurityPolicy", "allowsEval");
-        return throwGetterTypeError(*exec, "DOMSecurityPolicy", "allowsEval");
+            return reportDeprecatedGetterError(*state, "DOMSecurityPolicy", "allowsEval");
+        return throwGetterTypeError(*state, "DOMSecurityPolicy", "allowsEval");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.allowsEval());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSecurityPolicyAllowsInlineScript(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSecurityPolicyAllowsInlineScript(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMSecurityPolicyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMSecurityPolicy", "allowsInlineScript");
-        return throwGetterTypeError(*exec, "DOMSecurityPolicy", "allowsInlineScript");
+            return reportDeprecatedGetterError(*state, "DOMSecurityPolicy", "allowsInlineScript");
+        return throwGetterTypeError(*state, "DOMSecurityPolicy", "allowsInlineScript");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.allowsInlineScript());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSecurityPolicyAllowsInlineStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSecurityPolicyAllowsInlineStyle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMSecurityPolicyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMSecurityPolicy", "allowsInlineStyle");
-        return throwGetterTypeError(*exec, "DOMSecurityPolicy", "allowsInlineStyle");
+            return reportDeprecatedGetterError(*state, "DOMSecurityPolicy", "allowsInlineStyle");
+        return throwGetterTypeError(*state, "DOMSecurityPolicy", "allowsInlineStyle");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.allowsInlineStyle());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSecurityPolicyIsActive(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSecurityPolicyIsActive(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMSecurityPolicyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMSecurityPolicy", "isActive");
-        return throwGetterTypeError(*exec, "DOMSecurityPolicy", "isActive");
+            return reportDeprecatedGetterError(*state, "DOMSecurityPolicy", "isActive");
+        return throwGetterTypeError(*state, "DOMSecurityPolicy", "isActive");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.isActive());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSecurityPolicyReportURIs(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMSecurityPolicyReportURIs(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMSecurityPolicyPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMSecurityPolicy", "reportURIs");
-        return throwGetterTypeError(*exec, "DOMSecurityPolicy", "reportURIs");
+            return reportDeprecatedGetterError(*state, "DOMSecurityPolicy", "reportURIs");
+        return throwGetterTypeError(*state, "DOMSecurityPolicy", "reportURIs");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.reportURIs()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.reportURIs()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMSecurityPolicyConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDOMSecurityPolicyConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSDOMSecurityPolicyPrototype* domObject = jsDynamicCast<JSDOMSecurityPolicyPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMSecurityPolicy::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDOMSecurityPolicy::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSDOMSecurityPolicy::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDOMSecurityPolicyConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMSecurityPolicyConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsConnectionTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsConnectionTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsConnectionTo");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsConnectionTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsConnectionTo(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFontFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFontFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsFontFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsFontFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsFontFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFormAction(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFormAction(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsFormAction");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsFormAction");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsFormAction(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFrameFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsFrameFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsFrameFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsFrameFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsFrameFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsImageFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsImageFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsImageFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsImageFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsImageFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsMediaFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsMediaFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsMediaFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsMediaFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsMediaFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsObjectFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsObjectFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsObjectFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsObjectFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsObjectFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsPluginType(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsPluginType(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsPluginType");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsPluginType");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String type = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsPluginType(type));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsScriptFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsScriptFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsScriptFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsScriptFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsScriptFrom(url));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsStyleFrom(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMSecurityPolicyPrototypeFunctionAllowsStyleFrom(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMSecurityPolicy* castedThis = jsDynamicCast<JSDOMSecurityPolicy*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMSecurityPolicy", "allowsStyleFrom");
+        return throwThisTypeError(*state, "DOMSecurityPolicy", "allowsStyleFrom");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMSecurityPolicy::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String url = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String url = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.allowsStyleFrom(url));
     return JSValue::encode(result);
@@ -458,7 +426,7 @@ void JSDOMSecurityPolicyOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* 
 {
     auto* jsDOMSecurityPolicy = jsCast<JSDOMSecurityPolicy*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMSecurityPolicy->impl(), jsDOMSecurityPolicy);
+    uncacheWrapper(world, &jsDOMSecurityPolicy->wrapped(), jsDOMSecurityPolicy);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -469,6 +437,14 @@ extern "C" { extern void (*const __identifier("??_7DOMSecurityPolicy@WebCore@@6B
 extern "C" { extern void* _ZTVN7WebCore17DOMSecurityPolicyE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMSecurityPolicy* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMSecurityPolicy>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMSecurityPolicy* impl)
 {
     if (!impl)
@@ -500,7 +476,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMSecurityP
 DOMSecurityPolicy* JSDOMSecurityPolicy::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMSecurityPolicy*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

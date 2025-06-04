@@ -24,6 +24,7 @@
 
 #include "JSPositionCallback.h"
 
+#include "Geoposition.h"
 #include "JSGeoposition.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
@@ -35,7 +36,7 @@ namespace WebCore {
 JSPositionCallback::JSPositionCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : PositionCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -49,7 +50,7 @@ JSPositionCallback::~JSPositionCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
@@ -65,13 +66,25 @@ bool JSPositionCallback::handleEvent(Geoposition* position)
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), position));
+    args.append(toJS(state, m_data->globalObject(), WTF::getPtr(position)));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<Exception> returnedException;
+    UNUSED_PARAM(state);
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PositionCallback* impl)
+{
+    if (!impl || !static_cast<JSPositionCallback&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSPositionCallback&>(*impl).callbackData()->callback();
+
 }
 
 }

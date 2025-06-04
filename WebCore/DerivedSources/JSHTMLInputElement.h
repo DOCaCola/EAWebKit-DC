@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLInputElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLInputElement>&& impl)
     {
-        JSHTMLInputElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLInputElement>(globalObject->vm().heap)) JSHTMLInputElement(structure, globalObject, WTF::move(impl));
+        JSHTMLInputElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLInputElement>(globalObject->vm().heap)) JSHTMLInputElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,23 +50,23 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue selectionStart(JSC::ExecState*) const;
-    void setSelectionStart(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue selectionEnd(JSC::ExecState*) const;
-    void setSelectionEnd(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue selectionDirection(JSC::ExecState*) const;
-    void setSelectionDirection(JSC::ExecState*, JSC::JSValue);
+    JSC::JSValue selectionStart(JSC::ExecState&) const;
+    void setSelectionStart(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue selectionEnd(JSC::ExecState&) const;
+    void setSelectionEnd(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue selectionDirection(JSC::ExecState&) const;
+    void setSelectionDirection(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue setSelectionRange(JSC::ExecState*);
-    HTMLInputElement& impl() const
+    JSC::JSValue setSelectionRange(JSC::ExecState&);
+    HTMLInputElement& wrapped() const
     {
-        return static_cast<HTMLInputElement&>(Base::impl());
+        return static_cast<HTMLInputElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLInputElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLInputElement>&&);
+    JSHTMLInputElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLInputElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

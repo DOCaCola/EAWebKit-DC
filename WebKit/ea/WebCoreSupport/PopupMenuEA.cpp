@@ -219,7 +219,7 @@ bool PopupMenuEA::layout()
         if(m_popupClient->itemIsLabel(i))
         {
             //The labels are bolder meaning they need more width. Calculate it here.
-			FontDescription d = itemFont.fontDescription();  
+			FontCascadeDescription d = itemFont.fontDescription();  
             d.setWeight(d.bolderWeight());
 
             FontCascade itemFontBold(d, itemFont.letterSpacing(), itemFont.wordSpacing());
@@ -369,7 +369,7 @@ void PopupMenuEA::draw(void)
     Color defaultBgColor(sampleStyle.backgroundColor()); 
     if((int) defaultBgColor.rgb() == 0)             
         defaultBgColor.setRGB(EA::WebKit::GetThemeParameters().mColorInactiveListBoxSelectionBack);
-    context.setFillColor(defaultBgColor, ColorSpaceDeviceRGB);
+    context.setFillColor(defaultBgColor);
     const IntRect windowRect(0,0,m_poppedUpSurfaceRect.width(),m_poppedUpSurfaceRect.height());
     context.fillRect(windowRect);
 
@@ -413,7 +413,7 @@ void PopupMenuEA::draw(void)
         // Only fill if we have something different for this item since we already filled the full background with the estimated default
         if(bgColor != defaultBgColor)
         {
-            context.setFillColor(bgColor, ColorSpaceDeviceRGB);    
+            context.setFillColor(bgColor);    
             context.fillRect(itemRect);
         }
     
@@ -422,7 +422,7 @@ void PopupMenuEA::draw(void)
         const FontMetrics& fontMetrics = font.fontMetrics();
  		const int fontAscent = (int) fontMetrics.floatAscent();
         const TextRun textRun(m_popupClient->itemText(i));
-        context.setFillColor(textColor, ColorSpaceDeviceRGB);    // The fill color is used for the text draw
+        context.setFillColor(textColor);    // The fill color is used for the text draw
         context.drawText(font, textRun, IntPoint(itemRect.x() + ThemeEA::kPopupMenuBorderPadding, itemRect.y() + fontAscent));
     }
 
@@ -430,14 +430,14 @@ void PopupMenuEA::draw(void)
     if(m_scrollBarActive)
     {
         context.save();
-        m_scrollBar->paint(&context, m_scrollRect);
+        m_scrollBar->paint(context, m_scrollRect);
         context.restore();
     }
 
     // We draw the border last
-    context.setFillColor(0, ColorSpaceDeviceRGB);          // Disable the fill
+    context.setFillColor(0);          // Disable the fill
     context.setStrokeStyle(SolidStroke);
-    context.setStrokeColor(ThemeEA::kListBoxBorderColor, ColorSpaceDeviceRGB);
+    context.setStrokeColor(ThemeEA::kListBoxBorderColor);
     context.drawRect(windowRect);
 
     m_surface->Unlock();   
@@ -469,7 +469,7 @@ void PopupMenuEA::drawScrollBar(void)
 	WebCore::GraphicsContext context(cairoContext.get());
     
     // Paint the scrollbar if active
-    m_scrollBar->paint(&context, m_scrollRect);
+    m_scrollBar->paint(context, m_scrollRect);
     m_surface->Unlock();   
 
     // Request a redraw so that the new overlay gets transfered to the main view surface.
@@ -910,7 +910,7 @@ IntSize PopupMenuEA::contentsSize() const
 	return m_poppedUpSurfaceRect.size();
 }
 
-IntRect PopupMenuEA::scrollableAreaBoundingBox() const
+IntRect PopupMenuEA::scrollableAreaBoundingBox(bool*) const
 {
 	return m_poppedUpSurfaceRect;
 }

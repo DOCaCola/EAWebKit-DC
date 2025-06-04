@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGTextContentElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTextContentElement>&& impl)
     {
-        JSSVGTextContentElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextContentElement>(globalObject->vm().heap)) JSSVGTextContentElement(structure, globalObject, WTF::move(impl));
+        JSSVGTextContentElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextContentElement>(globalObject->vm().heap)) JSSVGTextContentElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTextContentElement& impl() const
+    SVGTextContentElement& wrapped() const
     {
-        return static_cast<SVGTextContentElement&>(Base::impl());
+        return static_cast<SVGTextContentElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTextContentElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTextContentElement>&&);
+    JSSVGTextContentElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTextContentElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -44,6 +44,8 @@ using namespace HTMLNames;
 TokenPreloadScanner::TagId TokenPreloadScanner::tagIdFor(const HTMLToken::DataVector& data)
 {
     AtomicString tagName(data);
+    if (tagName == iframeTag)
+        return TagId::Iframe;
     if (tagName == imgTag)
         return TagId::Img;
     if (tagName == inputTag)
@@ -66,6 +68,8 @@ TokenPreloadScanner::TagId TokenPreloadScanner::tagIdFor(const HTMLToken::DataVe
 String TokenPreloadScanner::initiatorFor(TagId tagId)
 {
     switch (tagId) {
+    case TagId::Iframe:
+        return "iframe";
     case TagId::Img:
         return "img";
     case TagId::Input:
@@ -103,9 +107,9 @@ public:
         if (m_tagId >= TagId::Unknown)
             return;
 
-        for (HTMLToken::AttributeList::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter) {
-            AtomicString attributeName(iter->name);
-            String attributeValue = StringImpl::create8BitIfPossible(iter->value);
+        for (auto& attribute : attributes) {
+            AtomicString attributeName(attribute.name);
+            String attributeValue = StringImpl::create8BitIfPossible(attribute.value);
             processAttribute(attributeName, attributeValue);
         }
 
@@ -140,38 +144,64 @@ public:
     }
 
 private:
-    template<typename NameType>
-    void processAttribute(const NameType& attributeName, const String& attributeValue)
+    void processImageAndScriptAttribute(const AtomicString& attributeName, const String& attributeValue)
     {
-        if (match(attributeName, charsetAttr))
+        if (match(attributeName, srcAttr))
+            setUrlToLoad(attributeValue);
+        else if (match(attributeName, crossoriginAttr) && !attributeValue.isNull())
+            m_crossOriginMode = stripLeadingAndTrailingHTMLSpaces(attributeValue);
+        else if (match(attributeName, charsetAttr))
             m_charset = attributeValue;
+    }
 
-        if (m_tagId == TagId::Script || m_tagId == TagId::Img) {
+    void processAttribute(const AtomicString& attributeName, const String& attributeValue)
+    {
+        switch (m_tagId) {
+        case TagId::Iframe:
             if (match(attributeName, srcAttr))
                 setUrlToLoad(attributeValue);
-            else if (match(attributeName, srcsetAttr) && m_srcSetAttribute.isNull())
+            break;
+        case TagId::Img:
+            if (match(attributeName, srcsetAttr) && m_srcSetAttribute.isNull()) {
                 m_srcSetAttribute = attributeValue;
-            else if (match(attributeName, sizesAttr) && m_sizesAttribute.isNull())
+                break;
+            }
+            if (match(attributeName, sizesAttr) && m_sizesAttribute.isNull()) {
                 m_sizesAttribute = attributeValue;
-            else if (match(attributeName, crossoriginAttr) && !attributeValue.isNull())
-                m_crossOriginMode = stripLeadingAndTrailingHTMLSpaces(attributeValue);
-        } else if (m_tagId == TagId::Link) {
+                break;
+            }
+            processImageAndScriptAttribute(attributeName, attributeValue);
+            break;
+        case TagId::Script:
+            processImageAndScriptAttribute(attributeName, attributeValue);
+            break;
+        case TagId::Link:
             if (match(attributeName, hrefAttr))
                 setUrlToLoad(attributeValue);
             else if (match(attributeName, relAttr))
                 m_linkIsStyleSheet = relAttributeIsStyleSheet(attributeValue);
             else if (match(attributeName, mediaAttr))
                 m_mediaAttribute = attributeValue;
-        } else if (m_tagId == TagId::Input) {
+            else if (match(attributeName, charsetAttr))
+                m_charset = attributeValue;
+            break;
+        case TagId::Input:
             if (match(attributeName, srcAttr))
                 setUrlToLoad(attributeValue);
             else if (match(attributeName, typeAttr))
                 m_inputIsImage = equalIgnoringCase(attributeValue, InputTypeNames::image());
-        } else if (m_tagId == TagId::Meta) {
+            break;
+        case TagId::Meta:
             if (match(attributeName, contentAttr))
                 m_metaContent = attributeValue;
             else if (match(attributeName, nameAttr))
                 m_metaIsViewport = equalIgnoringCase(attributeValue, "viewport");
+            break;
+        case TagId::Base:
+        case TagId::Style:
+        case TagId::Template:
+        case TagId::Unknown:
+            break;
         }
     }
 
@@ -195,20 +225,30 @@ private:
 
     const String& charset() const
     {
-        // FIXME: Its not clear that this if is needed, the loader probably ignores charset for image requests anyway.
-        if (m_tagId == TagId::Img)
-            return emptyString();
         return m_charset;
     }
 
     CachedResource::Type resourceType() const
     {
-        if (m_tagId == TagId::Script)
+        switch (m_tagId) {
+        case TagId::Iframe:
+            return CachedResource::MainResource;
+        case TagId::Script:
             return CachedResource::Script;
-        if (m_tagId == TagId::Img || (m_tagId == TagId::Input && m_inputIsImage))
+        case TagId::Img:
+        case TagId::Input:
+            ASSERT(m_tagId != TagId::Input || m_inputIsImage);
             return CachedResource::ImageResource;
-        if (m_tagId == TagId::Link && m_linkIsStyleSheet)
+        case TagId::Link:
+            ASSERT(m_linkIsStyleSheet);
             return CachedResource::CSSStyleSheet;
+        case TagId::Meta:
+        case TagId::Unknown:
+        case TagId::Style:
+        case TagId::Base:
+        case TagId::Template:
+            break;
+        }
         ASSERT_NOT_REACHED();
         return CachedResource::RawResource;
     }
@@ -216,6 +256,9 @@ private:
     bool shouldPreload()
     {
         if (m_urlToLoad.isEmpty())
+            return false;
+
+        if (protocolIs(m_urlToLoad, "data") || protocolIs(m_urlToLoad, "about"))
             return false;
 
         if (m_tagId == TagId::Link && !m_linkIsStyleSheet)

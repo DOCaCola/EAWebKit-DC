@@ -138,7 +138,7 @@ static PassRefPtr<DocumentFragment> documentFragmentFromDragData(DragData& dragD
             String title;
             String url = dragData.asURL(DragData::DoNotConvertFilenames, &title);
             if (!url.isEmpty()) {
-                RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::create(document);
+                Ref<HTMLAnchorElement> anchor = HTMLAnchorElement::create(document);
                 anchor->setHref(url);
                 if (title.isEmpty()) {
                     // Try the plain text first because the url might be normalized or escaped.
@@ -147,20 +147,19 @@ static PassRefPtr<DocumentFragment> documentFragmentFromDragData(DragData& dragD
                     if (title.isEmpty())
                         title = url;
                 }
-                RefPtr<Node> anchorText = document.createTextNode(title);
-                anchor->appendChild(anchorText, IGNORE_EXCEPTION);
-                RefPtr<DocumentFragment> fragment = document.createDocumentFragment();
-                fragment->appendChild(anchor, IGNORE_EXCEPTION);
-                return fragment.get();
+                anchor->appendChild(document.createTextNode(title), IGNORE_EXCEPTION);
+                Ref<DocumentFragment> fragment = document.createDocumentFragment();
+                fragment->appendChild(WTF::move(anchor), IGNORE_EXCEPTION);
+                return fragment.ptr();
             }
         }
     }
     if (allowPlainText && dragData.containsPlainText()) {
         chosePlainText = true;
-        return createFragmentFromText(context, dragData.asPlainText()).get();
+        return createFragmentFromText(context, dragData.asPlainText()).ptr();
     }
 
-    return 0;
+    return nullptr;
 }
 
 bool DragController::dragIsMove(FrameSelection& selection, DragData& dragData)
@@ -282,17 +281,20 @@ DragOperation DragController::dragEnteredOrUpdated(DragData& dragData)
     return dragOperation;
 }
 
-static HTMLInputElement* asFileInput(Node* node)
+static HTMLInputElement* asFileInput(Node& node)
 {
-    ASSERT(node);
+    if (!is<HTMLInputElement>(node))
+        return nullptr;
 
-    HTMLInputElement* inputElement = node->toInputElement();
+    auto* inputElement = &downcast<HTMLInputElement>(node);
 
     // If this is a button inside of the a file input, move up to the file input.
-    if (inputElement && inputElement->isTextButton() && is<ShadowRoot>(inputElement->treeScope().rootNode()))
-        inputElement = downcast<ShadowRoot>(inputElement->treeScope().rootNode()).hostElement()->toInputElement();
+    if (inputElement->isTextButton() && is<ShadowRoot>(inputElement->treeScope().rootNode())) {
+        auto& host = *downcast<ShadowRoot>(inputElement->treeScope().rootNode()).host();
+        inputElement = is<HTMLInputElement>(host) ? &downcast<HTMLInputElement>(host) : nullptr;
+    }
 
-    return inputElement && inputElement->isFileUpload() ? inputElement : 0;
+    return inputElement && inputElement->isFileUpload() ? inputElement : nullptr;
 }
 
 // This can return null if an empty document is loaded.
@@ -356,7 +358,7 @@ bool DragController::tryDocumentDrag(DragData& dragData, DragDestinationAction a
         if (!element)
             return false;
         
-        HTMLInputElement* elementAsFileInput = asFileInput(element);
+        HTMLInputElement* elementAsFileInput = asFileInput(*element);
         if (m_fileInputElementUnderMouse != elementAsFileInput) {
             if (m_fileInputElementUnderMouse)
                 m_fileInputElementUnderMouse->setCanReceiveDroppedFiles(false);
@@ -444,7 +446,7 @@ bool DragController::dispatchTextInputEventFor(Frame* innerFrame, DragData& drag
     ASSERT(m_page.dragCaretController().hasCaret());
     String text = m_page.dragCaretController().isContentRichlyEditable() ? emptyString() : dragData.asPlainText();
     Node* target = innerFrame->editor().findEventTargetFrom(m_page.dragCaretController().caretPosition());
-    return target->dispatchEvent(TextEvent::createForDrop(innerFrame->document()->domWindow(), text), IGNORE_EXCEPTION);
+    return target->dispatchEvent(TextEvent::createForDrop(innerFrame->document()->domWindow(), text));
 }
 
 bool DragController::concludeEditDrag(DragData& dragData)
@@ -566,7 +568,7 @@ bool DragController::canProcessDrag(DragData& dragData)
     if (!result.innerNonSharedNode())
         return false;
 
-    if (dragData.containsFiles() && asFileInput(result.innerNonSharedNode()))
+    if (dragData.containsFiles() && asFileInput(*result.innerNonSharedNode()))
         return true;
 
     if (is<HTMLPlugInElement>(*result.innerNonSharedNode())) {
@@ -650,7 +652,7 @@ Element* DragController::draggableElement(const Frame* sourceFrame, Element* sta
         state.type = DragSourceActionNone;
 #endif
 
-    for (auto renderer = startElement->renderer(); renderer; renderer = renderer->parent()) {
+    for (auto* renderer = startElement->renderer(); renderer; renderer = renderer->parent()) {
         Element* element = renderer->nonPseudoElement();
         if (!element) {
             // Anonymous render blocks don't correspond to actual DOM elements, so we skip over them

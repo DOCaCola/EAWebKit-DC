@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSRange : public JSDOMWrapper {
+class WEBCORE_EXPORT JSRange : public JSDOMWrapper<Range> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Range> Base;
     static JSRange* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Range>&& impl)
     {
-        JSRange* ptr = new (NotNull, JSC::allocateCell<JSRange>(globalObject->vm().heap)) JSRange(structure, globalObject, WTF::move(impl));
+        JSRange* ptr = new (NotNull, JSC::allocateCell<JSRange>(globalObject->vm().heap)) JSRange(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Range* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRange();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Range& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Range* m_impl;
 protected:
-    JSRange(JSC::Structure*, JSDOMGlobalObject*, Ref<Range>&&);
+    JSRange(JSC::Structure*, JSDOMGlobalObject&, Ref<Range>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Range*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Range*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Range& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Range& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Range*);
 
 
 } // namespace WebCore

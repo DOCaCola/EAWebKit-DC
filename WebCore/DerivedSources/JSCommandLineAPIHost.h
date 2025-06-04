@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCommandLineAPIHost : public JSDOMWrapper {
+class JSCommandLineAPIHost : public JSDOMWrapper<CommandLineAPIHost> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CommandLineAPIHost> Base;
     static JSCommandLineAPIHost* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CommandLineAPIHost>&& impl)
     {
-        JSCommandLineAPIHost* ptr = new (NotNull, JSC::allocateCell<JSCommandLineAPIHost>(globalObject->vm().heap)) JSCommandLineAPIHost(structure, globalObject, WTF::move(impl));
+        JSCommandLineAPIHost* ptr = new (NotNull, JSC::allocateCell<JSCommandLineAPIHost>(globalObject->vm().heap)) JSCommandLineAPIHost(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CommandLineAPIHost* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCommandLineAPIHost();
 
     DECLARE_INFO;
 
@@ -52,18 +51,13 @@ public:
 
 
     // Custom functions
-    JSC::JSValue inspect(JSC::ExecState*);
-    JSC::JSValue inspectedObject(JSC::ExecState*);
-    JSC::JSValue getEventListeners(JSC::ExecState*);
-    JSC::JSValue databaseId(JSC::ExecState*);
-    JSC::JSValue storageId(JSC::ExecState*);
-    CommandLineAPIHost& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CommandLineAPIHost* m_impl;
+    JSC::JSValue inspect(JSC::ExecState&);
+    JSC::JSValue inspectedObject(JSC::ExecState&);
+    JSC::JSValue getEventListeners(JSC::ExecState&);
+    JSC::JSValue databaseId(JSC::ExecState&);
+    JSC::JSValue storageId(JSC::ExecState&);
 protected:
-    JSCommandLineAPIHost(JSC::Structure*, JSDOMGlobalObject*, Ref<CommandLineAPIHost>&&);
+    JSCommandLineAPIHost(JSC::Structure*, JSDOMGlobalObject&, Ref<CommandLineAPIHost>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -86,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CommandLineAPIHost*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CommandLineAPIHost*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CommandLineAPIHost& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CommandLineAPIHost& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CommandLineAPIHost*);
 
 
 } // namespace WebCore

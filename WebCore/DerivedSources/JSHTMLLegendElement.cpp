@@ -22,9 +22,9 @@
 #include "JSHTMLLegendElement.h"
 
 #include "HTMLFormElement.h"
-#include "HTMLLegendElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLFormElement.h"
 #include "URL.h"
 #include <runtime/JSString.h>
@@ -66,50 +66,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLLegendElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLLegendElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLLegendElement> JSHTMLLegendElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLLegendElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLLegendElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLLegendElementConstructor>(vm.heap)) JSHTMLLegendElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLLegendElementConstructor::s_info = { "HTMLLegendElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLegendElementConstructor) };
-
-JSHTMLLegendElementConstructor::JSHTMLLegendElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLLegendElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLLegendElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLLegendElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLLegendElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLLegendElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLLegendElementConstructor::s_info = { "HTMLLegendElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLegendElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLLegendElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLegendElementAlign) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLegendElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLegendElementAlign) } },
 };
 
 const ClassInfo JSHTMLLegendElementPrototype::s_info = { "HTMLLegendElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLegendElementPrototype) };
@@ -122,7 +96,7 @@ void JSHTMLLegendElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLLegendElement::s_info = { "HTMLLegendElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLegendElement) };
 
-JSHTMLLegendElement::JSHTMLLegendElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLegendElement>&& impl)
+JSHTMLLegendElement::JSHTMLLegendElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLLegendElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -137,63 +111,63 @@ JSObject* JSHTMLLegendElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSHTMLLegendElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLLegendElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLegendElementForm(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLegendElement* castedThis = jsDynamicCast<JSHTMLLegendElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLegendElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLegendElement", "form");
-        return throwGetterTypeError(*exec, "HTMLLegendElement", "form");
+            return reportDeprecatedGetterError(*state, "HTMLLegendElement", "form");
+        return throwGetterTypeError(*state, "HTMLLegendElement", "form");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.form()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLegendElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLegendElementAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLegendElement* castedThis = jsDynamicCast<JSHTMLLegendElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLegendElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLegendElement", "align");
-        return throwGetterTypeError(*exec, "HTMLLegendElement", "align");
+            return reportDeprecatedGetterError(*state, "HTMLLegendElement", "align");
+        return throwGetterTypeError(*state, "HTMLLegendElement", "align");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLegendElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLLegendElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLLegendElementPrototype* domObject = jsDynamicCast<JSHTMLLegendElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLLegendElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLLegendElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLLegendElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLLegendElementAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLLegendElement* castedThis = jsDynamicCast<JSHTMLLegendElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLegendElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLegendElement", "align");
+            reportDeprecatedSetterError(*state, "HTMLLegendElement", "align");
         else
-            throwSetterTypeError(*exec, "HTMLLegendElement", "align");
+            throwSetterTypeError(*state, "HTMLLegendElement", "align");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
 }
@@ -201,7 +175,7 @@ void setJSHTMLLegendElementAlign(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSHTMLLegendElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLLegendElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLLegendElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

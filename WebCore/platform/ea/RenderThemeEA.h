@@ -157,7 +157,7 @@ protected:
 	virtual bool paintMediaCurrentTime(const RenderObject&, const PaintInfo&, const IntRect&) override;
 	virtual bool paintMediaTimeRemaining(const RenderObject&, const PaintInfo&, const IntRect&) override;
 
-	virtual void updateCachedSystemFontDescription(CSSValueID systemFontID, FontDescription&) const override;
+	void updateCachedSystemFontDescription(CSSValueID systemFontID, FontCascadeDescription&) const override;
 
 private:
 	void addIntrinsicMargins(RenderStyle& style) const;

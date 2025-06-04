@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSCustomEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CustomEvent>&& impl)
     {
-        JSCustomEvent* ptr = new (NotNull, JSC::allocateCell<JSCustomEvent>(globalObject->vm().heap)) JSCustomEvent(structure, globalObject, WTF::move(impl));
+        JSCustomEvent* ptr = new (NotNull, JSC::allocateCell<JSCustomEvent>(globalObject->vm().heap)) JSCustomEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,15 +52,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue detail(JSC::ExecState*) const;
-    CustomEvent& impl() const
+    JSC::JSValue detail(JSC::ExecState&) const;
+    CustomEvent& wrapped() const
     {
-        return static_cast<CustomEvent&>(Base::impl());
+        return static_cast<CustomEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSCustomEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<CustomEvent>&&);
+    JSCustomEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<CustomEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

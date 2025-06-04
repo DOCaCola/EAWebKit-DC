@@ -31,7 +31,7 @@ public:
     typedef JSStyleSheet Base;
     static JSCSSStyleSheet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleSheet>&& impl)
     {
-        JSCSSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheet>(globalObject->vm().heap)) JSCSSStyleSheet(structure, globalObject, WTF::move(impl));
+        JSCSSStyleSheet* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleSheet>(globalObject->vm().heap)) JSCSSStyleSheet(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSStyleSheet& impl() const
+    CSSStyleSheet& wrapped() const
     {
-        return static_cast<CSSStyleSheet&>(Base::impl());
+        return static_cast<CSSStyleSheet&>(Base::wrapped());
     }
 protected:
-    JSCSSStyleSheet(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSStyleSheet>&&);
+    JSCSSStyleSheet(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSStyleSheet>&&);
 
     void finishCreation(JSC::VM& vm)
     {

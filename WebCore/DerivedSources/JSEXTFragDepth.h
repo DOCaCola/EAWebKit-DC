@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSEXTFragDepth : public JSDOMWrapper {
+class JSEXTFragDepth : public JSDOMWrapper<EXTFragDepth> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<EXTFragDepth> Base;
     static JSEXTFragDepth* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTFragDepth>&& impl)
     {
-        JSEXTFragDepth* ptr = new (NotNull, JSC::allocateCell<JSEXTFragDepth>(globalObject->vm().heap)) JSEXTFragDepth(structure, globalObject, WTF::move(impl));
+        JSEXTFragDepth* ptr = new (NotNull, JSC::allocateCell<JSEXTFragDepth>(globalObject->vm().heap)) JSEXTFragDepth(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTFragDepth* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTFragDepth();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTFragDepth& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTFragDepth* m_impl;
 protected:
-    JSEXTFragDepth(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTFragDepth>&&);
+    JSEXTFragDepth(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTFragDepth>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTFragDepth*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTFragDepth*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTFragDepth& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTFragDepth& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, EXTFragDepth*);
 
 
 } // namespace WebCore

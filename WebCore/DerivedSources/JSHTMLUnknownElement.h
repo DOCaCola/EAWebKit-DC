@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLUnknownElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLUnknownElement>&& impl)
     {
-        JSHTMLUnknownElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElement>(globalObject->vm().heap)) JSHTMLUnknownElement(structure, globalObject, WTF::move(impl));
+        JSHTMLUnknownElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLUnknownElement>(globalObject->vm().heap)) JSHTMLUnknownElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLUnknownElement& impl() const
+    HTMLUnknownElement& wrapped() const
     {
-        return static_cast<HTMLUnknownElement&>(Base::impl());
+        return static_cast<HTMLUnknownElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLUnknownElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLUnknownElement>&&);
+    JSHTMLUnknownElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLUnknownElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -25,9 +25,9 @@
 #include "JSAudioProcessingEvent.h"
 
 #include "AudioBuffer.h"
-#include "AudioProcessingEvent.h"
 #include "JSAudioBuffer.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -66,51 +66,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAudioProcessingEventConstructor : public DOMConstructorObject {
-private:
-    JSAudioProcessingEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSAudioProcessingEvent> JSAudioProcessingEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAudioProcessingEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAudioProcessingEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSAudioProcessingEventConstructor>(vm.heap)) JSAudioProcessingEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSAudioProcessingEventConstructor::s_info = { "AudioProcessingEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioProcessingEventConstructor) };
-
-JSAudioProcessingEventConstructor::JSAudioProcessingEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSAudioProcessingEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSAudioProcessingEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAudioProcessingEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAudioProcessingEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioProcessingEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSAudioProcessingEventConstructor::s_info = { "AudioProcessingEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioProcessingEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioProcessingEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "playbackTime", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventPlaybackTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "inputBuffer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventInputBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "outputBuffer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventOutputBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "playbackTime", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventPlaybackTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "inputBuffer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventInputBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "outputBuffer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioProcessingEventOutputBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSAudioProcessingEventPrototype::s_info = { "AudioProcessingEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioProcessingEventPrototype) };
@@ -123,7 +97,7 @@ void JSAudioProcessingEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAudioProcessingEvent::s_info = { "AudioProcessingEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioProcessingEvent) };
 
-JSAudioProcessingEvent::JSAudioProcessingEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioProcessingEvent>&& impl)
+JSAudioProcessingEvent::JSAudioProcessingEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioProcessingEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -138,68 +112,68 @@ JSObject* JSAudioProcessingEvent::getPrototype(VM& vm, JSGlobalObject* globalObj
     return getDOMPrototype<JSAudioProcessingEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsAudioProcessingEventPlaybackTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioProcessingEventPlaybackTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioProcessingEvent* castedThis = jsDynamicCast<JSAudioProcessingEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioProcessingEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioProcessingEvent", "playbackTime");
-        return throwGetterTypeError(*exec, "AudioProcessingEvent", "playbackTime");
+            return reportDeprecatedGetterError(*state, "AudioProcessingEvent", "playbackTime");
+        return throwGetterTypeError(*state, "AudioProcessingEvent", "playbackTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.playbackTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioProcessingEventInputBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioProcessingEventInputBuffer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioProcessingEvent* castedThis = jsDynamicCast<JSAudioProcessingEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioProcessingEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioProcessingEvent", "inputBuffer");
-        return throwGetterTypeError(*exec, "AudioProcessingEvent", "inputBuffer");
+            return reportDeprecatedGetterError(*state, "AudioProcessingEvent", "inputBuffer");
+        return throwGetterTypeError(*state, "AudioProcessingEvent", "inputBuffer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.inputBuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.inputBuffer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioProcessingEventOutputBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioProcessingEventOutputBuffer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioProcessingEvent* castedThis = jsDynamicCast<JSAudioProcessingEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioProcessingEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioProcessingEvent", "outputBuffer");
-        return throwGetterTypeError(*exec, "AudioProcessingEvent", "outputBuffer");
+            return reportDeprecatedGetterError(*state, "AudioProcessingEvent", "outputBuffer");
+        return throwGetterTypeError(*state, "AudioProcessingEvent", "outputBuffer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.outputBuffer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.outputBuffer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioProcessingEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsAudioProcessingEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSAudioProcessingEventPrototype* domObject = jsDynamicCast<JSAudioProcessingEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAudioProcessingEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSAudioProcessingEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSAudioProcessingEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSAudioProcessingEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSAudioProcessingEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -210,6 +184,14 @@ extern "C" { extern void (*const __identifier("??_7AudioProcessingEvent@WebCore@
 extern "C" { extern void* _ZTVN7WebCore20AudioProcessingEventE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioProcessingEvent* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSAudioProcessingEvent>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioProcessingEvent* impl)
 {
     if (!impl)

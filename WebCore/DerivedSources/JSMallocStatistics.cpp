@@ -22,7 +22,6 @@
 #include "JSMallocStatistics.h"
 
 #include "JSDOMBinding.h"
-#include "MallocStatistics.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -64,9 +63,9 @@ private:
 
 static const HashTableValue JSMallocStatisticsPrototypeTableValues[] =
 {
-    { "reservedVMBytes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsReservedVMBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "committedVMBytes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsCommittedVMBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "freeListBytes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsFreeListBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "reservedVMBytes", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsReservedVMBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "committedVMBytes", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsCommittedVMBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "freeListBytes", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMallocStatisticsFreeListBytes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSMallocStatisticsPrototype::s_info = { "MallocStatisticsPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMallocStatisticsPrototype) };
@@ -79,9 +78,8 @@ void JSMallocStatisticsPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMallocStatistics::s_info = { "MallocStatistics", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMallocStatistics) };
 
-JSMallocStatistics::JSMallocStatistics(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MallocStatistics>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMallocStatistics::JSMallocStatistics(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MallocStatistics>&& impl)
+    : JSDOMWrapper<MallocStatistics>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -101,57 +99,52 @@ void JSMallocStatistics::destroy(JSC::JSCell* cell)
     thisObject->JSMallocStatistics::~JSMallocStatistics();
 }
 
-JSMallocStatistics::~JSMallocStatistics()
+EncodedJSValue jsMallocStatisticsReservedVMBytes(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMallocStatisticsReservedVMBytes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMallocStatistics* castedThis = jsDynamicCast<JSMallocStatistics*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMallocStatisticsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MallocStatistics", "reservedVMBytes");
-        return throwGetterTypeError(*exec, "MallocStatistics", "reservedVMBytes");
+            return reportDeprecatedGetterError(*state, "MallocStatistics", "reservedVMBytes");
+        return throwGetterTypeError(*state, "MallocStatistics", "reservedVMBytes");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.reservedVMBytes());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMallocStatisticsCommittedVMBytes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMallocStatisticsCommittedVMBytes(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMallocStatistics* castedThis = jsDynamicCast<JSMallocStatistics*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMallocStatisticsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MallocStatistics", "committedVMBytes");
-        return throwGetterTypeError(*exec, "MallocStatistics", "committedVMBytes");
+            return reportDeprecatedGetterError(*state, "MallocStatistics", "committedVMBytes");
+        return throwGetterTypeError(*state, "MallocStatistics", "committedVMBytes");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.committedVMBytes());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMallocStatisticsFreeListBytes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMallocStatisticsFreeListBytes(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMallocStatistics* castedThis = jsDynamicCast<JSMallocStatistics*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMallocStatisticsPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MallocStatistics", "freeListBytes");
-        return throwGetterTypeError(*exec, "MallocStatistics", "freeListBytes");
+            return reportDeprecatedGetterError(*state, "MallocStatistics", "freeListBytes");
+        return throwGetterTypeError(*state, "MallocStatistics", "freeListBytes");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.freeListBytes());
     return JSValue::encode(result);
 }
@@ -168,7 +161,14 @@ void JSMallocStatisticsOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsMallocStatistics = jsCast<JSMallocStatistics*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMallocStatistics->impl(), jsMallocStatistics);
+    uncacheWrapper(world, &jsMallocStatistics->wrapped(), jsMallocStatistics);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MallocStatistics* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMallocStatistics>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MallocStatistics* impl)
@@ -190,7 +190,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MallocStatis
 MallocStatistics* JSMallocStatistics::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMallocStatistics*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

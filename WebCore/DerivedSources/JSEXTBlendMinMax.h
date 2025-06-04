@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSEXTBlendMinMax : public JSDOMWrapper {
+class JSEXTBlendMinMax : public JSDOMWrapper<EXTBlendMinMax> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<EXTBlendMinMax> Base;
     static JSEXTBlendMinMax* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTBlendMinMax>&& impl)
     {
-        JSEXTBlendMinMax* ptr = new (NotNull, JSC::allocateCell<JSEXTBlendMinMax>(globalObject->vm().heap)) JSEXTBlendMinMax(structure, globalObject, WTF::move(impl));
+        JSEXTBlendMinMax* ptr = new (NotNull, JSC::allocateCell<JSEXTBlendMinMax>(globalObject->vm().heap)) JSEXTBlendMinMax(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTBlendMinMax* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTBlendMinMax();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTBlendMinMax& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTBlendMinMax* m_impl;
 protected:
-    JSEXTBlendMinMax(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTBlendMinMax>&&);
+    JSEXTBlendMinMax(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTBlendMinMax>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTBlendMinMax*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTBlendMinMax*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTBlendMinMax& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTBlendMinMax& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, EXTBlendMinMax*);
 
 
 } // namespace WebCore

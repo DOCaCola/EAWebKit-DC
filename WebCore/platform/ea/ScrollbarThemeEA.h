@@ -33,10 +33,10 @@ namespace WebCore {
 
 class ScrollbarThemeEA : public ScrollbarTheme {
 public:
-    virtual ~ScrollbarThemeEA();
+    ~ScrollbarThemeEA() override = default;
 
     virtual bool paint(Scrollbar&, GraphicsContext&, const IntRect& damageRect) override;
-    virtual void paintScrollCorner(ScrollView*, GraphicsContext*, const IntRect& cornerRect) override;
+    void paintScrollCorner(ScrollView*, GraphicsContext& context, const IntRect& cornerRect) override;
 
     virtual ScrollbarPart hitTest(Scrollbar&, const IntPoint&) override;
 

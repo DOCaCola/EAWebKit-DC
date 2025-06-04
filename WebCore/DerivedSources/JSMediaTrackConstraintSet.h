@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaTrackConstraintSet : public JSDOMWrapper {
+class JSMediaTrackConstraintSet : public JSDOMWrapper<MediaTrackConstraintSet> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaTrackConstraintSet> Base;
     static JSMediaTrackConstraintSet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaTrackConstraintSet>&& impl)
     {
-        JSMediaTrackConstraintSet* ptr = new (NotNull, JSC::allocateCell<JSMediaTrackConstraintSet>(globalObject->vm().heap)) JSMediaTrackConstraintSet(structure, globalObject, WTF::move(impl));
+        JSMediaTrackConstraintSet* ptr = new (NotNull, JSC::allocateCell<JSMediaTrackConstraintSet>(globalObject->vm().heap)) JSMediaTrackConstraintSet(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaTrackConstraintSet* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaTrackConstraintSet();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaTrackConstraintSet& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaTrackConstraintSet* m_impl;
 protected:
-    JSMediaTrackConstraintSet(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaTrackConstraintSet>&&);
+    JSMediaTrackConstraintSet(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaTrackConstraintSet>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaTrackConstraint
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaTrackConstraintSet*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaTrackConstraintSet& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaTrackConstraintSet& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaTrackConstraintSet*);
 
 
 } // namespace WebCore

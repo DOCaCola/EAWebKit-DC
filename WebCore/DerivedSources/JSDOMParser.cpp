@@ -21,10 +21,10 @@
 #include "config.h"
 #include "JSDOMParser.h"
 
-#include "DOMParser.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDocument.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -66,65 +66,30 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDOMParserConstructor : public DOMConstructorObject {
-private:
-    JSDOMParserConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSDOMParser> JSDOMParserConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMParserConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMParserConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMParserConstructor>(vm.heap)) JSDOMParserConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDOMParser(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSDOMParserConstructor::constructJSDOMParser(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSDOMParserConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDOMParserConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSDOMParserConstructor*>(state->callee());
     RefPtr<DOMParser> object = DOMParser::create();
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSDOMParserConstructor::s_info = { "DOMParserConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMParserConstructor) };
-
-JSDOMParserConstructor::JSDOMParserConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSDOMParserConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDOMParserConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMParser::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMParser::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMParser"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSDOMParserConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDOMParser;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDOMParserConstructor::s_info = { "DOMParserConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMParserConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDOMParserPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMParserConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "parseFromString", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMParserPrototypeFunctionParseFromString), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMParserConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "parseFromString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMParserPrototypeFunctionParseFromString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDOMParserPrototype::s_info = { "DOMParserPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMParserPrototype) };
@@ -137,9 +102,8 @@ void JSDOMParserPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMParser::s_info = { "DOMParser", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMParser) };
 
-JSDOMParser::JSDOMParser(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMParser>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMParser::JSDOMParser(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMParser>&& impl)
+    : JSDOMWrapper<DOMParser>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -159,42 +123,37 @@ void JSDOMParser::destroy(JSC::JSCell* cell)
     thisObject->JSDOMParser::~JSDOMParser();
 }
 
-JSDOMParser::~JSDOMParser()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsDOMParserConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDOMParserConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSDOMParserPrototype* domObject = jsDynamicCast<JSDOMParserPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMParser::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDOMParser::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSDOMParser::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDOMParserConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMParserConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMParserPrototypeFunctionParseFromString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMParserPrototypeFunctionParseFromString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMParser* castedThis = jsDynamicCast<JSDOMParser*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMParser", "parseFromString");
+        return throwThisTypeError(*state, "DOMParser", "parseFromString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMParser::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String str = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String str = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String contentType = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String contentType = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parseFromString(str, contentType, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.parseFromString(str, contentType, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -209,7 +168,14 @@ void JSDOMParserOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsDOMParser = jsCast<JSDOMParser*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMParser->impl(), jsDOMParser);
+    uncacheWrapper(world, &jsDOMParser->wrapped(), jsDOMParser);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMParser* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMParser>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMParser* impl)
@@ -231,7 +197,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMParser* i
 DOMParser* JSDOMParser::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMParser*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

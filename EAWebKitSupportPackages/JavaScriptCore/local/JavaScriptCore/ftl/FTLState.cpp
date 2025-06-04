@@ -29,6 +29,7 @@
 #if ENABLE(FTL_JIT)
 
 #include "CodeBlockWithJITType.h"
+#include "FTLAbbreviations.h"
 #include "FTLForOSREntryJITCode.h"
 #include "FTLJITCode.h"
 #include "FTLJITFinalizer.h"
@@ -37,6 +38,7 @@
 
 namespace JSC { namespace FTL {
 
+using namespace B3;
 using namespace DFG;
 
 State::State(Graph& graph)
@@ -45,10 +47,6 @@ State::State(Graph& graph)
     , module(0)
     , function(0)
     , generatedFunction(0)
-    , handleStackOverflowExceptionStackmapID(UINT_MAX)
-    , handleExceptionStackmapID(UINT_MAX)
-    , capturedStackmapID(UINT_MAX)
-    , varargsSpillSlotsStackmapID(UINT_MAX)
     , unwindDataSection(0)
     , unwindDataSectionSize(0)
 {
@@ -59,7 +57,7 @@ State::State(Graph& graph)
     }
     case FTLForOSREntryMode: {
         RefPtr<ForOSREntryJITCode> code = adoptRef(new ForOSREntryJITCode());
-        code->initializeEntryBuffer(graph.m_vm, graph.m_profiledBlock->m_numCalleeRegisters);
+        code->initializeEntryBuffer(graph.m_vm, graph.m_profiledBlock->m_numCalleeLocals);
         code->setBytecodeIndex(graph.m_plan.osrEntryBytecodeIndex);
         jitCode = code;
         break;
@@ -71,6 +69,15 @@ State::State(Graph& graph)
 
     graph.m_plan.finalizer = std::make_unique<JITFinalizer>(graph.m_plan);
     finalizer = static_cast<JITFinalizer*>(graph.m_plan.finalizer.get());
+
+#if FTL_USES_B3
+    proc = std::make_unique<Procedure>();
+
+    proc->setOriginPrinter(
+        [this] (PrintStream& out, B3::Origin origin) {
+            out.print("DFG:", bitwise_cast<Node*>(origin.data()));
+        });
+#endif // FTL_USES_B3
 }
 
 State::~State()
@@ -85,8 +92,14 @@ void State::dumpState(const char* when)
 
 void State::dumpState(LModule module, const char* when)
 {
+#if FTL_USES_B3
+    UNUSED_PARAM(module);
+    if (!when || !!when)
+        CRASH();
+#else
     dataLog("LLVM IR for ", CodeBlockWithJITType(graph.m_codeBlock, FTL::JITCode::FTLJIT), " ", when, ":\n");
     dumpModule(module);
+#endif
 }
 
 } } // namespace JSC::FTL

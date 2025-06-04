@@ -31,7 +31,7 @@ public:
     typedef JSElement Base;
     static JSSVGElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGElement>&& impl)
     {
-        JSSVGElement* ptr = new (NotNull, JSC::allocateCell<JSSVGElement>(globalObject->vm().heap)) JSSVGElement(structure, globalObject, WTF::move(impl));
+        JSSVGElement* ptr = new (NotNull, JSC::allocateCell<JSSVGElement>(globalObject->vm().heap)) JSSVGElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGElement& impl() const
+    SVGElement& wrapped() const
     {
-        return static_cast<SVGElement&>(Base::impl());
+        return static_cast<SVGElement&>(Base::wrapped());
     }
 protected:
-    JSSVGElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGElement>&&);
+    JSSVGElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

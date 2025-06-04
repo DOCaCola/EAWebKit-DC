@@ -34,7 +34,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFontFaceUriElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFontFaceUriElement>&& impl)
     {
-        JSSVGFontFaceUriElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceUriElement>(globalObject->vm().heap)) JSSVGFontFaceUriElement(structure, globalObject, WTF::move(impl));
+        JSSVGFontFaceUriElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFontFaceUriElement>(globalObject->vm().heap)) JSSVGFontFaceUriElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFontFaceUriElement& impl() const
+    SVGFontFaceUriElement& wrapped() const
     {
-        return static_cast<SVGFontFaceUriElement&>(Base::impl());
+        return static_cast<SVGFontFaceUriElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFontFaceUriElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFontFaceUriElement>&&);
+    JSSVGFontFaceUriElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFontFaceUriElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

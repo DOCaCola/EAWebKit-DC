@@ -23,6 +23,7 @@
 
 #include "DedicatedWorkerGlobalScope.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDedicatedWorkerGlobalScope.h"
 #include "JSEventListener.h"
 #include <runtime/Error.h>
@@ -44,26 +45,7 @@ JSC::EncodedJSValue jsDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstr
 void setJSDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsDedicatedWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
-class JSDedicatedWorkerGlobalScopeConstructor : public DOMConstructorObject {
-private:
-    JSDedicatedWorkerGlobalScopeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSDedicatedWorkerGlobalScopeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDedicatedWorkerGlobalScopeConstructor* ptr = new (NotNull, JSC::allocateCell<JSDedicatedWorkerGlobalScopeConstructor>(vm.heap)) JSDedicatedWorkerGlobalScopeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSDedicatedWorkerGlobalScope> JSDedicatedWorkerGlobalScopeConstructor;
 
 /* Hash table */
 
@@ -81,27 +63,20 @@ static const struct CompactHashIndex JSDedicatedWorkerGlobalScopeTableIndex[8] =
 
 static const HashTableValue JSDedicatedWorkerGlobalScopeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onmessage", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDedicatedWorkerGlobalScopeOnmessage) },
-    { "DedicatedWorkerGlobalScope", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onmessage", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeOnmessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDedicatedWorkerGlobalScopeOnmessage) } },
+    { "DedicatedWorkerGlobalScope", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor) } },
 };
 
-static const HashTable JSDedicatedWorkerGlobalScopeTable = { 3, 7, true, JSDedicatedWorkerGlobalScopeTableValues, 0, JSDedicatedWorkerGlobalScopeTableIndex };
-const ClassInfo JSDedicatedWorkerGlobalScopeConstructor::s_info = { "DedicatedWorkerGlobalScopeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDedicatedWorkerGlobalScopeConstructor) };
-
-JSDedicatedWorkerGlobalScopeConstructor::JSDedicatedWorkerGlobalScopeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSDedicatedWorkerGlobalScopeTable = { 3, 7, true, JSDedicatedWorkerGlobalScopeTableValues, JSDedicatedWorkerGlobalScopeTableIndex };
+template<> void JSDedicatedWorkerGlobalScopeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDedicatedWorkerGlobalScopeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, globalObject->prototype(), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, globalObject.prototype(), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DedicatedWorkerGlobalScope"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDedicatedWorkerGlobalScopeConstructor::s_info = { "DedicatedWorkerGlobalScopeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDedicatedWorkerGlobalScopeConstructor) };
 
 /* Hash table for prototype */
 
@@ -113,18 +88,18 @@ static const struct CompactHashIndex JSDedicatedWorkerGlobalScopePrototypeTableI
 
 static const HashTableValue JSDedicatedWorkerGlobalScopePrototypeTableValues[] =
 {
-    { "postMessage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDedicatedWorkerGlobalScopePrototypeFunctionPostMessage), (intptr_t) (1) },
+    { "postMessage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDedicatedWorkerGlobalScopePrototypeFunctionPostMessage), (intptr_t) (1) } },
 };
 
-static const HashTable JSDedicatedWorkerGlobalScopePrototypeTable = { 1, 1, false, JSDedicatedWorkerGlobalScopePrototypeTableValues, 0, JSDedicatedWorkerGlobalScopePrototypeTableIndex };
+static const HashTable JSDedicatedWorkerGlobalScopePrototypeTable = { 1, 1, false, JSDedicatedWorkerGlobalScopePrototypeTableValues, JSDedicatedWorkerGlobalScopePrototypeTableIndex };
 const ClassInfo JSDedicatedWorkerGlobalScopePrototype::s_info = { "DedicatedWorkerGlobalScopePrototype", &Base::s_info, &JSDedicatedWorkerGlobalScopePrototypeTable, CREATE_METHOD_TABLE(JSDedicatedWorkerGlobalScopePrototype) };
 
-bool JSDedicatedWorkerGlobalScopePrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDedicatedWorkerGlobalScopePrototype::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
-    VM& vm = exec->vm();
+    VM& vm = state->vm();
     UNUSED_PARAM(vm);
     auto* thisObject = jsCast<JSDedicatedWorkerGlobalScopePrototype*>(object);
-    return getStaticFunctionSlot<JSObject>(exec, JSDedicatedWorkerGlobalScopePrototypeTable, thisObject, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(state, JSDedicatedWorkerGlobalScopePrototypeTable, thisObject, propertyName, slot);
 }
 
 const ClassInfo JSDedicatedWorkerGlobalScope::s_info = { "DedicatedWorkerGlobalScope", &Base::s_info, &JSDedicatedWorkerGlobalScopeTable, CREATE_METHOD_TABLE(JSDedicatedWorkerGlobalScope) };
@@ -134,79 +109,81 @@ JSDedicatedWorkerGlobalScope::JSDedicatedWorkerGlobalScope(VM& vm, Structure* st
 {
 }
 
-bool JSDedicatedWorkerGlobalScope::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDedicatedWorkerGlobalScope::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDedicatedWorkerGlobalScope*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDedicatedWorkerGlobalScope, Base>(exec, JSDedicatedWorkerGlobalScopeTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDedicatedWorkerGlobalScope, Base>(state, JSDedicatedWorkerGlobalScopeTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsDedicatedWorkerGlobalScopeOnmessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDedicatedWorkerGlobalScopeOnmessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSDedicatedWorkerGlobalScope(JSValue::decode(thisValue));
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().messageEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().messageEvent));
 }
 
 
-EncodedJSValue jsDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSDedicatedWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSDedicatedWorkerGlobalScope::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSDedicatedWorkerGlobalScope::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsDedicatedWorkerGlobalScopeConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDedicatedWorkerGlobalScopeConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSDedicatedWorkerGlobalScope* domObject = toJSDedicatedWorkerGlobalScope(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDedicatedWorkerGlobalScope::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDedicatedWorkerGlobalScope::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSDedicatedWorkerGlobalScopeOnmessage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDedicatedWorkerGlobalScopeOnmessage(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDedicatedWorkerGlobalScope* castedThis = toJSDedicatedWorkerGlobalScope(JSValue::decode(thisValue));
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().messageEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().messageEvent, value);
 }
 
 
-void setJSDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDedicatedWorkerGlobalScopeDedicatedWorkerGlobalScopeConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDedicatedWorkerGlobalScope* castedThis = toJSDedicatedWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "DedicatedWorkerGlobalScope"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "DedicatedWorkerGlobalScope"), value);
 }
 
 
 JSValue JSDedicatedWorkerGlobalScope::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDedicatedWorkerGlobalScopeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDedicatedWorkerGlobalScopeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDedicatedWorkerGlobalScopePrototypeFunctionPostMessage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDedicatedWorkerGlobalScopePrototypeFunctionPostMessage(ExecState* state)
 {
-    JSDedicatedWorkerGlobalScope* castedThis = toJSDedicatedWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSDedicatedWorkerGlobalScope* castedThis = toJSDedicatedWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDedicatedWorkerGlobalScope::info());
-    return JSValue::encode(castedThis->postMessage(exec));
+    return JSValue::encode(castedThis->postMessage(*state));
 }
 
 DedicatedWorkerGlobalScope* JSDedicatedWorkerGlobalScope::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDedicatedWorkerGlobalScope*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

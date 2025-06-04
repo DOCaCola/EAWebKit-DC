@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSTrackEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TrackEvent>&& impl)
     {
-        JSTrackEvent* ptr = new (NotNull, JSC::allocateCell<JSTrackEvent>(globalObject->vm().heap)) JSTrackEvent(structure, globalObject, WTF::move(impl));
+        JSTrackEvent* ptr = new (NotNull, JSC::allocateCell<JSTrackEvent>(globalObject->vm().heap)) JSTrackEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -54,15 +54,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue track(JSC::ExecState*) const;
-    TrackEvent& impl() const
+    JSC::JSValue track(JSC::ExecState&) const;
+    TrackEvent& wrapped() const
     {
-        return static_cast<TrackEvent&>(Base::impl());
+        return static_cast<TrackEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTrackEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TrackEvent>&&);
+    JSTrackEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TrackEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

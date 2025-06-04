@@ -100,7 +100,6 @@ namespace JSC {
     {
     }
 
-#if ENABLE(ES6_TEMPLATE_LITERAL_SYNTAX)
     inline TemplateExpressionListNode::TemplateExpressionListNode(ExpressionNode* node)
         : m_node(node)
     {
@@ -150,7 +149,6 @@ namespace JSC {
         , m_templateLiteral(templateLiteral)
     {
     }
-#endif
 
     inline RegExpNode::RegExpNode(const JSTokenLocation& location, const Identifier& pattern, const Identifier& flags)
         : ExpressionNode(location)
@@ -878,23 +876,29 @@ namespace JSC {
 
     inline TryNode::TryNode(const JSTokenLocation& location, StatementNode* tryBlock, const Identifier& thrownValueIdent, StatementNode* catchBlock, VariableEnvironment& catchEnvironment, StatementNode* finallyBlock)
         : StatementNode(location)
+        , VariableEnvironmentNode(catchEnvironment)
         , m_tryBlock(tryBlock)
         , m_thrownValueIdent(thrownValueIdent)
         , m_catchBlock(catchBlock)
         , m_finallyBlock(finallyBlock)
     {
-        m_catchEnvironment.swap(catchEnvironment);
     }
 
     inline FunctionParameters::FunctionParameters()
     {
     }
 
-    inline FuncExprNode::FuncExprNode(const JSTokenLocation& location, const Identifier& ident, FunctionMetadataNode* m_metadata, const SourceCode& source)
+    
+    inline BaseFuncExprNode::BaseFuncExprNode(const JSTokenLocation& location, const Identifier& ident, FunctionMetadataNode* m_metadata, const SourceCode& source)
         : ExpressionNode(location)
         , m_metadata(m_metadata)
     {
         m_metadata->finishParsing(source, ident, FunctionExpression);
+    }
+
+    inline FuncExprNode::FuncExprNode(const JSTokenLocation& location, const Identifier& ident, FunctionMetadataNode* m_metadata, const SourceCode& source)
+        : BaseFuncExprNode(location, ident, m_metadata, source)
+    {
     }
 
     inline FuncDeclNode::FuncDeclNode(const JSTokenLocation& location, const Identifier& ident, FunctionMetadataNode* m_metadata, const SourceCode& source)
@@ -904,15 +908,27 @@ namespace JSC {
         m_metadata->finishParsing(source, ident, FunctionDeclaration);
     }
 
-#if ENABLE(ES6_CLASS_SYNTAX)
+    inline ArrowFuncExprNode::ArrowFuncExprNode(const JSTokenLocation& location, const Identifier& ident, FunctionMetadataNode* m_metadata, const SourceCode& source)
+        : BaseFuncExprNode(location, ident, m_metadata, source)
+    {
+    }
+
+    inline YieldExprNode::YieldExprNode(const JSTokenLocation& location, ExpressionNode* argument, bool delegate)
+        : ExpressionNode(location)
+        , m_argument(argument)
+        , m_delegate(delegate)
+    {
+    }
+
     inline ClassDeclNode::ClassDeclNode(const JSTokenLocation& location, ExpressionNode* classDeclaration)
         : StatementNode(location)
         , m_classDeclaration(classDeclaration)
     {
     }
 
-    inline ClassExprNode::ClassExprNode(const JSTokenLocation& location, const Identifier& name, ExpressionNode* constructorExpression, ExpressionNode* classHeritage, PropertyListNode* instanceMethods, PropertyListNode* staticMethods)
+    inline ClassExprNode::ClassExprNode(const JSTokenLocation& location, const Identifier& name, VariableEnvironment& classEnvironment, ExpressionNode* constructorExpression, ExpressionNode* classHeritage, PropertyListNode* instanceMethods, PropertyListNode* staticMethods)
         : ExpressionNode(location)
+        , VariableEnvironmentNode(classEnvironment)
         , m_name(name)
         , m_constructorExpression(constructorExpression)
         , m_classHeritage(classHeritage)
@@ -920,7 +936,6 @@ namespace JSC {
         , m_staticMethods(staticMethods)
     {
     }
-#endif
 
     inline CaseClauseNode::CaseClauseNode(ExpressionNode* expr, SourceElements* statements)
         : m_expr(expr)
@@ -1005,7 +1020,24 @@ namespace JSC {
         , m_bindingContext(context)
     {
     }
-    
+
+    inline AssignmentElementNode::AssignmentElementNode(ExpressionNode* assignmentTarget, const JSTextPosition& start, const JSTextPosition& end)
+        : DestructuringPatternNode()
+        , m_divotStart(start)
+        , m_divotEnd(end)
+        , m_assignmentTarget(assignmentTarget)
+    {
+    }
+
+    inline RestParameterNode::RestParameterNode(const Identifier& name, unsigned numParametersToSkip, const JSTextPosition& start, const JSTextPosition& end)
+        : DestructuringPatternNode()
+        , m_name(name)
+        , m_numParametersToSkip(numParametersToSkip)
+        , m_divotStart(start)
+        , m_divotEnd(end)
+    {
+    }
+
     inline DestructuringAssignmentNode::DestructuringAssignmentNode(const JSTokenLocation& location, DestructuringPatternNode* bindings, ExpressionNode* initializer)
         : ExpressionNode(location)
         , m_bindings(bindings)

@@ -384,7 +384,7 @@ protected:
     virtual bool hasPendingActivity() const override;
     virtual void stop() override;
     virtual const char* activeDOMObjectName() const override;
-    bool canSuspendForPageCache() const override;
+    bool canSuspendForDocumentSuspension() const override;
 
     void addSharedObject(WebGLSharedObject*);
     void addContextObject(WebGLContextObject*);
@@ -426,7 +426,7 @@ protected:
     // Adds a compressed texture format.
     void addCompressedTextureFormat(GC3Denum);
 
-    PassRefPtr<Image> drawImageIntoBuffer(Image*, int width, int height, int deviceScaleFactor);
+    PassRefPtr<Image> drawImageIntoBuffer(Image&, int width, int height, int deviceScaleFactor);
 
 #if ENABLE(VIDEO)
     PassRefPtr<Image> videoFrameToImage(HTMLVideoElement*, BackingStoreCopy, ExceptionCode&);
@@ -799,10 +799,6 @@ protected:
     void dispatchContextLostEvent();
     // Helper for restoration after context lost.
     void maybeRestoreContext();
-
-    // Determine if we are running privileged code in the browser, for example,
-    // a Safari or Chrome extension.
-    bool allowPrivilegedExtensions() const;
 
     enum ConsoleDisplayPreference {
         DisplayInConsole,

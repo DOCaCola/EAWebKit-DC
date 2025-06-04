@@ -31,7 +31,7 @@ public:
     typedef JSBlob Base;
     static JSFile* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<File>&& impl)
     {
-        JSFile* ptr = new (NotNull, JSC::allocateCell<JSFile>(globalObject->vm().heap)) JSFile(structure, globalObject, WTF::move(impl));
+        JSFile* ptr = new (NotNull, JSC::allocateCell<JSFile>(globalObject->vm().heap)) JSFile(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    File& impl() const
+    File& wrapped() const
     {
-        return static_cast<File&>(Base::impl());
+        return static_cast<File&>(Base::wrapped());
     }
 protected:
-    JSFile(JSC::Structure*, JSDOMGlobalObject*, Ref<File>&&);
+    JSFile(JSC::Structure*, JSDOMGlobalObject&, Ref<File>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -64,7 +64,8 @@ protected:
 };
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, File*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, File& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, File& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, File*);
 
 
 } // namespace WebCore

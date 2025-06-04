@@ -58,6 +58,7 @@ namespace WebCore {
     macro(beforeload) \
     macro(beforepaste) \
     macro(beforeunload) \
+    macro(beginEvent) \
     macro(blocked) \
     macro(blur) \
     macro(boundary) \
@@ -96,6 +97,7 @@ namespace WebCore {
     macro(durationchange) \
     macro(emptied) \
     macro(end) \
+    macro(endEvent) \
     macro(ended) \
     macro(enter) \
     macro(error) \
@@ -116,6 +118,7 @@ namespace WebCore {
     macro(hashchange) \
     macro(icecandidate) \
     macro(iceconnectionstatechange) \
+    macro(icegatheringstatechange) \
     macro(inactive) \
     macro(input) \
     macro(invalid) \
@@ -205,6 +208,7 @@ namespace WebCore {
     macro(touchend) \
     macro(touchmove) \
     macro(touchstart) \
+    macro(track) \
     macro(transitionend) \
     macro(unload) \
     macro(unmute) \

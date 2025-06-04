@@ -22,8 +22,8 @@
 #include "JSSVGDefsElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
-#include "SVGDefsElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -60,49 +60,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGDefsElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGDefsElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGDefsElement> JSSVGDefsElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGDefsElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGDefsElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGDefsElementConstructor>(vm.heap)) JSSVGDefsElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGDefsElementConstructor::s_info = { "SVGDefsElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGDefsElementConstructor) };
-
-JSSVGDefsElementConstructor::JSSVGDefsElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGDefsElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGDefsElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGDefsElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGDefsElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGDefsElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGDefsElementConstructor::s_info = { "SVGDefsElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGDefsElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGDefsElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGDefsElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGDefsElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGDefsElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGDefsElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGDefsElementPrototype::s_info = { "SVGDefsElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGDefsElementPrototype) };
@@ -115,7 +89,7 @@ void JSSVGDefsElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGDefsElement::s_info = { "SVGDefsElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGDefsElement) };
 
-JSSVGDefsElement::JSSVGDefsElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGDefsElement>&& impl)
+JSSVGDefsElement::JSSVGDefsElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGDefsElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,35 +104,35 @@ JSObject* JSSVGDefsElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGDefsElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGDefsElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGDefsElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGDefsElement* castedThis = jsDynamicCast<JSSVGDefsElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGDefsElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGDefsElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGDefsElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGDefsElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGDefsElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGDefsElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGDefsElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGDefsElementPrototype* domObject = jsDynamicCast<JSSVGDefsElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGDefsElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGDefsElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGDefsElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGDefsElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGDefsElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

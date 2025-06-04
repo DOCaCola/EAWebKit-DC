@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaController : public JSDOMWrapper {
+class JSMediaController : public JSDOMWrapper<MediaController> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaController> Base;
     static JSMediaController* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaController>&& impl)
     {
-        JSMediaController* ptr = new (NotNull, JSC::allocateCell<JSMediaController>(globalObject->vm().heap)) JSMediaController(structure, globalObject, WTF::move(impl));
+        JSMediaController* ptr = new (NotNull, JSC::allocateCell<JSMediaController>(globalObject->vm().heap)) JSMediaController(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaController* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaController();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaController& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaController* m_impl;
 protected:
-    JSMediaController(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaController>&&);
+    JSMediaController(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaController>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaController*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaController*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaController& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaController& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaController*);
 
 
 } // namespace WebCore

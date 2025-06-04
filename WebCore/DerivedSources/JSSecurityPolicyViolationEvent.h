@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSSecurityPolicyViolationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SecurityPolicyViolationEvent>&& impl)
     {
-        JSSecurityPolicyViolationEvent* ptr = new (NotNull, JSC::allocateCell<JSSecurityPolicyViolationEvent>(globalObject->vm().heap)) JSSecurityPolicyViolationEvent(structure, globalObject, WTF::move(impl));
+        JSSecurityPolicyViolationEvent* ptr = new (NotNull, JSC::allocateCell<JSSecurityPolicyViolationEvent>(globalObject->vm().heap)) JSSecurityPolicyViolationEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SecurityPolicyViolationEvent& impl() const
+    SecurityPolicyViolationEvent& wrapped() const
     {
-        return static_cast<SecurityPolicyViolationEvent&>(Base::impl());
+        return static_cast<SecurityPolicyViolationEvent&>(Base::wrapped());
     }
 protected:
-    JSSecurityPolicyViolationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<SecurityPolicyViolationEvent>&&);
+    JSSecurityPolicyViolationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<SecurityPolicyViolationEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

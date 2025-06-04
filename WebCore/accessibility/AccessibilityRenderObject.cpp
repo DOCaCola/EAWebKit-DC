@@ -632,10 +632,12 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
     if (m_renderer->isBR())
         return ASCIILiteral("\n");
 
+    bool isRenderText = is<RenderText>(*m_renderer);
+
 #if ENABLE(MATHML)
     // Math operators create RenderText nodes on the fly that are not tied into the DOM in a reasonable way,
     // so rangeOfContents does not work for them (nor does regular text selection).
-    if (is<RenderText>(*m_renderer) && m_renderer->isAnonymous() && ancestorsOfType<RenderMathMLOperator>(*m_renderer).first())
+    if (isRenderText && m_renderer->isAnonymous() && ancestorsOfType<RenderMathMLOperator>(*m_renderer).first())
         return downcast<RenderText>(*m_renderer).text();
     if (is<RenderMathMLOperator>(*m_renderer) && !m_renderer->isAnonymous())
         return downcast<RenderMathMLOperator>(*m_renderer).element().textContent();
@@ -647,7 +649,8 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
 
     // We use a text iterator for text objects AND for those cases where we are
     // explicitly asking for the full text under a given element.
-    if (is<RenderText>(*m_renderer) || mode.childrenInclusion == AccessibilityTextUnderElementMode::TextUnderElementModeIncludeAllChildren) {
+    bool shouldIncludeAllChildren = mode.childrenInclusion == AccessibilityTextUnderElementMode::TextUnderElementModeIncludeAllChildren;
+    if (isRenderText || shouldIncludeAllChildren) {
         // If possible, use a text iterator to get the text, so that whitespace
         // is handled consistently.
         Document* nodeDocument = nullptr;
@@ -686,6 +689,12 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
                 // catch stale WebCoreAXObject (see <rdar://problem/3960196>)
                 if (frame->document() != nodeDocument)
                     return String();
+
+                // The tree should be stable before looking through the children of a non-Render Text object.
+                // Otherwise, further uses of TextIterator will force a layout update, potentially altering
+                // the accessibility tree and causing crashes in the loop that computes the result text.
+                ASSERT((isRenderText || !shouldIncludeAllChildren) || (!nodeDocument->renderView()->layoutState() && !nodeDocument->childNeedsStyleRecalc()));
+
                 return plainText(textRange.get(), textIteratorBehaviorForTextRange());
             }
         }
@@ -956,16 +965,10 @@ void AccessibilityRenderObject::addRadioButtonGroupMembers(AccessibilityChildren
                 linkedUIElements.append(object);        
         } 
     } else {
-        RefPtr<NodeList> list = node->document().getElementsByTagName(inputTag.localName());
-        unsigned length = list->length();
-        for (unsigned i = 0; i < length; ++i) {
-            Node* item = list->item(i);
-            if (is<HTMLInputElement>(*item)) {
-                HTMLInputElement& associateElement = downcast<HTMLInputElement>(*item);
-                if (associateElement.isRadioButton() && associateElement.name() == input.name()) {
-                    if (AccessibilityObject* object = axObjectCache()->getOrCreate(&associateElement))
-                        linkedUIElements.append(object);
-                }
+        for (auto& associateElement : descendantsOfType<HTMLInputElement>(node->document())) {
+            if (associateElement.isRadioButton() && associateElement.name() == input.name()) {
+                if (AccessibilityObject* object = axObjectCache()->getOrCreate(&associateElement))
+                    linkedUIElements.append(object);
             }
         }
     }
@@ -1786,19 +1789,18 @@ void AccessibilityRenderObject::getDocumentLinks(AccessibilityChildrenVector& re
 {
     Document& document = m_renderer->document();
     Ref<HTMLCollection> links = document.links();
-    for (unsigned i = 0; Node* curr = links->item(i); i++) {
-        RenderObject* obj = curr->renderer();
-        if (obj) {
-            RefPtr<AccessibilityObject> axobj = document.axObjectCache()->getOrCreate(obj);
-            ASSERT(axobj);
-            if (!axobj->accessibilityIsIgnored() && axobj->isLink())
-                result.append(axobj);
+    for (unsigned i = 0; auto* current = links->item(i); ++i) {
+        if (auto* renderer = current->renderer()) {
+            RefPtr<AccessibilityObject> axObject = document.axObjectCache()->getOrCreate(renderer);
+            ASSERT(axObject);
+            if (!axObject->accessibilityIsIgnored() && axObject->isLink())
+                result.append(axObject);
         } else {
-            Node* parent = curr->parentNode();
-            if (is<HTMLAreaElement>(*curr) && is<HTMLMapElement>(parent)) {
+            auto* parent = current->parentNode();
+            if (is<HTMLAreaElement>(*current) && is<HTMLMapElement>(parent)) {
                 auto& areaObject = downcast<AccessibilityImageMapLink>(*axObjectCache()->getOrCreate(ImageMapLinkRole));
                 HTMLMapElement& map = downcast<HTMLMapElement>(*parent);
-                areaObject.setHTMLAreaElement(downcast<HTMLAreaElement>(curr));
+                areaObject.setHTMLAreaElement(downcast<HTMLAreaElement>(current));
                 areaObject.setHTMLMapElement(&map);
                 areaObject.setParent(accessibilityParentForImageMap(&map));
 
@@ -2551,9 +2553,9 @@ AccessibilityRole AccessibilityRenderObject::determineAccessibilityRole()
             return RadioButtonRole;
         if (input.isTextButton())
             return buttonRoleType();
-        // On iOS, the date field is a popup button. On other platforms this is a text field.
+        // On iOS, the date field and time field are popup buttons. On other platforms they are text fields.
 #if PLATFORM(IOS)
-        if (input.isDateField())
+        if (input.isDateField() || input.isTimeField())
             return PopUpButtonRole;
 #endif
         
@@ -2696,13 +2698,20 @@ AccessibilityRole AccessibilityRenderObject::determineAccessibilityRole()
         return LandmarkBannerRole;
     if (node && node->hasTagName(footerTag) && !isDescendantOfElementType(articleTag) && !isDescendantOfElementType(sectionTag))
         return FooterRole;
-
-    if (m_renderer->isRenderBlockFlow())
-        return GroupRole;
     
     // If the element does not have role, but it has ARIA attributes, or accepts tab focus, accessibility should fallback to exposing it as a group.
     if (supportsARIAAttributes() || canSetFocusAttribute())
         return GroupRole;
+
+    if (m_renderer->isRenderBlockFlow()) {
+#if PLATFORM(GTK) || PLATFORM(EFL)
+        // For ATK, GroupRole maps to ATK_ROLE_PANEL. Panels are most commonly found (and hence
+        // expected) in UI elements; not text blocks.
+        return m_renderer->isAnonymousBlock() ? DivRole : GroupRole;
+#else
+        return GroupRole;
+#endif
+    }
     
     // InlineRole is the final fallback before assigning UnknownRole to an object. It makes it
     // possible to distinguish truly unknown objects from non-focusable inline text elements
@@ -2723,9 +2732,16 @@ AccessibilityOrientation AccessibilityRenderObject::orientation() const
         return AccessibilityOrientationHorizontal;
     if (equalIgnoringCase(ariaOrientation, "vertical"))
         return AccessibilityOrientationVertical;
+    if (equalIgnoringCase(ariaOrientation, "undefined"))
+        return AccessibilityOrientationUndefined;
 
-    if (isScrollbar())
+    // ARIA 1.1 Implicit defaults are defined on some roles.
+    // http://www.w3.org/TR/wai-aria-1.1/#aria-orientation
+    if (isScrollbar() || isComboBox() || isListBox() || isMenu() || isTree())
         return AccessibilityOrientationVertical;
+    
+    if (isMenuBar() || isSplitter() || isTabList() || isToolbar())
+        return AccessibilityOrientationHorizontal;
     
     return AccessibilityObject::orientation();
 }
@@ -3561,7 +3577,8 @@ void AccessibilityRenderObject::scrollTo(const IntPoint& point) const
     if (!box.canBeScrolledAndHasScrollableArea())
         return;
 
-    box.layer()->scrollToOffset(toIntSize(point), RenderLayer::ScrollOffsetClamped);
+    // FIXME: is point a ScrollOffset or ScrollPosition? Test in RTL overflow.
+    box.layer()->scrollToOffset(point, RenderLayer::ScrollOffsetClamped);
 }
 
 #if ENABLE(MATHML)

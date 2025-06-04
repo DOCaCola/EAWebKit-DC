@@ -33,7 +33,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLTemplateElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTemplateElement>&& impl)
     {
-        JSHTMLTemplateElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElement>(globalObject->vm().heap)) JSHTMLTemplateElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTemplateElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTemplateElement>(globalObject->vm().heap)) JSHTMLTemplateElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,15 +52,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue content(JSC::ExecState*) const;
-    HTMLTemplateElement& impl() const
+    JSC::JSValue content(JSC::ExecState&) const;
+    HTMLTemplateElement& wrapped() const
     {
-        return static_cast<HTMLTemplateElement&>(Base::impl());
+        return static_cast<HTMLTemplateElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLTemplateElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTemplateElement>&&);
+    JSHTMLTemplateElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTemplateElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

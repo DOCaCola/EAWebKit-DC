@@ -33,7 +33,7 @@ public:
     typedef JSMouseEvent Base;
     static JSWheelEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WheelEvent>&& impl)
     {
-        JSWheelEvent* ptr = new (NotNull, JSC::allocateCell<JSWheelEvent>(globalObject->vm().heap)) JSWheelEvent(structure, globalObject, WTF::move(impl));
+        JSWheelEvent* ptr = new (NotNull, JSC::allocateCell<JSWheelEvent>(globalObject->vm().heap)) JSWheelEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WheelEvent& impl() const
+    WheelEvent& wrapped() const
     {
-        return static_cast<WheelEvent&>(Base::impl());
+        return static_cast<WheelEvent&>(Base::wrapped());
     }
 protected:
-    JSWheelEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WheelEvent>&&);
+    JSWheelEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WheelEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

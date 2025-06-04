@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegLinetoRel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoRel>&& impl)
     {
-        JSSVGPathSegLinetoRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoRel>(globalObject->vm().heap)) JSSVGPathSegLinetoRel(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoRel* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoRel>(globalObject->vm().heap)) JSSVGPathSegLinetoRel(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoRel& impl() const
+    SVGPathSegLinetoRel& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoRel&>(Base::impl());
+        return static_cast<SVGPathSegLinetoRel&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoRel(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoRel>&&);
+    JSSVGPathSegLinetoRel(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoRel>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -117,6 +117,10 @@ namespace GenericTypes {
 class SearchMatch;
 } // GenericTypes
 
+namespace Heap {
+class GarbageCollection;
+} // Heap
+
 namespace LayerTree {
 class CompositingReasons;
 class IntRect;
@@ -177,6 +181,11 @@ class TypeLocation;
 class TypeSet;
 enum class SyntaxErrorType;
 } // Runtime
+
+namespace ScriptProfiler {
+class Event;
+enum class EventType;
+} // ScriptProfiler
 
 namespace Timeline {
 class CPUProfile;
@@ -1057,7 +1066,10 @@ public:
         OriginSet = 1 << 3,
         TitleSet = 1 << 4,
         DisabledSet = 1 << 5,
-        AllFieldsSet = (StyleSheetIdSet | FrameIdSet | SourceURLSet | OriginSet | TitleSet | DisabledSet)
+        IsInlineSet = 1 << 6,
+        StartLineSet = 1 << 7,
+        StartColumnSet = 1 << 8,
+        AllFieldsSet = (StyleSheetIdSet | FrameIdSet | SourceURLSet | OriginSet | TitleSet | DisabledSet | IsInlineSet | StartLineSet | StartColumnSet)
     };
 
     template<int STATE>
@@ -1120,6 +1132,27 @@ public:
             return castState<DisabledSet>();
         }
 
+        Builder<STATE | IsInlineSet>& setIsInline(bool value)
+        {
+            COMPILE_ASSERT(!(STATE & IsInlineSet), property_isInline_already_set);
+            m_result->setBoolean(ASCIILiteral("isInline"), value);
+            return castState<IsInlineSet>();
+        }
+
+        Builder<STATE | StartLineSet>& setStartLine(double value)
+        {
+            COMPILE_ASSERT(!(STATE & StartLineSet), property_startLine_already_set);
+            m_result->setDouble(ASCIILiteral("startLine"), value);
+            return castState<StartLineSet>();
+        }
+
+        Builder<STATE | StartColumnSet>& setStartColumn(double value)
+        {
+            COMPILE_ASSERT(!(STATE & StartColumnSet), property_startColumn_already_set);
+            m_result->setDouble(ASCIILiteral("startColumn"), value);
+            return castState<StartColumnSet>();
+        }
+
         Ref<CSSStyleSheetHeader> release()
         {
             COMPILE_ASSERT(STATE == AllFieldsSet, result_is_not_ready);
@@ -1139,6 +1172,9 @@ public:
      *     .setOrigin(...)
      *     .setTitle(...)
      *     .setDisabled(...)
+     *     .setIsInline(...)
+     *     .setStartLine(...)
+     *     .setStartColumn(...)
      *     .release();
      */
     static Builder<NoFieldsSet> create()
@@ -2588,18 +2624,28 @@ public:
         False = 49,
         Mixed = 50,
     }; // enum class Checked
+    // Named after property name 'current' while generating AccessibilityProperties.
+    enum class Current {
+        True = 48,
+        False = 49,
+        Page = 51,
+        Step = 52,
+        Location = 53,
+        Date = 54,
+        Time = 55,
+    }; // enum class Current
     // Named after property name 'invalid' while generating AccessibilityProperties.
     enum class Invalid {
         True = 48,
         False = 49,
-        Grammar = 51,
-        Spelling = 52,
+        Grammar = 56,
+        Spelling = 57,
     }; // enum class Invalid
     // Named after property name 'liveRegionStatus' while generating AccessibilityProperties.
     enum class LiveRegionStatus {
-        Assertive = 53,
-        Polite = 54,
-        Off = 55,
+        Assertive = 58,
+        Polite = 59,
+        Off = 60,
     }; // enum class LiveRegionStatus
     enum {
         NoFieldsSet = 0,
@@ -2703,6 +2749,11 @@ public:
     void setControlledNodeIds(RefPtr<Inspector::Protocol::Array<Inspector::Protocol::DOM::NodeId>> value)
     {
         InspectorObjectBase::setArray(ASCIILiteral("controlledNodeIds"), WTF::move(value));
+    }
+
+    void setCurrent(Current value)
+    {
+        InspectorObjectBase::setString(ASCIILiteral("current"), Inspector::Protocol::getEnumConstantValue(static_cast<int>(value)));
     }
 
     void setDisabled(bool value)
@@ -2957,9 +3008,9 @@ public:
 namespace DOMDebugger {
 /* DOM breakpoint type. */
 enum class DOMBreakpointType {
-    SubtreeModified = 56,
-    AttributeModified = 57,
-    NodeRemoved = 58,
+    SubtreeModified = 61,
+    AttributeModified = 62,
+    NodeRemoved = 63,
 }; // enum class DOMBreakpointType
 } // DOMDebugger
 
@@ -3259,9 +3310,9 @@ public:
     // Named after property name 'type' while generating BreakpointAction.
     enum class Type {
         Log = 26,
-        Evaluate = 59,
-        Sound = 60,
-        Probe = 61,
+        Evaluate = 64,
+        Sound = 65,
+        Probe = 66,
     }; // enum class Type
     enum {
         NoFieldsSet = 0,
@@ -3385,6 +3436,11 @@ public:
     void setAutoContinue(bool value)
     {
         InspectorObjectBase::setBoolean(ASCIILiteral("autoContinue"), value);
+    }
+
+    void setIgnoreCount(int value)
+    {
+        InspectorObjectBase::setInteger(ASCIILiteral("ignoreCount"), value);
     }
 };
 
@@ -3561,12 +3617,13 @@ class Scope : public Inspector::InspectorObjectBase {
 public:
     // Named after property name 'type' while generating Scope.
     enum class Type {
-        Global = 62,
-        Local = 63,
-        With = 64,
-        Closure = 65,
-        Catch = 66,
-        FunctionName = 67,
+        Global = 67,
+        With = 68,
+        Closure = 69,
+        Catch = 70,
+        FunctionName = 71,
+        GlobalLexicalEnvironment = 72,
+        NestedLexical = 73,
     }; // enum class Type
     enum {
         NoFieldsSet = 0,
@@ -3956,6 +4013,88 @@ public:
 
 } // GenericTypes
 
+namespace Heap {
+/* Information about a garbage collection. */
+class GarbageCollection : public Inspector::InspectorObjectBase {
+public:
+    // Named after property name 'type' while generating GarbageCollection.
+    enum class Type {
+        Full = 74,
+        Partial = 75,
+    }; // enum class Type
+    enum {
+        NoFieldsSet = 0,
+        TypeSet = 1 << 0,
+        StartTimeSet = 1 << 1,
+        EndTimeSet = 1 << 2,
+        AllFieldsSet = (TypeSet | StartTimeSet | EndTimeSet)
+    };
+
+    template<int STATE>
+    class Builder {
+    private:
+        RefPtr<InspectorObject> m_result;
+
+        template<int STEP> Builder<STATE | STEP>& castState()
+        {
+            return *reinterpret_cast<Builder<STATE | STEP>*>(this);
+        }
+
+        Builder(Ref</*GarbageCollection*/InspectorObject>&& object)
+            : m_result(WTF::move(object))
+        {
+            COMPILE_ASSERT(STATE == NoFieldsSet, builder_created_in_non_init_state);
+        }
+        friend class GarbageCollection;
+    public:
+
+        Builder<STATE | TypeSet>& setType(Type value)
+        {
+            COMPILE_ASSERT(!(STATE & TypeSet), property_type_already_set);
+            m_result->setString(ASCIILiteral("type"), Inspector::Protocol::getEnumConstantValue(static_cast<int>(value)));
+            return castState<TypeSet>();
+        }
+
+        Builder<STATE | StartTimeSet>& setStartTime(double value)
+        {
+            COMPILE_ASSERT(!(STATE & StartTimeSet), property_startTime_already_set);
+            m_result->setDouble(ASCIILiteral("startTime"), value);
+            return castState<StartTimeSet>();
+        }
+
+        Builder<STATE | EndTimeSet>& setEndTime(double value)
+        {
+            COMPILE_ASSERT(!(STATE & EndTimeSet), property_endTime_already_set);
+            m_result->setDouble(ASCIILiteral("endTime"), value);
+            return castState<EndTimeSet>();
+        }
+
+        Ref<GarbageCollection> release()
+        {
+            COMPILE_ASSERT(STATE == AllFieldsSet, result_is_not_ready);
+            COMPILE_ASSERT(sizeof(GarbageCollection) == sizeof(InspectorObject), cannot_cast);
+
+            Ref<InspectorObject> result = m_result.releaseNonNull();
+            return WTF::move(*reinterpret_cast<Ref<GarbageCollection>*>(&result));
+        }
+    };
+
+    /*
+     * Synthetic constructor:
+     * Ref<GarbageCollection> result = GarbageCollection::create()
+     *     .setType(...)
+     *     .setStartTime(...)
+     *     .setEndTime(...)
+     *     .release();
+     */
+    static Builder<NoFieldsSet> create()
+    {
+        return Builder<NoFieldsSet>(InspectorObject::create());
+    }
+};
+
+} // Heap
+
 namespace LayerTree {
 /* A rectangle. */
 class IntRect : public Inspector::InspectorObjectBase {
@@ -4335,6 +4474,11 @@ public:
     void setPreserve3D(bool value)
     {
         InspectorObjectBase::setBoolean(ASCIILiteral("preserve3D"), value);
+    }
+
+    void setWillChange(bool value)
+    {
+        InspectorObjectBase::setBoolean(ASCIILiteral("willChange"), value);
     }
 
     void setRoot(bool value)
@@ -4971,8 +5115,8 @@ class Initiator : public Inspector::InspectorObjectBase {
 public:
     // Named after property name 'type' while generating Initiator.
     enum class Type {
-        Parser = 76,
-        Script = 77,
+        Parser = 84,
+        Script = 85,
         Other = 25,
     }; // enum class Type
     enum {
@@ -5870,19 +6014,19 @@ public:
 namespace Page {
 /* Resource type as it was perceived by the rendering engine. */
 enum class ResourceType {
-    Document = 68,
-    Stylesheet = 69,
-    Image = 70,
-    Font = 71,
-    Script = 72,
-    XHR = 73,
-    WebSocket = 74,
-    Other = 75,
+    Document = 76,
+    Stylesheet = 77,
+    Image = 78,
+    Font = 79,
+    Script = 80,
+    XHR = 81,
+    WebSocket = 82,
+    Other = 83,
 }; // enum class ResourceType
 /* Coordinate system used by supplied coordinates. */
 enum class CoordinateSystem {
-    Viewport = 78,
-    Page = 79,
+    Viewport = 86,
+    Page = 87,
 }; // enum class CoordinateSystem
 /* Information about the Frame on the page. */
 class Frame : public Inspector::InspectorObjectBase {
@@ -6354,28 +6498,28 @@ class RemoteObject : public Inspector::InspectorObjectBase {
 public:
     // Named after property name 'type' while generating RemoteObject.
     enum class Type {
-        Object = 80,
-        Function = 81,
-        Undefined = 82,
-        String = 83,
-        Number = 84,
-        Boolean = 85,
-        Symbol = 86,
+        Object = 88,
+        Function = 89,
+        Undefined = 90,
+        String = 91,
+        Number = 92,
+        Boolean = 93,
+        Symbol = 94,
     }; // enum class Type
     // Named after property name 'subtype' while generating RemoteObject.
     enum class Subtype {
-        Array = 87,
-        Null = 88,
-        Node = 89,
-        Regexp = 90,
-        Date = 91,
+        Array = 95,
+        Null = 96,
+        Node = 97,
+        Regexp = 98,
+        Date = 54,
         Error = 29,
-        Map = 92,
-        Set = 93,
-        Weakmap = 94,
-        Weakset = 95,
-        Iterator = 96,
-        Class = 97,
+        Map = 99,
+        Set = 100,
+        Weakmap = 101,
+        Weakset = 102,
+        Iterator = 103,
+        Class = 104,
     }; // enum class Subtype
     enum {
         NoFieldsSet = 0,
@@ -6475,28 +6619,28 @@ class ObjectPreview : public Inspector::InspectorObjectBase {
 public:
     // Named after property name 'type' while generating ObjectPreview.
     enum class Type {
-        Object = 80,
-        Function = 81,
-        Undefined = 82,
-        String = 83,
-        Number = 84,
-        Boolean = 85,
-        Symbol = 86,
+        Object = 88,
+        Function = 89,
+        Undefined = 90,
+        String = 91,
+        Number = 92,
+        Boolean = 93,
+        Symbol = 94,
     }; // enum class Type
     // Named after property name 'subtype' while generating ObjectPreview.
     enum class Subtype {
-        Array = 87,
-        Null = 88,
-        Node = 89,
-        Regexp = 90,
-        Date = 91,
+        Array = 95,
+        Null = 96,
+        Node = 97,
+        Regexp = 98,
+        Date = 54,
         Error = 29,
-        Map = 92,
-        Set = 93,
-        Weakmap = 94,
-        Weakset = 95,
-        Iterator = 96,
-        Class = 97,
+        Map = 99,
+        Set = 100,
+        Weakmap = 101,
+        Weakset = 102,
+        Iterator = 103,
+        Class = 104,
     }; // enum class Subtype
     enum {
         NoFieldsSet = 0,
@@ -6594,29 +6738,29 @@ class PropertyPreview : public Inspector::InspectorObjectBase {
 public:
     // Named after property name 'type' while generating PropertyPreview.
     enum class Type {
-        Object = 80,
-        Function = 81,
-        Undefined = 82,
-        String = 83,
-        Number = 84,
-        Boolean = 85,
-        Symbol = 86,
-        Accessor = 98,
+        Object = 88,
+        Function = 89,
+        Undefined = 90,
+        String = 91,
+        Number = 92,
+        Boolean = 93,
+        Symbol = 94,
+        Accessor = 105,
     }; // enum class Type
     // Named after property name 'subtype' while generating PropertyPreview.
     enum class Subtype {
-        Array = 87,
-        Null = 88,
-        Node = 89,
-        Regexp = 90,
-        Date = 91,
+        Array = 95,
+        Null = 96,
+        Node = 97,
+        Regexp = 98,
+        Date = 54,
         Error = 29,
-        Map = 92,
-        Set = 93,
-        Weakmap = 94,
-        Weakset = 95,
-        Iterator = 96,
-        Class = 97,
+        Map = 99,
+        Set = 100,
+        Weakmap = 101,
+        Weakset = 102,
+        Iterator = 103,
+        Class = 104,
     }; // enum class Subtype
     enum {
         NoFieldsSet = 0,
@@ -7137,10 +7281,10 @@ public:
 
 /* Syntax error type: "none" for no error, "irrecoverable" for unrecoverable errors, "unterminated-literal" for when there is an unterminated literal, "recoverable" for when the expression is unfinished but valid so far. */
 enum class SyntaxErrorType {
-    None = 99,
-    Irrecoverable = 100,
-    UnterminatedLiteral = 101,
-    Recoverable = 102,
+    None = 106,
+    Irrecoverable = 107,
+    UnterminatedLiteral = 108,
+    Recoverable = 109,
 }; // enum class SyntaxErrorType
 /* Range of an error in source code. */
 class ErrorRange : public Inspector::InspectorObjectBase {
@@ -7563,7 +7707,8 @@ public:
         StartOffsetSet = 1 << 0,
         EndOffsetSet = 1 << 1,
         HasExecutedSet = 1 << 2,
-        AllFieldsSet = (StartOffsetSet | EndOffsetSet | HasExecutedSet)
+        ExecutionCountSet = 1 << 3,
+        AllFieldsSet = (StartOffsetSet | EndOffsetSet | HasExecutedSet | ExecutionCountSet)
     };
 
     template<int STATE>
@@ -7605,6 +7750,13 @@ public:
             return castState<HasExecutedSet>();
         }
 
+        Builder<STATE | ExecutionCountSet>& setExecutionCount(int value)
+        {
+            COMPILE_ASSERT(!(STATE & ExecutionCountSet), property_executionCount_already_set);
+            m_result->setInteger(ASCIILiteral("executionCount"), value);
+            return castState<ExecutionCountSet>();
+        }
+
         Ref<BasicBlock> release()
         {
             COMPILE_ASSERT(STATE == AllFieldsSet, result_is_not_ready);
@@ -7621,6 +7773,7 @@ public:
      *     .setStartOffset(...)
      *     .setEndOffset(...)
      *     .setHasExecuted(...)
+     *     .setExecutionCount(...)
      *     .release();
      */
     static Builder<NoFieldsSet> create()
@@ -7631,41 +7784,112 @@ public:
 
 } // Runtime
 
+namespace ScriptProfiler {
+/*  */
+enum class EventType {
+    API = 110,
+    Microtask = 111,
+    Other = 83,
+}; // enum class EventType
+class Event : public Inspector::InspectorObjectBase {
+public:
+    enum {
+        NoFieldsSet = 0,
+        StartTimeSet = 1 << 0,
+        EndTimeSet = 1 << 1,
+        TypeSet = 1 << 2,
+        AllFieldsSet = (StartTimeSet | EndTimeSet | TypeSet)
+    };
+
+    template<int STATE>
+    class Builder {
+    private:
+        RefPtr<InspectorObject> m_result;
+
+        template<int STEP> Builder<STATE | STEP>& castState()
+        {
+            return *reinterpret_cast<Builder<STATE | STEP>*>(this);
+        }
+
+        Builder(Ref</*Event*/InspectorObject>&& object)
+            : m_result(WTF::move(object))
+        {
+            COMPILE_ASSERT(STATE == NoFieldsSet, builder_created_in_non_init_state);
+        }
+        friend class Event;
+    public:
+
+        Builder<STATE | StartTimeSet>& setStartTime(double value)
+        {
+            COMPILE_ASSERT(!(STATE & StartTimeSet), property_startTime_already_set);
+            m_result->setDouble(ASCIILiteral("startTime"), value);
+            return castState<StartTimeSet>();
+        }
+
+        Builder<STATE | EndTimeSet>& setEndTime(double value)
+        {
+            COMPILE_ASSERT(!(STATE & EndTimeSet), property_endTime_already_set);
+            m_result->setDouble(ASCIILiteral("endTime"), value);
+            return castState<EndTimeSet>();
+        }
+
+        Builder<STATE | TypeSet>& setType(Inspector::Protocol::ScriptProfiler::EventType value)
+        {
+            COMPILE_ASSERT(!(STATE & TypeSet), property_type_already_set);
+            m_result->setString(ASCIILiteral("type"), Inspector::Protocol::getEnumConstantValue(static_cast<int>(value)));
+            return castState<TypeSet>();
+        }
+
+        Ref<Event> release()
+        {
+            COMPILE_ASSERT(STATE == AllFieldsSet, result_is_not_ready);
+            COMPILE_ASSERT(sizeof(Event) == sizeof(InspectorObject), cannot_cast);
+
+            Ref<InspectorObject> result = m_result.releaseNonNull();
+            return WTF::move(*reinterpret_cast<Ref<Event>*>(&result));
+        }
+    };
+
+    /*
+     * Synthetic constructor:
+     * Ref<Event> result = Event::create()
+     *     .setStartTime(...)
+     *     .setEndTime(...)
+     *     .setType(...)
+     *     .release();
+     */
+    static Builder<NoFieldsSet> create()
+    {
+        return Builder<NoFieldsSet>(InspectorObject::create());
+    }
+};
+
+} // ScriptProfiler
+
 namespace Timeline {
 /* Timeline record type. */
 enum class EventType {
-    EventDispatch = 103,
-    ScheduleStyleRecalculation = 104,
-    RecalculateStyles = 105,
-    InvalidateLayout = 106,
-    Layout = 107,
-    Paint = 108,
-    Composite = 109,
-    RenderingFrame = 110,
-    ScrollLayer = 111,
-    ParseHTML = 112,
-    TimerInstall = 113,
-    TimerRemove = 114,
-    TimerFire = 115,
-    EvaluateScript = 116,
-    MarkLoad = 117,
-    MarkDOMContent = 118,
-    TimeStamp = 119,
-    Time = 120,
-    TimeEnd = 121,
-    XHRReadyStateChange = 122,
-    XHRLoad = 123,
-    FunctionCall = 124,
-    ProbeSample = 125,
-    ConsoleProfile = 126,
-    GCEvent = 127,
-    RequestAnimationFrame = 128,
-    CancelAnimationFrame = 129,
-    FireAnimationFrame = 130,
-    WebSocketCreate = 131,
-    WebSocketSendHandshakeRequest = 132,
-    WebSocketReceiveHandshakeResponse = 133,
-    WebSocketDestroy = 134,
+    EventDispatch = 112,
+    ScheduleStyleRecalculation = 113,
+    RecalculateStyles = 114,
+    InvalidateLayout = 115,
+    Layout = 116,
+    Paint = 117,
+    Composite = 118,
+    RenderingFrame = 119,
+    TimerInstall = 120,
+    TimerRemove = 121,
+    TimerFire = 122,
+    EvaluateScript = 123,
+    TimeStamp = 124,
+    Time = 125,
+    TimeEnd = 126,
+    FunctionCall = 127,
+    ProbeSample = 128,
+    ConsoleProfile = 129,
+    RequestAnimationFrame = 130,
+    CancelAnimationFrame = 131,
+    FireAnimationFrame = 132,
 }; // enum class EventType
 /* Timeline record contains information about the recorded activity. */
 class TimelineEvent : public Inspector::InspectorObject {

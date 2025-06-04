@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSNotificationCenter : public JSDOMWrapper {
+class JSNotificationCenter : public JSDOMWrapper<NotificationCenter> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<NotificationCenter> Base;
     static JSNotificationCenter* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NotificationCenter>&& impl)
     {
-        JSNotificationCenter* ptr = new (NotNull, JSC::allocateCell<JSNotificationCenter>(globalObject->vm().heap)) JSNotificationCenter(structure, globalObject, WTF::move(impl));
+        JSNotificationCenter* ptr = new (NotNull, JSC::allocateCell<JSNotificationCenter>(globalObject->vm().heap)) JSNotificationCenter(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static NotificationCenter* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNotificationCenter();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    NotificationCenter& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NotificationCenter* m_impl;
 protected:
-    JSNotificationCenter(JSC::Structure*, JSDOMGlobalObject*, Ref<NotificationCenter>&&);
+    JSNotificationCenter(JSC::Structure*, JSDOMGlobalObject&, Ref<NotificationCenter>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NotificationCenter*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NotificationCenter*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NotificationCenter& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NotificationCenter& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, NotificationCenter*);
 
 
 } // namespace WebCore

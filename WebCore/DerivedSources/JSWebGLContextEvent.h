@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSWebGLContextEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLContextEvent>&& impl)
     {
-        JSWebGLContextEvent* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextEvent>(globalObject->vm().heap)) JSWebGLContextEvent(structure, globalObject, WTF::move(impl));
+        JSWebGLContextEvent* ptr = new (NotNull, JSC::allocateCell<JSWebGLContextEvent>(globalObject->vm().heap)) JSWebGLContextEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLContextEvent& impl() const
+    WebGLContextEvent& wrapped() const
     {
-        return static_cast<WebGLContextEvent&>(Base::impl());
+        return static_cast<WebGLContextEvent&>(Base::wrapped());
     }
 protected:
-    JSWebGLContextEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLContextEvent>&&);
+    JSWebGLContextEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLContextEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLFormElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFormElement>&& impl)
     {
-        JSHTMLFormElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElement>(globalObject->vm().heap)) JSHTMLFormElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFormElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormElement>(globalObject->vm().heap)) JSHTMLFormElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFormElement& impl() const
+    HTMLFormElement& wrapped() const
     {
-        return static_cast<HTMLFormElement&>(Base::impl());
+        return static_cast<HTMLFormElement&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpure | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLFormElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFormElement>&&);
+    JSHTMLFormElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFormElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -66,8 +66,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLFormElement*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 

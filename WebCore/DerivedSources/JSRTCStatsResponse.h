@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCStatsResponse : public JSDOMWrapper {
+class JSRTCStatsResponse : public JSDOMWrapper<RTCStatsResponse> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCStatsResponse> Base;
     static JSRTCStatsResponse* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCStatsResponse>&& impl)
     {
-        JSRTCStatsResponse* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsResponse>(globalObject->vm().heap)) JSRTCStatsResponse(structure, globalObject, WTF::move(impl));
+        JSRTCStatsResponse* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsResponse>(globalObject->vm().heap)) JSRTCStatsResponse(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSRTCStatsResponse();
 
     DECLARE_INFO;
 
@@ -54,15 +53,11 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCStatsResponse& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCStatsResponse* m_impl;
+    static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSRTCStatsResponse(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCStatsResponse>&&);
+    JSRTCStatsResponse(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCStatsResponse>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,8 +66,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, RTCStatsResponse*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSRTCStatsResponseOwner : public JSC::WeakHandleOwner {
@@ -88,7 +82,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCStatsResponse*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsResponse*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCStatsResponse& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCStatsResponse& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsResponse*);
 
 
 } // namespace WebCore

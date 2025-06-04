@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGDescElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGDescElement>&& impl)
     {
-        JSSVGDescElement* ptr = new (NotNull, JSC::allocateCell<JSSVGDescElement>(globalObject->vm().heap)) JSSVGDescElement(structure, globalObject, WTF::move(impl));
+        JSSVGDescElement* ptr = new (NotNull, JSC::allocateCell<JSSVGDescElement>(globalObject->vm().heap)) JSSVGDescElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGDescElement& impl() const
+    SVGDescElement& wrapped() const
     {
-        return static_cast<SVGDescElement&>(Base::impl());
+        return static_cast<SVGDescElement&>(Base::wrapped());
     }
 protected:
-    JSSVGDescElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGDescElement>&&);
+    JSSVGDescElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGDescElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

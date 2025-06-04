@@ -22,8 +22,8 @@
 #include "JSPopStateEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
-#include "PopStateEvent.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -61,29 +61,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSPopStateEventConstructor : public DOMConstructorObject {
-private:
-    JSPopStateEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSPopStateEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSPopStateEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSPopStateEventConstructor>(vm.heap)) JSPopStateEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSPopStateEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSPopStateEvent> JSPopStateEventConstructor;
 
 /* Hash table */
 
@@ -95,31 +73,33 @@ static const struct CompactHashIndex JSPopStateEventTableIndex[2] = {
 
 static const HashTableValue JSPopStateEventTableValues[] =
 {
-    { "state", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPopStateEventState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "state", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPopStateEventState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSPopStateEventTable = { 1, 1, true, JSPopStateEventTableValues, 0, JSPopStateEventTableIndex };
-EncodedJSValue JSC_HOST_CALL JSPopStateEventConstructor::constructJSPopStateEvent(ExecState* exec)
+static const HashTable JSPopStateEventTable = { 1, 1, true, JSPopStateEventTableValues, JSPopStateEventTableIndex };
+template<> EncodedJSValue JSC_HOST_CALL JSPopStateEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSPopStateEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSPopStateEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     PopStateEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillPopStateEventInit(eventInit, dictionary))
@@ -127,7 +107,7 @@ EncodedJSValue JSC_HOST_CALL JSPopStateEventConstructor::constructJSPopStateEven
     }
 
     RefPtr<PopStateEvent> event = PopStateEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillPopStateEventInit(PopStateEventInit& eventInit, JSDictionary& dictionary)
@@ -140,33 +120,20 @@ bool fillPopStateEventInit(PopStateEventInit& eventInit, JSDictionary& dictionar
     return true;
 }
 
-const ClassInfo JSPopStateEventConstructor::s_info = { "PopStateEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPopStateEventConstructor) };
-
-JSPopStateEventConstructor::JSPopStateEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSPopStateEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSPopStateEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSPopStateEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSPopStateEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("PopStateEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSPopStateEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSPopStateEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSPopStateEventConstructor::s_info = { "PopStateEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPopStateEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSPopStateEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPopStateEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPopStateEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSPopStateEventPrototype::s_info = { "PopStateEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPopStateEventPrototype) };
@@ -179,7 +146,7 @@ void JSPopStateEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSPopStateEvent::s_info = { "PopStateEvent", &Base::s_info, &JSPopStateEventTable, CREATE_METHOD_TABLE(JSPopStateEvent) };
 
-JSPopStateEvent::JSPopStateEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<PopStateEvent>&& impl)
+JSPopStateEvent::JSPopStateEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<PopStateEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -194,34 +161,36 @@ JSObject* JSPopStateEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSPopStateEvent>(vm, globalObject);
 }
 
-bool JSPopStateEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSPopStateEvent::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSPopStateEvent*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSPopStateEvent, Base>(exec, JSPopStateEventTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSPopStateEvent, Base>(state, JSPopStateEventTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsPopStateEventState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsPopStateEventState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSPopStateEvent*>(slotBase);
-    return JSValue::encode(castedThis->state(exec));
+    return JSValue::encode(castedThis->state(*state));
 }
 
 
-EncodedJSValue jsPopStateEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsPopStateEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSPopStateEventPrototype* domObject = jsDynamicCast<JSPopStateEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSPopStateEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSPopStateEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSPopStateEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSPopStateEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSPopStateEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 void JSPopStateEvent::visitChildren(JSCell* cell, SlotVisitor& visitor)

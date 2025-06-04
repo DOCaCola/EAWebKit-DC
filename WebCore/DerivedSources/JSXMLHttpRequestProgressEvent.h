@@ -31,14 +31,13 @@ public:
     typedef JSProgressEvent Base;
     static JSXMLHttpRequestProgressEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestProgressEvent>&& impl)
     {
-        JSXMLHttpRequestProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestProgressEvent>(globalObject->vm().heap)) JSXMLHttpRequestProgressEvent(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequestProgressEvent* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestProgressEvent>(globalObject->vm().heap)) JSXMLHttpRequestProgressEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
 
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
 
     DECLARE_INFO;
 
@@ -48,14 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XMLHttpRequestProgressEvent& impl() const
+    XMLHttpRequestProgressEvent& wrapped() const
     {
-        return static_cast<XMLHttpRequestProgressEvent&>(Base::impl());
+        return static_cast<XMLHttpRequestProgressEvent&>(Base::wrapped());
     }
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXMLHttpRequestProgressEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequestProgressEvent>&&);
+    JSXMLHttpRequestProgressEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequestProgressEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

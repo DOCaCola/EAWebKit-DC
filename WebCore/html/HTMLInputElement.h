@@ -66,8 +66,6 @@ public:
     static Ref<HTMLInputElement> create(const QualifiedName&, Document&, HTMLFormElement*, bool createdByParser);
     virtual ~HTMLInputElement();
 
-    virtual HTMLInputElement* toInputElement() override final { return this; }
-
     WEBCORE_EXPORT virtual bool shouldAutocomplete() const override final;
 
     // For ValidityState
@@ -282,10 +280,8 @@ public:
 
     void cacheSelectionInResponseToSetValue(int caretOffset) { cacheSelection(caretOffset, caretOffset, SelectionHasNoDirection); }
 
-#if ENABLE(INPUT_TYPE_COLOR)
-    // For test purposes.
-    WEBCORE_EXPORT void selectColorInColorChooser(const Color&);
-#endif
+    Color valueAsColor() const; // Returns transparent color if not type=color.
+    WEBCORE_EXPORT void selectColor(const Color&); // Does nothing if not type=color. Simulates user selection of color; intended for testing.
 
     String defaultToolTip() const;
 
@@ -331,11 +327,12 @@ private:
     enum AutoCompleteSetting { Uninitialized, On, Off };
 
     virtual void didAddUserAgentShadowRoot(ShadowRoot*) override final;
+    virtual bool canHaveUserAgentShadowRoot() const override final { return true; }
 
     virtual void willChangeForm() override final;
     virtual void didChangeForm() override final;
     virtual InsertionNotificationRequest insertedInto(ContainerNode&) override final;
-	void finishedInsertingSubtree() override final;
+    void finishedInsertingSubtree() override final;
     virtual void removedFrom(ContainerNode&) override final;
     virtual void didMoveToNewDocument(Document* oldDocument) override final;
 
@@ -344,7 +341,7 @@ private:
     virtual bool isMouseFocusable() const override final;
     virtual bool isEnumeratable() const override final;
     virtual bool supportLabels() const override final;
-    virtual void updateFocusAppearance(bool restorePreviousSelection) override final;
+    virtual void updateFocusAppearance(SelectionRestorationMode, SelectionRevealMode) override final;
     virtual bool shouldUseInputMethod() override final;
 
     virtual bool isTextFormControl() const override final { return isTextField(); }
@@ -379,9 +376,9 @@ private:
     virtual bool isInRange() const override final;
     virtual bool isOutOfRange() const override final;
 
-    virtual void documentDidResumeFromPageCache() override final;
+    virtual void resumeFromDocumentSuspension() override final;
 #if ENABLE(INPUT_TYPE_COLOR)
-    virtual void documentWillSuspendForPageCache() override final;
+    virtual void prepareForDocumentSuspension() override final;
 #endif
 
     virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const override final;

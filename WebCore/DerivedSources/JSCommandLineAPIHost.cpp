@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSCommandLineAPIHost.h"
 
-#include "CommandLineAPIHost.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include <runtime/Error.h>
@@ -70,13 +69,13 @@ private:
 
 static const HashTableValue JSCommandLineAPIHostPrototypeTableValues[] =
 {
-    { "clearConsoleMessages", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionClearConsoleMessages), (intptr_t) (0) },
-    { "copyText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionCopyText), (intptr_t) (1) },
-    { "inspect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionInspect), (intptr_t) (2) },
-    { "inspectedObject", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionInspectedObject), (intptr_t) (0) },
-    { "getEventListeners", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionGetEventListeners), (intptr_t) (1) },
-    { "databaseId", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionDatabaseId), (intptr_t) (1) },
-    { "storageId", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionStorageId), (intptr_t) (1) },
+    { "clearConsoleMessages", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionClearConsoleMessages), (intptr_t) (0) } },
+    { "copyText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionCopyText), (intptr_t) (1) } },
+    { "inspect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionInspect), (intptr_t) (2) } },
+    { "inspectedObject", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionInspectedObject), (intptr_t) (0) } },
+    { "getEventListeners", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionGetEventListeners), (intptr_t) (1) } },
+    { "databaseId", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionDatabaseId), (intptr_t) (1) } },
+    { "storageId", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCommandLineAPIHostPrototypeFunctionStorageId), (intptr_t) (1) } },
 };
 
 const ClassInfo JSCommandLineAPIHostPrototype::s_info = { "CommandLineAPIHostPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCommandLineAPIHostPrototype) };
@@ -89,9 +88,8 @@ void JSCommandLineAPIHostPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCommandLineAPIHost::s_info = { "CommandLineAPIHost", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCommandLineAPIHost) };
 
-JSCommandLineAPIHost::JSCommandLineAPIHost(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CommandLineAPIHost>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCommandLineAPIHost::JSCommandLineAPIHost(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CommandLineAPIHost>&& impl)
+    : JSDOMWrapper<CommandLineAPIHost>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -111,88 +109,83 @@ void JSCommandLineAPIHost::destroy(JSC::JSCell* cell)
     thisObject->JSCommandLineAPIHost::~JSCommandLineAPIHost();
 }
 
-JSCommandLineAPIHost::~JSCommandLineAPIHost()
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionClearConsoleMessages(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionClearConsoleMessages(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "clearConsoleMessages");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "clearConsoleMessages");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.clearConsoleMessages();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionCopyText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionCopyText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "copyText");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "copyText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String text = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String text = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.copyText(text);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionInspect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionInspect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "inspect");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "inspect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    return JSValue::encode(castedThis->inspect(exec));
+    return JSValue::encode(castedThis->inspect(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionInspectedObject(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionInspectedObject(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "inspectedObject");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "inspectedObject");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    return JSValue::encode(castedThis->inspectedObject(exec));
+    return JSValue::encode(castedThis->inspectedObject(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionGetEventListeners(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionGetEventListeners(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "getEventListeners");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "getEventListeners");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    return JSValue::encode(castedThis->getEventListeners(exec));
+    return JSValue::encode(castedThis->getEventListeners(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionDatabaseId(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionDatabaseId(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "databaseId");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "databaseId");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    return JSValue::encode(castedThis->databaseId(exec));
+    return JSValue::encode(castedThis->databaseId(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionStorageId(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCommandLineAPIHostPrototypeFunctionStorageId(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCommandLineAPIHost* castedThis = jsDynamicCast<JSCommandLineAPIHost*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CommandLineAPIHost", "storageId");
+        return throwThisTypeError(*state, "CommandLineAPIHost", "storageId");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCommandLineAPIHost::info());
-    return JSValue::encode(castedThis->storageId(exec));
+    return JSValue::encode(castedThis->storageId(*state));
 }
 
 bool JSCommandLineAPIHostOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -206,7 +199,14 @@ void JSCommandLineAPIHostOwner::finalize(JSC::Handle<JSC::Unknown> handle, void*
 {
     auto* jsCommandLineAPIHost = jsCast<JSCommandLineAPIHost*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCommandLineAPIHost->impl(), jsCommandLineAPIHost);
+    uncacheWrapper(world, &jsCommandLineAPIHost->wrapped(), jsCommandLineAPIHost);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, CommandLineAPIHost* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSCommandLineAPIHost>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CommandLineAPIHost* impl)
@@ -228,7 +228,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CommandLineA
 CommandLineAPIHost* JSCommandLineAPIHost::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCommandLineAPIHost*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

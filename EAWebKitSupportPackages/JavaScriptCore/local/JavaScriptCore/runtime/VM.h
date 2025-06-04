@@ -33,6 +33,9 @@
 #include "DateInstanceCache.h"
 #include "ExecutableAllocator.h"
 #include "FunctionHasExecutedCache.h"
+#if ENABLE(JIT)
+#include "GPRInfo.h"
+#endif
 #include "Heap.h"
 #include "Intrinsic.h"
 #include "JITThunks.h"
@@ -51,7 +54,6 @@
 #include "TypedArrayController.h"
 #include "VMEntryRecord.h"
 #include "Watchpoint.h"
-#include "WeakRandom.h"
 #include <wtf/Bag.h>
 #include <wtf/BumpPointerAllocator.h>
 #include <wtf/DateMath.h>
@@ -64,6 +66,7 @@
 #include <wtf/ThreadSafeRefCounted.h>
 #include <wtf/ThreadSpecific.h>
 #include <wtf/WTFThreadData.h>
+#include <wtf/WeakRandom.h>
 #include <wtf/text/SymbolRegistry.h>
 #include <wtf/text/WTFString.h>
 #if ENABLE(REGEXP_TRACING)
@@ -72,7 +75,6 @@
 
 namespace JSC {
 
-class ArityCheckFailReturnThunks;
 class BuiltinExecutables;
 class CodeBlock;
 class CodeCache;
@@ -86,16 +88,15 @@ class Identifier;
 class Interpreter;
 class JSGlobalObject;
 class JSObject;
-class Keywords;
 class LLIntOffsetsExtractor;
 class LegacyProfiler;
 class NativeExecutable;
 class RegExpCache;
+class RegisterAtOffsetList;
 class ScriptExecutable;
 class SourceProvider;
 class SourceProviderCache;
 struct StackFrame;
-class Stringifier;
 class Structure;
 #if ENABLE(REGEXP_TRACING)
 class RegExp;
@@ -104,6 +105,7 @@ class UnlinkedCodeBlock;
 class UnlinkedEvalCodeBlock;
 class UnlinkedFunctionExecutable;
 class UnlinkedProgramCodeBlock;
+class UnlinkedModuleProgramCodeBlock;
 class VirtualRegister;
 class VMEntryScope;
 class Watchdog;
@@ -238,6 +240,7 @@ public:
     JS_EXPORT_PRIVATE ~VM();
 
     JS_EXPORT_PRIVATE Watchdog& ensureWatchdog();
+    JS_EXPORT_PRIVATE Watchdog* watchdog() { return m_watchdog.get(); }
 
 private:
     RefPtr<JSLock> m_apiLock;
@@ -261,8 +264,6 @@ public:
     ClientData* clientData;
     VMEntryFrame* topVMEntryFrame;
     ExecState* topCallFrame;
-    RefPtr<Watchdog> watchdog;
-
     Strong<Structure> structureStructure;
     Strong<Structure> structureRareDataStructure;
     Strong<Structure> terminatedExecutionErrorStructure;
@@ -280,6 +281,10 @@ public:
     Strong<Structure> evalExecutableStructure;
     Strong<Structure> programExecutableStructure;
     Strong<Structure> functionExecutableStructure;
+#if ENABLE(WEBASSEMBLY)
+    Strong<Structure> webAssemblyExecutableStructure;
+#endif
+    Strong<Structure> moduleProgramExecutableStructure;
     Strong<Structure> regExpStructure;
     Strong<Structure> symbolStructure;
     Strong<Structure> symbolTableStructure;
@@ -291,12 +296,24 @@ public:
     Strong<Structure> unlinkedProgramCodeBlockStructure;
     Strong<Structure> unlinkedEvalCodeBlockStructure;
     Strong<Structure> unlinkedFunctionCodeBlockStructure;
+    Strong<Structure> unlinkedModuleProgramCodeBlockStructure;
     Strong<Structure> propertyTableStructure;
     Strong<Structure> weakMapDataStructure;
     Strong<Structure> inferredValueStructure;
+    Strong<Structure> inferredTypeStructure;
+    Strong<Structure> inferredTypeTableStructure;
     Strong<Structure> functionRareDataStructure;
+    Strong<Structure> generatorFrameStructure;
     Strong<Structure> exceptionStructure;
     Strong<Structure> promiseDeferredStructure;
+    Strong<Structure> internalPromiseDeferredStructure;
+    Strong<Structure> nativeStdFunctionCellStructure;
+    Strong<Structure> programCodeBlockStructure;
+    Strong<Structure> moduleProgramCodeBlockStructure;
+    Strong<Structure> evalCodeBlockStructure;
+    Strong<Structure> functionCodeBlockStructure;
+    Strong<Structure> webAssemblyCodeBlockStructure;
+
     Strong<JSCell> iterationTerminator;
     Strong<JSCell> emptyPropertyNameEnumerator;
 
@@ -330,21 +347,25 @@ public:
     void* enabledProfilerAddress() { return &m_enabledProfiler; }
 
 #if ENABLE(JIT)
+//+EAWKDC EAWEBKIT Change
 #if defined FORCE_NON_JIT //Forcing fallback into non jit version for PC builds only. For some reason 16.x version uses jit all the time and disabling it in EAPlatform.h does not working properly.
     bool canUseJIT() { return false; }
 #else
     bool canUseJIT() { return m_canUseJIT; }
 #endif
+//-EAWKDC EAWEBKIT Change
 #else
     bool canUseJIT() { return false; } // interpreter only
 #endif
 
 #if ENABLE(YARR_JIT)
+//+EAWKDC EAWEBKIT Change
 #if FORCE_NON_JIT //Forcing fallback into non jit version for PC builds only. For some reason 16.x version uses jit all the time and disabling it in EAPlatform.h does not working properly.
     bool canUseRegExpJIT() { return false; }
 #else
     bool canUseRegExpJIT() { return m_canUseRegExpJIT; }
 #endif
+//-EAWKDC EAWEBKIT Change
 #else
     bool canUseRegExpJIT() { return false; } // interpreter only
 #endif
@@ -356,17 +377,28 @@ public:
 
     typedef HashMap<RefPtr<SourceProvider>, RefPtr<SourceProviderCache>> SourceProviderCacheMap;
     SourceProviderCacheMap sourceProviderCacheMap;
-    std::unique_ptr<Keywords> keywords;
     Interpreter* interpreter;
 #if ENABLE(JIT)
+#if NUMBER_OF_CALLEE_SAVES_REGISTERS > 0
+    intptr_t calleeSaveRegistersBuffer[NUMBER_OF_CALLEE_SAVES_REGISTERS];
+
+    static ptrdiff_t calleeSaveRegistersBufferOffset()
+    {
+        return OBJECT_OFFSETOF(VM, calleeSaveRegistersBuffer);
+    }
+#endif // NUMBER_OF_CALLEE_SAVES_REGISTERS > 0
+
     std::unique_ptr<JITThunks> jitStubs;
     MacroAssemblerCodeRef getCTIStub(ThunkGenerator generator)
     {
         return jitStubs->ctiStub(this, generator);
     }
     NativeExecutable* getHostFunction(NativeFunction, Intrinsic);
+    
+    std::unique_ptr<RegisterAtOffsetList> allCalleeSaveRegisterOffsets;
+    
+    RegisterAtOffsetList* getAllCalleeSaveRegisterOffsets() { return allCalleeSaveRegisterOffsets.get(); }
 
-    std::unique_ptr<ArityCheckFailReturnThunks> arityCheckFailReturnThunks;
 #endif // ENABLE(JIT)
     std::unique_ptr<CommonSlowPaths::ArityCheckData> arityCheckData;
 #if ENABLE(FTL_JIT)
@@ -379,9 +411,9 @@ public:
         return OBJECT_OFFSETOF(VM, m_exception);
     }
 
-    static ptrdiff_t callFrameForThrowOffset()
+    static ptrdiff_t callFrameForCatchOffset()
     {
-        return OBJECT_OFFSETOF(VM, callFrameForThrow);
+        return OBJECT_OFFSETOF(VM, callFrameForCatch);
     }
 
     static ptrdiff_t targetMachinePCForThrowOffset()
@@ -389,14 +421,12 @@ public:
         return OBJECT_OFFSETOF(VM, targetMachinePCForThrow);
     }
 
+    void restorePreviousException(Exception* exception) { setException(exception); }
+
     void clearException() { m_exception = nullptr; }
     void clearLastException() { m_lastException = nullptr; }
 
-    void setException(Exception* exception)
-    {
-        m_exception = exception;
-        m_lastException = exception;
-    }
+    ExecState** addressOfCallFrameForCatch() { return &callFrameForCatch; }
 
     Exception* exception() const { return m_exception; }
     JSCell** addressOfException() { return reinterpret_cast<JSCell**>(&m_exception); }
@@ -408,6 +438,14 @@ public:
     JS_EXPORT_PRIVATE JSValue throwException(ExecState*, JSValue);
     JS_EXPORT_PRIVATE JSObject* throwException(ExecState*, JSObject*);
 
+    void setFailNextNewCodeBlock() { m_failNextNewCodeBlock = true; }
+    bool getAndClearFailNextNewCodeBlock()
+    {
+        bool result = m_failNextNewCodeBlock;
+        m_failNextNewCodeBlock = false;
+        return result;
+    }
+    
     void* stackPointerAtVMEntry() const { return m_stackPointerAtVMEntry; }
     void setStackPointerAtVMEntry(void*);
 
@@ -443,7 +481,7 @@ public:
     JSValue hostCallReturnValue;
     unsigned varargsLength;
     ExecState* newCallFrameReturnValue;
-    ExecState* callFrameForThrow;
+    ExecState* callFrameForCatch;
     void* targetMachinePCForThrow;
     Instruction* targetInterpreterPCForThrow;
     uint32_t osrExitIndex;
@@ -471,6 +509,14 @@ public:
         ScratchBuffer* result = scratchBuffers.last();
         result->setActiveLength(0);
         return result;
+    }
+
+    EncodedJSValue* exceptionFuzzingBuffer(size_t size)
+    {
+        ASSERT(Options::useExceptionFuzz());
+        if (!m_exceptionFuzzBuffer)
+            m_exceptionFuzzBuffer = MallocPtr<EncodedJSValue>::malloc(size);
+        return m_exceptionFuzzBuffer.get();
     }
 
     void gatherConservativeRoots(ConservativeRoots&);
@@ -517,20 +563,13 @@ public:
     void setInitializingObjectClass(const ClassInfo*);
 #endif
 
-    unsigned m_newStringsSinceLastHashCons;
-
-    static const unsigned s_minNumberOfNewStringsToHashCons = 100;
-
-    bool haveEnoughNewStringsToHashCons() { return m_newStringsSinceLastHashCons > s_minNumberOfNewStringsToHashCons; }
-    void resetNewStringsSinceLastHashCons() { m_newStringsSinceLastHashCons = 0; }
-
     bool currentThreadIsHoldingAPILock() const { return m_apiLock->currentThreadIsHoldingLock(); }
 
     JSLock& apiLock() { return *m_apiLock; }
     CodeCache* codeCache() { return m_codeCache.get(); }
 
-    void prepareToDeleteCode();
-        
+    JS_EXPORT_PRIVATE void whenIdle(std::function<void()>);
+
     JS_EXPORT_PRIVATE void deleteAllCode();
 
     void registerWatchpointForImpureProperty(const Identifier&, Watchpoint*);
@@ -554,19 +593,26 @@ public:
 
     JS_EXPORT_PRIVATE void queueMicrotask(JSGlobalObject*, PassRefPtr<Microtask>);
     JS_EXPORT_PRIVATE void drainMicrotasks();
+    JS_EXPORT_PRIVATE void setShouldRewriteConstAsVar(bool shouldRewrite) { m_shouldRewriteConstAsVar = shouldRewrite; }
+    ALWAYS_INLINE bool shouldRewriteConstAsVar() { return m_shouldRewriteConstAsVar; }
 
     inline bool shouldTriggerTermination(ExecState*);
 
 private:
     friend class LLIntOffsetsExtractor;
     friend class ClearExceptionScope;
-    friend class RecursiveAllocationScope;
 
     VM(VMType, HeapType);
     static VM*& sharedInstanceInternal();
     void createNativeThunk();
 
     void updateStackLimit();
+
+    void setException(Exception* exception)
+    {
+        m_exception = exception;
+        m_lastException = exception;
+    }
 
 #if ENABLE(ASSEMBLER)
     bool m_canUseAssembler;
@@ -600,7 +646,9 @@ private:
     void* m_lastStackTop;
     Exception* m_exception { nullptr };
     Exception* m_lastException { nullptr };
+    bool m_failNextNewCodeBlock { false };
     bool m_inDefineOwnProperty;
+    bool m_shouldRewriteConstAsVar { false };
     std::unique_ptr<CodeCache> m_codeCache;
     LegacyProfiler* m_enabledProfiler;
     std::unique_ptr<BuiltinExecutables> m_builtinExecutables;
@@ -612,6 +660,8 @@ private:
     std::unique_ptr<ControlFlowProfiler> m_controlFlowProfiler;
     unsigned m_controlFlowProfilerEnabledCount;
     Deque<std::unique_ptr<QueuedTask>> m_microtaskQueue;
+    MallocPtr<EncodedJSValue> m_exceptionFuzzBuffer;
+    RefPtr<Watchdog> m_watchdog;
 };
 
 #if ENABLE(GC_VALIDATION)

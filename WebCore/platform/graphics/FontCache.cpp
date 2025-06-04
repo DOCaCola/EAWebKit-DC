@@ -100,7 +100,9 @@ struct FontPlatformDataCacheKey {
     WTF_MAKE_FAST_ALLOCATED;
 public:
     FontPlatformDataCacheKey() { }
-    FontPlatformDataCacheKey(const AtomicString& family, const FontDescription& description)
+    //+EAWKDC Change - Replace FontDescription with FontCascadeDescription
+    FontPlatformDataCacheKey(const AtomicString& family, const FontCascadeDescription& description)
+    //-EAWKDC Change
         : m_fontDescriptionKey(description)
         , m_family(family)
     { }
@@ -213,9 +215,11 @@ static const AtomicString alternateFamilyName(const AtomicString& familyName)
     return nullAtom;
 }
 
-FontPlatformData* FontCache::getCachedFontPlatformData(const FontDescription& fontDescription,
+    //+EAWKDC Change
+FontPlatformData* FontCache::getCachedFontPlatformData(const FontCascadeDescription& fontDescription,
                                                        const AtomicString& passedFamilyName,
                                                        bool checkingAlternateName)
+    //-EAWKDC Change
 {
 #if PLATFORM(IOS)
     FontLocker fontLocker;
@@ -370,7 +374,9 @@ const unsigned cTargetInactiveFontData = 200;
 const unsigned cMaxUnderMemoryPressureInactiveFontData = 50;
 const unsigned cTargetUnderMemoryPressureInactiveFontData = 30;
 
-RefPtr<Font> FontCache::fontForFamily(const FontDescription& fontDescription, const AtomicString& family, bool checkingAlternateName)
+    //+EAWKDC Change
+RefPtr<Font> FontCache::fontForFamily(const FontCascadeDescription& fontDescription, const AtomicString& family, bool checkingAlternateName)
+    //-EAWKDC Change
 {
     if (!m_purgeTimer.isActive())
         m_purgeTimer.startOneShot(std::chrono::milliseconds::zero());
@@ -441,7 +447,7 @@ void FontCache::purgeInactiveFontData(unsigned purgeCount)
         if (entry.value && !cachedFonts().contains(*entry.value))
             keysToRemove.append(entry.key);
     }
-    for (auto key : keysToRemove)
+    for (auto& key : keysToRemove)
         fontPlatformDataCache().remove(key);
 
 #if ENABLE(OPENTYPE_VERTICAL)
@@ -539,7 +545,7 @@ void FontCache::invalidate()
 }
 
 #if !PLATFORM(COCOA)
-RefPtr<Font> FontCache::similarFont(const FontDescription&)
+RefPtr<Font> FontCache::similarFont(const FontDescription&, const AtomicString&)
 {
     return nullptr;
 }

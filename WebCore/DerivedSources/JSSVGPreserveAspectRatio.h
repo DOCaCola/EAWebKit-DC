@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGPreserveAspectRatio : public JSDOMWrapper {
+class JSSVGPreserveAspectRatio : public JSDOMWrapper<SVGPropertyTearOff<SVGPreserveAspectRatio>> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPropertyTearOff<SVGPreserveAspectRatio>> Base;
     static JSSVGPreserveAspectRatio* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGPreserveAspectRatio>>&& impl)
     {
-        JSSVGPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGPreserveAspectRatio>(globalObject->vm().heap)) JSSVGPreserveAspectRatio(structure, globalObject, WTF::move(impl));
+        JSSVGPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGPreserveAspectRatio>(globalObject->vm().heap)) JSSVGPreserveAspectRatio(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGPropertyTearOff<SVGPreserveAspectRatio>* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPreserveAspectRatio();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGPreserveAspectRatio>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGPreserveAspectRatio>* m_impl;
 protected:
-    JSSVGPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGPreserveAspectRatio>>&&);
+    JSSVGPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPropertyTearOff<SVGPreserveAspectRatio>>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<S
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGPreserveAspectRatio>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGPreserveAspectRatio>& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGPreserveAspectRatio>& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGPreserveAspectRatio>*);
 
 
 } // namespace WebCore

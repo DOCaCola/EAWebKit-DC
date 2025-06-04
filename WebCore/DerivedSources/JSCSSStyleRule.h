@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSStyleRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSStyleRule>&& impl)
     {
-        JSCSSStyleRule* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleRule>(globalObject->vm().heap)) JSCSSStyleRule(structure, globalObject, WTF::move(impl));
+        JSCSSStyleRule* ptr = new (NotNull, JSC::allocateCell<JSCSSStyleRule>(globalObject->vm().heap)) JSCSSStyleRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSStyleRule& impl() const
+    CSSStyleRule& wrapped() const
     {
-        return static_cast<CSSStyleRule&>(Base::impl());
+        return static_cast<CSSStyleRule&>(Base::wrapped());
     }
 protected:
-    JSCSSStyleRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSStyleRule>&&);
+    JSCSSStyleRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSStyleRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

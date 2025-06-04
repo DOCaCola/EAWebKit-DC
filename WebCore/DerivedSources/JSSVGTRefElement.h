@@ -32,7 +32,7 @@ public:
     typedef JSSVGTextPositioningElement Base;
     static JSSVGTRefElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTRefElement>&& impl)
     {
-        JSSVGTRefElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTRefElement>(globalObject->vm().heap)) JSSVGTRefElement(structure, globalObject, WTF::move(impl));
+        JSSVGTRefElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTRefElement>(globalObject->vm().heap)) JSSVGTRefElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTRefElement& impl() const
+    SVGTRefElement& wrapped() const
     {
-        return static_cast<SVGTRefElement&>(Base::impl());
+        return static_cast<SVGTRefElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTRefElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTRefElement>&&);
+    JSSVGTRefElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTRefElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -110,9 +110,6 @@ class HTMLMediaElement
     , private TextTrackClient
     , private VideoTrackClient
 #endif
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-    , public PlatformTextTrackMenuClient
-#endif
 {
 public:
     MediaPlayer* player() const { return m_player.get(); }
@@ -207,7 +204,8 @@ public:
     virtual PassRefPtr<TimeRanges> seekable() const override;
     WEBCORE_EXPORT bool ended() const;
     bool autoplay() const;
-    bool loop() const;    
+    bool isAutoplaying() const { return m_autoplaying; }
+    bool loop() const;
     void setLoop(bool b);
     WEBCORE_EXPORT virtual void play() override;
     WEBCORE_EXPORT virtual void pause() override;
@@ -306,12 +304,6 @@ public:
 
 #if ENABLE(AVF_CAPTIONS)
     virtual Vector<RefPtr<PlatformTextTrack>> outOfBandTrackSources() override;
-#endif
-
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-    virtual void setSelectedTextTrack(PassRefPtr<PlatformTextTrack>) override;
-    virtual Vector<RefPtr<PlatformTextTrack>> platformTextTracks() override;
-    PlatformTextTrackMenuInterface* platformTextTrackMenu();
 #endif
 
     struct TrackGroup;
@@ -447,6 +439,7 @@ public:
 
 #if ENABLE(MEDIA_CONTROLS_SCRIPT)
     void pageScaleFactorChanged();
+    WEBCORE_EXPORT String getCurrentMediaControlsStatus();
 #endif
 
 //+EAWebKitChange
@@ -463,6 +456,7 @@ public:
     virtual MediaProducer::MediaStateFlags mediaState() const override;
 
     void layoutSizeChanged();
+    void visibilityDidChange();
 
     void allowsMediaDocumentInlinePlaybackChanged();
 
@@ -470,13 +464,15 @@ protected:
     HTMLMediaElement(const QualifiedName&, Document&, bool);
     virtual ~HTMLMediaElement();
 
-    virtual void parseAttribute(const QualifiedName&, const AtomicString&) override;
-    virtual void finishParsingChildren() override;
-    virtual bool isURLAttribute(const Attribute&) const override;
-    virtual void willAttachRenderers() override;
-    virtual void didAttachRenderers() override;
+    void parseAttribute(const QualifiedName&, const AtomicString&) override;
+    void finishParsingChildren() override;
+    bool isURLAttribute(const Attribute&) const override;
+    void willAttachRenderers() override;
+    void didAttachRenderers() override;
+    void willDetachRenderers() override;
+    void didDetachRenderers() override;
 
-    virtual void didMoveToNewDocument(Document* oldDocument) override;
+    void didMoveToNewDocument(Document* oldDocument) override;
 
     enum DisplayMode { Unknown, None, Poster, PosterWaitingForVideo, Video };
     DisplayMode displayMode() const { return m_displayMode; }
@@ -504,6 +500,9 @@ private:
 
     virtual bool alwaysCreateUserAgentShadowRoot() const override { return true; }
 
+    // FIXME: Shadow DOM spec says we should be able to create shadow root on audio and video elements
+    virtual bool canHaveUserAgentShadowRoot() const override final { return true; }
+
     virtual bool hasCustomFocusLogic() const override;
     virtual bool supportsFocus() const override;
     virtual bool isMouseFocusable() const override;
@@ -518,7 +517,7 @@ private:
 
     // ActiveDOMObject API.
     const char* activeDOMObjectName() const override;
-    bool canSuspendForPageCache() const override;
+    bool canSuspendForDocumentSuspension() const override;
     void suspend(ReasonForSuspension) override;
     void resume() override;
     void stop() override;
@@ -578,7 +577,7 @@ private:
     void enqueuePlaybackTargetAvailabilityChangedEvent();
 
     using EventTarget::dispatchEvent;
-    virtual bool dispatchEvent(PassRefPtr<Event>) override;
+    virtual bool dispatchEvent(Event&) override;
 #endif
 
 #if ENABLE(MEDIA_SESSION)
@@ -727,7 +726,6 @@ private:
     bool isBlockedOnMediaController() const;
     virtual bool hasCurrentSrc() const override { return !m_currentSrc.isEmpty(); }
     virtual bool isLiveStream() const override { return movieLoadType() == MediaPlayerEnums::LiveStream; }
-    bool isAutoplaying() const { return m_autoplaying; }
 
     void updateSleepDisabling();
     bool shouldDisableSleep() const;
@@ -739,17 +737,18 @@ private:
 #endif
 
     // PlatformMediaSessionClient Overrides
-    virtual PlatformMediaSession::MediaType mediaType() const override;
-    virtual PlatformMediaSession::MediaType presentationType() const override;
-    virtual PlatformMediaSession::DisplayType displayType() const override;
-    virtual void suspendPlayback() override;
-    virtual void mayResumePlayback(bool shouldResume) override;
-    virtual String mediaSessionTitle() const override;
-    virtual double mediaSessionDuration() const override { return duration(); }
-    virtual double mediaSessionCurrentTime() const override { return currentTime(); }
-    virtual bool canReceiveRemoteControlCommands() const override { return true; }
-    virtual void didReceiveRemoteControlCommand(PlatformMediaSession::RemoteControlCommandType) override;
-    virtual bool overrideBackgroundPlaybackRestriction() const override;
+    PlatformMediaSession::MediaType mediaType() const override;
+    PlatformMediaSession::MediaType presentationType() const override;
+    PlatformMediaSession::DisplayType displayType() const override;
+    void suspendPlayback() override;
+    void resumeAutoplaying() override;
+    void mayResumePlayback(bool shouldResume) override;
+    String mediaSessionTitle() const override;
+    double mediaSessionDuration() const override { return duration(); }
+    double mediaSessionCurrentTime() const override { return currentTime(); }
+    bool canReceiveRemoteControlCommands() const override { return true; }
+    void didReceiveRemoteControlCommand(PlatformMediaSession::RemoteControlCommandType) override;
+    bool shouldOverrideBackgroundPlaybackRestriction(PlatformMediaSession::InterruptionType) const override;
 
     virtual void pageMutedStateDidChange() override;
 
@@ -761,8 +760,8 @@ private:
     void updateCaptionContainer();
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    virtual void documentWillSuspendForPageCache() override final;
-    virtual void documentDidResumeFromPageCache() override final;
+    virtual void prepareForDocumentSuspension() override final;
+    virtual void resumeFromDocumentSuspension() override final;
 
     enum class UpdateMediaState {
         Asynchronously,
@@ -770,6 +769,9 @@ private:
     };
     void updateMediaState(UpdateMediaState updateState = UpdateMediaState::Synchronously);
 #endif
+
+    void isVisibleInViewportChanged() override final;
+    void updateShouldAutoplay();
 
     Timer m_pendingActionTimer;
     Timer m_progressEventTimer;
@@ -950,10 +952,6 @@ private:
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)
     RefPtr<MediaKeys> m_mediaKeys;
-#endif
-
-#if USE(PLATFORM_TEXT_TRACK_MENU)
-    RefPtr<PlatformTextTrackMenuInterface> m_platformMenu;
 #endif
 
     std::unique_ptr<MediaElementSession> m_mediaSession;

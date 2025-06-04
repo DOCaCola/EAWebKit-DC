@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Element>&& impl)
     {
-        JSElement* ptr = new (NotNull, JSC::allocateCell<JSElement>(globalObject->vm().heap)) JSElement(structure, globalObject, WTF::move(impl));
+        JSElement* ptr = new (NotNull, JSC::allocateCell<JSElement>(globalObject->vm().heap)) JSElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,17 +50,17 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue before(JSC::ExecState*);
-    JSC::JSValue after(JSC::ExecState*);
-    JSC::JSValue replaceWith(JSC::ExecState*);
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    Element& impl() const
+    JSC::JSValue before(JSC::ExecState&);
+    JSC::JSValue after(JSC::ExecState&);
+    JSC::JSValue replaceWith(JSC::ExecState&);
+    JSC::JSValue prepend(JSC::ExecState&);
+    JSC::JSValue append(JSC::ExecState&);
+    Element& wrapped() const
     {
-        return static_cast<Element&>(Base::impl());
+        return static_cast<Element&>(Base::wrapped());
     }
 protected:
-    JSElement(JSC::Structure*, JSDOMGlobalObject*, Ref<Element>&&);
+    JSElement(JSC::Structure*, JSDOMGlobalObject&, Ref<Element>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -70,7 +70,6 @@ protected:
 
 };
 
-JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Element*);
 
 
 } // namespace WebCore

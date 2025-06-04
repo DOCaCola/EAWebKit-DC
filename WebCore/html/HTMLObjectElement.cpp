@@ -55,8 +55,8 @@
 #include <wtf/Ref.h>
 
 #if PLATFORM(IOS)
+#include "DynamicLinkerSPI.h"
 #include "RuntimeApplicationChecksIOS.h"
-#include "WebCoreSystemInterface.h"
 #endif
 
 namespace WebCore {
@@ -64,12 +64,12 @@ namespace WebCore {
 using namespace HTMLNames;
 
 inline HTMLObjectElement::HTMLObjectElement(const QualifiedName& tagName, Document& document, HTMLFormElement* form, bool createdByParser)
-    : HTMLPlugInImageElement(tagName, document, createdByParser, ShouldNotPreferPlugInsForImages)
+    : HTMLPlugInImageElement(tagName, document, createdByParser)
+    , FormAssociatedElement(form)
     , m_docNamedItem(true)
     , m_useFallbackContent(false)
 {
     ASSERT(hasTagName(objectTag));
-    setForm(form);
 }
 
 inline HTMLObjectElement::~HTMLObjectElement()
@@ -159,7 +159,7 @@ static void mapDataParamToSrc(Vector<String>* paramNames, Vector<String>* paramV
 #if PLATFORM(IOS)
 static bool shouldNotPerformURLAdjustment()
 {
-    static bool shouldNotPerformURLAdjustment = applicationIsNASAHD() && !iosExecutableWasLinkedOnOrAfterVersion(wkIOSSystemVersion_5_0);
+    static bool shouldNotPerformURLAdjustment = applicationIsNASAHD() && dyld_get_program_sdk_version() < DYLD_IOS_VERSION_5_0;
     return shouldNotPerformURLAdjustment;
 }
 #endif
@@ -228,7 +228,7 @@ void HTMLObjectElement::parametersForPlugin(Vector<String>& paramNames, Vector<S
 
     if (url.isEmpty() && !urlParameter.isEmpty()) {
         SubframeLoader& loader = document().frame()->loader().subframeLoader();
-        if (loader.resourceWillUsePlugin(urlParameter, serviceType, shouldPreferPlugInsForImages()))
+        if (loader.resourceWillUsePlugin(urlParameter, serviceType))
             url = urlParameter;
     }
 }
@@ -342,7 +342,7 @@ Node::InsertionNotificationRequest HTMLObjectElement::insertedInto(ContainerNode
 
 void HTMLObjectElement::finishedInsertingSubtree()
 {
-	resetFormOwner();
+    resetFormOwner();
 }
 
 void HTMLObjectElement::removedFrom(ContainerNode& insertionPoint)

@@ -22,6 +22,7 @@
 #include "JSMediaQueryListListener.h"
 
 #include "JSMediaQueryList.h"
+#include "MediaQueryList.h"
 #include "ScriptExecutionContext.h"
 #include <runtime/JSLock.h>
 
@@ -32,7 +33,7 @@ namespace WebCore {
 JSMediaQueryListListener::JSMediaQueryListListener(JSObject* callback, JSDOMGlobalObject* globalObject)
     : MediaQueryListListener(JSMediaQueryListListenerType)
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -46,7 +47,7 @@ JSMediaQueryListListener::~JSMediaQueryListListener()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
@@ -69,13 +70,25 @@ bool JSMediaQueryListListener::queryChanged(MediaQueryList* list)
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
-    ExecState* exec = m_data->globalObject()->globalExec();
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
-    args.append(toJS(exec, m_data->globalObject(), list));
+    args.append(toJS(state, m_data->globalObject(), WTF::getPtr(list)));
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<Exception> returnedException;
+    UNUSED_PARAM(state);
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaQueryListListener* impl)
+{
+    if (!impl || !static_cast<JSMediaQueryListListener&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSMediaQueryListListener&>(*impl).callbackData()->callback();
+
 }
 
 }

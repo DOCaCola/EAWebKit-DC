@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSDocument* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Document>&& impl)
     {
-        JSDocument* ptr = new (NotNull, JSC::allocateCell<JSDocument>(globalObject->vm().heap)) JSDocument(structure, globalObject, WTF::move(impl));
+        JSDocument* ptr = new (NotNull, JSC::allocateCell<JSDocument>(globalObject->vm().heap)) JSDocument(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,22 +50,18 @@ public:
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
-    // Custom attributes
-    JSC::JSValue location(JSC::ExecState*) const;
-    void setLocation(JSC::ExecState*, JSC::JSValue);
-
     // Custom functions
-    JSC::JSValue createTouchList(JSC::ExecState*);
-    JSC::JSValue prepend(JSC::ExecState*);
-    JSC::JSValue append(JSC::ExecState*);
-    Document& impl() const
+    JSC::JSValue createTouchList(JSC::ExecState&);
+    JSC::JSValue prepend(JSC::ExecState&);
+    JSC::JSValue append(JSC::ExecState&);
+    Document& wrapped() const
     {
-        return static_cast<Document&>(Base::impl());
+        return static_cast<Document&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDocument(JSC::Structure*, JSDOMGlobalObject*, Ref<Document>&&);
+    JSDocument(JSC::Structure*, JSDOMGlobalObject&, Ref<Document>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -76,7 +72,8 @@ protected:
 };
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Document*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Document& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Document& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Document*);
 
 
 } // namespace WebCore

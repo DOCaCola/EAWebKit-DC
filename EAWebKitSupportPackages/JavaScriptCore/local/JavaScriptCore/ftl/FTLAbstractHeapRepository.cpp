@@ -29,7 +29,9 @@
 #if ENABLE(FTL_JIT)
 
 #include "DirectArguments.h"
+#include "FTLAbbreviations.h"
 #include "GetterSetter.h"
+#include "JSArrowFunction.h"
 #include "JSEnvironmentRecord.h"
 #include "JSPropertyNameEnumerator.h"
 #include "JSScope.h"
@@ -62,23 +64,27 @@ AbstractHeapRepository::AbstractHeapRepository(LContext context)
 
     , absolute(context, &root, "absolute")
     , m_context(context)
+#if !FTL_USES_B3
     , m_tbaaKind(mdKindID(m_context, "tbaa"))
+#endif
 {
     // Make sure that our explicit assumptions about the StructureIDBlob match reality.
     RELEASE_ASSERT(!(JSCell_indexingType.offset() & (sizeof(int32_t) - 1)));
     RELEASE_ASSERT(JSCell_indexingType.offset() + 1 == JSCell_typeInfoType.offset());
     RELEASE_ASSERT(JSCell_indexingType.offset() + 2 == JSCell_typeInfoFlags.offset());
-    RELEASE_ASSERT(JSCell_indexingType.offset() + 3 == JSCell_gcData.offset());
+    RELEASE_ASSERT(JSCell_indexingType.offset() + 3 == JSCell_cellState.offset());
 
     JSCell_indexingType.changeParent(&JSCell_usefulBytes);
     JSCell_typeInfoType.changeParent(&JSCell_usefulBytes);
     JSCell_typeInfoFlags.changeParent(&JSCell_usefulBytes);
-    JSCell_gcData.changeParent(&JSCell_usefulBytes);
-    
+    JSCell_cellState.changeParent(&JSCell_usefulBytes);
+
+#if !FTL_USES_B3
     root.m_tbaaMetadata = mdNode(m_context, mdString(m_context, root.m_heapName));
     
     RELEASE_ASSERT(m_tbaaKind);
     RELEASE_ASSERT(root.m_tbaaMetadata);
+#endif
     
     RELEASE_ASSERT(!JSCell_freeListNext.offset());
 }

@@ -33,7 +33,6 @@
 #include "DOMWindow.h"
 #include "CachedResourceLoader.h"
 #include "Document.h"
-#include "EventException.h"
 #include "EventListener.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
@@ -132,7 +131,7 @@ void Worker::terminate()
     m_contextProxy->terminateWorkerGlobalScope();
 }
 
-bool Worker::canSuspendForPageCache() const
+bool Worker::canSuspendForDocumentSuspension() const
 {
     // FIXME: It is not currently possible to suspend a worker, so pages with workers can not go into page cache.
     return false;
@@ -179,8 +178,6 @@ void Worker::notifyFinished()
 	//-EAWebKitChange
     else {
         WorkerThreadStartMode startMode = DontPauseWorkerGlobalScopeOnStart;
-        if (InspectorInstrumentation::shouldPauseDedicatedWorkerOnStart(scriptExecutionContext()))
-            startMode = PauseWorkerGlobalScopeOnStart;
         m_contextProxy->startWorkerGlobalScope(m_scriptLoader->url(), scriptExecutionContext()->userAgent(m_scriptLoader->url()), m_scriptLoader->script(), startMode);
         InspectorInstrumentation::scriptImported(scriptExecutionContext(), m_scriptLoader->identifier(), m_scriptLoader->script());
     }

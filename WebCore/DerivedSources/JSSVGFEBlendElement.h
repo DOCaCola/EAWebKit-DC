@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEBlendElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEBlendElement>&& impl)
     {
-        JSSVGFEBlendElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEBlendElement>(globalObject->vm().heap)) JSSVGFEBlendElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEBlendElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEBlendElement>(globalObject->vm().heap)) JSSVGFEBlendElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEBlendElement& impl() const
+    SVGFEBlendElement& wrapped() const
     {
-        return static_cast<SVGFEBlendElement&>(Base::impl());
+        return static_cast<SVGFEBlendElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEBlendElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEBlendElement>&&);
+    JSSVGFEBlendElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEBlendElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

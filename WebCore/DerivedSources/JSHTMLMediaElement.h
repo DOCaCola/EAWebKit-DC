@@ -35,7 +35,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMediaElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMediaElement>&& impl)
     {
-        JSHTMLMediaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMediaElement>(globalObject->vm().heap)) JSHTMLMediaElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMediaElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMediaElement>(globalObject->vm().heap)) JSHTMLMediaElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -55,15 +55,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setController(JSC::ExecState*, JSC::JSValue);
-    HTMLMediaElement& impl() const
+    void setController(JSC::ExecState&, JSC::JSValue);
+    HTMLMediaElement& wrapped() const
     {
-        return static_cast<HTMLMediaElement&>(Base::impl());
+        return static_cast<HTMLMediaElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLMediaElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMediaElement>&&);
+    JSHTMLMediaElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMediaElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

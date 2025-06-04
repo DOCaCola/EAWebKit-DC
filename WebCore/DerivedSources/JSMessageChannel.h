@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMessageChannel : public JSDOMWrapper {
+class JSMessageChannel : public JSDOMWrapper<MessageChannel> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MessageChannel> Base;
     static JSMessageChannel* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageChannel>&& impl)
     {
-        JSMessageChannel* ptr = new (NotNull, JSC::allocateCell<JSMessageChannel>(globalObject->vm().heap)) JSMessageChannel(structure, globalObject, WTF::move(impl));
+        JSMessageChannel* ptr = new (NotNull, JSC::allocateCell<JSMessageChannel>(globalObject->vm().heap)) JSMessageChannel(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MessageChannel* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMessageChannel();
 
     DECLARE_INFO;
 
@@ -56,13 +55,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    MessageChannel& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MessageChannel* m_impl;
 protected:
-    JSMessageChannel(JSC::Structure*, JSDOMGlobalObject*, Ref<MessageChannel>&&);
+    JSMessageChannel(JSC::Structure*, JSDOMGlobalObject&, Ref<MessageChannel>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MessageChannel*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MessageChannel*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MessageChannel& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MessageChannel& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MessageChannel*);
 
 
 } // namespace WebCore

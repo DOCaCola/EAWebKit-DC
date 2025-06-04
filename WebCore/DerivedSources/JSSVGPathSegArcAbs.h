@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegArcAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegArcAbs>&& impl)
     {
-        JSSVGPathSegArcAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegArcAbs>(globalObject->vm().heap)) JSSVGPathSegArcAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegArcAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegArcAbs>(globalObject->vm().heap)) JSSVGPathSegArcAbs(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegArcAbs& impl() const
+    SVGPathSegArcAbs& wrapped() const
     {
-        return static_cast<SVGPathSegArcAbs&>(Base::impl());
+        return static_cast<SVGPathSegArcAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegArcAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegArcAbs>&&);
+    JSSVGPathSegArcAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegArcAbs>&&);
 
     void finishCreation(JSC::VM& vm)
     {

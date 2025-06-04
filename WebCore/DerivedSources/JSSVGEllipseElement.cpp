@@ -22,9 +22,9 @@
 #include "JSSVGEllipseElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
-#include "SVGEllipseElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -65,53 +65,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGEllipseElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGEllipseElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGEllipseElement> JSSVGEllipseElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGEllipseElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGEllipseElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGEllipseElementConstructor>(vm.heap)) JSSVGEllipseElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGEllipseElementConstructor::s_info = { "SVGEllipseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGEllipseElementConstructor) };
-
-JSSVGEllipseElementConstructor::JSSVGEllipseElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGEllipseElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGEllipseElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGEllipseElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGEllipseElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGEllipseElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGEllipseElementConstructor::s_info = { "SVGEllipseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGEllipseElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGEllipseElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cx", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementCx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementCy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rx", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementRx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ry", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementRy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cx", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementCx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementCy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rx", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementRx), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ry", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementRy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGEllipseElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGEllipseElementPrototype::s_info = { "SVGEllipseElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGEllipseElementPrototype) };
@@ -124,7 +98,7 @@ void JSSVGEllipseElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGEllipseElement::s_info = { "SVGEllipseElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGEllipseElement) };
 
-JSSVGEllipseElement::JSSVGEllipseElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGEllipseElement>&& impl)
+JSSVGEllipseElement::JSSVGEllipseElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGEllipseElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -139,107 +113,107 @@ JSObject* JSSVGEllipseElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSSVGEllipseElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGEllipseElementCx(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementCx(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGEllipseElement* castedThis = jsDynamicCast<JSSVGEllipseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGEllipseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGEllipseElement", "cx");
-        return throwGetterTypeError(*exec, "SVGEllipseElement", "cx");
+            return reportDeprecatedGetterError(*state, "SVGEllipseElement", "cx");
+        return throwGetterTypeError(*state, "SVGEllipseElement", "cx");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.cxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGEllipseElementCy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementCy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGEllipseElement* castedThis = jsDynamicCast<JSSVGEllipseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGEllipseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGEllipseElement", "cy");
-        return throwGetterTypeError(*exec, "SVGEllipseElement", "cy");
+            return reportDeprecatedGetterError(*state, "SVGEllipseElement", "cy");
+        return throwGetterTypeError(*state, "SVGEllipseElement", "cy");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.cyAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGEllipseElementRx(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementRx(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGEllipseElement* castedThis = jsDynamicCast<JSSVGEllipseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGEllipseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGEllipseElement", "rx");
-        return throwGetterTypeError(*exec, "SVGEllipseElement", "rx");
+            return reportDeprecatedGetterError(*state, "SVGEllipseElement", "rx");
+        return throwGetterTypeError(*state, "SVGEllipseElement", "rx");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.rxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGEllipseElementRy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementRy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGEllipseElement* castedThis = jsDynamicCast<JSSVGEllipseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGEllipseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGEllipseElement", "ry");
-        return throwGetterTypeError(*exec, "SVGEllipseElement", "ry");
+            return reportDeprecatedGetterError(*state, "SVGEllipseElement", "ry");
+        return throwGetterTypeError(*state, "SVGEllipseElement", "ry");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.ryAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGEllipseElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGEllipseElement* castedThis = jsDynamicCast<JSSVGEllipseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGEllipseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGEllipseElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGEllipseElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGEllipseElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGEllipseElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGEllipseElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGEllipseElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGEllipseElementPrototype* domObject = jsDynamicCast<JSSVGEllipseElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGEllipseElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGEllipseElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGEllipseElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGEllipseElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGEllipseElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

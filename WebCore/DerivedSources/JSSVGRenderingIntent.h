@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGRenderingIntent : public JSDOMWrapper {
+class JSSVGRenderingIntent : public JSDOMWrapper<SVGRenderingIntent> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGRenderingIntent> Base;
     static JSSVGRenderingIntent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGRenderingIntent>&& impl)
     {
-        JSSVGRenderingIntent* ptr = new (NotNull, JSC::allocateCell<JSSVGRenderingIntent>(globalObject->vm().heap)) JSSVGRenderingIntent(structure, globalObject, WTF::move(impl));
+        JSSVGRenderingIntent* ptr = new (NotNull, JSC::allocateCell<JSSVGRenderingIntent>(globalObject->vm().heap)) JSSVGRenderingIntent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGRenderingIntent* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGRenderingIntent();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGRenderingIntent& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGRenderingIntent* m_impl;
 protected:
-    JSSVGRenderingIntent(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGRenderingIntent>&&);
+    JSSVGRenderingIntent(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGRenderingIntent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

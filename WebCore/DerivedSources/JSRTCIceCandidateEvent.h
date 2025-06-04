@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSRTCIceCandidateEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceCandidateEvent>&& impl)
     {
-        JSRTCIceCandidateEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateEvent>(globalObject->vm().heap)) JSRTCIceCandidateEvent(structure, globalObject, WTF::move(impl));
+        JSRTCIceCandidateEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCIceCandidateEvent>(globalObject->vm().heap)) JSRTCIceCandidateEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCIceCandidateEvent& impl() const
+    RTCIceCandidateEvent& wrapped() const
     {
-        return static_cast<RTCIceCandidateEvent&>(Base::impl());
+        return static_cast<RTCIceCandidateEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCIceCandidateEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceCandidateEvent>&&);
+    JSRTCIceCandidateEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCIceCandidateEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

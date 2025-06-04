@@ -26,28 +26,25 @@ namespace WebCore {
 
 class SVGPathSegWithContext : public SVGPathSeg {
 public:
-    SVGPathSegWithContext(const SVGPathElement& element, SVGPathSegRole role)
+    SVGPathSegWithContext(SVGPathElement* element, SVGPathSegRole role)
         : m_role(role)
-        , m_element(element.createWeakPtr())
+        , m_element(element)
     {
     }
 
-    RefPtr<SVGAnimatedProperty> animatedProperty() const
+    SVGAnimatedProperty* animatedProperty() const
     {
-        if (!m_element)
-            return nullptr;
-
         switch (m_role) {
         case PathSegUndefinedRole:
-            return nullptr;
+            return 0;
         case PathSegUnalteredRole:
             return SVGAnimatedProperty::lookupWrapper<SVGPathElement, SVGAnimatedPathSegListPropertyTearOff>(m_element.get(), SVGPathElement::dPropertyInfo());
         case PathSegNormalizedRole:
             // FIXME: https://bugs.webkit.org/show_bug.cgi?id=15412 - Implement normalized path segment lists!
-            return nullptr;
+            return 0;
         };
 
-        return nullptr;
+        return 0;
     }
 
     SVGPathElement* contextElement() const { return m_element.get(); }
@@ -56,20 +53,24 @@ public:
     void setContextAndRole(SVGPathElement* element, SVGPathSegRole role)
     {
         m_role = role;
-        m_element = element ? element->createWeakPtr() : WeakPtr<SVGPathElement>();
+        m_element = element;
     }
 
 protected:
     void commitChange()
     {
-        if (!m_element || m_role == PathSegUndefinedRole)
+        if (!m_element) {
+            ASSERT(m_role == PathSegUndefinedRole);
             return;
+        }
+
+        ASSERT(m_role != PathSegUndefinedRole);
         m_element->pathSegListChanged(m_role);
     }
 
 private:
     SVGPathSegRole m_role;
-    WeakPtr<SVGPathElement> m_element;
+    RefPtr<SVGPathElement> m_element;
 };
 
 class SVGPathSegSingleCoordinate : public SVGPathSegWithContext { 
@@ -89,7 +90,7 @@ public:
     }
 
 protected:
-    SVGPathSegSingleCoordinate(const SVGPathElement& element, SVGPathSegRole role, float x, float y)
+    SVGPathSegSingleCoordinate(SVGPathElement* element, SVGPathSegRole role, float x, float y)
         : SVGPathSegWithContext(element, role)
         , m_x(x)
         , m_y(y)

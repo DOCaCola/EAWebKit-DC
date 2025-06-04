@@ -332,7 +332,8 @@ void ResourceHandleManager::notifyJobFailed(const JobInfo& jobInfo)
 	ResourceHandleClient* pRHC = pRHI->client();
 	if(pRHC)
 	{
-		const WTF::String sURI(GetFixedString(jobInfo.mTInfo.mURI)->data(), GetFixedString(jobInfo.mTInfo.mURI)->length());
+		const WTF::String sURISTring(GetFixedString(jobInfo.mTInfo.mURI)->data(), GetFixedString(jobInfo.mTInfo.mURI)->length());
+		const URL sURI(ParsedURLString, sURISTring);
 		const WTF::String sError("Transport job failed.");
 
 		ResourceError error(sURI, EA::WebKit::kLETTransport, sURI, sError);

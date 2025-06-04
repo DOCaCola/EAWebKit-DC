@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLFontElement.h"
 
-#include "HTMLFontElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -67,51 +67,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLFontElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLFontElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLFontElement> JSHTMLFontElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLFontElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLFontElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLFontElementConstructor>(vm.heap)) JSHTMLFontElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLFontElementConstructor::s_info = { "HTMLFontElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFontElementConstructor) };
-
-JSHTMLFontElementConstructor::JSHTMLFontElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLFontElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLFontElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLFontElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLFontElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLFontElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLFontElementConstructor::s_info = { "HTMLFontElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFontElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLFontElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "color", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementColor) },
-    { "face", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementFace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementFace) },
-    { "size", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementSize) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "color", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementColor) } },
+    { "face", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementFace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementFace) } },
+    { "size", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFontElementSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLFontElementSize) } },
 };
 
 const ClassInfo JSHTMLFontElementPrototype::s_info = { "HTMLFontElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFontElementPrototype) };
@@ -124,7 +98,7 @@ void JSHTMLFontElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLFontElement::s_info = { "HTMLFontElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFontElement) };
 
-JSHTMLFontElement::JSHTMLFontElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFontElement>&& impl)
+JSHTMLFontElement::JSHTMLFontElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLFontElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -139,120 +113,120 @@ JSObject* JSHTMLFontElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLFontElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLFontElementColor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFontElementColor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFontElement", "color");
-        return throwGetterTypeError(*exec, "HTMLFontElement", "color");
+            return reportDeprecatedGetterError(*state, "HTMLFontElement", "color");
+        return throwGetterTypeError(*state, "HTMLFontElement", "color");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::colorAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::colorAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFontElementFace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFontElementFace(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFontElement", "face");
-        return throwGetterTypeError(*exec, "HTMLFontElement", "face");
+            return reportDeprecatedGetterError(*state, "HTMLFontElement", "face");
+        return throwGetterTypeError(*state, "HTMLFontElement", "face");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::faceAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::faceAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFontElementSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFontElementSize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLFontElement", "size");
-        return throwGetterTypeError(*exec, "HTMLFontElement", "size");
+            return reportDeprecatedGetterError(*state, "HTMLFontElement", "size");
+        return throwGetterTypeError(*state, "HTMLFontElement", "size");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::sizeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::sizeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLFontElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLFontElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLFontElementPrototype* domObject = jsDynamicCast<JSHTMLFontElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLFontElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLFontElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLFontElementColor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLFontElementColor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLFontElement", "color");
+            reportDeprecatedSetterError(*state, "HTMLFontElement", "color");
         else
-            throwSetterTypeError(*exec, "HTMLFontElement", "color");
+            throwSetterTypeError(*state, "HTMLFontElement", "color");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::colorAttr, nativeValue);
 }
 
 
-void setJSHTMLFontElementFace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLFontElementFace(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLFontElement", "face");
+            reportDeprecatedSetterError(*state, "HTMLFontElement", "face");
         else
-            throwSetterTypeError(*exec, "HTMLFontElement", "face");
+            throwSetterTypeError(*state, "HTMLFontElement", "face");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::faceAttr, nativeValue);
 }
 
 
-void setJSHTMLFontElementSize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLFontElementSize(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLFontElement* castedThis = jsDynamicCast<JSHTMLFontElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLFontElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLFontElement", "size");
+            reportDeprecatedSetterError(*state, "HTMLFontElement", "size");
         else
-            throwSetterTypeError(*exec, "HTMLFontElement", "size");
+            throwSetterTypeError(*state, "HTMLFontElement", "size");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::sizeAttr, nativeValue);
 }
@@ -260,7 +234,7 @@ void setJSHTMLFontElementSize(ExecState* exec, JSObject* baseObject, EncodedJSVa
 
 JSValue JSHTMLFontElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLFontElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLFontElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

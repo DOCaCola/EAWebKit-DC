@@ -132,4 +132,12 @@ inline size_t opcodeLength(OpcodeID opcode)
 
 } // namespace JSC
 
+namespace WTF {
+
+class PrintStream;
+
+void printInternal(PrintStream&, JSC::OpcodeID);
+
+} // namespace WTF
+
 #endif // Opcode_h

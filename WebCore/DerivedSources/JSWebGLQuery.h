@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLQuery : public JSDOMWrapper {
+class JSWebGLQuery : public JSDOMWrapper<WebGLQuery> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLQuery> Base;
     static JSWebGLQuery* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLQuery>&& impl)
     {
-        JSWebGLQuery* ptr = new (NotNull, JSC::allocateCell<JSWebGLQuery>(globalObject->vm().heap)) JSWebGLQuery(structure, globalObject, WTF::move(impl));
+        JSWebGLQuery* ptr = new (NotNull, JSC::allocateCell<JSWebGLQuery>(globalObject->vm().heap)) JSWebGLQuery(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLQuery* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLQuery();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLQuery& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLQuery* m_impl;
 protected:
-    JSWebGLQuery(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLQuery>&&);
+    JSWebGLQuery(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLQuery>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLQuery*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLQuery*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLQuery& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLQuery& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLQuery*);
 
 
 } // namespace WebCore

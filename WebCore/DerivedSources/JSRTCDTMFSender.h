@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCDTMFSender : public JSDOMWrapper {
+class JSRTCDTMFSender : public JSDOMWrapper<RTCDTMFSender> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCDTMFSender> Base;
     static JSRTCDTMFSender* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDTMFSender>&& impl)
     {
-        JSRTCDTMFSender* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFSender>(globalObject->vm().heap)) JSRTCDTMFSender(structure, globalObject, WTF::move(impl));
+        JSRTCDTMFSender* ptr = new (NotNull, JSC::allocateCell<JSRTCDTMFSender>(globalObject->vm().heap)) JSRTCDTMFSender(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCDTMFSender* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCDTMFSender();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    RTCDTMFSender& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCDTMFSender* m_impl;
 protected:
-    JSRTCDTMFSender(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDTMFSender>&&);
+    JSRTCDTMFSender(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDTMFSender>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCDTMFSender*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCDTMFSender*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCDTMFSender& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCDTMFSender& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCDTMFSender*);
 
 
 } // namespace WebCore

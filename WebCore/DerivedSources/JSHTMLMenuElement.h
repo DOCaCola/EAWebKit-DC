@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMenuElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMenuElement>&& impl)
     {
-        JSHTMLMenuElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMenuElement>(globalObject->vm().heap)) JSHTMLMenuElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMenuElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMenuElement>(globalObject->vm().heap)) JSHTMLMenuElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMenuElement& impl() const
+    HTMLMenuElement& wrapped() const
     {
-        return static_cast<HTMLMenuElement&>(Base::impl());
+        return static_cast<HTMLMenuElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMenuElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMenuElement>&&);
+    JSHTMLMenuElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMenuElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

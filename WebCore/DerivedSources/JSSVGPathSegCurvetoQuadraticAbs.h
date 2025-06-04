@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegCurvetoQuadraticAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegCurvetoQuadraticAbs>&& impl)
     {
-        JSSVGPathSegCurvetoQuadraticAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoQuadraticAbs>(globalObject->vm().heap)) JSSVGPathSegCurvetoQuadraticAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegCurvetoQuadraticAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegCurvetoQuadraticAbs>(globalObject->vm().heap)) JSSVGPathSegCurvetoQuadraticAbs(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegCurvetoQuadraticAbs& impl() const
+    SVGPathSegCurvetoQuadraticAbs& wrapped() const
     {
-        return static_cast<SVGPathSegCurvetoQuadraticAbs&>(Base::impl());
+        return static_cast<SVGPathSegCurvetoQuadraticAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegCurvetoQuadraticAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegCurvetoQuadraticAbs>&&);
+    JSSVGPathSegCurvetoQuadraticAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegCurvetoQuadraticAbs>&&);
 
     void finishCreation(JSC::VM& vm)
     {

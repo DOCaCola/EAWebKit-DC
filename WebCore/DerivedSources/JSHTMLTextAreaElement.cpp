@@ -24,8 +24,8 @@
 #include "ExceptionCode.h"
 #include "HTMLFormElement.h"
 #include "HTMLNames.h"
-#include "HTMLTextAreaElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLFormElement.h"
 #include "JSNodeList.h"
 #include "JSValidityState.h"
@@ -98,6 +98,8 @@ void setJSHTMLTextAreaElementAutocorrect(JSC::ExecState*, JSC::JSObject*, JSC::E
 JSC::EncodedJSValue jsHTMLTextAreaElementAutocapitalize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSHTMLTextAreaElementAutocapitalize(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
+JSC::EncodedJSValue jsHTMLTextAreaElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSHTMLTextAreaElementAutocomplete(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsHTMLTextAreaElementConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSHTMLTextAreaElementPrototype : public JSC::JSNonFinalObject {
@@ -125,86 +127,61 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLTextAreaElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLTextAreaElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLTextAreaElement> JSHTMLTextAreaElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLTextAreaElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLTextAreaElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLTextAreaElementConstructor>(vm.heap)) JSHTMLTextAreaElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLTextAreaElementConstructor::s_info = { "HTMLTextAreaElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTextAreaElementConstructor) };
-
-JSHTMLTextAreaElementConstructor::JSHTMLTextAreaElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLTextAreaElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLTextAreaElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLTextAreaElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLTextAreaElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLTextAreaElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLTextAreaElementConstructor::s_info = { "HTMLTextAreaElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTextAreaElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLTextAreaElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "autofocus", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutofocus) },
-    { "cols", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementCols), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementCols) },
-    { "dirName", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDirName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDirName) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDisabled) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "maxLength", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementMaxLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementMaxLength) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementName) },
-    { "placeholder", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementPlaceholder), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementPlaceholder) },
-    { "readOnly", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementReadOnly), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementReadOnly) },
-    { "required", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementRequired) },
-    { "rows", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementRows) },
-    { "wrap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementWrap) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultValue", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDefaultValue) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementValue) },
-    { "textLength", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementTextLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "willValidate", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "validationMessage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "labels", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectionStart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionStart) },
-    { "selectionEnd", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionEnd) },
-    { "selectionDirection", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionDirection) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "autofocus", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutofocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutofocus) } },
+    { "cols", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementCols), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementCols) } },
+    { "dirName", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDirName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDirName) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDisabled) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "maxLength", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementMaxLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementMaxLength) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementName) } },
+    { "placeholder", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementPlaceholder), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementPlaceholder) } },
+    { "readOnly", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementReadOnly), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementReadOnly) } },
+    { "required", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementRequired) } },
+    { "rows", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementRows), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementRows) } },
+    { "wrap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementWrap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementWrap) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultValue", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementDefaultValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementDefaultValue) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementValue) } },
+    { "textLength", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementTextLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "willValidate", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementWillValidate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validity", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValidity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "validationMessage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementValidationMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "labels", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementLabels), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectionStart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionStart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionStart) } },
+    { "selectionEnd", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionEnd), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionEnd) } },
+    { "selectionDirection", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementSelectionDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementSelectionDirection) } },
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-    { "autocorrect", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutocorrect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutocorrect) },
+    { "autocorrect", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutocorrect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutocorrect) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-    { "autocapitalize", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutocapitalize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutocapitalize) },
+    { "autocapitalize", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutocapitalize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutocapitalize) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "checkValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionCheckValidity), (intptr_t) (0) },
-    { "setCustomValidity", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) },
-    { "select", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSelect), (intptr_t) (0) },
-    { "setRangeText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetRangeText), (intptr_t) (1) },
-    { "setSelectionRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetSelectionRange), (intptr_t) (0) },
+    { "autocomplete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTextAreaElementAutocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTextAreaElementAutocomplete) } },
+    { "checkValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionCheckValidity), (intptr_t) (0) } },
+    { "setCustomValidity", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetCustomValidity), (intptr_t) (1) } },
+    { "select", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSelect), (intptr_t) (0) } },
+    { "setRangeText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetRangeText), (intptr_t) (1) } },
+    { "setSelectionRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLTextAreaElementPrototypeFunctionSetSelectionRange), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLTextAreaElementPrototype::s_info = { "HTMLTextAreaElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTextAreaElementPrototype) };
@@ -217,7 +194,7 @@ void JSHTMLTextAreaElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLTextAreaElement::s_info = { "HTMLTextAreaElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTextAreaElement) };
 
-JSHTMLTextAreaElement::JSHTMLTextAreaElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTextAreaElement>&& impl)
+JSHTMLTextAreaElement::JSHTMLTextAreaElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLTextAreaElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -232,410 +209,410 @@ JSObject* JSHTMLTextAreaElement::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSHTMLTextAreaElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLTextAreaElementAutofocus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementAutofocus(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "autofocus");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "autofocus");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "autofocus");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "autofocus");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::autofocusAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementCols(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementCols(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "cols");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "cols");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "cols");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "cols");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.cols());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementDirName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementDirName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "dirName");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "dirName");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "dirName");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "dirName");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::dirnameAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::dirnameAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementDisabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "disabled");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "disabled");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "disabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::disabledAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementForm(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "form");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "form");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "form");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "form");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.form()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementMaxLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementMaxLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "maxLength");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "maxLength");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "maxLength");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "maxLength");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.maxLength());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "name");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "name");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "name");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getNameAttribute());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementPlaceholder(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementPlaceholder(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "placeholder");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "placeholder");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "placeholder");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "placeholder");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::placeholderAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::placeholderAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementReadOnly(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementReadOnly(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "readOnly");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "readOnly");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "readOnly");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "readOnly");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::readonlyAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "required");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "required");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "required");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "required");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::requiredAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementRows(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementRows(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "rows");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "rows");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "rows");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "rows");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.rows());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementWrap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementWrap(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "wrap");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "wrap");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "wrap");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "wrap");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::wrapAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::wrapAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "type");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "type");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.type());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.type());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementDefaultValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementDefaultValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "defaultValue");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "defaultValue");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "defaultValue");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "defaultValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.defaultValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.defaultValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "value");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "value");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "value");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "value");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.value());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.value());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementTextLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementTextLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "textLength");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "textLength");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "textLength");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "textLength");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.textLength());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementWillValidate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementWillValidate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "willValidate");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "willValidate");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "willValidate");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "willValidate");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.willValidate());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementValidity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementValidity(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "validity");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "validity");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "validity");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "validity");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.validity()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.validity()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementValidationMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementValidationMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "validationMessage");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "validationMessage");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "validationMessage");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "validationMessage");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.validationMessage());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.validationMessage());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementLabels(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementLabels(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "labels");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "labels");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "labels");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "labels");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.labels()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.labels()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementSelectionStart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementSelectionStart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "selectionStart");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "selectionStart");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "selectionStart");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "selectionStart");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.selectionStart());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementSelectionEnd(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementSelectionEnd(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "selectionEnd");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "selectionEnd");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "selectionEnd");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "selectionEnd");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.selectionEnd());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTextAreaElementSelectionDirection(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementSelectionDirection(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "selectionDirection");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "selectionDirection");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "selectionDirection");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "selectionDirection");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.selectionDirection());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.selectionDirection());
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-EncodedJSValue jsHTMLTextAreaElementAutocorrect(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementAutocorrect(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "autocorrect");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "autocorrect");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "autocorrect");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "autocorrect");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.autocorrect());
     return JSValue::encode(result);
 }
@@ -643,370 +620,387 @@ EncodedJSValue jsHTMLTextAreaElementAutocorrect(ExecState* exec, JSObject* slotB
 #endif
 
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-EncodedJSValue jsHTMLTextAreaElementAutocapitalize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementAutocapitalize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTextAreaElement", "autocapitalize");
-        return throwGetterTypeError(*exec, "HTMLTextAreaElement", "autocapitalize");
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "autocapitalize");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "autocapitalize");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.autocapitalize());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.autocapitalize());
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue jsHTMLTextAreaElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLTextAreaElementAutocomplete(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "HTMLTextAreaElement", "autocomplete");
+        return throwGetterTypeError(*state, "HTMLTextAreaElement", "autocomplete");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.autocomplete());
+    return JSValue::encode(result);
+}
+
+
+EncodedJSValue jsHTMLTextAreaElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLTextAreaElementPrototype* domObject = jsDynamicCast<JSHTMLTextAreaElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLTextAreaElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLTextAreaElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLTextAreaElementAutofocus(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementAutofocus(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "autofocus");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "autofocus");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "autofocus");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "autofocus");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::autofocusAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementCols(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementCols(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "cols");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "cols");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "cols");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "cols");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCols(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementDirName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementDirName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "dirName");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "dirName");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "dirName");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "dirName");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::dirnameAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementDisabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "disabled");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "disabled");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "disabled");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "disabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::disabledAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementMaxLength(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementMaxLength(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "maxLength");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "maxLength");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "maxLength");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "maxLength");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setMaxLength(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLTextAreaElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "name");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "name");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "name");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "name");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementPlaceholder(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementPlaceholder(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "placeholder");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "placeholder");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "placeholder");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "placeholder");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::placeholderAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementReadOnly(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementReadOnly(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "readOnly");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "readOnly");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "readOnly");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "readOnly");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::readonlyAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementRequired(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementRequired(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "required");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "required");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "required");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "required");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::requiredAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementRows(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementRows(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "rows");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "rows");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "rows");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "rows");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setRows(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementWrap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementWrap(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "wrap");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "wrap");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "wrap");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "wrap");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::wrapAttr, nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementDefaultValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementDefaultValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "defaultValue");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "defaultValue");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "defaultValue");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "defaultValue");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setDefaultValue(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "value");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "value");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "value");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "value");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setValue(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementSelectionStart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementSelectionStart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "selectionStart");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "selectionStart");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "selectionStart");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "selectionStart");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectionStart(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementSelectionEnd(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementSelectionEnd(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "selectionEnd");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "selectionEnd");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "selectionEnd");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "selectionEnd");
         return;
     }
-    auto& impl = castedThis->impl();
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectionEnd(nativeValue);
 }
 
 
-void setJSHTMLTextAreaElementSelectionDirection(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementSelectionDirection(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "selectionDirection");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "selectionDirection");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "selectionDirection");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "selectionDirection");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectionDirection(nativeValue);
 }
 
 
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-void setJSHTMLTextAreaElementAutocorrect(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementAutocorrect(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "autocorrect");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "autocorrect");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "autocorrect");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "autocorrect");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAutocorrect(nativeValue);
 }
@@ -1014,155 +1008,175 @@ void setJSHTMLTextAreaElementAutocorrect(ExecState* exec, JSObject* baseObject, 
 #endif
 
 #if ENABLE(IOS_AUTOCORRECT_AND_AUTOCAPITALIZE)
-void setJSHTMLTextAreaElementAutocapitalize(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTextAreaElementAutocapitalize(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTextAreaElement", "autocapitalize");
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "autocapitalize");
         else
-            throwSetterTypeError(*exec, "HTMLTextAreaElement", "autocapitalize");
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "autocapitalize");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAutocapitalize(nativeValue);
 }
 
 #endif
 
-JSValue JSHTMLTextAreaElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
+void setJSHTMLTextAreaElementAutocomplete(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
-    return getDOMConstructor<JSHTMLTextAreaElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSHTMLTextAreaElementPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "HTMLTextAreaElement", "autocomplete");
+        else
+            throwSetterTypeError(*state, "HTMLTextAreaElement", "autocomplete");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setAutocomplete(nativeValue);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionCheckValidity(ExecState* exec)
+
+JSValue JSHTMLTextAreaElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    JSValue thisValue = exec->thisValue();
+    return getDOMConstructor<JSHTMLTextAreaElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
+}
+
+EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionCheckValidity(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "checkValidity");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "checkValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.checkValidity());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetCustomValidity(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetCustomValidity(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "setCustomValidity");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "setCustomValidity");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String error = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String error = valueToStringWithUndefinedOrNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCustomValidity(error);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSelect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSelect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "select");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "select");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.select();
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "setRangeText");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "setRangeText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String replacement = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String replacement = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setRangeText(replacement, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "setRangeText");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "setRangeText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String replacement = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String replacement = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned start = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned start = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned end = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned end = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String selectionMode = exec->argumentCount() <= 3 ? String() : exec->uncheckedArgument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String selectionMode = state->argument(3).isUndefined() ? String() : state->uncheckedArgument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setRangeText(replacement, start, end, selectionMode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetRangeText(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(4, exec->argumentCount());
+    size_t argsCount = std::min<size_t>(4, state->argumentCount());
     if (argsCount == 1)
-        return jsHTMLTextAreaElementPrototypeFunctionSetRangeText1(exec);
+        return jsHTMLTextAreaElementPrototypeFunctionSetRangeText1(state);
     if (argsCount == 3 || argsCount == 4)
-        return jsHTMLTextAreaElementPrototypeFunctionSetRangeText2(exec);
+        return jsHTMLTextAreaElementPrototypeFunctionSetRangeText2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetSelectionRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLTextAreaElementPrototypeFunctionSetSelectionRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLTextAreaElement* castedThis = jsDynamicCast<JSHTMLTextAreaElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLTextAreaElement", "setSelectionRange");
+        return throwThisTypeError(*state, "HTMLTextAreaElement", "setSelectionRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLTextAreaElement::info());
-    auto& impl = castedThis->impl();
-    int start = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int start = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int end = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int end = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 2) {
         impl.setSelectionRange(start, end);
         return JSValue::encode(jsUndefined());
     }
 
-    String direction = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String direction = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setSelectionRange(start, end, direction);
     return JSValue::encode(jsUndefined());

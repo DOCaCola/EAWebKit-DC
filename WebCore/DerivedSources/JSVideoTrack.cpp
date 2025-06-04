@@ -28,15 +28,8 @@
 #include "JSDOMBinding.h"
 #include "JSNodeCustom.h"
 #include "URL.h"
-#include "VideoTrack.h"
-#include "VideoTrackMediaSource.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
-
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-#include "JSSourceBuffer.h"
-#include "SourceBuffer.h"
-#endif
 
 using namespace JSC;
 
@@ -52,9 +45,6 @@ JSC::EncodedJSValue jsVideoTrackLanguage(JSC::ExecState*, JSC::JSObject*, JSC::E
 void setJSVideoTrackLanguage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsVideoTrackSelected(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSVideoTrackSelected(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-JSC::EncodedJSValue jsVideoTrackSourceBuffer(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
 
 class JSVideoTrackPrototype : public JSC::JSNonFinalObject {
 public:
@@ -93,23 +83,18 @@ static const struct CompactHashIndex JSVideoTrackTableIndex[4] = {
 
 static const HashTableValue JSVideoTrackTableValues[] =
 {
-    { "kind", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackKind) },
-    { "language", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackLanguage) },
+    { "kind", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackKind) } },
+    { "language", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackLanguage) } },
 };
 
-static const HashTable JSVideoTrackTable = { 2, 3, true, JSVideoTrackTableValues, 0, JSVideoTrackTableIndex };
+static const HashTable JSVideoTrackTable = { 2, 3, true, JSVideoTrackTableValues, JSVideoTrackTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSVideoTrackPrototypeTableValues[] =
 {
-    { "id", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "label", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selected", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackSelected), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackSelected) },
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-    { "sourceBuffer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackSourceBuffer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "id", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "label", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selected", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsVideoTrackSelected), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSVideoTrackSelected) } },
 };
 
 const ClassInfo JSVideoTrackPrototype::s_info = { "VideoTrackPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSVideoTrackPrototype) };
@@ -122,9 +107,8 @@ void JSVideoTrackPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSVideoTrack::s_info = { "VideoTrack", &Base::s_info, &JSVideoTrackTable, CREATE_METHOD_TABLE(JSVideoTrack) };
 
-JSVideoTrack::JSVideoTrack(Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoTrack>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSVideoTrack::JSVideoTrack(Structure* structure, JSDOMGlobalObject& globalObject, Ref<VideoTrack>&& impl)
+    : JSDOMWrapper<VideoTrack>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -144,151 +128,129 @@ void JSVideoTrack::destroy(JSC::JSCell* cell)
     thisObject->JSVideoTrack::~JSVideoTrack();
 }
 
-JSVideoTrack::~JSVideoTrack()
-{
-    releaseImpl();
-}
-
-bool JSVideoTrack::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSVideoTrack::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSVideoTrack*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSVideoTrack, Base>(exec, JSVideoTrackTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSVideoTrack, Base>(state, JSVideoTrackTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsVideoTrackId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoTrackId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoTrack* castedThis = jsDynamicCast<JSVideoTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoTrack", "id");
-        return throwGetterTypeError(*exec, "VideoTrack", "id");
+            return reportDeprecatedGetterError(*state, "VideoTrack", "id");
+        return throwGetterTypeError(*state, "VideoTrack", "id");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.id());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoTrackKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoTrackKind(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSVideoTrack*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.kind());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoTrackLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoTrackLabel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoTrack* castedThis = jsDynamicCast<JSVideoTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoTrack", "label");
-        return throwGetterTypeError(*exec, "VideoTrack", "label");
+            return reportDeprecatedGetterError(*state, "VideoTrack", "label");
+        return throwGetterTypeError(*state, "VideoTrack", "label");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.label());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.label());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoTrackLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoTrackLanguage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSVideoTrack*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.language());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.language());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsVideoTrackSelected(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsVideoTrackSelected(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSVideoTrack* castedThis = jsDynamicCast<JSVideoTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoTrack", "selected");
-        return throwGetterTypeError(*exec, "VideoTrack", "selected");
+            return reportDeprecatedGetterError(*state, "VideoTrack", "selected");
+        return throwGetterTypeError(*state, "VideoTrack", "selected");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.selected());
     return JSValue::encode(result);
 }
 
 
-#if ENABLE(MEDIA_SOURCE) && ENABLE(VIDEO_TRACK)
-EncodedJSValue jsVideoTrackSourceBuffer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSVideoTrack* castedThis = jsDynamicCast<JSVideoTrack*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSVideoTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "VideoTrack", "sourceBuffer");
-        return throwGetterTypeError(*exec, "VideoTrack", "sourceBuffer");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(VideoTrackMediaSource::sourceBuffer(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-void setJSVideoTrackKind(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVideoTrackKind(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSVideoTrack*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setKind(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setKind(*state, value);
 }
 
 
-void setJSVideoTrackLanguage(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVideoTrackLanguage(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSVideoTrack*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setLanguage(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setLanguage(*state, value);
 }
 
 
-void setJSVideoTrackSelected(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSVideoTrackSelected(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSVideoTrack* castedThis = jsDynamicCast<JSVideoTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSVideoTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "VideoTrack", "selected");
+            reportDeprecatedSetterError(*state, "VideoTrack", "selected");
         else
-            throwSetterTypeError(*exec, "VideoTrack", "selected");
+            throwSetterTypeError(*state, "VideoTrack", "selected");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelected(nativeValue);
 }
@@ -305,7 +267,7 @@ void JSVideoTrack::visitChildren(JSCell* cell, SlotVisitor& visitor)
 bool JSVideoTrackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsVideoTrack = jsCast<JSVideoTrack*>(handle.slot()->asCell());
-    Element* element = WTF::getPtr(jsVideoTrack->impl().element());
+    Element* element = WTF::getPtr(jsVideoTrack->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -316,7 +278,7 @@ void JSVideoTrackOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context
 {
     auto* jsVideoTrack = jsCast<JSVideoTrack*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsVideoTrack->impl(), jsVideoTrack);
+    uncacheWrapper(world, &jsVideoTrack->wrapped(), jsVideoTrack);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -327,6 +289,14 @@ extern "C" { extern void (*const __identifier("??_7VideoTrack@WebCore@@6B@")[])(
 extern "C" { extern void* _ZTVN7WebCore10VideoTrackE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoTrack* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSVideoTrack>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoTrack* impl)
 {
     if (!impl)
@@ -358,7 +328,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, VideoTrack* 
 VideoTrack* JSVideoTrack::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSVideoTrack*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -21,8 +21,9 @@
 #include "config.h"
 #include "JSCSSCharsetRule.h"
 
-#include "CSSCharsetRule.h"
+#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <wtf/GetPtr.h>
 
@@ -61,49 +62,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSCharsetRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSCharsetRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCSSCharsetRule> JSCSSCharsetRuleConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSCharsetRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSCharsetRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSCharsetRuleConstructor>(vm.heap)) JSCSSCharsetRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSCharsetRuleConstructor::s_info = { "CSSCharsetRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSCharsetRuleConstructor) };
-
-JSCSSCharsetRuleConstructor::JSCSSCharsetRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSCharsetRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSCharsetRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSCharsetRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSCharsetRule::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSCharsetRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSCharsetRuleConstructor::s_info = { "CSSCharsetRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSCharsetRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSCharsetRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSCharsetRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "encoding", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSCharsetRuleEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSCharsetRuleEncoding) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSCharsetRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "encoding", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSCharsetRuleEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCSSCharsetRuleEncoding) } },
 };
 
 const ClassInfo JSCSSCharsetRulePrototype::s_info = { "CSSCharsetRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSCharsetRulePrototype) };
@@ -116,7 +91,7 @@ void JSCSSCharsetRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSCharsetRule::s_info = { "CSSCharsetRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSCharsetRule) };
 
-JSCSSCharsetRule::JSCSSCharsetRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSCharsetRule>&& impl)
+JSCSSCharsetRule::JSCSSCharsetRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSCharsetRule>&& impl)
     : JSCSSRule(structure, globalObject, WTF::move(impl))
 {
 }
@@ -131,56 +106,56 @@ JSObject* JSCSSCharsetRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCSSCharsetRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSCharsetRuleEncoding(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSCharsetRuleEncoding(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSCharsetRule* castedThis = jsDynamicCast<JSCSSCharsetRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSCharsetRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSCharsetRule", "encoding");
-        return throwGetterTypeError(*exec, "CSSCharsetRule", "encoding");
+            return reportDeprecatedGetterError(*state, "CSSCharsetRule", "encoding");
+        return throwGetterTypeError(*state, "CSSCharsetRule", "encoding");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.encoding());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.encoding());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSCharsetRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSCharsetRuleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSCharsetRulePrototype* domObject = jsDynamicCast<JSCSSCharsetRulePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSCharsetRule::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSCharsetRule::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCSSCharsetRuleEncoding(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCSSCharsetRuleEncoding(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCSSCharsetRule* castedThis = jsDynamicCast<JSCSSCharsetRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSCharsetRulePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CSSCharsetRule", "encoding");
+            reportDeprecatedSetterError(*state, "CSSCharsetRule", "encoding");
         else
-            throwSetterTypeError(*exec, "CSSCharsetRule", "encoding");
+            throwSetterTypeError(*state, "CSSCharsetRule", "encoding");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setEncoding(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSCSSCharsetRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSCharsetRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSCharsetRuleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

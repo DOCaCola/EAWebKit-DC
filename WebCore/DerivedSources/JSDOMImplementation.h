@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMImplementation : public JSDOMWrapper {
+class JSDOMImplementation : public JSDOMWrapper<DOMImplementation> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMImplementation> Base;
     static JSDOMImplementation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMImplementation>&& impl)
     {
-        JSDOMImplementation* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementation>(globalObject->vm().heap)) JSDOMImplementation(structure, globalObject, WTF::move(impl));
+        JSDOMImplementation* ptr = new (NotNull, JSC::allocateCell<JSDOMImplementation>(globalObject->vm().heap)) JSDOMImplementation(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMImplementation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMImplementation();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMImplementation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMImplementation* m_impl;
 protected:
-    JSDOMImplementation(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMImplementation>&&);
+    JSDOMImplementation(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMImplementation>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMImplementation*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMImplementation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMImplementation& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMImplementation& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMImplementation*);
 
 
 } // namespace WebCore

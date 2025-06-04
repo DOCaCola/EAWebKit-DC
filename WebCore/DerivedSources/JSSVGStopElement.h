@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGStopElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGStopElement>&& impl)
     {
-        JSSVGStopElement* ptr = new (NotNull, JSC::allocateCell<JSSVGStopElement>(globalObject->vm().heap)) JSSVGStopElement(structure, globalObject, WTF::move(impl));
+        JSSVGStopElement* ptr = new (NotNull, JSC::allocateCell<JSSVGStopElement>(globalObject->vm().heap)) JSSVGStopElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGStopElement& impl() const
+    SVGStopElement& wrapped() const
     {
-        return static_cast<SVGStopElement&>(Base::impl());
+        return static_cast<SVGStopElement&>(Base::wrapped());
     }
 protected:
-    JSSVGStopElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGStopElement>&&);
+    JSSVGStopElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGStopElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

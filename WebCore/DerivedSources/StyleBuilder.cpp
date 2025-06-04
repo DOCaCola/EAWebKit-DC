@@ -56,109 +56,145 @@ public:
     }
     static void applyInitialFontStyle(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setItalic(FontDescription::initialItalic());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setItalic(FontCascadeDescription::initialItalic());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritFontStyle(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setItalic(styleResolver.parentFontDescription().italic());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyValueFontStyle(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setItalic(downcast<CSSPrimitiveValue>(value));
-        styleResolver.setFontDescription(fontDescription);
-    }
-    static void applyInitialFontVariant(StyleResolver& styleResolver)
-    {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setSmallCaps(FontDescription::initialSmallCaps());
-        styleResolver.setFontDescription(fontDescription);
-    }
-    static void applyInheritFontVariant(StyleResolver& styleResolver)
-    {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setSmallCaps(styleResolver.parentFontDescription().smallCaps());
-        styleResolver.setFontDescription(fontDescription);
-    }
-    static void applyValueFontVariant(StyleResolver& styleResolver, CSSValue& value)
-    {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setSmallCaps(downcast<CSSPrimitiveValue>(value));
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInitialTextRendering(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setTextRenderingMode(FontDescription::initialTextRenderingMode());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setTextRenderingMode(FontCascadeDescription::initialTextRenderingMode());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritTextRendering(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setTextRenderingMode(styleResolver.parentFontDescription().textRenderingMode());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyValueTextRendering(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setTextRenderingMode(downcast<CSSPrimitiveValue>(value));
         styleResolver.setFontDescription(fontDescription);
     }
-    static void applyValueWebkitFontFeatureSettings(StyleResolver& styleResolver, CSSValue& value)
+    static void applyValueFontFeatureSettings(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setFeatureSettings(StyleBuilderConverter::convertFontFeatureSettings(styleResolver, value));
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInitialWebkitFontKerning(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setKerning(FontDescription::initialKerning());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setKerning(FontCascadeDescription::initialKerning());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritWebkitFontKerning(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setKerning(styleResolver.parentFontDescription().kerning());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyValueWebkitFontKerning(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setKerning(downcast<CSSPrimitiveValue>(value));
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInitialWebkitFontSmoothing(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setFontSmoothing(FontDescription::initialFontSmoothing());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setFontSmoothing(FontCascadeDescription::initialFontSmoothing());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritWebkitFontSmoothing(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setFontSmoothing(styleResolver.parentFontDescription().fontSmoothing());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyValueWebkitFontSmoothing(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setFontSmoothing(downcast<CSSPrimitiveValue>(value));
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInitialFontVariantPosition(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantPosition(FontCascadeDescription::initialVariantPosition());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInheritFontVariantPosition(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantPosition(styleResolver.parentFontDescription().variantPosition());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyValueFontVariantPosition(StyleResolver& styleResolver, CSSValue& value)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantPosition(downcast<CSSPrimitiveValue>(value));
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInitialFontVariantCaps(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantCaps(FontCascadeDescription::initialVariantCaps());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInheritFontVariantCaps(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantCaps(styleResolver.parentFontDescription().variantCaps());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyValueFontVariantCaps(StyleResolver& styleResolver, CSSValue& value)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantCaps(downcast<CSSPrimitiveValue>(value));
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInitialFontVariantAlternates(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantAlternates(FontCascadeDescription::initialVariantAlternates());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyInheritFontVariantAlternates(StyleResolver& styleResolver)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantAlternates(styleResolver.parentFontDescription().variantAlternates());
+        styleResolver.setFontDescription(fontDescription);
+    }
+    static void applyValueFontVariantAlternates(StyleResolver& styleResolver, CSSValue& value)
+    {
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setVariantAlternates(downcast<CSSPrimitiveValue>(value));
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInitialWebkitLocale(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setLocale(FontDescription::initialLocale());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setLocale(FontCascadeDescription::initialLocale());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritWebkitLocale(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setLocale(styleResolver.parentFontDescription().locale());
         styleResolver.setFontDescription(fontDescription);
     }
@@ -188,19 +224,19 @@ public:
     }
     static void applyInitialFontSynthesis(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
-        fontDescription.setFontSynthesis(FontDescription::initialFontSynthesis());
+        auto fontDescription = styleResolver.fontDescription();
+        fontDescription.setFontSynthesis(FontCascadeDescription::initialFontSynthesis());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyInheritFontSynthesis(StyleResolver& styleResolver)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setFontSynthesis(styleResolver.parentFontDescription().fontSynthesis());
         styleResolver.setFontDescription(fontDescription);
     }
     static void applyValueFontSynthesis(StyleResolver& styleResolver, CSSValue& value)
     {
-        FontDescription fontDescription = styleResolver.fontDescription();
+        auto fontDescription = styleResolver.fontDescription();
         fontDescription.setFontSynthesis(StyleBuilderConverter::convertFontSynthesis(styleResolver, value));
         styleResolver.setFontDescription(fontDescription);
     }
@@ -1707,18 +1743,6 @@ public:
     {
         styleResolver.style()->accessSVGStyle().setFillRule(downcast<CSSPrimitiveValue>(value));
     }
-    static void applyInitialFilter(StyleResolver& styleResolver)
-    {
-        styleResolver.style()->accessSVGStyle().setFilterResource(SVGRenderStyle::initialFilterResource());
-    }
-    static void applyInheritFilter(StyleResolver& styleResolver)
-    {
-        styleResolver.style()->accessSVGStyle().setFilterResource(styleResolver.parentStyle()->svgStyle().filterResource());
-    }
-    static void applyValueFilter(StyleResolver& styleResolver, CSSValue& value)
-    {
-        styleResolver.style()->accessSVGStyle().setFilterResource(StyleBuilderConverter::convertSVGURIReference(styleResolver, value));
-    }
     static void applyInitialFloat(StyleResolver& styleResolver)
     {
         styleResolver.style()->setFloating(RenderStyle::initialFloating());
@@ -2136,7 +2160,7 @@ public:
     }
     static void applyValueOutlineOffset(StyleResolver& styleResolver, CSSValue& value)
     {
-        styleResolver.style()->setOutlineOffset(StyleBuilderConverter::convertComputedLength<int>(styleResolver, value));
+        styleResolver.style()->setOutlineOffset(StyleBuilderConverter::convertComputedLength<float>(styleResolver, value));
     }
     static void applyInitialOutlineWidth(StyleResolver& styleResolver)
     {
@@ -2148,7 +2172,7 @@ public:
     }
     static void applyValueOutlineWidth(StyleResolver& styleResolver, CSSValue& value)
     {
-        styleResolver.style()->setOutlineWidth(StyleBuilderConverter::convertLineWidth<unsigned short>(styleResolver, value));
+        styleResolver.style()->setOutlineWidth(StyleBuilderConverter::convertLineWidth<float>(styleResolver, value));
     }
     static void applyInitialOverflowWrap(StyleResolver& styleResolver)
     {
@@ -3785,15 +3809,15 @@ public:
     {
         styleResolver.style()->setBoxDecorationBreak(downcast<CSSPrimitiveValue>(value));
     }
-    static void applyInitialWebkitFilter(StyleResolver& styleResolver)
+    static void applyInitialFilter(StyleResolver& styleResolver)
     {
         styleResolver.style()->setFilter(RenderStyle::initialFilter());
     }
-    static void applyInheritWebkitFilter(StyleResolver& styleResolver)
+    static void applyInheritFilter(StyleResolver& styleResolver)
     {
         styleResolver.style()->setFilter(styleResolver.parentStyle()->filter());
     }
-    static void applyValueWebkitFilter(StyleResolver& styleResolver, CSSValue& value)
+    static void applyValueFilter(StyleResolver& styleResolver, CSSValue& value)
     {
         auto convertedValue = StyleBuilderConverter::convertFilterOperations(styleResolver, value);
         if (convertedValue)
@@ -3969,6 +3993,18 @@ public:
         if (convertedValue)
             styleResolver.style()->setGridItemColumnEnd(convertedValue.value());
     }
+    static void applyInitialWebkitGridColumnGap(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setGridColumnGap(RenderStyle::initialZeroLength());
+    }
+    static void applyInheritWebkitGridColumnGap(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setGridColumnGap(styleResolver.parentStyle()->gridColumnGap());
+    }
+    static void applyValueWebkitGridColumnGap(StyleResolver& styleResolver, CSSValue& value)
+    {
+        styleResolver.style()->setGridColumnGap(StyleBuilderConverter::convertLength(styleResolver, value));
+    }
     static void applyInitialWebkitGridColumnStart(StyleResolver& styleResolver)
     {
         styleResolver.style()->setGridItemColumnStart(RenderStyle::initialGridItemColumnStart());
@@ -3996,6 +4032,18 @@ public:
         auto convertedValue = StyleBuilderConverter::convertGridPosition(styleResolver, value);
         if (convertedValue)
             styleResolver.style()->setGridItemRowEnd(convertedValue.value());
+    }
+    static void applyInitialWebkitGridRowGap(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setGridRowGap(RenderStyle::initialZeroLength());
+    }
+    static void applyInheritWebkitGridRowGap(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setGridRowGap(styleResolver.parentStyle()->gridRowGap());
+    }
+    static void applyValueWebkitGridRowGap(StyleResolver& styleResolver, CSSValue& value)
+    {
+        styleResolver.style()->setGridRowGap(StyleBuilderConverter::convertLength(styleResolver, value));
     }
     static void applyInitialWebkitGridRowStart(StyleResolver& styleResolver)
     {
@@ -5584,12 +5632,25 @@ public:
     {
         styleResolver.style()->setTapHighlightColor(StyleBuilderConverter::convertTapHighlightColor(styleResolver, value));
     }
+    static void applyInitialTouchAction(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTouchAction(RenderStyle::initialTouchAction());
+    }
+    static void applyInheritTouchAction(StyleResolver& styleResolver)
+    {
+        styleResolver.style()->setTouchAction(styleResolver.parentStyle()->touchAction());
+    }
+    static void applyValueTouchAction(StyleResolver& styleResolver, CSSValue& value)
+    {
+        styleResolver.style()->setTouchAction(downcast<CSSPrimitiveValue>(value));
+    }
 };
 
 void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleResolver, CSSValue& value, bool isInitial, bool isInherit)
 {
     switch (property) {
     case CSSPropertyInvalid:
+    case CSSPropertyCustom:
         break;
     case CSSPropertyColor:
         if (isInitial)
@@ -5639,14 +5700,6 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueFontStyle(styleResolver, value);
         break;
-    case CSSPropertyFontVariant:
-        if (isInitial)
-            StyleBuilderFunctions::applyInitialFontVariant(styleResolver);
-        else if (isInherit)
-            StyleBuilderFunctions::applyInheritFontVariant(styleResolver);
-        else
-            StyleBuilderFunctions::applyValueFontVariant(styleResolver, value);
-        break;
     case CSSPropertyFontWeight:
         if (isInitial)
             StyleBuilderCustom::applyInitialFontWeight(styleResolver);
@@ -5663,13 +5716,13 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueTextRendering(styleResolver, value);
         break;
-    case CSSPropertyWebkitFontFeatureSettings:
+    case CSSPropertyFontFeatureSettings:
         if (isInitial)
-            StyleBuilderCustom::applyInitialWebkitFontFeatureSettings(styleResolver);
+            StyleBuilderCustom::applyInitialFontFeatureSettings(styleResolver);
         else if (isInherit)
-            StyleBuilderCustom::applyInheritWebkitFontFeatureSettings(styleResolver);
+            StyleBuilderCustom::applyInheritFontFeatureSettings(styleResolver);
         else
-            StyleBuilderFunctions::applyValueWebkitFontFeatureSettings(styleResolver, value);
+            StyleBuilderFunctions::applyValueFontFeatureSettings(styleResolver, value);
         break;
     case CSSPropertyWebkitFontKerning:
         if (isInitial)
@@ -5687,13 +5740,53 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueWebkitFontSmoothing(styleResolver, value);
         break;
-    case CSSPropertyWebkitFontVariantLigatures:
+    case CSSPropertyFontVariantLigatures:
         if (isInitial)
-            StyleBuilderCustom::applyInitialWebkitFontVariantLigatures(styleResolver);
+            StyleBuilderCustom::applyInitialFontVariantLigatures(styleResolver);
         else if (isInherit)
-            StyleBuilderCustom::applyInheritWebkitFontVariantLigatures(styleResolver);
+            StyleBuilderCustom::applyInheritFontVariantLigatures(styleResolver);
         else
-            StyleBuilderCustom::applyValueWebkitFontVariantLigatures(styleResolver, value);
+            StyleBuilderCustom::applyValueFontVariantLigatures(styleResolver, value);
+        break;
+    case CSSPropertyFontVariantPosition:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialFontVariantPosition(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritFontVariantPosition(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueFontVariantPosition(styleResolver, value);
+        break;
+    case CSSPropertyFontVariantCaps:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialFontVariantCaps(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritFontVariantCaps(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueFontVariantCaps(styleResolver, value);
+        break;
+    case CSSPropertyFontVariantNumeric:
+        if (isInitial)
+            StyleBuilderCustom::applyInitialFontVariantNumeric(styleResolver);
+        else if (isInherit)
+            StyleBuilderCustom::applyInheritFontVariantNumeric(styleResolver);
+        else
+            StyleBuilderCustom::applyValueFontVariantNumeric(styleResolver, value);
+        break;
+    case CSSPropertyFontVariantAlternates:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialFontVariantAlternates(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritFontVariantAlternates(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueFontVariantAlternates(styleResolver, value);
+        break;
+    case CSSPropertyFontVariantEastAsian:
+        if (isInitial)
+            StyleBuilderCustom::applyInitialFontVariantEastAsian(styleResolver);
+        else if (isInherit)
+            StyleBuilderCustom::applyInheritFontVariantEastAsian(styleResolver);
+        else
+            StyleBuilderCustom::applyValueFontVariantEastAsian(styleResolver, value);
         break;
     case CSSPropertyWebkitLocale:
         if (isInitial)
@@ -5758,6 +5851,10 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
             StyleBuilderFunctions::applyInheritAlignmentBaseline(styleResolver);
         else
             StyleBuilderFunctions::applyValueAlignmentBaseline(styleResolver, value);
+        break;
+    case CSSPropertyAll:
+        ASSERT(isShorthandCSSProperty(property));
+        ASSERT_NOT_REACHED();
         break;
     case CSSPropertyAnimation:
         ASSERT(isShorthandCSSProperty(property));
@@ -6359,14 +6456,6 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueFillRule(styleResolver, value);
         break;
-    case CSSPropertyFilter:
-        if (isInitial)
-            StyleBuilderFunctions::applyInitialFilter(styleResolver);
-        else if (isInherit)
-            StyleBuilderFunctions::applyInheritFilter(styleResolver);
-        else
-            StyleBuilderFunctions::applyValueFilter(styleResolver, value);
-        break;
     case CSSPropertyFloat:
         if (isInitial)
             StyleBuilderFunctions::applyInitialFloat(styleResolver);
@@ -6392,6 +6481,10 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
             StyleBuilderFunctions::applyValueFloodOpacity(styleResolver, value);
         break;
     case CSSPropertyFont:
+        ASSERT(isShorthandCSSProperty(property));
+        ASSERT_NOT_REACHED();
+        break;
+    case CSSPropertyFontVariant:
         ASSERT(isShorthandCSSProperty(property));
         ASSERT_NOT_REACHED();
         break;
@@ -7589,13 +7682,13 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueWebkitBoxDecorationBreak(styleResolver, value);
         break;
-    case CSSPropertyWebkitFilter:
+    case CSSPropertyFilter:
         if (isInitial)
-            StyleBuilderFunctions::applyInitialWebkitFilter(styleResolver);
+            StyleBuilderFunctions::applyInitialFilter(styleResolver);
         else if (isInherit)
-            StyleBuilderFunctions::applyInheritWebkitFilter(styleResolver);
+            StyleBuilderFunctions::applyInheritFilter(styleResolver);
         else
-            StyleBuilderFunctions::applyValueWebkitFilter(styleResolver, value);
+            StyleBuilderFunctions::applyValueFilter(styleResolver, value);
         break;
     case CSSPropertyAlignContent:
         if (isInitial)
@@ -7727,6 +7820,14 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueWebkitGridColumnEnd(styleResolver, value);
         break;
+    case CSSPropertyWebkitGridColumnGap:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialWebkitGridColumnGap(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritWebkitGridColumnGap(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueWebkitGridColumnGap(styleResolver, value);
+        break;
     case CSSPropertyWebkitGridColumnStart:
         if (isInitial)
             StyleBuilderFunctions::applyInitialWebkitGridColumnStart(styleResolver);
@@ -7763,6 +7864,14 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
         else
             StyleBuilderFunctions::applyValueWebkitGridRowEnd(styleResolver, value);
         break;
+    case CSSPropertyWebkitGridRowGap:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialWebkitGridRowGap(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritWebkitGridRowGap(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueWebkitGridRowGap(styleResolver, value);
+        break;
     case CSSPropertyWebkitGridRowStart:
         if (isInitial)
             StyleBuilderFunctions::applyInitialWebkitGridRowStart(styleResolver);
@@ -7772,6 +7881,10 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
             StyleBuilderFunctions::applyValueWebkitGridRowStart(styleResolver, value);
         break;
     case CSSPropertyWebkitGridColumn:
+        ASSERT(isShorthandCSSProperty(property));
+        ASSERT_NOT_REACHED();
+        break;
+    case CSSPropertyWebkitGridGap:
         ASSERT(isShorthandCSSProperty(property));
         ASSERT_NOT_REACHED();
         break;
@@ -8516,6 +8629,14 @@ void StyleBuilder::applyProperty(CSSPropertyID property, StyleResolver& styleRes
             StyleBuilderFunctions::applyInheritWebkitTapHighlightColor(styleResolver);
         else
             StyleBuilderFunctions::applyValueWebkitTapHighlightColor(styleResolver, value);
+        break;
+    case CSSPropertyTouchAction:
+        if (isInitial)
+            StyleBuilderFunctions::applyInitialTouchAction(styleResolver);
+        else if (isInherit)
+            StyleBuilderFunctions::applyInheritTouchAction(styleResolver);
+        else
+            StyleBuilderFunctions::applyValueTouchAction(styleResolver, value);
         break;
     };
 }

@@ -25,7 +25,7 @@
 #include "JSWebGLVertexArrayObject.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLVertexArrayObject.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLVertexArrayObjectConstructor : public DOMConstructorObject {
-private:
-    JSWebGLVertexArrayObjectConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLVertexArrayObject> JSWebGLVertexArrayObjectConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLVertexArrayObjectConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLVertexArrayObjectConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLVertexArrayObjectConstructor>(vm.heap)) JSWebGLVertexArrayObjectConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLVertexArrayObjectConstructor::s_info = { "WebGLVertexArrayObjectConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObjectConstructor) };
-
-JSWebGLVertexArrayObjectConstructor::JSWebGLVertexArrayObjectConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLVertexArrayObjectConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLVertexArrayObjectConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLVertexArrayObject::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLVertexArrayObject::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLVertexArrayObject"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLVertexArrayObjectConstructor::s_info = { "WebGLVertexArrayObjectConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObjectConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLVertexArrayObjectPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLVertexArrayObjectConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLVertexArrayObjectConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLVertexArrayObjectPrototype::s_info = { "WebGLVertexArrayObjectPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObjectPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLVertexArrayObjectPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLVertexArrayObject::s_info = { "WebGLVertexArrayObject", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObject) };
 
-JSWebGLVertexArrayObject::JSWebGLVertexArrayObject(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLVertexArrayObject>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLVertexArrayObject::JSWebGLVertexArrayObject(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLVertexArrayObject>&& impl)
+    : JSDOMWrapper<WebGLVertexArrayObject>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLVertexArrayObject::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLVertexArrayObject::~JSWebGLVertexArrayObject();
 }
 
-JSWebGLVertexArrayObject::~JSWebGLVertexArrayObject()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLVertexArrayObjectConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLVertexArrayObjectConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLVertexArrayObjectPrototype* domObject = jsDynamicCast<JSWebGLVertexArrayObjectPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLVertexArrayObject::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLVertexArrayObject::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLVertexArrayObject::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLVertexArrayObjectConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLVertexArrayObjectConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLVertexArrayObjectOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLVertexArrayObjectOwner::finalize(JSC::Handle<JSC::Unknown> handle, v
 {
     auto* jsWebGLVertexArrayObject = jsCast<JSWebGLVertexArrayObject*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLVertexArrayObject->impl(), jsWebGLVertexArrayObject);
+    uncacheWrapper(world, &jsWebGLVertexArrayObject->wrapped(), jsWebGLVertexArrayObject);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLVertexArrayObject@WebCor
 extern "C" { extern void* _ZTVN7WebCore22WebGLVertexArrayObjectE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLVertexArrayObject>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexA
 WebGLVertexArrayObject* JSWebGLVertexArrayObject::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLVertexArrayObject*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

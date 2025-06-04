@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEColorMatrixElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEColorMatrixElement>&& impl)
     {
-        JSSVGFEColorMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEColorMatrixElement>(globalObject->vm().heap)) JSSVGFEColorMatrixElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEColorMatrixElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEColorMatrixElement>(globalObject->vm().heap)) JSSVGFEColorMatrixElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEColorMatrixElement& impl() const
+    SVGFEColorMatrixElement& wrapped() const
     {
-        return static_cast<SVGFEColorMatrixElement&>(Base::impl());
+        return static_cast<SVGFEColorMatrixElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEColorMatrixElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEColorMatrixElement>&&);
+    JSSVGFEColorMatrixElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEColorMatrixElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

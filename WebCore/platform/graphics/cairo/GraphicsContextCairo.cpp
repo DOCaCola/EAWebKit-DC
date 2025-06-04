@@ -89,14 +89,14 @@ enum PathDrawingStyle {
     FillAndStroke = Fill + Stroke
 };
 
-static inline void drawPathShadow(GraphicsContext* context, PathDrawingStyle drawingStyle)
+static inline void drawPathShadow(GraphicsContext& context, PathDrawingStyle drawingStyle)
 {
-    ShadowBlur& shadow = context->platformContext()->shadowBlur();
+    ShadowBlur& shadow = context.platformContext()->shadowBlur();
     if (shadow.type() == ShadowBlur::NoShadow)
         return;
 
     // Calculate the extents of the rendered solid paths.
-    cairo_t* cairoContext = context->platformContext()->cr();
+    cairo_t* cairoContext = context.platformContext()->cr();
     std::unique_ptr<cairo_path_t, void(*)(cairo_path_t*)> path(cairo_copy_path(cairoContext), [](cairo_path_t* path) {
         cairo_path_destroy(path);
     });
@@ -129,14 +129,14 @@ static inline void drawPathShadow(GraphicsContext* context, PathDrawingStyle dra
     if (drawingStyle & Fill) {
         cairo_save(cairoShadowContext);
         cairo_append_path(cairoShadowContext, path.get());
-        shadowContext->platformContext()->prepareForFilling(context->state(), PlatformContextCairo::NoAdjustment);
+        shadowContext->platformContext()->prepareForFilling(context.state(), PlatformContextCairo::NoAdjustment);
         cairo_fill(cairoShadowContext);
         cairo_restore(cairoShadowContext);
     }
 
     if (drawingStyle & Stroke) {
         cairo_append_path(cairoShadowContext, path.get());
-        shadowContext->platformContext()->prepareForStroking(context->state(), PlatformContextCairo::DoNotPreserveAlpha);
+        shadowContext->platformContext()->prepareForStroking(context.state(), PlatformContextCairo::DoNotPreserveAlpha);
         cairo_stroke(cairoShadowContext);
     }
 
@@ -149,28 +149,28 @@ static inline void drawPathShadow(GraphicsContext* context, PathDrawingStyle dra
     cairo_append_path(cairoContext, path.get());
 }
 
-static inline void fillCurrentCairoPath(GraphicsContext* context)
+static inline void fillCurrentCairoPath(GraphicsContext& context)
 {
-    cairo_t* cr = context->platformContext()->cr();
+    cairo_t* cr = context.platformContext()->cr();
     cairo_save(cr);
 
-    context->platformContext()->prepareForFilling(context->state(), PlatformContextCairo::AdjustPatternForGlobalAlpha);
+    context.platformContext()->prepareForFilling(context.state(), PlatformContextCairo::AdjustPatternForGlobalAlpha);
     cairo_fill(cr);
 
     cairo_restore(cr);
 }
 
-static inline void shadowAndFillCurrentCairoPath(GraphicsContext* context)
+static inline void shadowAndFillCurrentCairoPath(GraphicsContext& context)
 {
     drawPathShadow(context, Fill);
     fillCurrentCairoPath(context);
 }
 
-static inline void shadowAndStrokeCurrentCairoPath(GraphicsContext* context)
+static inline void shadowAndStrokeCurrentCairoPath(GraphicsContext& context)
 {
     drawPathShadow(context, Stroke);
-    context->platformContext()->prepareForStroking(context->state());
-    cairo_stroke(context->platformContext()->cr());
+    context.platformContext()->prepareForStroking(context.state());
+    cairo_stroke(context.platformContext()->cr());
 }
 
 GraphicsContext::GraphicsContext(cairo_t* cr)
@@ -224,7 +224,6 @@ void GraphicsContext::restorePlatformState()
     platformContext()->shadowBlur().setShadowValues(FloatSize(m_state.shadowBlur, m_state.shadowBlur),
                                                     m_state.shadowOffset,
                                                     m_state.shadowColor,
-                                                    m_state.shadowColorSpace,
                                                     m_state.shadowsIgnoreTransforms);
 }
 
@@ -253,93 +252,96 @@ void GraphicsContext::drawRect(const FloatRect& rect, float)
     cairo_restore(cr);
 }
 
-static double calculateStrokePatternOffset(int distance, int patternWidth)
-{
-    // Example: 80 pixels with a width of 30 pixels. Remainder is 20.
-    // The maximum pixels of line we could paint will be 50 pixels.
-    int remainder = distance % patternWidth;
-    int numSegments = (distance - remainder) / patternWidth;
-
-    // Special case 1px dotted borders for speed.
-    if (patternWidth == 1)
-        return 1;
-
-    bool evenNumberOfSegments = !(numSegments % 2);
-    if (remainder)
-        evenNumberOfSegments = !evenNumberOfSegments;
-
-    if (evenNumberOfSegments) {
-        if (remainder)
-            return (patternWidth - remainder) + (remainder / 2);
-        return patternWidth / 2;
-    }
-
-    // Odd number of segments.
-    if (remainder)
-        return (patternWidth - remainder) / 2.f;
-    return 0;
-}
-
-static void drawLineOnCairoContext(GraphicsContext* graphicsContext, cairo_t* context, const FloatPoint& point1, const FloatPoint& point2)
-{
-    StrokeStyle style = graphicsContext->strokeStyle();
-    if (style == NoStroke)
-        return;
-
-    const Color& strokeColor = graphicsContext->strokeColor();
-    int strokeThickness = floorf(graphicsContext->strokeThickness());
-    if (graphicsContext->strokeThickness() < 1)
-        strokeThickness = 1;
-
-    int patternWidth = 0;
-    if (style == DottedStroke)
-        patternWidth = strokeThickness;
-    else if (style == DashedStroke)
-        patternWidth = 3 * strokeThickness;
-
-    bool isVerticalLine = point1.x() == point2.x();
-    FloatPoint point1OnPixelBoundaries = point1;
-    FloatPoint point2OnPixelBoundaries = point2;
-    GraphicsContext::adjustLineToPixelBoundaries(point1OnPixelBoundaries, point2OnPixelBoundaries, strokeThickness, style);
-
-    if (patternWidth) {
-        // Do a rect fill of our endpoints.  This ensures we always have the
-        // appearance of being a border.  We then draw the actual dotted/dashed line.
-        FloatRect firstRect(point1OnPixelBoundaries, FloatSize(strokeThickness, strokeThickness));
-        FloatRect secondRect(point2OnPixelBoundaries, FloatSize(strokeThickness, strokeThickness));
-        if (isVerticalLine) {
-            firstRect.move(-strokeThickness / 2, -strokeThickness);
-            secondRect.move(-strokeThickness / 2, 0);
-        } else {
-            firstRect.move(-strokeThickness, -strokeThickness / 2);
-            secondRect.move(0, -strokeThickness / 2);
-        }
-        fillRectWithColor(context, firstRect, strokeColor);
-        fillRectWithColor(context, secondRect, strokeColor);
-
-        int distance = (isVerticalLine ? (point2.y() - point1.y()) : (point2.x() - point1.x())) - 2 * strokeThickness;
-        double patternOffset = calculateStrokePatternOffset(distance, patternWidth);
-        double patternWidthAsDouble = patternWidth;
-        cairo_set_dash(context, &patternWidthAsDouble, 1, patternOffset);
-    }
-
-    setSourceRGBAFromColor(context, strokeColor);
-    cairo_set_line_width(context, strokeThickness);
-    cairo_move_to(context, point1OnPixelBoundaries.x(), point1OnPixelBoundaries.y());
-    cairo_line_to(context, point2OnPixelBoundaries.x(), point2OnPixelBoundaries.y());
-    cairo_stroke(context);
-}
-
 // This is only used to draw borders, so we should not draw shadows.
 void GraphicsContext::drawLine(const FloatPoint& point1, const FloatPoint& point2)
 {
     if (paintingDisabled())
         return;
 
+    if (strokeStyle() == NoStroke)
+        return;
+
+    const Color& strokeColor = this->strokeColor();
+    float thickness = strokeThickness();
+    bool isVerticalLine = (point1.x() + thickness == point2.x());
+    float strokeWidth = isVerticalLine ? point2.y() - point1.y() : point2.x() - point1.x();
+    if (!thickness || !strokeWidth)
+        return;
+
     cairo_t* cairoContext = platformContext()->cr();
-    cairo_save(cairoContext);
-    drawLineOnCairoContext(this, cairoContext, point1, point2);
-    cairo_restore(cairoContext);
+    StrokeStyle strokeStyle = this->strokeStyle();
+    float cornerWidth = 0;
+    bool drawsDashedLine = strokeStyle == DottedStroke || strokeStyle == DashedStroke;
+
+    if (drawsDashedLine) {
+        cairo_save(cairoContext);
+        // Figure out end points to ensure we always paint corners.
+        cornerWidth = strokeStyle == DottedStroke ? thickness : std::min(2 * thickness, std::max(thickness, strokeWidth / 3));
+        if (isVerticalLine) {
+            fillRectWithColor(cairoContext, FloatRect(point1.x(), point1.y(), thickness, cornerWidth), strokeColor);
+            fillRectWithColor(cairoContext, FloatRect(point1.x(), point2.y() - cornerWidth, thickness, cornerWidth), strokeColor);
+        } else {
+            fillRectWithColor(cairoContext, FloatRect(point1.x(), point1.y(), cornerWidth, thickness), strokeColor);
+            fillRectWithColor(cairoContext, FloatRect(point2.x() - cornerWidth, point1.y(), cornerWidth, thickness), strokeColor);
+        }
+        strokeWidth -= 2 * cornerWidth;
+        float patternWidth = strokeStyle == DottedStroke ? thickness : std::min(3 * thickness, std::max(thickness, strokeWidth / 3));
+        // Check if corner drawing sufficiently covers the line.
+        if (strokeWidth <= patternWidth + 1) {
+            cairo_restore(cairoContext);
+            return;
+        }
+
+        // Pattern starts with full fill and ends with the empty fill.
+        // 1. Let's start with the empty phase after the corner.
+        // 2. Check if we've got odd or even number of patterns and whether they fully cover the line.
+        // 3. In case of even number of patterns and/or remainder, move the pattern start position
+        // so that the pattern is balanced between the corners.
+        float patternOffset = patternWidth;
+        int numberOfSegments = std::floor(strokeWidth / patternWidth);
+        bool oddNumberOfSegments = numberOfSegments % 2;
+        float remainder = strokeWidth - (numberOfSegments * patternWidth);
+        if (oddNumberOfSegments && remainder)
+            patternOffset -= remainder / 2.f;
+        else if (!oddNumberOfSegments) {
+            if (remainder)
+                patternOffset += patternOffset - (patternWidth + remainder) / 2.f;
+            else
+                patternOffset += patternWidth / 2.f;
+        }
+        const double dashedLine[2] = { static_cast<double>(patternWidth), static_cast<double>(patternWidth) };
+        cairo_set_dash(cairoContext, dashedLine, 2, patternOffset);
+    } else {
+        setSourceRGBAFromColor(cairoContext, strokeColor);
+        if (thickness < 1)
+            cairo_set_line_width(cairoContext, 1);
+    }
+
+
+    FloatPoint p1 = point1;
+    FloatPoint p2 = point2;
+    // Center line and cut off corners for pattern patining.
+    if (isVerticalLine) {
+        float centerOffset = (p2.x() - p1.x()) / 2;
+        p1.move(centerOffset, cornerWidth);
+        p2.move(-centerOffset, -cornerWidth);
+    } else {
+        float centerOffset = (p2.y() - p1.y()) / 2;
+        p1.move(cornerWidth, centerOffset);
+        p2.move(-cornerWidth, -centerOffset);
+    }
+
+    if (shouldAntialias())
+        cairo_set_antialias(cairoContext, CAIRO_ANTIALIAS_NONE);
+
+    cairo_new_path(cairoContext);
+    cairo_move_to(cairoContext, p1.x(), p1.y());
+    cairo_line_to(cairoContext, p2.x(), p2.y());
+    cairo_stroke(cairoContext);
+    if (drawsDashedLine)
+        cairo_restore(cairoContext);
+    if (shouldAntialias())
+        cairo_set_antialias(cairoContext, CAIRO_ANTIALIAS_DEFAULT);
 }
 
 // This method is only used to draw the little circles used in lists.
@@ -430,7 +432,7 @@ void GraphicsContext::fillPath(const Path& path)
 
     cairo_t* cr = platformContext()->cr();
     setPathOnCairoContext(cr, path.platformPath()->context());
-    shadowAndFillCurrentCairoPath(this);
+    shadowAndFillCurrentCairoPath(*this);
 }
 
 void GraphicsContext::strokePath(const Path& path)
@@ -440,7 +442,7 @@ void GraphicsContext::strokePath(const Path& path)
 
     cairo_t* cr = platformContext()->cr();
     setPathOnCairoContext(cr, path.platformPath()->context());
-    shadowAndStrokeCurrentCairoPath(this);
+    shadowAndStrokeCurrentCairoPath(*this);
 }
 
 void GraphicsContext::fillRect(const FloatRect& rect)
@@ -450,16 +452,16 @@ void GraphicsContext::fillRect(const FloatRect& rect)
 
     cairo_t* cr = platformContext()->cr();
     cairo_rectangle(cr, rect.x(), rect.y(), rect.width(), rect.height());
-    shadowAndFillCurrentCairoPath(this);
+    shadowAndFillCurrentCairoPath(*this);
 }
 
-void GraphicsContext::fillRect(const FloatRect& rect, const Color& color, ColorSpace)
+void GraphicsContext::fillRect(const FloatRect& rect, const Color& color)
 {
     if (paintingDisabled())
         return;
 
     if (hasShadow())
-        platformContext()->shadowBlur().drawRectShadow(this, FloatRoundedRect(rect));
+        platformContext()->shadowBlur().drawRectShadow(*this, FloatRoundedRect(rect));
 
     fillRectWithColor(platformContext()->cr(), rect, color);
 }
@@ -494,8 +496,13 @@ void GraphicsContext::clipPath(const Path& path, WindRule clipRule)
     cairo_t* cr = platformContext()->cr();
     if (!path.isNull())
         setPathOnCairoContext(cr, path.platformPath()->context());
+
+    cairo_fill_rule_t savedFillRule = cairo_get_fill_rule(cr);
     cairo_set_fill_rule(cr, clipRule == RULE_EVENODD ? CAIRO_FILL_RULE_EVEN_ODD : CAIRO_FILL_RULE_WINDING);
     cairo_clip(cr);
+    cairo_set_fill_rule(cr, savedFillRule);
+
+    m_data->clip(path);
 }
 
 IntRect GraphicsContext::clipBounds() const
@@ -515,7 +522,7 @@ static inline void adjustFocusRingColor(Color& color)
 #endif
 }
 
-static inline void adjustFocusRingLineWidth(int& width)
+static inline void adjustFocusRingLineWidth(float& width)
 {
 #if PLATFORM(GTK)
     width = 2;
@@ -533,7 +540,7 @@ static inline StrokeStyle focusRingStrokeStyle()
 #endif
 }
 
-void GraphicsContext::drawFocusRing(const Path& path, int width, int /* offset */, const Color& color)
+void GraphicsContext::drawFocusRing(const Path& path, float width, float /* offset */, const Color& color)
 {
     // FIXME: We should draw paths that describe a rectangle with rounded corners
     // so as to be consistent with how we draw rectangular focus rings.
@@ -551,7 +558,7 @@ void GraphicsContext::drawFocusRing(const Path& path, int width, int /* offset *
     cairo_restore(cr);
 }
 
-void GraphicsContext::drawFocusRing(const Vector<IntRect>& rects, int width, int /* offset */, const Color& color)
+void GraphicsContext::drawFocusRing(const Vector<IntRect>& rects, float width, float /* offset */, const Color& color)
 {
     if (paintingDisabled())
         return;
@@ -721,13 +728,13 @@ void GraphicsContext::translate(float x, float y)
     m_data->translate(x, y);
 }
 
-void GraphicsContext::setPlatformFillColor(const Color&, ColorSpace)
+void GraphicsContext::setPlatformFillColor(const Color&)
 {
     // Cairo contexts can't hold separate fill and stroke colors
     // so we set them just before we actually fill or stroke
 }
 
-void GraphicsContext::setPlatformStrokeColor(const Color&, ColorSpace)
+void GraphicsContext::setPlatformStrokeColor(const Color&)
 {
     // Cairo contexts can't hold separate fill and stroke colors
     // so we set them just before we actually fill or stroke
@@ -795,7 +802,7 @@ void GraphicsContext::setCTM(const AffineTransform& transform)
     m_data->setCTM(transform);
 }
 
-void GraphicsContext::setPlatformShadow(FloatSize const& size, float, Color const&, ColorSpace)
+void GraphicsContext::setPlatformShadow(FloatSize const& size, float, Color const&)
 {
     if (paintingDisabled())
         return;
@@ -810,7 +817,6 @@ void GraphicsContext::setPlatformShadow(FloatSize const& size, float, Color cons
     platformContext()->shadowBlur().setShadowValues(FloatSize(m_state.shadowBlur, m_state.shadowBlur),
                                                     m_state.shadowOffset,
                                                     m_state.shadowColor,
-                                                    m_state.shadowColorSpace,
                                                     m_state.shadowsIgnoreTransforms);
 }
 
@@ -872,7 +878,7 @@ void GraphicsContext::strokeRect(const FloatRect& rect, float width)
     cairo_save(cr);
     cairo_rectangle(cr, rect.x(), rect.y(), rect.width(), rect.height());
     cairo_set_line_width(cr, width);
-    shadowAndStrokeCurrentCairoPath(this);
+    shadowAndStrokeCurrentCairoPath(*this);
     cairo_restore(cr);
 }
 
@@ -960,30 +966,9 @@ void GraphicsContext::setPlatformCompositeOperation(CompositeOperator op, BlendM
     cairo_set_operator(platformContext()->cr(), cairo_op);
 }
 
-void GraphicsContext::clip(const Path& path, WindRule windRule)
-{
-    if (paintingDisabled())
-        return;
-
-    cairo_t* cr = platformContext()->cr();
-    if (!path.isNull()) {
-        cairo_path_t* pathCopy = cairo_copy_path(path.platformPath()->context());
-        cairo_append_path(cr, pathCopy);
-        cairo_path_destroy(pathCopy);
-    }
-    cairo_fill_rule_t savedFillRule = cairo_get_fill_rule(cr);
-    if (windRule == RULE_NONZERO)
-        cairo_set_fill_rule(cr, CAIRO_FILL_RULE_WINDING);
-    else
-        cairo_set_fill_rule(cr, CAIRO_FILL_RULE_EVEN_ODD);
-    cairo_clip(cr);
-    cairo_set_fill_rule(cr, savedFillRule);
-    m_data->clip(path);
-}
-
 void GraphicsContext::canvasClip(const Path& path, WindRule windRule)
 {
-    clip(path, windRule);
+    clipPath(path, windRule);
 }
 
 void GraphicsContext::clipOut(const Path& path)
@@ -1037,13 +1022,13 @@ void GraphicsContext::clipOut(const FloatRect& r)
     cairo_set_fill_rule(cr, savedFillRule);
 }
 
-void GraphicsContext::platformFillRoundedRect(const FloatRoundedRect& rect, const Color& color, ColorSpace)
+void GraphicsContext::platformFillRoundedRect(const FloatRoundedRect& rect, const Color& color)
 {
     if (paintingDisabled())
         return;
 
     if (hasShadow())
-        platformContext()->shadowBlur().drawRectShadow(this, rect);
+        platformContext()->shadowBlur().drawRectShadow(*this, rect);
 
     cairo_t* cr = platformContext()->cr();
     cairo_save(cr);
@@ -1055,13 +1040,13 @@ void GraphicsContext::platformFillRoundedRect(const FloatRoundedRect& rect, cons
     cairo_restore(cr);
 }
 
-void GraphicsContext::fillRectWithRoundedHole(const FloatRect& rect, const FloatRoundedRect& roundedHoleRect, const Color& color, ColorSpace)
+void GraphicsContext::fillRectWithRoundedHole(const FloatRect& rect, const FloatRoundedRect& roundedHoleRect, const Color& color)
 {
     if (paintingDisabled() || !color.isValid())
         return;
 
     if (this->mustUseShadowBlur())
-        platformContext()->shadowBlur().drawInsetShadow(this, rect, roundedHoleRect);
+        platformContext()->shadowBlur().drawInsetShadow(*this, rect, roundedHoleRect);
 
     Path path;
     path.addRect(rect);
@@ -1073,8 +1058,18 @@ void GraphicsContext::fillRectWithRoundedHole(const FloatRect& rect, const Float
     cairo_t* cr = platformContext()->cr();
     cairo_save(cr);
     setPathOnCairoContext(platformContext()->cr(), path.platformPath()->context());
-    fillCurrentCairoPath(this);
+    fillCurrentCairoPath(*this);
     cairo_restore(cr);
+}
+
+void GraphicsContext::drawPattern(Image& image, const FloatRect& tileRect, const AffineTransform& patternTransform, const FloatPoint& phase, const FloatSize&, CompositeOperator op, const FloatRect& destRect, BlendMode)
+{
+    RefPtr<cairo_surface_t> surface = image.nativeImageForCurrentFrame();
+    if (!surface) // If it's too early we won't have an image yet.
+        return;
+
+    cairo_t* cr = platformContext()->cr();
+    drawPatternToCairoContext(cr, surface.get(), IntSize(image.size()), tileRect, patternTransform, phase, toCairoOperator(op), destRect);
 }
 
 void GraphicsContext::setPlatformShouldAntialias(bool enable)
@@ -1088,14 +1083,9 @@ void GraphicsContext::setPlatformShouldAntialias(bool enable)
     cairo_set_antialias(platformContext()->cr(), enable ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE);
 }
 
-void GraphicsContext::setImageInterpolationQuality(InterpolationQuality quality)
+void GraphicsContext::setPlatformImageInterpolationQuality(InterpolationQuality quality)
 {
     platformContext()->setImageInterpolationQuality(quality);
-}
-
-InterpolationQuality GraphicsContext::imageInterpolationQuality() const
-{
-    return platformContext()->imageInterpolationQuality();
 }
 
 bool GraphicsContext::isAcceleratedContext() const

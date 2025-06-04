@@ -1,5 +1,5 @@
 partial interface WorkerGlobalScope {
-    [Conditional=WEB_SOCKETS, EnabledAtRuntime] attribute WebSocketConstructor WebSocket;
+    [EnabledAtRuntime, Conditional=WEB_SOCKETS] attribute WebSocketConstructor WebSocket;
     [Conditional=CHANNEL_MESSAGING] attribute MessageChannelConstructor MessageChannel;
     attribute MessageEventConstructor MessageEvent;
     attribute BlobConstructor Blob;

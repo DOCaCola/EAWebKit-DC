@@ -40,6 +40,7 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSRequestAnimationFrameCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(double highResTime);
@@ -47,8 +48,11 @@ public:
 private:
     JSRequestAnimationFrameCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RequestAnimationFrameCallback*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RequestAnimationFrameCallback& impl) { return toJS(state, globalObject, &impl); }
 
 } // namespace WebCore
 

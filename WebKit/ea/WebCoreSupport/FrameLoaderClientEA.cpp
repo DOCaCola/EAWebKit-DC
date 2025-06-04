@@ -86,6 +86,8 @@
 #include <EAWebKit/EAWebKitInput.h>
 #include <internal/include/EAWebKitAssert.h>
 
+#include "HTMLCollection.h"
+
 // Note by Arpit Baldeva - 
 // The frame load events in WebCore are pretty complex, some times non-intuitive. A discussion about some of them can be read
 // at http://old.nabble.com/FrameLoaderClient-notifications-tt16025970.html
@@ -286,7 +288,7 @@ void FrameLoaderClientEA::detachedFromParent3()
 {
 }
 
-void FrameLoaderClientEA::dispatchDidHandleOnloadEvents()
+void FrameLoaderClientEA::dispatchDidDispatchOnloadEvents()
 {
 	if(isMainFrame(m_frame))
 	{
@@ -788,7 +790,7 @@ void FrameLoaderClientEA::committedLoad(WebCore::DocumentLoader* loader, const c
 
 WebCore::ResourceError FrameLoaderClientEA::cancelledError(const WebCore::ResourceRequest& request)
 {
-	ResourceError error = ResourceError("NetworkDomain", EA::WebKit::kLETLoadCancelled, request.url().string(),"Request cancelled");
+	ResourceError error = ResourceError("NetworkDomain", EA::WebKit::kLETLoadCancelled, request.url(),"Request cancelled");
     error.setIsCancellation(true);
     return error;
 }
@@ -796,34 +798,40 @@ WebCore::ResourceError FrameLoaderClientEA::cancelledError(const WebCore::Resour
 WebCore::ResourceError FrameLoaderClientEA::blockedError(const WebCore::ResourceRequest& request)
 {
 	EAW_ASSERT_FORMATTED(false, "WebKit Error:URL blocked - %s",request.url().string().ascii().data());
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETBlocked, request.url().string(),"Request blocked");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETBlocked, request.url(),"Request blocked");
+}
+
+ResourceError FrameLoaderClientEA::blockedByContentBlockerError(const ResourceRequest&)
+{
+	notImplemented();
+	return ResourceError();
 }
 
 
 WebCore::ResourceError FrameLoaderClientEA::cannotShowURLError(const WebCore::ResourceRequest& request)
 {
 	EAW_ASSERT_FORMATTED(false, "WebKit Error:Cannot show URL. Please verify the URL you are trying to load - %s",request.url().string().ascii().data());
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowURL, request.url().string(),"Cannot show URL");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowURL, request.url(),"Cannot show URL");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::interruptedForPolicyChangeError(const WebCore::ResourceRequest &request)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETFrameLoadInterruptedByPolicyChange, request.url().string(),"Frame load interrupted by policy change");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETFrameLoadInterruptedByPolicyChange, request.url(),"Frame load interrupted by policy change");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::cannotShowMIMETypeError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowMIMEType, response.url().string(),"Cannot show mimetype");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::kLETCannotShowMIMEType, response.url(),"Cannot show mimetype");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::fileDoesNotExistError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("NetworkDomain", EA::WebKit::kLETContentNotFoundError, response.url().string(),"File does not exist");
+	return ResourceError("NetworkDomain", EA::WebKit::kLETContentNotFoundError, response.url(),"File does not exist");
 }
 
 WebCore::ResourceError FrameLoaderClientEA::pluginWillHandleLoadError(const WebCore::ResourceResponse& response)
 {
-	return ResourceError("WebKitErrorDomain", EA::WebKit::KLETPluginWillHandleLoadError, response.url().string(),"Loading is handled by the media engine");
+	return ResourceError("WebKitErrorDomain", EA::WebKit::KLETPluginWillHandleLoadError, response.url(),"Loading is handled by the media engine");
 }
 
 bool FrameLoaderClientEA::shouldFallBack(const WebCore::ResourceError& error)
@@ -854,7 +862,7 @@ WTF::Ref<WebCore::DocumentLoader> FrameLoaderClientEA::createDocumentLoader(cons
     return WTF::move(loader);
 }
 
-void FrameLoaderClientEA::convertMainResourceLoadToDownload(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&)
+void FrameLoaderClientEA::convertMainResourceLoadToDownload(WebCore::DocumentLoader*, SessionID, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&)
 {
     if (!m_webFrame)
         return;
@@ -1271,7 +1279,7 @@ RefPtr<Frame> FrameLoaderClientEA::createFrame(const URL& url, const String& nam
     return frameData.frame;
 }
 
-ObjectContentType FrameLoaderClientEA::objectContentType(const URL& url, const String& mimeTypeIn, bool)
+ObjectContentType FrameLoaderClientEA::objectContentType(const URL& url, const String& mimeTypeIn)
 {
     String extension = url.path().substring(url.path().reverseFind('.') + 1);
 	if (url.isEmpty() && !mimeTypeIn.length())
@@ -1348,5 +1356,9 @@ PassRefPtr<FrameNetworkingContext> FrameLoaderClientEA::createNetworkingContext(
     return FrameNetworkingContextEA::create(m_frame, m_webFrame,false);
 }
 
+void FrameLoaderClientEA::prefetchDNS(const String&)
+{
+	notImplemented();
+}
 }
 

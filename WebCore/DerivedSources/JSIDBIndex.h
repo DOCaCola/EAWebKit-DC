@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSIDBIndex : public JSDOMWrapper {
+class JSIDBIndex : public JSDOMWrapper<IDBIndex> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<IDBIndex> Base;
     static JSIDBIndex* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBIndex>&& impl)
     {
-        JSIDBIndex* ptr = new (NotNull, JSC::allocateCell<JSIDBIndex>(globalObject->vm().heap)) JSIDBIndex(structure, globalObject, WTF::move(impl));
+        JSIDBIndex* ptr = new (NotNull, JSC::allocateCell<JSIDBIndex>(globalObject->vm().heap)) JSIDBIndex(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBIndex* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBIndex();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBIndex& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBIndex* m_impl;
 protected:
-    JSIDBIndex(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBIndex>&&);
+    JSIDBIndex(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBIndex>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBIndex*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBIndex*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBIndex& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBIndex& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBIndex*);
 
 
 } // namespace WebCore

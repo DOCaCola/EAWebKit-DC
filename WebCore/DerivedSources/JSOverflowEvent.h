@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSOverflowEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OverflowEvent>&& impl)
     {
-        JSOverflowEvent* ptr = new (NotNull, JSC::allocateCell<JSOverflowEvent>(globalObject->vm().heap)) JSOverflowEvent(structure, globalObject, WTF::move(impl));
+        JSOverflowEvent* ptr = new (NotNull, JSC::allocateCell<JSOverflowEvent>(globalObject->vm().heap)) JSOverflowEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    OverflowEvent& impl() const
+    OverflowEvent& wrapped() const
     {
-        return static_cast<OverflowEvent&>(Base::impl());
+        return static_cast<OverflowEvent&>(Base::wrapped());
     }
 protected:
-    JSOverflowEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<OverflowEvent>&&);
+    JSOverflowEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<OverflowEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

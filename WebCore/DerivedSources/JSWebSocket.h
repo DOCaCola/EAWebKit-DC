@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebSocket : public JSDOMWrapper {
+class JSWebSocket : public JSDOMWrapper<WebSocket> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebSocket> Base;
     static JSWebSocket* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebSocket>&& impl)
     {
-        JSWebSocket* ptr = new (NotNull, JSC::allocateCell<JSWebSocket>(globalObject->vm().heap)) JSWebSocket(structure, globalObject, WTF::move(impl));
+        JSWebSocket* ptr = new (NotNull, JSC::allocateCell<JSWebSocket>(globalObject->vm().heap)) JSWebSocket(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebSocket* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebSocket();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    WebSocket& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebSocket* m_impl;
 protected:
-    JSWebSocket(JSC::Structure*, JSDOMGlobalObject*, Ref<WebSocket>&&);
+    JSWebSocket(JSC::Structure*, JSDOMGlobalObject&, Ref<WebSocket>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebSocket*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebSocket*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebSocket& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebSocket& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebSocket*);
 
 
 } // namespace WebCore

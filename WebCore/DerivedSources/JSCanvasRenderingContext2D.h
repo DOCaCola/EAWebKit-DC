@@ -31,7 +31,7 @@ public:
     typedef JSCanvasRenderingContext Base;
     static JSCanvasRenderingContext2D* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasRenderingContext2D>&& impl)
     {
-        JSCanvasRenderingContext2D* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext2D>(globalObject->vm().heap)) JSCanvasRenderingContext2D(structure, globalObject, WTF::move(impl));
+        JSCanvasRenderingContext2D* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext2D>(globalObject->vm().heap)) JSCanvasRenderingContext2D(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,20 +50,23 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue webkitLineDash(JSC::ExecState*) const;
-    void setWebkitLineDash(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue strokeStyle(JSC::ExecState*) const;
-    void setStrokeStyle(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue fillStyle(JSC::ExecState*) const;
-    void setFillStyle(JSC::ExecState*, JSC::JSValue);
-    CanvasRenderingContext2D& impl() const
+    JSC::JSValue webkitLineDash(JSC::ExecState&) const;
+    void setWebkitLineDash(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue strokeStyle(JSC::ExecState&) const;
+    void setStrokeStyle(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue fillStyle(JSC::ExecState&) const;
+    void setFillStyle(JSC::ExecState&, JSC::JSValue);
+
+    // Custom functions
+    JSC::JSValue commit(JSC::ExecState&);
+    CanvasRenderingContext2D& wrapped() const
     {
-        return static_cast<CanvasRenderingContext2D&>(Base::impl());
+        return static_cast<CanvasRenderingContext2D&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSCanvasRenderingContext2D(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasRenderingContext2D>&&);
+    JSCanvasRenderingContext2D(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasRenderingContext2D>&&);
 
     void finishCreation(JSC::VM& vm)
     {

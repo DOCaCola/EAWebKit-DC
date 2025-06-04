@@ -32,7 +32,7 @@ public:
     typedef JSSVGTextPositioningElement Base;
     static JSSVGTSpanElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTSpanElement>&& impl)
     {
-        JSSVGTSpanElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTSpanElement>(globalObject->vm().heap)) JSSVGTSpanElement(structure, globalObject, WTF::move(impl));
+        JSSVGTSpanElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTSpanElement>(globalObject->vm().heap)) JSSVGTSpanElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTSpanElement& impl() const
+    SVGTSpanElement& wrapped() const
     {
-        return static_cast<SVGTSpanElement&>(Base::impl());
+        return static_cast<SVGTSpanElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTSpanElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTSpanElement>&&);
+    JSSVGTSpanElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTSpanElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

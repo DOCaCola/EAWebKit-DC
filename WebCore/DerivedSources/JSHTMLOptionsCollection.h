@@ -32,7 +32,7 @@ public:
     typedef JSHTMLCollection Base;
     static JSHTMLOptionsCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLOptionsCollection>&& impl)
     {
-        JSHTMLOptionsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionsCollection>(globalObject->vm().heap)) JSHTMLOptionsCollection(structure, globalObject, WTF::move(impl));
+        JSHTMLOptionsCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLOptionsCollection>(globalObject->vm().heap)) JSHTMLOptionsCollection(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,6 +41,7 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static HTMLOptionsCollection* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
+    static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void put(JSC::JSCell*, JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
 
@@ -51,21 +52,22 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
+    static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setLength(JSC::ExecState*, JSC::JSValue);
+    void setLength(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue remove(JSC::ExecState*);
-    HTMLOptionsCollection& impl() const
+    JSC::JSValue remove(JSC::ExecState&);
+    HTMLOptionsCollection& wrapped() const
     {
-        return static_cast<HTMLOptionsCollection&>(Base::impl());
+        return static_cast<HTMLOptionsCollection&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLOptionsCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLOptionsCollection>&&);
+    JSHTMLOptionsCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLOptionsCollection>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -74,6 +76,8 @@ protected:
     }
 
     void indexSetter(JSC::ExecState*, unsigned index, JSC::JSValue);
+private:
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSHTMLOptionsCollectionOwner : public JSC::WeakHandleOwner {

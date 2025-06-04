@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSSQLResultSet : public JSDOMWrapper {
+class JSSQLResultSet : public JSDOMWrapper<SQLResultSet> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SQLResultSet> Base;
     static JSSQLResultSet* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSet>&& impl)
     {
-        JSSQLResultSet* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSet>(globalObject->vm().heap)) JSSQLResultSet(structure, globalObject, WTF::move(impl));
+        JSSQLResultSet* ptr = new (NotNull, JSC::allocateCell<JSSQLResultSet>(globalObject->vm().heap)) JSSQLResultSet(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLResultSet* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSQLResultSet();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    SQLResultSet& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLResultSet* m_impl;
 protected:
-    JSSQLResultSet(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLResultSet>&&);
+    JSSQLResultSet(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLResultSet>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLResultSet*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSet*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLResultSet& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLResultSet& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SQLResultSet*);
 
 
 } // namespace WebCore

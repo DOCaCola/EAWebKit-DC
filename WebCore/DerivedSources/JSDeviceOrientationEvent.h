@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSDeviceOrientationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DeviceOrientationEvent>&& impl)
     {
-        JSDeviceOrientationEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceOrientationEvent>(globalObject->vm().heap)) JSDeviceOrientationEvent(structure, globalObject, WTF::move(impl));
+        JSDeviceOrientationEvent* ptr = new (NotNull, JSC::allocateCell<JSDeviceOrientationEvent>(globalObject->vm().heap)) JSDeviceOrientationEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,21 +52,21 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue alpha(JSC::ExecState*) const;
-    JSC::JSValue beta(JSC::ExecState*) const;
-    JSC::JSValue gamma(JSC::ExecState*) const;
-    JSC::JSValue absolute(JSC::ExecState*) const;
+    JSC::JSValue alpha(JSC::ExecState&) const;
+    JSC::JSValue beta(JSC::ExecState&) const;
+    JSC::JSValue gamma(JSC::ExecState&) const;
+    JSC::JSValue absolute(JSC::ExecState&) const;
 
     // Custom functions
-    JSC::JSValue initDeviceOrientationEvent(JSC::ExecState*);
-    DeviceOrientationEvent& impl() const
+    JSC::JSValue initDeviceOrientationEvent(JSC::ExecState&);
+    DeviceOrientationEvent& wrapped() const
     {
-        return static_cast<DeviceOrientationEvent&>(Base::impl());
+        return static_cast<DeviceOrientationEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSDeviceOrientationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<DeviceOrientationEvent>&&);
+    JSDeviceOrientationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<DeviceOrientationEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

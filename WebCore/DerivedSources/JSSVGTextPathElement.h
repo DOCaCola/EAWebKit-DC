@@ -32,7 +32,7 @@ public:
     typedef JSSVGTextContentElement Base;
     static JSSVGTextPathElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGTextPathElement>&& impl)
     {
-        JSSVGTextPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextPathElement>(globalObject->vm().heap)) JSSVGTextPathElement(structure, globalObject, WTF::move(impl));
+        JSSVGTextPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGTextPathElement>(globalObject->vm().heap)) JSSVGTextPathElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGTextPathElement& impl() const
+    SVGTextPathElement& wrapped() const
     {
-        return static_cast<SVGTextPathElement&>(Base::impl());
+        return static_cast<SVGTextPathElement&>(Base::wrapped());
     }
 protected:
-    JSSVGTextPathElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGTextPathElement>&&);
+    JSSVGTextPathElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGTextPathElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

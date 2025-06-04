@@ -161,7 +161,15 @@ public:
     PassRefPtr<ArrayBufferView> impl();
     void neuter();
     
-    void* vector() { return m_vector; }
+    void* vector()
+    {
+        return m_vector.getPredicated(
+            this,
+            [this] () -> bool {
+                return mode() == FastTypedArray;
+            });
+    }
+    
     unsigned byteOffset();
     unsigned length() const { return m_length; }
 
@@ -177,7 +185,7 @@ private:
 protected:
     ArrayBuffer* existingBufferInButterfly();
 
-    void* m_vector;
+    CopyBarrier<char> m_vector; // this is really a void*, but void would not work here.
     uint32_t m_length;
     TypedArrayMode m_mode;
 };

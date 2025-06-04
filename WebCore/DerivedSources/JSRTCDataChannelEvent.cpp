@@ -27,7 +27,6 @@
 #include "JSDOMBinding.h"
 #include "JSRTCDataChannel.h"
 #include "RTCDataChannel.h"
-#include "RTCDataChannelEvent.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -67,7 +66,7 @@ private:
 
 static const HashTableValue JSRTCDataChannelEventPrototypeTableValues[] =
 {
-    { "channel", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDataChannelEventChannel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "channel", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCDataChannelEventChannel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCDataChannelEventPrototype::s_info = { "RTCDataChannelEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDataChannelEventPrototype) };
@@ -80,7 +79,7 @@ void JSRTCDataChannelEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCDataChannelEvent::s_info = { "RTCDataChannelEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCDataChannelEvent) };
 
-JSRTCDataChannelEvent::JSRTCDataChannelEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDataChannelEvent>&& impl)
+JSRTCDataChannelEvent::JSRTCDataChannelEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCDataChannelEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -95,19 +94,19 @@ JSObject* JSRTCDataChannelEvent::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSRTCDataChannelEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsRTCDataChannelEventChannel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCDataChannelEventChannel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCDataChannelEvent* castedThis = jsDynamicCast<JSRTCDataChannelEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCDataChannelEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCDataChannelEvent", "channel");
-        return throwGetterTypeError(*exec, "RTCDataChannelEvent", "channel");
+            return reportDeprecatedGetterError(*state, "RTCDataChannelEvent", "channel");
+        return throwGetterTypeError(*state, "RTCDataChannelEvent", "channel");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.channel()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.channel()));
     return JSValue::encode(result);
 }
 

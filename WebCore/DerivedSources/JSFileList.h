@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSFileList : public JSDOMWrapper {
+class JSFileList : public JSDOMWrapper<FileList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FileList> Base;
     static JSFileList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileList>&& impl)
     {
-        JSFileList* ptr = new (NotNull, JSC::allocateCell<JSFileList>(globalObject->vm().heap)) JSFileList(structure, globalObject, WTF::move(impl));
+        JSFileList* ptr = new (NotNull, JSC::allocateCell<JSFileList>(globalObject->vm().heap)) JSFileList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FileList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSFileList(JSC::Structure*, JSDOMGlobalObject*, Ref<FileList>&&);
+    JSFileList(JSC::Structure*, JSDOMGlobalObject&, Ref<FileList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FileList*);
 
 
 } // namespace WebCore

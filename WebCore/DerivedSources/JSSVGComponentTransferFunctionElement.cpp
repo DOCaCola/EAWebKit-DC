@@ -22,10 +22,10 @@
 #include "JSSVGComponentTransferFunctionElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedNumberList.h"
-#include "SVGComponentTransferFunctionElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -68,74 +68,48 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGComponentTransferFunctionElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGComponentTransferFunctionElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGComponentTransferFunctionElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGComponentTransferFunctionElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGComponentTransferFunctionElementConstructor>(vm.heap)) JSSVGComponentTransferFunctionElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGComponentTransferFunctionElement> JSSVGComponentTransferFunctionElementConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGComponentTransferFunctionElementConstructorTableValues[] =
 {
-    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
 };
 
-const ClassInfo JSSVGComponentTransferFunctionElementConstructor::s_info = { "SVGComponentTransferFunctionElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGComponentTransferFunctionElementConstructor) };
-
-JSSVGComponentTransferFunctionElementConstructor::JSSVGComponentTransferFunctionElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGComponentTransferFunctionElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGComponentTransferFunctionElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGComponentTransferFunctionElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGComponentTransferFunctionElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGComponentTransferFunctionElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGComponentTransferFunctionElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGComponentTransferFunctionElementConstructor::s_info = { "SVGComponentTransferFunctionElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGComponentTransferFunctionElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGComponentTransferFunctionElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "type", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "tableValues", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementTableValues), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "slope", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementSlope), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "intercept", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementIntercept), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "amplitude", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementAmplitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "exponent", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementExponent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "offset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "type", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "tableValues", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementTableValues), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "slope", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementSlope), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "intercept", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementIntercept), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "amplitude", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementAmplitude), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "exponent", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementExponent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "offset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGComponentTransferFunctionElementOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
 };
 
 const ClassInfo JSSVGComponentTransferFunctionElementPrototype::s_info = { "SVGComponentTransferFunctionElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGComponentTransferFunctionElementPrototype) };
@@ -148,7 +122,7 @@ void JSSVGComponentTransferFunctionElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGComponentTransferFunctionElement::s_info = { "SVGComponentTransferFunctionElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGComponentTransferFunctionElement) };
 
-JSSVGComponentTransferFunctionElement::JSSVGComponentTransferFunctionElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGComponentTransferFunctionElement>&& impl)
+JSSVGComponentTransferFunctionElement::JSSVGComponentTransferFunctionElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGComponentTransferFunctionElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -163,143 +137,143 @@ JSObject* JSSVGComponentTransferFunctionElement::getPrototype(VM& vm, JSGlobalOb
     return getDOMPrototype<JSSVGComponentTransferFunctionElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGComponentTransferFunctionElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "type");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "type");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "type");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "type");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.typeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementTableValues(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementTableValues(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "tableValues");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "tableValues");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "tableValues");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "tableValues");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumberList> obj = impl.tableValuesAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementSlope(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementSlope(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "slope");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "slope");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "slope");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "slope");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.slopeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementIntercept(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementIntercept(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "intercept");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "intercept");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "intercept");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "intercept");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.interceptAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementAmplitude(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementAmplitude(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "amplitude");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "amplitude");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "amplitude");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "amplitude");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.amplitudeAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementExponent(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementExponent(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "exponent");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "exponent");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "exponent");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "exponent");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.exponentAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementOffset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGComponentTransferFunctionElement* castedThis = jsDynamicCast<JSSVGComponentTransferFunctionElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGComponentTransferFunctionElement", "offset");
-        return throwGetterTypeError(*exec, "SVGComponentTransferFunctionElement", "offset");
+            return reportDeprecatedGetterError(*state, "SVGComponentTransferFunctionElement", "offset");
+        return throwGetterTypeError(*state, "SVGComponentTransferFunctionElement", "offset");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.offsetAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGComponentTransferFunctionElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGComponentTransferFunctionElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGComponentTransferFunctionElementPrototype* domObject = jsDynamicCast<JSSVGComponentTransferFunctionElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGComponentTransferFunctionElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGComponentTransferFunctionElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGComponentTransferFunctionElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGComponentTransferFunctionElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGComponentTransferFunctionElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

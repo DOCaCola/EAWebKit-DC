@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEDisplacementMapElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDisplacementMapElement>&& impl)
     {
-        JSSVGFEDisplacementMapElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElement>(globalObject->vm().heap)) JSSVGFEDisplacementMapElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDisplacementMapElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDisplacementMapElement>(globalObject->vm().heap)) JSSVGFEDisplacementMapElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDisplacementMapElement& impl() const
+    SVGFEDisplacementMapElement& wrapped() const
     {
-        return static_cast<SVGFEDisplacementMapElement&>(Base::impl());
+        return static_cast<SVGFEDisplacementMapElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDisplacementMapElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDisplacementMapElement>&&);
+    JSSVGFEDisplacementMapElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDisplacementMapElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

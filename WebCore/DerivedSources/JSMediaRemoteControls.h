@@ -33,7 +33,7 @@ public:
     typedef JSEventTarget Base;
     static JSMediaRemoteControls* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaRemoteControls>&& impl)
     {
-        JSMediaRemoteControls* ptr = new (NotNull, JSC::allocateCell<JSMediaRemoteControls>(globalObject->vm().heap)) JSMediaRemoteControls(structure, globalObject, WTF::move(impl));
+        JSMediaRemoteControls* ptr = new (NotNull, JSC::allocateCell<JSMediaRemoteControls>(globalObject->vm().heap)) JSMediaRemoteControls(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaRemoteControls& impl() const
+    MediaRemoteControls& wrapped() const
     {
-        return static_cast<MediaRemoteControls&>(Base::impl());
+        return static_cast<MediaRemoteControls&>(Base::wrapped());
     }
 protected:
-    JSMediaRemoteControls(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaRemoteControls>&&);
+    JSMediaRemoteControls(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaRemoteControls>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -67,7 +67,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaRemoteControls*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaRemoteControls& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaRemoteControls& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaRemoteControls*);
 
 
 } // namespace WebCore

@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSFileException : public JSDOMWrapper {
+class JSFileException : public JSDOMWrapper<FileException> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FileException> Base;
     static JSFileException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileException>&& impl)
     {
-        JSFileException* ptr = new (NotNull, JSC::allocateCell<JSFileException>(globalObject->vm().heap)) JSFileException(structure, globalObject, WTF::move(impl));
+        JSFileException* ptr = new (NotNull, JSC::allocateCell<JSFileException>(globalObject->vm().heap)) JSFileException(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static FileException* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileException();
 
     DECLARE_INFO;
 
@@ -52,15 +51,10 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    FileException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileException* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSFileException(JSC::Structure*, JSDOMGlobalObject*, Ref<FileException>&&);
+    JSFileException(JSC::Structure*, JSDOMGlobalObject&, Ref<FileException>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileException*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileException& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileException& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FileException*);
 
 
 } // namespace WebCore

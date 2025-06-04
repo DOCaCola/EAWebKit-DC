@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSCryptoKeyPair : public JSDOMWrapper {
+class JSCryptoKeyPair : public JSDOMWrapper<CryptoKeyPair> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CryptoKeyPair> Base;
     static JSCryptoKeyPair* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKeyPair>&& impl)
     {
-        JSCryptoKeyPair* ptr = new (NotNull, JSC::allocateCell<JSCryptoKeyPair>(globalObject->vm().heap)) JSCryptoKeyPair(structure, globalObject, WTF::move(impl));
+        JSCryptoKeyPair* ptr = new (NotNull, JSC::allocateCell<JSCryptoKeyPair>(globalObject->vm().heap)) JSCryptoKeyPair(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CryptoKeyPair* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCryptoKeyPair();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    CryptoKeyPair& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CryptoKeyPair* m_impl;
 protected:
-    JSCryptoKeyPair(JSC::Structure*, JSDOMGlobalObject*, Ref<CryptoKeyPair>&&);
+    JSCryptoKeyPair(JSC::Structure*, JSDOMGlobalObject&, Ref<CryptoKeyPair>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CryptoKeyPair*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CryptoKeyPair*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CryptoKeyPair& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CryptoKeyPair& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CryptoKeyPair*);
 
 
 } // namespace WebCore

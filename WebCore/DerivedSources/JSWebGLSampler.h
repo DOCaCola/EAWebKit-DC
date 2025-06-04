@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLSampler : public JSDOMWrapper {
+class JSWebGLSampler : public JSDOMWrapper<WebGLSampler> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLSampler> Base;
     static JSWebGLSampler* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLSampler>&& impl)
     {
-        JSWebGLSampler* ptr = new (NotNull, JSC::allocateCell<JSWebGLSampler>(globalObject->vm().heap)) JSWebGLSampler(structure, globalObject, WTF::move(impl));
+        JSWebGLSampler* ptr = new (NotNull, JSC::allocateCell<JSWebGLSampler>(globalObject->vm().heap)) JSWebGLSampler(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLSampler* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLSampler();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLSampler& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLSampler* m_impl;
 protected:
-    JSWebGLSampler(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLSampler>&&);
+    JSWebGLSampler(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLSampler>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLSampler*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLSampler*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLSampler& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLSampler& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLSampler*);
 
 
 } // namespace WebCore

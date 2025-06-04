@@ -72,7 +72,7 @@ static void contentsQuadToCoordinateSystem(const FrameView* mainView, const Fram
     quad.setP4(view->contentsToRootView(roundedIntPoint(quad.p4())));
 
     if (coordinateSystem == InspectorOverlay::CoordinateSystem::View)
-        quad += mainView->scrollOffset();
+        quad += toIntSize(mainView->scrollPosition());
 }
 
 static void contentsQuadToPage(const FrameView* mainView, const FrameView* view, FloatQuad& quad)
@@ -96,8 +96,8 @@ static void buildRendererHighlight(RenderObject* renderer, RenderRegion* region,
     if (isSVGRenderer) {
         highlight.type = HighlightType::Rects;
         renderer->absoluteQuads(highlight.quads);
-        for (size_t i = 0; i < highlight.quads.size(); ++i)
-            contentsQuadToCoordinateSystem(mainView, containingView, highlight.quads[i], coordinateSystem);
+        for (auto& quad : highlight.quads)
+            contentsQuadToCoordinateSystem(mainView, containingView, quad, coordinateSystem);
     } else if (is<RenderBox>(*renderer) || is<RenderInline>(*renderer)) {
         LayoutRect contentBox;
         LayoutRect paddingBox;
@@ -221,7 +221,7 @@ void InspectorOverlay::paint(GraphicsContext& context)
     GraphicsContextStateSaver stateSaver(context);
     FrameView* view = overlayPage()->mainFrame().view();
     view->updateLayoutAndStyleIfNeededRecursive();
-    view->paint(&context, IntRect(0, 0, view->width(), view->height()));
+    view->paint(context, IntRect(0, 0, view->width(), view->height()));
 }
 
 void InspectorOverlay::getHighlight(Highlight& highlight, InspectorOverlay::CoordinateSystem coordinateSystem) const
@@ -259,10 +259,10 @@ void InspectorOverlay::hideHighlight()
     update();
 }
 
-void InspectorOverlay::highlightNodeList(PassRefPtr<NodeList> nodes, const HighlightConfig& highlightConfig)
+void InspectorOverlay::highlightNodeList(RefPtr<NodeList>&& nodes, const HighlightConfig& highlightConfig)
 {
     m_nodeHighlightConfig = highlightConfig;
-    m_highlightNodeList = nodes;
+    m_highlightNodeList = WTF::move(nodes);
     m_highlightNode = nullptr;
     update();
 }
@@ -277,8 +277,8 @@ void InspectorOverlay::highlightNode(Node* node, const HighlightConfig& highligh
 
 void InspectorOverlay::highlightQuad(std::unique_ptr<FloatQuad> quad, const HighlightConfig& highlightConfig)
 {
-    if (m_quadHighlightConfig.usePageCoordinates)
-        *quad -= m_page.mainFrame().view()->scrollOffset();
+    if (highlightConfig.usePageCoordinates)
+        *quad -= toIntSize(m_page.mainFrame().view()->scrollPosition());
 
     m_quadHighlightConfig = highlightConfig;
     m_highlightQuad = WTF::move(quad);
@@ -372,14 +372,14 @@ static Ref<Inspector::Protocol::OverlayTypes::Quad> buildArrayForQuad(const Floa
     array->addItem(buildObjectForPoint(quad.p2()));
     array->addItem(buildObjectForPoint(quad.p3()));
     array->addItem(buildObjectForPoint(quad.p4()));
-    return WTF::move(array);
+    return array;
 }
 
 static Ref<Inspector::Protocol::OverlayTypes::FragmentHighlightData> buildObjectForHighlight(const Highlight& highlight)
 {
     auto arrayOfQuads = Inspector::Protocol::Array<Inspector::Protocol::OverlayTypes::Quad>::create();
-    for (size_t i = 0; i < highlight.quads.size(); ++i)
-        arrayOfQuads->addItem(buildArrayForQuad(highlight.quads[i]));
+    for (auto& quad : highlight.quads)
+        arrayOfQuads->addItem(buildArrayForQuad(quad));
 
     return Inspector::Protocol::OverlayTypes::FragmentHighlightData::create()
         .setQuads(WTF::move(arrayOfQuads))
@@ -450,7 +450,7 @@ static Ref<Inspector::Protocol::Array<Inspector::Protocol::OverlayTypes::Region>
         arrayOfRegions->addItem(WTF::move(regionObject));
     }
 
-    return WTF::move(arrayOfRegions);
+    return arrayOfRegions;
 }
 
 static Ref<Inspector::Protocol::OverlayTypes::Size> buildObjectForSize(const IntSize& size)
@@ -594,7 +594,7 @@ static FloatPoint localPointToRoot(RenderObject* renderer, const FrameView* main
 {
     FloatPoint result = renderer->localToAbsolute(point);
     result = view->contentsToRootView(roundedIntPoint(result));
-    result += mainView->scrollOffset();
+    result += toIntSize(mainView->scrollPosition());
     return result;
 }
 
@@ -834,7 +834,7 @@ Ref<Inspector::Protocol::Array<Inspector::Protocol::OverlayTypes::NodeHighlightD
         }
     }
 
-    return WTF::move(highlights);
+    return highlights;
 }
 
 void InspectorOverlay::drawNodeHighlight()
@@ -947,7 +947,7 @@ void InspectorOverlay::evaluateInOverlay(const String& method, RefPtr<InspectorV
 
 void InspectorOverlay::freePage()
 {
-    m_overlayPage.reset();
+    m_overlayPage = nullptr;
 }
 
 } // namespace WebCore

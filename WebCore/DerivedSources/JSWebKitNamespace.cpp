@@ -25,9 +25,9 @@
 #include "JSWebKitNamespace.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSUserMessageHandlersNamespace.h"
 #include "UserMessageHandlersNamespace.h"
-#include "WebKitNamespace.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -64,49 +64,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitNamespaceConstructor : public DOMConstructorObject {
-private:
-    JSWebKitNamespaceConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebKitNamespace> JSWebKitNamespaceConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitNamespaceConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitNamespaceConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamespaceConstructor>(vm.heap)) JSWebKitNamespaceConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebKitNamespaceConstructor::s_info = { "WebKitNamespaceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamespaceConstructor) };
-
-JSWebKitNamespaceConstructor::JSWebKitNamespaceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebKitNamespaceConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebKitNamespaceConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitNamespace::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitNamespace::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitNamespace"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebKitNamespaceConstructor::s_info = { "WebKitNamespaceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamespaceConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitNamespacePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamespaceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "messageHandlers", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamespaceMessageHandlers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamespaceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "messageHandlers", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitNamespaceMessageHandlers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitNamespacePrototype::s_info = { "WebKitNamespacePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamespacePrototype) };
@@ -119,9 +93,8 @@ void JSWebKitNamespacePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitNamespace::s_info = { "WebKitNamespace", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitNamespace) };
 
-JSWebKitNamespace::JSWebKitNamespace(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitNamespace>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebKitNamespace::JSWebKitNamespace(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitNamespace>&& impl)
+    : JSDOMWrapper<WebKitNamespace>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -141,39 +114,34 @@ void JSWebKitNamespace::destroy(JSC::JSCell* cell)
     thisObject->JSWebKitNamespace::~JSWebKitNamespace();
 }
 
-JSWebKitNamespace::~JSWebKitNamespace()
+EncodedJSValue jsWebKitNamespaceMessageHandlers(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsWebKitNamespaceMessageHandlers(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitNamespace* castedThis = jsDynamicCast<JSWebKitNamespace*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitNamespacePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitNamespace", "messageHandlers");
-        return throwGetterTypeError(*exec, "WebKitNamespace", "messageHandlers");
+            return reportDeprecatedGetterError(*state, "WebKitNamespace", "messageHandlers");
+        return throwGetterTypeError(*state, "WebKitNamespace", "messageHandlers");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.messageHandlers()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.messageHandlers()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitNamespaceConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebKitNamespaceConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebKitNamespacePrototype* domObject = jsDynamicCast<JSWebKitNamespacePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitNamespace::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebKitNamespace::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebKitNamespace::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebKitNamespaceConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitNamespaceConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebKitNamespaceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -187,7 +155,7 @@ void JSWebKitNamespaceOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsWebKitNamespace = jsCast<JSWebKitNamespace*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebKitNamespace->impl(), jsWebKitNamespace);
+    uncacheWrapper(world, &jsWebKitNamespace->wrapped(), jsWebKitNamespace);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -198,6 +166,14 @@ extern "C" { extern void (*const __identifier("??_7WebKitNamespace@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15WebKitNamespaceE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamespace* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebKitNamespace>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamespace* impl)
 {
     if (!impl)
@@ -229,7 +205,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebKitNamesp
 WebKitNamespace* JSWebKitNamespace::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebKitNamespace*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

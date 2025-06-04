@@ -36,6 +36,7 @@
 #include <unicode/uidna.h>
 #include <wtf/HashMap.h>
 #include <wtf/HexNumber.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
@@ -433,7 +434,12 @@ void URL::invalidate()
 URL::URL(ParsedURLStringTag, const String& url)
 {
     parse(url);
+#if OS(WINDOWS)
+    // FIXME(148598): Work around Windows local file handling bug in CFNetwork
+    ASSERT(isLocalFile() || url == m_string);
+#else
     ASSERT(url == m_string);
+#endif
 }
 
 URL::URL(const URL& base, const String& relative)
@@ -1593,6 +1599,23 @@ bool protocolHostAndPortAreEqual(const URL& a, const URL& b)
     return true;
 }
 
+bool hostsAreEqual(const URL& a, const URL& b)
+{
+    int hostStartA = a.hostStart();
+    int hostLengthA = a.hostEnd() - hostStartA;
+    int hostStartB = b.hostStart();
+    int hostLengthB = b.hostEnd() - hostStartB;
+    if (hostLengthA != hostLengthB)
+        return false;
+
+    for (int i = 0; i < hostLengthA; ++i) {
+        if (a.string()[hostStartA + i] != b.string()[hostStartB + i])
+            return false;
+    }
+
+    return true;
+}
+
 String encodeWithURLEscapeSequences(const String& notEncodedString, PercentEncodeCharacterClass whatToEncode)
 {
     CString asUTF8 = notEncodedString.utf8();
@@ -1675,8 +1698,17 @@ static void appendEncodedHostname(UCharBuffer& buffer, StringView string)
 #if !PLATFORM(EA)
     UChar hostnameBuffer[hostnameBufferLength];
     UErrorCode error = U_ZERO_ERROR;
+
+#if COMPILER(GCC_OR_CLANG)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     int32_t numCharactersConverted = uidna_IDNToASCII(string.upconvertedCharacters(), string.length(), hostnameBuffer,
         hostnameBufferLength, UIDNA_ALLOW_UNASSIGNED, 0, &error);
+#if COMPILER(GCC_OR_CLANG)
+#pragma GCC diagnostic pop
+#endif
+
     if (error == U_ZERO_ERROR)
         buffer.append(hostnameBuffer, numCharactersConverted);
 #endif
@@ -1964,20 +1996,28 @@ bool URL::isBlankURL() const
     return protocolIs("about");
 }
 
+typedef HashMap<String, unsigned short, CaseFoldingHash> DefaultPortsMap;
+static const DefaultPortsMap& defaultPortsMap()
+{
+    static NeverDestroyed<const DefaultPortsMap> defaultPortsMap(DefaultPortsMap({
+        { "http", 80 },
+        { "https", 443 },
+        { "ftp", 21 },
+        { "ftps", 990 }
+    }));
+    return defaultPortsMap.get();
+}
+unsigned short defaultPortForProtocol(const String& protocol)
+{
+    return defaultPortsMap().get(protocol);
+}
+
 bool isDefaultPortForProtocol(unsigned short port, const String& protocol)
 {
     if (protocol.isEmpty())
         return false;
 
-    typedef HashMap<String, unsigned, CaseFoldingHash> DefaultPortsMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DefaultPortsMap, defaultPorts, ());
-    if (defaultPorts.isEmpty()) {
-        defaultPorts.set("http", 80);
-        defaultPorts.set("https", 443);
-        defaultPorts.set("ftp", 21);
-        defaultPorts.set("ftps", 990);
-    }
-    return defaultPorts.get(protocol) == port;
+    return defaultPortForProtocol(protocol) == port;
 }
 
 bool portAllowed(const URL& url)

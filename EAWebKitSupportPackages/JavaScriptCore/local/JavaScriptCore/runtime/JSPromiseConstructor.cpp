@@ -26,12 +26,14 @@
 #include "config.h"
 #include "JSPromiseConstructor.h"
 
+#include "BuiltinNames.h"
 #include "Error.h"
 #include "Exception.h"
 #include "IteratorOperations.h"
 #include "JSCBuiltins.h"
 #include "JSCJSValueInlines.h"
 #include "JSCellInlines.h"
+#include "JSFunction.h"
 #include "JSPromise.h"
 #include "JSPromisePrototype.h"
 #include "Lookup.h"
@@ -48,14 +50,14 @@ STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(JSPromiseConstructor);
 
 namespace JSC {
 
-const ClassInfo JSPromiseConstructor::s_info = { "Function", &InternalFunction::s_info, &promiseConstructorTable, CREATE_METHOD_TABLE(JSPromiseConstructor) };
+const ClassInfo JSPromiseConstructor::s_info = { "Function", &Base::s_info, &promiseConstructorTable, CREATE_METHOD_TABLE(JSPromiseConstructor) };
 
 /* Source for JSPromiseConstructor.lut.h
 @begin promiseConstructorTable
-  resolve         JSPromiseConstructorFuncResolve             DontEnum|Function 1
-  reject          JSPromiseConstructorFuncReject              DontEnum|Function 1
-  race            JSPromiseConstructorFuncRace                DontEnum|Function 1
-  all             JSPromiseConstructorFuncAll                 DontEnum|Function 1
+  resolve         JSBuiltin             DontEnum|Function 1
+  reject          JSBuiltin             DontEnum|Function 1
+  race            JSBuiltin             DontEnum|Function 1
+  all             JSBuiltin             DontEnum|Function 1
 @end
 */
 
@@ -63,6 +65,7 @@ JSPromiseConstructor* JSPromiseConstructor::create(VM& vm, Structure* structure,
 {
     JSPromiseConstructor* constructor = new (NotNull, allocateCell<JSPromiseConstructor>(vm.heap)) JSPromiseConstructor(vm, structure);
     constructor->finishCreation(vm, promisePrototype);
+    constructor->addOwnInternalSlots(vm, structure->globalObject());
     return constructor;
 }
 
@@ -72,7 +75,7 @@ Structure* JSPromiseConstructor::createStructure(VM& vm, JSGlobalObject* globalO
 }
 
 JSPromiseConstructor::JSPromiseConstructor(VM& vm, Structure* structure)
-    : InternalFunction(vm, structure)
+    : Base(vm, structure)
 {
 }
 
@@ -83,23 +86,34 @@ void JSPromiseConstructor::finishCreation(VM& vm, JSPromisePrototype* promisePro
     putDirectWithoutTransition(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum | DontDelete);
 }
 
+void JSPromiseConstructor::addOwnInternalSlots(VM& vm, JSGlobalObject* globalObject)
+{
+    JSC_BUILTIN_FUNCTION(vm.propertyNames->builtinNames().resolvePrivateName(), promiseConstructorResolveCodeGenerator, DontEnum | DontDelete | ReadOnly);
+    JSC_BUILTIN_FUNCTION(vm.propertyNames->builtinNames().rejectPrivateName(), promiseConstructorRejectCodeGenerator, DontEnum | DontDelete | ReadOnly);
+}
+
 static EncodedJSValue JSC_HOST_CALL constructPromise(ExecState* exec)
 {
-    VM& vm = exec->vm();
     JSGlobalObject* globalObject = exec->callee()->globalObject();
+    VM& vm = exec->vm();
 
-    JSPromise* promise = JSPromise::create(vm, globalObject);
+    JSValue newTarget = exec->newTarget();
+    if (newTarget.isUndefined())
+        return throwVMTypeError(exec);
 
-    JSFunction* initializePromise = globalObject->initializePromiseFunction();
-    CallData callData;
-    CallType callType = getCallData(initializePromise, callData);
-    ASSERT(callType != CallTypeNone);
-
-    MarkedArgumentBuffer arguments;
-    arguments.append(exec->argument(0));
-    call(exec, initializePromise, callType, callData, promise, arguments);
+    JSPromise* promise = JSPromise::create(vm, globalObject->promiseStructure());
+    if (!jsDynamicCast<JSPromiseConstructor*>(newTarget)) {
+        JSValue proto = asObject(newTarget)->getDirect(vm, vm.propertyNames->prototype);
+        asObject(promise)->setPrototypeWithCycleCheck(exec, proto);
+    }
+    promise->initialize(exec, globalObject, exec->argument(0));
 
     return JSValue::encode(promise);
+}
+
+static EncodedJSValue JSC_HOST_CALL callPromise(ExecState* exec)
+{
+    return throwVMTypeError(exec);
 }
 
 ConstructType JSPromiseConstructor::getConstructData(JSCell*, ConstructData& constructData)
@@ -110,13 +124,17 @@ ConstructType JSPromiseConstructor::getConstructData(JSCell*, ConstructData& con
 
 CallType JSPromiseConstructor::getCallData(JSCell*, CallData& callData)
 {
-    callData.native.function = constructPromise;
+    // FIXME: This is workaround. Since JSC does not expose @isConstructor to JS builtins,
+    // we use typeof function === "function" now. And since typeof constructorWithoutCallability
+    // returns "object", we need to define [[Call]] for now.
+    // https://bugs.webkit.org/show_bug.cgi?id=144093
+    callData.native.function = callPromise;
     return CallTypeHost;
 }
 
 bool JSPromiseConstructor::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<InternalFunction>(exec, promiseConstructorTable, jsCast<JSPromiseConstructor*>(object), propertyName, slot);
+    return getStaticFunctionSlot<Base>(exec, promiseConstructorTable, jsCast<JSPromiseConstructor*>(object), propertyName, slot);
 }
 
 } // namespace JSC

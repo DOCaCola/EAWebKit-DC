@@ -24,8 +24,8 @@
 
 #include "JSIDBCursorWithValue.h"
 
-#include "IDBCursorWithValue.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -62,49 +62,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSIDBCursorWithValueConstructor : public DOMConstructorObject {
-private:
-    JSIDBCursorWithValueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSIDBCursorWithValue> JSIDBCursorWithValueConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSIDBCursorWithValueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSIDBCursorWithValueConstructor* ptr = new (NotNull, JSC::allocateCell<JSIDBCursorWithValueConstructor>(vm.heap)) JSIDBCursorWithValueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSIDBCursorWithValueConstructor::s_info = { "IDBCursorWithValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorWithValueConstructor) };
-
-JSIDBCursorWithValueConstructor::JSIDBCursorWithValueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSIDBCursorWithValueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSIDBCursorWithValueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSIDBCursorWithValue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSIDBCursorWithValue::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("IDBCursorWithValue"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSIDBCursorWithValueConstructor::s_info = { "IDBCursorWithValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorWithValueConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSIDBCursorWithValuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorWithValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorWithValueValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorWithValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "value", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsIDBCursorWithValueValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSIDBCursorWithValuePrototype::s_info = { "IDBCursorWithValuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorWithValuePrototype) };
@@ -117,7 +91,7 @@ void JSIDBCursorWithValuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBCursorWithValue::s_info = { "IDBCursorWithValue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBCursorWithValue) };
 
-JSIDBCursorWithValue::JSIDBCursorWithValue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBCursorWithValue>&& impl)
+JSIDBCursorWithValue::JSIDBCursorWithValue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBCursorWithValue>&& impl)
     : JSIDBCursor(structure, globalObject, WTF::move(impl))
 {
 }
@@ -132,34 +106,34 @@ JSObject* JSIDBCursorWithValue::getPrototype(VM& vm, JSGlobalObject* globalObjec
     return getDOMPrototype<JSIDBCursorWithValue>(vm, globalObject);
 }
 
-EncodedJSValue jsIDBCursorWithValueValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsIDBCursorWithValueValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSIDBCursorWithValue* castedThis = jsDynamicCast<JSIDBCursorWithValue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSIDBCursorWithValuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "IDBCursorWithValue", "value");
-        return throwGetterTypeError(*exec, "IDBCursorWithValue", "value");
+            return reportDeprecatedGetterError(*state, "IDBCursorWithValue", "value");
+        return throwGetterTypeError(*state, "IDBCursorWithValue", "value");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = (impl.value().hasNoValue() ? jsNull() : impl.value().jsValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsIDBCursorWithValueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsIDBCursorWithValueConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSIDBCursorWithValuePrototype* domObject = jsDynamicCast<JSIDBCursorWithValuePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSIDBCursorWithValue::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSIDBCursorWithValue::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSIDBCursorWithValue::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSIDBCursorWithValueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSIDBCursorWithValueConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

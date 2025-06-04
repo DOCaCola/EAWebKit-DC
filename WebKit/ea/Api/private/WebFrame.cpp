@@ -481,8 +481,8 @@ WebCore::IntPoint WebFrame::scrollPosition() const
     if (!d->frame->view())
 		return WebCore::IntPoint(0,0);
 
-	WebCore::IntSize ofs = d->frame->view()->scrollOffset();
-	return WebCore::IntPoint(ofs.width(), ofs.height());
+	WebCore::IntPoint ofs = d->frame->view()->scrollPosition();
+	return WebCore::IntPoint(ofs.x(), ofs.y());
 }
 
 void WebFrame::setScrollPosition(const WebCore::IntPoint &pos)
@@ -538,7 +538,7 @@ void WebFrame::renderNonTiled(EA::WebKit::IHardwareRenderer* renderer, ISurface 
         {
             const WebCore::IntRect &dirty = dirtyRegions[i];
 			graphicsContext.translate(-dirty.x(), -dirty.y());// Translate the context so the drawing starts at the origin of the locked portion.
-            view->paint(&graphicsContext, dirty);// Paint contents and scroll bars. Some ports call paintContents and then painScrollbars separately.
+            view->paint(graphicsContext, dirty);// Paint contents and scroll bars. Some ports call paintContents and then painScrollbars separately.
         }
 
 		EAW_ASSERT_FORMATTED(cairo_status(cairoContext.get()) == CAIRO_STATUS_SUCCESS, "cairo failed to paint (for example, OOM) - %d",cairo_status(cairoContext.get()));
@@ -549,7 +549,7 @@ void WebFrame::renderNonTiled(EA::WebKit::IHardwareRenderer* renderer, ISurface 
 			graphicsContext.save();
 			
 			graphicsContext.setStrokeStyle(WebCore::SolidStroke);
-			graphicsContext.setStrokeColor(WebCore::Color(1.0f,0.0f,0.0f,1.0f), WebCore::ColorSpaceDeviceRGB);
+			graphicsContext.setStrokeColor(WebCore::Color(1.0f,0.0f,0.0f,1.0f));
 			graphicsContext.strokeRect(WebCore::FloatRect(eaRect.mLocation.mX,eaRect.mLocation.mY,eaRect.mSize.mWidth,eaRect.mSize.mHeight),2.0f); 
 
 			graphicsContext.restore();
@@ -759,9 +759,9 @@ void WebFrame::renderScrollHelper(WebCore::Scrollbar *bar, WebCore::FrameView *v
 		WebCore::GraphicsContext graphicsContext(cairoContext.get());
 		graphicsContext.translate(-boundsRect.x(), -boundsRect.y()); 
 		if(view)
-			view->paintScrollCorner(&graphicsContext, boundsRect);
+			view->paintScrollCorner(graphicsContext, boundsRect);
 		else
-			bar->paint(&graphicsContext, boundsRect);
+			bar->paint(graphicsContext, boundsRect);
 
 		(*surface)->Unlock();
 	}

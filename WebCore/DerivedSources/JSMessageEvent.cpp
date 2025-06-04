@@ -23,10 +23,10 @@
 
 #include "EventTarget.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "JSEventTarget.h"
 #include "JSMessagePort.h"
-#include "MessageEvent.h"
 #include "MessagePort.h"
 #include "URL.h"
 #include <runtime/Error.h>
@@ -77,29 +77,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMessageEventConstructor : public DOMConstructorObject {
-private:
-    JSMessageEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSMessageEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMessageEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSMessageEventConstructor>(vm.heap)) JSMessageEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMessageEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSMessageEvent> JSMessageEventConstructor;
 
 /* Hash table */
 
@@ -111,31 +89,33 @@ static const struct CompactHashIndex JSMessageEventTableIndex[2] = {
 
 static const HashTableValue JSMessageEventTableValues[] =
 {
-    { "data", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "data", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSMessageEventTable = { 1, 1, true, JSMessageEventTableValues, 0, JSMessageEventTableIndex };
-EncodedJSValue JSC_HOST_CALL JSMessageEventConstructor::constructJSMessageEvent(ExecState* exec)
+static const HashTable JSMessageEventTable = { 1, 1, true, JSMessageEventTableValues, JSMessageEventTableIndex };
+template<> EncodedJSValue JSC_HOST_CALL JSMessageEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSMessageEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSMessageEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     MessageEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillMessageEventInit(eventInit, dictionary))
@@ -143,7 +123,7 @@ EncodedJSValue JSC_HOST_CALL JSMessageEventConstructor::constructJSMessageEvent(
     }
 
     RefPtr<MessageEvent> event = MessageEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillMessageEventInit(MessageEventInit& eventInit, JSDictionary& dictionary)
@@ -164,39 +144,26 @@ bool fillMessageEventInit(MessageEventInit& eventInit, JSDictionary& dictionary)
     return true;
 }
 
-const ClassInfo JSMessageEventConstructor::s_info = { "MessageEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageEventConstructor) };
-
-JSMessageEventConstructor::JSMessageEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMessageEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMessageEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMessageEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMessageEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MessageEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSMessageEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMessageEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMessageEventConstructor::s_info = { "MessageEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMessageEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastEventId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventLastEventId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "source", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ports", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventPorts), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "initMessageEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMessageEventPrototypeFunctionInitMessageEvent), (intptr_t) (0) },
-    { "webkitInitMessageEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMessageEventPrototypeFunctionWebkitInitMessageEvent), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "origin", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastEventId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventLastEventId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "source", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventSource), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ports", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageEventPorts), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "initMessageEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMessageEventPrototypeFunctionInitMessageEvent), (intptr_t) (0) } },
+    { "webkitInitMessageEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMessageEventPrototypeFunctionWebkitInitMessageEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMessageEventPrototype::s_info = { "MessageEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageEventPrototype) };
@@ -209,7 +176,7 @@ void JSMessageEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMessageEvent::s_info = { "MessageEvent", &Base::s_info, &JSMessageEventTable, CREATE_METHOD_TABLE(JSMessageEvent) };
 
-JSMessageEvent::JSMessageEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageEvent>&& impl)
+JSMessageEvent::JSMessageEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MessageEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -224,122 +191,124 @@ JSObject* JSMessageEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSMessageEvent>(vm, globalObject);
 }
 
-bool JSMessageEvent::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSMessageEvent::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSMessageEvent*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSMessageEvent, Base>(exec, JSMessageEventTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSMessageEvent, Base>(state, JSMessageEventTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsMessageEventOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageEventOrigin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageEvent", "origin");
-        return throwGetterTypeError(*exec, "MessageEvent", "origin");
+            return reportDeprecatedGetterError(*state, "MessageEvent", "origin");
+        return throwGetterTypeError(*state, "MessageEvent", "origin");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.origin());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.origin());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageEventLastEventId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageEventLastEventId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageEvent", "lastEventId");
-        return throwGetterTypeError(*exec, "MessageEvent", "lastEventId");
+            return reportDeprecatedGetterError(*state, "MessageEvent", "lastEventId");
+        return throwGetterTypeError(*state, "MessageEvent", "lastEventId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.lastEventId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.lastEventId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageEventSource(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageEventSource(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageEvent", "source");
-        return throwGetterTypeError(*exec, "MessageEvent", "source");
+            return reportDeprecatedGetterError(*state, "MessageEvent", "source");
+        return throwGetterTypeError(*state, "MessageEvent", "source");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.source()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.source()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageEventData(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageEventData(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSMessageEvent*>(slotBase);
-    return JSValue::encode(castedThis->data(exec));
+    return JSValue::encode(castedThis->data(*state));
 }
 
 
-EncodedJSValue jsMessageEventPorts(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageEventPorts(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageEvent", "ports");
-        return throwGetterTypeError(*exec, "MessageEvent", "ports");
+            return reportDeprecatedGetterError(*state, "MessageEvent", "ports");
+        return throwGetterTypeError(*state, "MessageEvent", "ports");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.ports());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.ports());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMessageEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMessageEventPrototype* domObject = jsDynamicCast<JSMessageEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMessageEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMessageEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSMessageEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMessageEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMessageEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMessageEventPrototypeFunctionInitMessageEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMessageEventPrototypeFunctionInitMessageEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MessageEvent", "initMessageEvent");
+        return throwThisTypeError(*state, "MessageEvent", "initMessageEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMessageEvent::info());
-    return JSValue::encode(castedThis->initMessageEvent(exec));
+    return JSValue::encode(castedThis->initMessageEvent(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMessageEventPrototypeFunctionWebkitInitMessageEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMessageEventPrototypeFunctionWebkitInitMessageEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMessageEvent* castedThis = jsDynamicCast<JSMessageEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MessageEvent", "webkitInitMessageEvent");
+        return throwThisTypeError(*state, "MessageEvent", "webkitInitMessageEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMessageEvent::info());
-    return JSValue::encode(castedThis->webkitInitMessageEvent(exec));
+    return JSValue::encode(castedThis->webkitInitMessageEvent(*state));
 }
 
 void JSMessageEvent::visitChildren(JSCell* cell, SlotVisitor& visitor)

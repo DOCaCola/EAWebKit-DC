@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLAppletElement.h"
 
-#include "HTMLAppletElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -83,26 +83,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLAppletElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLAppletElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLAppletElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLAppletElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLAppletElementConstructor>(vm.heap)) JSHTMLAppletElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLAppletElement> JSHTMLAppletElementConstructor;
 
 /* Hash table */
 
@@ -114,41 +95,34 @@ static const struct CompactHashIndex JSHTMLAppletElementTableIndex[2] = {
 
 static const HashTableValue JSHTMLAppletElementTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSHTMLAppletElementTable = { 1, 1, true, JSHTMLAppletElementTableValues, 0, JSHTMLAppletElementTableIndex };
-const ClassInfo JSHTMLAppletElementConstructor::s_info = { "HTMLAppletElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAppletElementConstructor) };
-
-JSHTMLAppletElementConstructor::JSHTMLAppletElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHTMLAppletElementTable = { 1, 1, true, JSHTMLAppletElementTableValues, JSHTMLAppletElementTableIndex };
+template<> void JSHTMLAppletElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLAppletElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLAppletElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLAppletElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLAppletElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLAppletElementConstructor::s_info = { "HTMLAppletElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAppletElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLAppletElementPrototypeTableValues[] =
 {
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementAlign) },
-    { "alt", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementAlt), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementAlt) },
-    { "archive", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementArchive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementArchive) },
-    { "code", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementCode) },
-    { "codeBase", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementCodeBase), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementCodeBase) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementHeight) },
-    { "hspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementHspace) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementName) },
-    { "object", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementObject), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementObject) },
-    { "vspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementVspace) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementWidth) },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementAlign) } },
+    { "alt", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementAlt), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementAlt) } },
+    { "archive", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementArchive), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementArchive) } },
+    { "code", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementCode) } },
+    { "codeBase", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementCodeBase), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementCodeBase) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementHeight) } },
+    { "hspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementHspace) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementName) } },
+    { "object", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementObject), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementObject) } },
+    { "vspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementVspace) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLAppletElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLAppletElementWidth) } },
 };
 
 const ClassInfo JSHTMLAppletElementPrototype::s_info = { "HTMLAppletElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLAppletElementPrototype) };
@@ -161,7 +135,7 @@ void JSHTMLAppletElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLAppletElement::s_info = { "HTMLAppletElement", &Base::s_info, &JSHTMLAppletElementTable, CREATE_METHOD_TABLE(JSHTMLAppletElement) };
 
-JSHTMLAppletElement::JSHTMLAppletElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLAppletElement>&& impl)
+JSHTMLAppletElement::JSHTMLAppletElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLAppletElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -176,455 +150,457 @@ JSObject* JSHTMLAppletElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSHTMLAppletElement>(vm, globalObject);
 }
 
-bool JSHTMLAppletElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLAppletElement::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLAppletElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSHTMLAppletElement, Base>(exec, JSHTMLAppletElementTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSHTMLAppletElement, Base>(state, JSHTMLAppletElementTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSHTMLAppletElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLAppletElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLAppletElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLAppletElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "align");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "align");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "align");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "align");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementAlt(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementAlt(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "alt");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "alt");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "alt");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "alt");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::altAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::altAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementArchive(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementArchive(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "archive");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "archive");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "archive");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "archive");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::archiveAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::archiveAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "code");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "code");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "code");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "code");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::codeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::codeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementCodeBase(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementCodeBase(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "codeBase");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "codeBase");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "codeBase");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "codeBase");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::codebaseAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::codebaseAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "height");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "height");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "height");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "height");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementHspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementHspace(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "hspace");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "hspace");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "hspace");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "hspace");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::hspaceAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::hspaceAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "name");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "name");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "name");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getNameAttribute());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementObject(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementObject(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "object");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "object");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "object");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "object");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::objectAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::objectAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementVspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementVspace(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "vspace");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "vspace");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "vspace");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "vspace");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::vspaceAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::vspaceAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLAppletElement", "width");
-        return throwGetterTypeError(*exec, "HTMLAppletElement", "width");
+            return reportDeprecatedGetterError(*state, "HTMLAppletElement", "width");
+        return throwGetterTypeError(*state, "HTMLAppletElement", "width");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLAppletElementConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLAppletElementConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSHTMLAppletElement* domObject = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLAppletElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLAppletElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHTMLAppletElement::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSHTMLAppletElement::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLAppletElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSHTMLAppletElement::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSHTMLAppletElement::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSHTMLAppletElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSHTMLAppletElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "align");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "align");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "align");
+            throwSetterTypeError(*state, "HTMLAppletElement", "align");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementAlt(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementAlt(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "alt");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "alt");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "alt");
+            throwSetterTypeError(*state, "HTMLAppletElement", "alt");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::altAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementArchive(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementArchive(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "archive");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "archive");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "archive");
+            throwSetterTypeError(*state, "HTMLAppletElement", "archive");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::archiveAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementCode(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementCode(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "code");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "code");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "code");
+            throwSetterTypeError(*state, "HTMLAppletElement", "code");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::codeAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementCodeBase(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementCodeBase(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "codeBase");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "codeBase");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "codeBase");
+            throwSetterTypeError(*state, "HTMLAppletElement", "codeBase");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::codebaseAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementHeight(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "height");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "height");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "height");
+            throwSetterTypeError(*state, "HTMLAppletElement", "height");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::heightAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementHspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementHspace(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "hspace");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "hspace");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "hspace");
+            throwSetterTypeError(*state, "HTMLAppletElement", "hspace");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::hspaceAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "name");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "name");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "name");
+            throwSetterTypeError(*state, "HTMLAppletElement", "name");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementObject(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementObject(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "object");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "object");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "object");
+            throwSetterTypeError(*state, "HTMLAppletElement", "object");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::objectAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementVspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementVspace(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "vspace");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "vspace");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "vspace");
+            throwSetterTypeError(*state, "HTMLAppletElement", "vspace");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::vspaceAttr, nativeValue);
 }
 
 
-void setJSHTMLAppletElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLAppletElementWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLAppletElement* castedThis = jsDynamicCast<JSHTMLAppletElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLAppletElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLAppletElement", "width");
+            reportDeprecatedSetterError(*state, "HTMLAppletElement", "width");
         else
-            throwSetterTypeError(*exec, "HTMLAppletElement", "width");
+            throwSetterTypeError(*state, "HTMLAppletElement", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, nativeValue);
 }
@@ -632,7 +608,7 @@ void setJSHTMLAppletElementWidth(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSHTMLAppletElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLAppletElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLAppletElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLActiveInfo : public JSDOMWrapper {
+class JSWebGLActiveInfo : public JSDOMWrapper<WebGLActiveInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLActiveInfo> Base;
     static JSWebGLActiveInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLActiveInfo>&& impl)
     {
-        JSWebGLActiveInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfo>(globalObject->vm().heap)) JSWebGLActiveInfo(structure, globalObject, WTF::move(impl));
+        JSWebGLActiveInfo* ptr = new (NotNull, JSC::allocateCell<JSWebGLActiveInfo>(globalObject->vm().heap)) JSWebGLActiveInfo(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLActiveInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLActiveInfo();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLActiveInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLActiveInfo* m_impl;
 protected:
-    JSWebGLActiveInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLActiveInfo>&&);
+    JSWebGLActiveInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLActiveInfo>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLActiveInfo*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLActiveInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLActiveInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLActiveInfo& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLActiveInfo*);
 
 
 } // namespace WebCore

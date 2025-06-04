@@ -26,7 +26,6 @@
 
 #include "JSDOMBinding.h"
 #include "JSRTCIceServer.h"
-#include "RTCConfiguration.h"
 #include "RTCIceServer.h"
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
@@ -39,8 +38,8 @@ namespace WebCore {
 // Attributes
 
 JSC::EncodedJSValue jsRTCConfigurationIceServers(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCConfigurationIceTransports(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsRTCConfigurationRequestIdentity(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCConfigurationIceTransportPolicy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsRTCConfigurationBundlePolicy(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSRTCConfigurationPrototype : public JSC::JSNonFinalObject {
 public:
@@ -71,9 +70,9 @@ private:
 
 static const HashTableValue JSRTCConfigurationPrototypeTableValues[] =
 {
-    { "iceServers", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceServers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "iceTransports", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceTransports), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requestIdentity", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationRequestIdentity), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "iceServers", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceServers), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "iceTransportPolicy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationIceTransportPolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "bundlePolicy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCConfigurationBundlePolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCConfigurationPrototype::s_info = { "RTCConfigurationPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCConfigurationPrototype) };
@@ -86,9 +85,8 @@ void JSRTCConfigurationPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCConfiguration::s_info = { "RTCConfiguration", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCConfiguration) };
 
-JSRTCConfiguration::JSRTCConfiguration(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCConfiguration>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCConfiguration::JSRTCConfiguration(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCConfiguration>&& impl)
+    : JSDOMWrapper<RTCConfiguration>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -108,58 +106,53 @@ void JSRTCConfiguration::destroy(JSC::JSCell* cell)
     thisObject->JSRTCConfiguration::~JSRTCConfiguration();
 }
 
-JSRTCConfiguration::~JSRTCConfiguration()
+EncodedJSValue jsRTCConfigurationIceServers(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsRTCConfigurationIceServers(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "iceServers");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "iceServers");
+            return reportDeprecatedGetterError(*state, "RTCConfiguration", "iceServers");
+        return throwGetterTypeError(*state, "RTCConfiguration", "iceServers");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.iceServers());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.iceServers());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRTCConfigurationIceTransports(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCConfigurationIceTransportPolicy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "iceTransports");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "iceTransports");
+            return reportDeprecatedGetterError(*state, "RTCConfiguration", "iceTransportPolicy");
+        return throwGetterTypeError(*state, "RTCConfiguration", "iceTransportPolicy");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.iceTransports());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.iceTransportPolicy());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRTCConfigurationRequestIdentity(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCConfigurationBundlePolicy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCConfiguration* castedThis = jsDynamicCast<JSRTCConfiguration*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCConfigurationPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCConfiguration", "requestIdentity");
-        return throwGetterTypeError(*exec, "RTCConfiguration", "requestIdentity");
+            return reportDeprecatedGetterError(*state, "RTCConfiguration", "bundlePolicy");
+        return throwGetterTypeError(*state, "RTCConfiguration", "bundlePolicy");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.requestIdentity());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.bundlePolicy());
     return JSValue::encode(result);
 }
 
@@ -175,7 +168,7 @@ void JSRTCConfigurationOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsRTCConfiguration = jsCast<JSRTCConfiguration*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCConfiguration->impl(), jsRTCConfiguration);
+    uncacheWrapper(world, &jsRTCConfiguration->wrapped(), jsRTCConfiguration);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -186,6 +179,14 @@ extern "C" { extern void (*const __identifier("??_7RTCConfiguration@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16RTCConfigurationE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCConfiguration* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSRTCConfiguration>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCConfiguration* impl)
 {
     if (!impl)
@@ -217,7 +218,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCConfigura
 RTCConfiguration* JSRTCConfiguration::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSRTCConfiguration*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

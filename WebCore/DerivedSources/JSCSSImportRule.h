@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSImportRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSImportRule>&& impl)
     {
-        JSCSSImportRule* ptr = new (NotNull, JSC::allocateCell<JSCSSImportRule>(globalObject->vm().heap)) JSCSSImportRule(structure, globalObject, WTF::move(impl));
+        JSCSSImportRule* ptr = new (NotNull, JSC::allocateCell<JSCSSImportRule>(globalObject->vm().heap)) JSCSSImportRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSImportRule& impl() const
+    CSSImportRule& wrapped() const
     {
-        return static_cast<CSSImportRule&>(Base::impl());
+        return static_cast<CSSImportRule&>(Base::wrapped());
     }
 protected:
-    JSCSSImportRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSImportRule>&&);
+    JSCSSImportRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSImportRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

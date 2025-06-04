@@ -101,17 +101,13 @@ public:
     typedef PropertyListNode* PropertyList;
     typedef ElementNode* ElementList;
     typedef ArgumentListNode* ArgumentsList;
-#if ENABLE(ES6_TEMPLATE_LITERAL_SYNTAX)
     typedef TemplateExpressionListNode* TemplateExpressionList;
     typedef TemplateStringNode* TemplateString;
     typedef TemplateStringListNode* TemplateStringList;
     typedef TemplateLiteralNode* TemplateLiteral;
-#endif
     typedef FunctionParameters* FormalParameterList;
     typedef FunctionMetadataNode* FunctionBody;
-#if ENABLE(ES6_CLASS_SYNTAX)
     typedef ClassExprNode* ClassExpression;
-#endif
     typedef ModuleNameNode* ModuleName;
     typedef ImportSpecifierNode* ImportSpecifier;
     typedef ImportSpecifierListNode* ImportSpecifierList;
@@ -125,6 +121,7 @@ public:
     typedef ArrayPatternNode* ArrayPattern;
     typedef ObjectPatternNode* ObjectPattern;
     typedef BindingNode* BindingPattern;
+    typedef AssignmentElementNode* AssignmentElement;
     static const bool CreatesAST = true;
     static const bool NeedsFreeVariableInfo = true;
     static const bool CanUseFunctionCache = true;
@@ -258,7 +255,6 @@ public:
         return node;
     }
 
-#if ENABLE(ES6_TEMPLATE_LITERAL_SYNTAX)
     TemplateStringNode* createTemplateString(const JSTokenLocation& location, const Identifier& cooked, const Identifier& raw)
     {
         return new (m_parserArena) TemplateStringNode(location, cooked, raw);
@@ -300,7 +296,6 @@ public:
         setExceptionLocation(node, start, divot, end);
         return node;
     }
-#endif
 
     ExpressionNode* createRegExp(const JSTokenLocation& location, const Identifier& pattern, const Identifier& flags, const JSTextPosition& start)
     {
@@ -334,20 +329,30 @@ public:
 
     ExpressionNode* createAssignResolve(const JSTokenLocation& location, const Identifier& ident, ExpressionNode* rhs, const JSTextPosition& start, const JSTextPosition& divot, const JSTextPosition& end, AssignmentContext assignmentContext)
     {
-        if (rhs->isFuncExprNode())
+        if (rhs->isFuncExprNode() || rhs->isArrowFuncExprNode())
             static_cast<FuncExprNode*>(rhs)->metadata()->setInferredName(ident);
         AssignResolveNode* node = new (m_parserArena) AssignResolveNode(location, ident, rhs, assignmentContext);
         setExceptionLocation(node, start, divot, end);
         return node;
     }
 
-#if ENABLE(ES6_CLASS_SYNTAX)
-    ClassExprNode* createClassExpr(const JSTokenLocation& location, const Identifier& name, ExpressionNode* constructor,
+    YieldExprNode* createYield(const JSTokenLocation& location)
+    {
+        return new (m_parserArena) YieldExprNode(location, nullptr, /* delegate */ false);
+    }
+
+    YieldExprNode* createYield(const JSTokenLocation& location, ExpressionNode* argument, bool delegate, const JSTextPosition& start, const JSTextPosition& divot, const JSTextPosition& end)
+    {
+        YieldExprNode* node = new (m_parserArena) YieldExprNode(location, argument, delegate);
+        setExceptionLocation(node, start, divot, end);
+        return node;
+    }
+
+    ClassExprNode* createClassExpr(const JSTokenLocation& location, const Identifier& name, VariableEnvironment& classEnvironment, ExpressionNode* constructor,
         ExpressionNode* parentClass, PropertyListNode* instanceMethods, PropertyListNode* staticMethods)
     {
-        return new (m_parserArena) ClassExprNode(location, name, constructor, parentClass, instanceMethods, staticMethods);
+        return new (m_parserArena) ClassExprNode(location, name, classEnvironment, constructor, parentClass, instanceMethods, staticMethods);
     }
-#endif
 
     ExpressionNode* createFunctionExpr(const JSTokenLocation& location, const ParserFunctionInfo<ASTBuilder>& functionInfo)
     {
@@ -361,19 +366,19 @@ public:
         const JSTokenLocation& startLocation, const JSTokenLocation& endLocation, 
         unsigned startColumn, unsigned endColumn, int functionKeywordStart, 
         int functionNameStart, int parametersStart, bool inStrictContext, 
-        ConstructorKind constructorKind, unsigned parameterCount, SourceParseMode mode)
+        ConstructorKind constructorKind, SuperBinding superBinding, unsigned parameterCount, SourceParseMode mode, bool isArrowFunctionBodyExpression)
     {
         return new (m_parserArena) FunctionMetadataNode(
             m_parserArena, startLocation, endLocation, startColumn, endColumn, 
             functionKeywordStart, functionNameStart, parametersStart, 
-            inStrictContext, constructorKind, parameterCount, mode);
+            inStrictContext, constructorKind, superBinding, parameterCount, mode, isArrowFunctionBodyExpression);
     }
 
     ExpressionNode* createArrowFunctionExpr(const JSTokenLocation& location, const ParserFunctionInfo<ASTBuilder>& functionInfo)
     {
-        SourceCode source = m_sourceCode->subExpression(functionInfo.startOffset, functionInfo.endOffset, functionInfo.startLine, functionInfo.bodyStartColumn);
-
-        FuncExprNode* result = new (m_parserArena) FuncExprNode(location, *functionInfo.name, functionInfo.body, source);
+        usesArrowFunction();
+        SourceCode source = m_sourceCode->subExpression(functionInfo.startOffset, functionInfo.body->isArrowFunctionBodyExpression() ? functionInfo.endOffset - 1 : functionInfo.endOffset, functionInfo.startLine, functionInfo.bodyStartColumn);
+        ArrowFuncExprNode* result = new (m_parserArena) ArrowFuncExprNode(location, *functionInfo.name, functionInfo.body, source);
         functionInfo.body->setLoc(functionInfo.startLine, functionInfo.endLine, location.startOffset, location.lineStartOffset);
         return result;
     }
@@ -388,7 +393,17 @@ public:
         FuncExprNode* funcExpr = new (m_parserArena) FuncExprNode(location, m_vm->propertyNames->nullIdentifier, functionInfo.body, source);
         return new (m_parserArena) PropertyNode(*name, funcExpr, type, PropertyNode::Unknown, superBinding);
     }
-    
+
+    NEVER_INLINE PropertyNode* createGetterOrSetterProperty(const JSTokenLocation& location, PropertyNode::Type type, bool,
+        ExpressionNode* name, const ParserFunctionInfo<ASTBuilder>& functionInfo, SuperBinding superBinding)
+    {
+        ASSERT(name);
+        functionInfo.body->setLoc(functionInfo.startLine, functionInfo.endLine, location.startOffset, location.lineStartOffset);
+        SourceCode source = m_sourceCode->subExpression(functionInfo.startOffset, functionInfo.endOffset, functionInfo.startLine, functionInfo.bodyStartColumn);
+        FuncExprNode* funcExpr = new (m_parserArena) FuncExprNode(location, m_vm->propertyNames->nullIdentifier, functionInfo.body, source);
+        return new (m_parserArena) PropertyNode(name, funcExpr, type, PropertyNode::Unknown, superBinding);
+    }
+
     NEVER_INLINE PropertyNode* createGetterOrSetterProperty(VM* vm, ParserArena& parserArena, const JSTokenLocation& location, PropertyNode::Type type, bool,
         double name, const ParserFunctionInfo<ASTBuilder>& functionInfo, SuperBinding superBinding)
     {
@@ -442,7 +457,6 @@ public:
         return decl;
     }
 
-#if ENABLE(ES6_CLASS_SYNTAX)
     StatementNode* createClassDeclStatement(const JSTokenLocation& location, ClassExprNode* classExpression,
         const JSTextPosition& classStart, const JSTextPosition& classEnd, unsigned startLine, unsigned endLine)
     {
@@ -451,7 +465,6 @@ public:
         decl->setLoc(startLine, endLine, location.startOffset, location.lineStartOffset);
         return decl;
     }
-#endif
 
     StatementNode* createBlockStatement(const JSTokenLocation& location, JSC::SourceElements* elements, int startLine, int endLine, VariableEnvironment& lexicalVariables)
     {
@@ -514,6 +527,26 @@ public:
         return pattern->isBindingNode();
     }
 
+    bool isAssignmentLocation(const Expression& pattern)
+    {
+        return pattern->isAssignmentLocation();
+    }
+
+    bool isObjectLiteral(const Expression& node)
+    {
+        return node->isObjectLiteral();
+    }
+
+    bool isArrayLiteral(const Expression& node)
+    {
+        return node->isArrayLiteral();
+    }
+
+    bool isObjectOrArrayLiteral(const Expression& node)
+    {
+        return isObjectLiteral(node) || isArrayLiteral(node);
+    }
+
     StatementNode* createEmptyStatement(const JSTokenLocation& location) { return new (m_parserArena) EmptyStatementNode(location); }
 
     StatementNode* createDeclarationStatement(const JSTokenLocation& location, ExpressionNode* expr, int start, int end)
@@ -561,8 +594,6 @@ public:
     StatementNode* createTryStatement(const JSTokenLocation& location, StatementNode* tryBlock, const Identifier* ident, StatementNode* catchBlock, StatementNode* finallyBlock, int startLine, int endLine, VariableEnvironment& catchEnvironment)
     {
         TryNode* result = new (m_parserArena) TryNode(location, tryBlock, *ident, catchBlock, catchEnvironment, finallyBlock);
-        if (catchBlock)
-            usesCatch();
         result->setLoc(startLine, endLine, location.startOffset, location.lineStartOffset);
         return result;
     }
@@ -822,10 +853,25 @@ public:
     {
         node->appendEntry(location, identifier, wasString, pattern, defaultValue);
     }
-    
+
+    void appendObjectPatternEntry(ObjectPattern node, const JSTokenLocation& location, ExpressionNode* propertyExpression, DestructuringPattern pattern, ExpressionNode* defaultValue)
+    {
+        node->appendEntry(location, propertyExpression, pattern, defaultValue);
+    }
+
     BindingPattern createBindingLocation(const JSTokenLocation&, const Identifier& boundProperty, const JSTextPosition& start, const JSTextPosition& end, AssignmentContext context)
     {
         return new (m_parserArena) BindingNode(boundProperty, start, end, context);
+    }
+
+    RestParameterNode* createRestParameter(const Identifier& name, size_t numParametersToSkip, const JSTextPosition& start, const JSTextPosition& end)
+    {
+        return new (m_parserArena) RestParameterNode(name, numParametersToSkip, start, end);
+    }
+
+    AssignmentElement createAssignmentElement(const Expression& assignmentTarget, const JSTextPosition& start, const JSTextPosition& end)
+    {
+        return new (m_parserArena) AssignmentElementNode(assignmentTarget, start, end);
     }
 
     void setEndOffset(Node* node, int offset)
@@ -847,6 +893,9 @@ public:
     {
         node->setStartOffset(offset);
     }
+
+
+    void propagateArgumentsUse() { usesArguments(); }
     
 private:
     struct Scope {
@@ -868,7 +917,7 @@ private:
 
     void incConstants() { m_scope.m_numConstants++; }
     void usesThis() { m_scope.m_features |= ThisFeature; }
-    void usesCatch() { m_scope.m_features |= CatchFeature; }
+    void usesArrowFunction() { m_scope.m_features |= ArrowFunctionFeature; }
     void usesArguments() { m_scope.m_features |= ArgumentsFeature; }
     void usesWith() { m_scope.m_features |= WithFeature; }
     void usesEval() 

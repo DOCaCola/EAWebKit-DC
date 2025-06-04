@@ -94,7 +94,7 @@
 #define DOM_EVENT_INTERFACES_FOR_EACH_INDIE_UI(macro)
 #endif
 
-#if ENABLE(IOS_GESTURE_EVENTS)
+#if ENABLE(IOS_GESTURE_EVENTS) || ENABLE(MAC_GESTURE_EVENTS)
 #define DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS(macro) \
     macro(GestureEvent) \
 // End of DOM_EVENT_INTERFACES_FOR_EACH_IOS_GESTURE_EVENTS
@@ -109,6 +109,7 @@
     macro(RTCDTMFToneChangeEvent) \
     macro(RTCDataChannelEvent) \
     macro(RTCIceCandidateEvent) \
+    macro(RTCTrackEvent) \
 // End of DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM
 #else
 #define DOM_EVENT_INTERFACES_FOR_EACH_MEDIA_STREAM(macro)

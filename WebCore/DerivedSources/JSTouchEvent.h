@@ -33,7 +33,7 @@ public:
     typedef JSUIEvent Base;
     static JSTouchEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TouchEvent>&& impl)
     {
-        JSTouchEvent* ptr = new (NotNull, JSC::allocateCell<JSTouchEvent>(globalObject->vm().heap)) JSTouchEvent(structure, globalObject, WTF::move(impl));
+        JSTouchEvent* ptr = new (NotNull, JSC::allocateCell<JSTouchEvent>(globalObject->vm().heap)) JSTouchEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TouchEvent& impl() const
+    TouchEvent& wrapped() const
     {
-        return static_cast<TouchEvent&>(Base::impl());
+        return static_cast<TouchEvent&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTouchEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<TouchEvent>&&);
+    JSTouchEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<TouchEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

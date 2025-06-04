@@ -138,7 +138,7 @@ void TextureMapperLayerClientEA::renderCompositedLayers(GraphicsContext* context
     if(m_frame->page()->view()->GetHardwareRenderer()->UseCustomClip())
 		m_textureMapper->beginClip(matrix, clip);
     m_rootTextureMapperLayer->paint();
-    m_fpsCounter.updateFPSAndDisplay(m_textureMapper.get(), IntPoint::zero(), matrix);
+    m_fpsCounter.updateFPSAndDisplay(*m_textureMapper.get(), IntPoint::zero(), matrix);
 	if(m_frame->page()->view()->GetHardwareRenderer()->UseCustomClip())
 		m_textureMapper->endClip();
     m_textureMapper->endPainting();

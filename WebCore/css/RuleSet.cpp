@@ -70,6 +70,10 @@ static inline MatchBasedOnRuleHash computeMatchBasedOnRuleHash(const CSSSelector
     }
     if (SelectorChecker::isCommonPseudoClassSelector(&selector))
         return MatchBasedOnRuleHash::ClassB;
+#if ENABLE(SHADOW_DOM)
+    if (selector.match() == CSSSelector::PseudoClass && selector.pseudoClassType() == CSSSelector::PseudoClassHost)
+        return MatchBasedOnRuleHash::ClassB;
+#endif
     if (selector.match() == CSSSelector::Id)
         return MatchBasedOnRuleHash::ClassA;
     if (selector.match() == CSSSelector::Class)
@@ -258,6 +262,12 @@ void RuleSet::addRule(StyleRule* rule, unsigned selectorIndex, AddRuleFlags addR
             }
         }
 
+#if ENABLE(SHADOW_DOM)
+        if (selector->match() == CSSSelector::PseudoClass && selector->pseudoClassType() == CSSSelector::PseudoClassHost) {
+            m_hostPseudoClassRules.append(ruleData);
+            return;
+        }
+#endif
         if (selector->relation() != CSSSelector::SubSelector)
             break;
         selector = selector->tagHistory();
@@ -329,7 +339,7 @@ void RuleSet::addChildRules(const Vector<RefPtr<StyleRuleBase>>& rules, const Me
                 addChildRules(mediaRule.childRules(), medium, resolver, hasDocumentSecurityOrigin, isInitiatingElementInUserAgentShadowTree, addRuleFlags);
         } else if (is<StyleRuleFontFace>(*rule) && resolver) {
             // Add this font face to our set.
-            resolver->document().fontSelector().addFontFaceRule(downcast<StyleRuleFontFace>(rule.get()), isInitiatingElementInUserAgentShadowTree);
+            resolver->document().fontSelector().addFontFaceRule(downcast<StyleRuleFontFace>(*rule.get()), isInitiatingElementInUserAgentShadowTree);
             resolver->invalidateMatchedPropertiesCache();
         } else if (is<StyleRuleKeyframes>(*rule) && resolver)
             resolver->addKeyframeStyle(downcast<StyleRuleKeyframes>(rule.get()));
@@ -348,24 +358,20 @@ void RuleSet::addChildRules(const Vector<RefPtr<StyleRuleBase>>& rules, const Me
     }
 }
 
-void RuleSet::addRulesFromSheet(StyleSheetContents* sheet, const MediaQueryEvaluator& medium, StyleResolver* resolver)
+void RuleSet::addRulesFromSheet(StyleSheetContents& sheet, const MediaQueryEvaluator& medium, StyleResolver* resolver)
 {
-    ASSERT(sheet);
-
-    const Vector<RefPtr<StyleRuleImport>>& importRules = sheet->importRules();
-    for (unsigned i = 0; i < importRules.size(); ++i) {
-        StyleRuleImport* importRule = importRules[i].get();
-        if (importRule->styleSheet() && (!importRule->mediaQueries() || medium.eval(importRule->mediaQueries(), resolver)))
-            addRulesFromSheet(importRule->styleSheet(), medium, resolver);
+    for (auto& rule : sheet.importRules()) {
+        if (rule->styleSheet() && (!rule->mediaQueries() || medium.eval(rule->mediaQueries(), resolver)))
+            addRulesFromSheet(*rule->styleSheet(), medium, resolver);
     }
 
-    bool hasDocumentSecurityOrigin = resolver && resolver->document().securityOrigin()->canRequest(sheet->baseURL());
+    bool hasDocumentSecurityOrigin = resolver && resolver->document().securityOrigin()->canRequest(sheet.baseURL());
     AddRuleFlags addRuleFlags = static_cast<AddRuleFlags>((hasDocumentSecurityOrigin ? RuleHasDocumentSecurityOrigin : 0));
 
     // FIXME: Skip Content Security Policy check when stylesheet is in a user agent shadow tree.
     // See <https://bugs.webkit.org/show_bug.cgi?id=146663>.
     bool isInitiatingElementInUserAgentShadowTree = false;
-    addChildRules(sheet->childRules(), medium, resolver, hasDocumentSecurityOrigin, isInitiatingElementInUserAgentShadowTree, addRuleFlags);
+    addChildRules(sheet.childRules(), medium, resolver, hasDocumentSecurityOrigin, isInitiatingElementInUserAgentShadowTree, addRuleFlags);
 
     if (m_autoShrinkToFitEnabled)
         shrinkToFit();
@@ -375,6 +381,29 @@ void RuleSet::addStyleRule(StyleRule* rule, AddRuleFlags addRuleFlags)
 {
     for (size_t selectorIndex = 0; selectorIndex != notFound; selectorIndex = rule->selectorList().indexOfNextSelectorAfter(selectorIndex))
         addRule(rule, selectorIndex, addRuleFlags);
+}
+
+bool RuleSet::hasShadowPseudoElementRules() const
+{
+    if (!m_shadowPseudoElementRules.isEmpty())
+        return true;
+#if ENABLE(VIDEO_TRACK)
+    if (!m_cuePseudoRules.isEmpty())
+        return true;
+#endif
+    return false;
+}
+
+void RuleSet::copyShadowPseudoElementRulesFrom(const RuleSet& other)
+{
+    for (auto& keyValuePair : other.m_shadowPseudoElementRules)
+        m_shadowPseudoElementRules.add(keyValuePair.key, std::make_unique<RuleDataVector>(*keyValuePair.value));
+
+#if ENABLE(VIDEO_TRACK)
+    // FIXME: We probably shouldn't treat WebVTT as author stylable user agent shadow tree.
+    for (auto& cue : other.m_cuePseudoRules)
+        m_cuePseudoRules.append(cue);
+#endif
 }
 
 static inline void shrinkMapVectorsToFit(RuleSet::AtomRuleMap& map)

@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2015 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,14 +26,11 @@
 #include "config.h"
 #include "DFACombiner.h"
 
+#if ENABLE(CONTENT_EXTENSIONS)
+
 #include "MutableRangeList.h"
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
-
-//+EAWebKitChange
-//9/23/2015 It appears this new code is missing an appropriate guard
-#if ENABLE(CONTENT_EXTENSIONS)
-//-EAWebKitChange
 
 namespace WebCore {
 
@@ -228,7 +224,4 @@ void DFACombiner::combineDFAs(unsigned minimumSize, std::function<void(DFA&&)> h
 
 } // namespace WebCore
 
-//+EAWebKitChange
-//9/23/2015 #if ENABLE(CONTENT_EXTENSIONS)
 #endif
-//-EAWebKitChange

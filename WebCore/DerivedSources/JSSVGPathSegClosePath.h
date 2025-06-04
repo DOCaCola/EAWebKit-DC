@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegClosePath* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegClosePath>&& impl)
     {
-        JSSVGPathSegClosePath* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegClosePath>(globalObject->vm().heap)) JSSVGPathSegClosePath(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegClosePath* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegClosePath>(globalObject->vm().heap)) JSSVGPathSegClosePath(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegClosePath& impl() const
+    SVGPathSegClosePath& wrapped() const
     {
-        return static_cast<SVGPathSegClosePath&>(Base::impl());
+        return static_cast<SVGPathSegClosePath&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegClosePath(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegClosePath>&&);
+    JSSVGPathSegClosePath(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegClosePath>&&);
 
     void finishCreation(JSC::VM& vm)
     {

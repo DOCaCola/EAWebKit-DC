@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSVideoPlaybackQuality : public JSDOMWrapper {
+class JSVideoPlaybackQuality : public JSDOMWrapper<VideoPlaybackQuality> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<VideoPlaybackQuality> Base;
     static JSVideoPlaybackQuality* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VideoPlaybackQuality>&& impl)
     {
-        JSVideoPlaybackQuality* ptr = new (NotNull, JSC::allocateCell<JSVideoPlaybackQuality>(globalObject->vm().heap)) JSVideoPlaybackQuality(structure, globalObject, WTF::move(impl));
+        JSVideoPlaybackQuality* ptr = new (NotNull, JSC::allocateCell<JSVideoPlaybackQuality>(globalObject->vm().heap)) JSVideoPlaybackQuality(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static VideoPlaybackQuality* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSVideoPlaybackQuality();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    VideoPlaybackQuality& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VideoPlaybackQuality* m_impl;
 protected:
-    JSVideoPlaybackQuality(JSC::Structure*, JSDOMGlobalObject*, Ref<VideoPlaybackQuality>&&);
+    JSVideoPlaybackQuality(JSC::Structure*, JSDOMGlobalObject&, Ref<VideoPlaybackQuality>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VideoPlaybackQuality
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VideoPlaybackQuality*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VideoPlaybackQuality& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VideoPlaybackQuality& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, VideoPlaybackQuality*);
 
 
 } // namespace WebCore

@@ -37,6 +37,7 @@ class CollectionNamedElementCache {
 public:
     const Vector<Element*>* findElementsWithId(const AtomicString& id) const;
     const Vector<Element*>* findElementsWithName(const AtomicString& name) const;
+    const Vector<AtomicString>& propertyNames() const { return m_propertyNames; }
 
     void appendToIdCache(const AtomicString& id, Element&);
     void appendToNameCache(const AtomicString& name, Element&);
@@ -48,37 +49,38 @@ private:
     typedef HashMap<AtomicStringImpl*, Vector<Element*>> StringToElementsMap;
 
     const Vector<Element*>* find(const StringToElementsMap&, const AtomicString& key) const;
-    static void append(StringToElementsMap&, const AtomicString& key, Element&);
+    void append(StringToElementsMap&, const AtomicString& key, Element&);
 
     StringToElementsMap m_idMap;
     StringToElementsMap m_nameMap;
+    Vector<AtomicString> m_propertyNames;
 
 #if !ASSERT_DISABLED
     bool m_didPopulate { false };
 #endif
 };
 
-class HTMLCollection : public ScriptWrappable, public RefCounted<HTMLCollection> {
+// HTMLCollection subclasses NodeList to maintain legacy ObjC API compatibility.
+class HTMLCollection : public NodeList {
 public:
     virtual ~HTMLCollection();
 
     // DOM API
-    virtual unsigned length() const = 0;
-    virtual Element* item(unsigned offset) const = 0;
+    virtual Element* item(unsigned index) const override = 0; // Tighten return type from NodeList::item().
     virtual Element* namedItem(const AtomicString& name) const = 0;
-    PassRefPtr<NodeList> tags(const String&);
+    const Vector<AtomicString>& supportedPropertyNames();
+    RefPtr<NodeList> tags(const String&);
 
     // Non-DOM API
-    bool hasNamedItem(const AtomicString& name) const;
     Vector<Ref<Element>> namedItems(const AtomicString& name) const;
-    virtual size_t memoryCost() const;
+    virtual size_t memoryCost() const override;
 
     bool isRootedAtDocument() const;
     NodeListInvalidationType invalidationType() const;
     CollectionType type() const;
     ContainerNode& ownerNode() const;
     ContainerNode& rootNode() const;
-    void invalidateCache(const QualifiedName* attributeName);
+    void invalidateCacheForAttribute(const QualifiedName* attributeName);
     virtual void invalidateCache(Document&);
 
     bool hasNamedElementCache() const;
@@ -128,17 +130,17 @@ inline const Vector<Element*>* CollectionNamedElementCache::findElementsWithName
 
 inline void CollectionNamedElementCache::appendToIdCache(const AtomicString& id, Element& element)
 {
-    return append(m_idMap, id, element);
+    append(m_idMap, id, element);
 }
 
 inline void CollectionNamedElementCache::appendToNameCache(const AtomicString& name, Element& element)
 {
-    return append(m_nameMap, name, element);
+    append(m_nameMap, name, element);
 }
 
 inline size_t CollectionNamedElementCache::memoryCost() const
 {
-    return (m_idMap.size() + m_nameMap.size()) * sizeof(Element*);
+    return (m_idMap.size() + m_nameMap.size()) * sizeof(Element*) + m_propertyNames.size() * sizeof(AtomicString);
 }
 
 inline void CollectionNamedElementCache::didPopulate()
@@ -159,6 +161,8 @@ inline const Vector<Element*>* CollectionNamedElementCache::find(const StringToE
 
 inline void CollectionNamedElementCache::append(StringToElementsMap& map, const AtomicString& key, Element& element)
 {
+    if (!m_idMap.contains(key.impl()) && !m_nameMap.contains(key.impl()))
+        m_propertyNames.append(key);
     map.add(key.impl(), Vector<Element*>()).iterator->value.append(&element);
 }
 
@@ -192,7 +196,7 @@ inline Document& HTMLCollection::document() const
     return m_ownerNode->document();
 }
 
-inline void HTMLCollection::invalidateCache(const QualifiedName* attributeName)
+inline void HTMLCollection::invalidateCacheForAttribute(const QualifiedName* attributeName)
 {
     if (!attributeName || shouldInvalidateTypeOnAttributeChange(invalidationType(), *attributeName))
         invalidateCache(document());

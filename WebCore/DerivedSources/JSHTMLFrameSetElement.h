@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLFrameSetElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFrameSetElement>&& impl)
     {
-        JSHTMLFrameSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElement>(globalObject->vm().heap)) JSHTMLFrameSetElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFrameSetElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFrameSetElement>(globalObject->vm().heap)) JSHTMLFrameSetElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,14 +49,14 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFrameSetElement& impl() const
+    HTMLFrameSetElement& wrapped() const
     {
-        return static_cast<HTMLFrameSetElement&>(Base::impl());
+        return static_cast<HTMLFrameSetElement&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLFrameSetElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFrameSetElement>&&);
+    JSHTMLFrameSetElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFrameSetElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,8 +65,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLFrameSetElement*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 

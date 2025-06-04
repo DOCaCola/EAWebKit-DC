@@ -4,9 +4,13 @@ set(JSC_SOURCES
 
 set(JSC_LIBRARIES
     ${CMAKE_DL_LIBS}
-    JavaScriptCore
-    WTF
+    JavaScriptCore${DEBUG_SUFFIX}
+    WTF${DEBUG_SUFFIX}
 )
+
+if (WTF_OS_MAC_OS_X)
+    list(APPEND JSC_LIBRARIES edit)
+endif ()
 
 if ("${JavaScriptCore_LIBRARY_TYPE}" MATCHES "STATIC")
     add_definitions(-DSTATICALLY_LINKED_WITH_JavaScriptCore)
@@ -30,4 +34,17 @@ endif ()
 
 if (SHOULD_INSTALL_JS_SHELL)
     install(TARGETS jsc DESTINATION "${EXEC_INSTALL_DIR}")
+endif ()
+
+if (WIN32)
+    add_dependencies(jsc jscLib)
+endif ()
+
+if (NOT WIN32)
+    set(TESTB3_SOURCES
+        ../b3/testb3.cpp
+    )
+
+    add_executable(testb3 ${TESTB3_SOURCES})
+    target_link_libraries(testb3 ${JSC_LIBRARIES})
 endif ()

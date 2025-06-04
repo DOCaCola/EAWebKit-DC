@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSXMLHttpRequestException : public JSDOMWrapper {
+class JSXMLHttpRequestException : public JSDOMWrapper<XMLHttpRequestException> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XMLHttpRequestException> Base;
     static JSXMLHttpRequestException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestException>&& impl)
     {
-        JSXMLHttpRequestException* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestException>(globalObject->vm().heap)) JSXMLHttpRequestException(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequestException* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestException>(globalObject->vm().heap)) JSXMLHttpRequestException(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static XMLHttpRequestException* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSXMLHttpRequestException();
 
     DECLARE_INFO;
 
@@ -53,15 +52,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XMLHttpRequestException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLHttpRequestException* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXMLHttpRequestException(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequestException>&&);
+    JSXMLHttpRequestException(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequestException>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLHttpRequestExcept
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLHttpRequestException& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLHttpRequestException& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestException*);
 
 
 } // namespace WebCore

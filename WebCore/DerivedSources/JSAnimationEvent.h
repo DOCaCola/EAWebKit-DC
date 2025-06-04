@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSAnimationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnimationEvent>&& impl)
     {
-        JSAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSAnimationEvent>(globalObject->vm().heap)) JSAnimationEvent(structure, globalObject, WTF::move(impl));
+        JSAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSAnimationEvent>(globalObject->vm().heap)) JSAnimationEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AnimationEvent& impl() const
+    AnimationEvent& wrapped() const
     {
-        return static_cast<AnimationEvent&>(Base::impl());
+        return static_cast<AnimationEvent&>(Base::wrapped());
     }
 protected:
-    JSAnimationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<AnimationEvent>&&);
+    JSAnimationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<AnimationEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

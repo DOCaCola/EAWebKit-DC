@@ -59,7 +59,7 @@ Ref<RenderStyle> resolveForDocument(const Document& document)
     documentStyle.get().setRTLOrdering(document.visuallyOrdered() ? VisualOrder : LogicalOrder);
     documentStyle.get().setZoom(!document.printing() ? renderView.frame().pageZoomFactor() : 1);
     documentStyle.get().setPageScaleTransform(renderView.frame().frameScaleFactor());
-    FontDescription documentFontDescription = documentStyle.get().fontDescription();
+    FontCascadeDescription documentFontDescription = documentStyle.get().fontDescription();
     documentFontDescription.setLocale(document.contentLanguage());
     documentStyle.get().setFontDescription(WTF::move(documentFontDescription));
 
@@ -98,7 +98,7 @@ Ref<RenderStyle> resolveForDocument(const Document& document)
 
     const Settings& settings = renderView.frame().settings();
 
-    FontDescription fontDescription;
+    FontCascadeDescription fontDescription;
     fontDescription.setLocale(document.contentLanguage());
     fontDescription.setRenderingMode(settings.fontRenderingMode());
     fontDescription.setOneFamily(standardFamily);
@@ -111,7 +111,7 @@ Ref<RenderStyle> resolveForDocument(const Document& document)
 
     FontOrientation fontOrientation;
     NonCJKGlyphOrientation glyphOrientation;
-    documentStyle.get().getFontAndGlyphOrientation(fontOrientation, glyphOrientation);
+    std::tie(fontOrientation, glyphOrientation) = documentStyle.get().fontAndGlyphOrientation();
     fontDescription.setOrientation(fontOrientation);
     fontDescription.setNonCJKGlyphOrientation(glyphOrientation);
 

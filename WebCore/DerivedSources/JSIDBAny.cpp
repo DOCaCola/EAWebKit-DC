@@ -24,7 +24,6 @@
 
 #include "JSIDBAny.h"
 
-#include "IDBAny.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSIDBAnyPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSIDBAnyPrototype::s_info = { "IDBAnyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBAnyPrototype) };
@@ -74,9 +73,8 @@ void JSIDBAnyPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSIDBAny::s_info = { "IDBAny", &Base::s_info, 0, CREATE_METHOD_TABLE(JSIDBAny) };
 
-JSIDBAny::JSIDBAny(Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBAny>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSIDBAny::JSIDBAny(Structure* structure, JSDOMGlobalObject& globalObject, Ref<IDBAny>&& impl)
+    : JSDOMWrapper<IDBAny>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,11 +94,6 @@ void JSIDBAny::destroy(JSC::JSCell* cell)
     thisObject->JSIDBAny::~JSIDBAny();
 }
 
-JSIDBAny::~JSIDBAny()
-{
-    releaseImpl();
-}
-
 bool JSIDBAnyOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     UNUSED_PARAM(handle);
@@ -112,13 +105,13 @@ void JSIDBAnyOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsIDBAny = jsCast<JSIDBAny*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsIDBAny->impl(), jsIDBAny);
+    uncacheWrapper(world, &jsIDBAny->wrapped(), jsIDBAny);
 }
 
 IDBAny* JSIDBAny::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSIDBAny*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

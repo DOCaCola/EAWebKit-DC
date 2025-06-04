@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSFileError : public JSDOMWrapper {
+class JSFileError : public JSDOMWrapper<FileError> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FileError> Base;
     static JSFileError* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileError>&& impl)
     {
-        JSFileError* ptr = new (NotNull, JSC::allocateCell<JSFileError>(globalObject->vm().heap)) JSFileError(structure, globalObject, WTF::move(impl));
+        JSFileError* ptr = new (NotNull, JSC::allocateCell<JSFileError>(globalObject->vm().heap)) JSFileError(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static FileError* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSFileError();
 
     DECLARE_INFO;
 
@@ -52,15 +51,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FileError& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileError* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSFileError(JSC::Structure*, JSDOMGlobalObject*, Ref<FileError>&&);
+    JSFileError(JSC::Structure*, JSDOMGlobalObject&, Ref<FileError>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileError*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileError*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileError& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileError& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FileError*);
 
 
 } // namespace WebCore

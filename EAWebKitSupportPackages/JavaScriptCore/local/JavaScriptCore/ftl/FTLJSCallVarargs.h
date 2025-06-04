@@ -26,7 +26,9 @@
 #ifndef FTLJSCallVarargs_h
 #define FTLJSCallVarargs_h
 
-#if ENABLE(FTL_JIT)
+#include "DFGCommon.h"
+
+#if ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #include "FTLJSCallBase.h"
 
@@ -43,13 +45,13 @@ namespace FTL {
 class JSCallVarargs {
 public:
     JSCallVarargs();
-    JSCallVarargs(unsigned stackmapID, DFG::Node*);
+    JSCallVarargs(unsigned stackmapID, DFG::Node*, CodeOrigin callSiteDescriptionOrigin);
     
     DFG::Node* node() const { return m_node; }
     
     static unsigned numSpillSlotsNeeded();
     
-    void emit(CCallHelpers&, int32_t spillSlotsOffset);
+    void emit(CCallHelpers&, State&, int32_t spillSlotsOffset, int32_t osrExitFromGenericUnwindSpillSlots);
     void link(VM&, LinkBuffer&, CodeLocationLabel exceptionHandler);
     
     unsigned stackmapID() const { return m_stackmapID; }
@@ -58,6 +60,10 @@ public:
     {
         return m_instructionOffset < other.m_instructionOffset;
     }
+    
+    void setCallSiteIndex(CallSiteIndex callSiteIndex) { m_callBase.setCallSiteIndex(callSiteIndex); }
+    CodeOrigin callSiteDescriptionOrigin() const { return m_callBase.callSiteDescriptionOrigin(); }
+    void setCorrespondingGenericUnwindOSRExit(OSRExit* exit) { m_callBase.setCorrespondingGenericUnwindOSRExit(exit); }
     
 private:
     unsigned m_stackmapID;
@@ -71,7 +77,7 @@ public:
 
 } } // namespace JSC::FTL
 
-#endif // ENABLE(FTL_JIT)
+#endif // ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #endif // FTLJSCallVarargs_h
 

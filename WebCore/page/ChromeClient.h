@@ -47,8 +47,12 @@
 
 #if ENABLE(MEDIA_SESSION)
 namespace WebCore {
-struct MediaSessionMetadata;
+class MediaSessionMetadata;
 }
+#endif
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+#include "MediaPlaybackTargetContext.h"
 #endif
 
 #if PLATFORM(IOS)
@@ -80,6 +84,7 @@ class GraphicsContext3D;
 class GraphicsLayer;
 class GraphicsLayerFactory;
 class HTMLInputElement;
+class HTMLMediaElement;
 class HTMLVideoElement;
 class HitTestResult;
 class IntRect;
@@ -400,10 +405,6 @@ public:
     virtual bool isPointerLocked() { return false; }
 #endif
 
-    virtual void didBeginTrackingPotentialLongMousePress(const IntPoint& mouseDownPosition, const HitTestResult&) { UNUSED_PARAM(mouseDownPosition); }
-    virtual void didRecognizeLongMousePress() { }
-    virtual void didCancelTrackingPotentialLongMousePress() { }
-
     virtual FloatSize minimumWindowSize() const { return FloatSize(100, 100); };
 
     virtual bool isEmptyChromeClient() const { return false; }
@@ -453,14 +454,17 @@ public:
     virtual void removePlaybackTargetPickerClient(uint64_t /*contextId*/) { }
     virtual void showPlaybackTargetPicker(uint64_t /*contextId*/, const WebCore::IntPoint&, bool /* isVideo */) { }
     virtual void playbackTargetPickerClientStateDidChange(uint64_t /*contextId*/, MediaProducer::MediaStateFlags) { }
+    virtual void setMockMediaPlaybackTargetPickerEnabled(bool)  { }
+    virtual void setMockMediaPlaybackTargetPickerState(const String&, WebCore::MediaPlaybackTargetContext::State) { }
 #endif
 
-#if ENABLE(VIDEO)
-    virtual void mediaDocumentNaturalSizeChanged(const WebCore::IntSize&) { }
-#if USE(GSTREAMER)
-    virtual void requestInstallMissingMediaPlugins(const String& /*details*/, const String& /*description*/, MediaPlayerRequestInstallMissingPluginsCallback&) { };
+    virtual void imageOrMediaDocumentSizeChanged(const WebCore::IntSize&) { }
+
+#if ENABLE(VIDEO) && USE(GSTREAMER)
+    virtual void requestInstallMissingMediaPlugins(const String& /*details*/, const String& /*description*/, MediaPlayerRequestInstallMissingPluginsCallback&) { }
 #endif
-#endif
+
+    virtual void didInvalidateDocumentMarkerRects() { }
 
 protected:
     virtual ~ChromeClient() { }

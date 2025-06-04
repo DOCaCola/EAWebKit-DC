@@ -110,7 +110,7 @@ void FontCache::platformInit()
 {
 }
 
-static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, const AtomicString& familyName, const UChar* sampleChars = NULL, size_t length = 0)
+static EA::WebKit::IFont* createFont(const FontCascadeDescription& fontDescription, const AtomicString& familyName, const UChar* sampleChars = NULL, size_t length = 0)
 {
 	//Given the info, check if the text system is capable of creating a font. If yes, create it otherwise return null.
 	if(EA::WebKit::ITextSystem* pTextSystem = EA::WebKit::GetTextSystem())
@@ -217,8 +217,8 @@ static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, con
 
 		textStyle.mfWeight = ConvertFontWeight(fontDescription.weight());
 
-		if(fontDescription.smallCaps())
-			textStyle.mVariant = EA::WebKit::kVariantSmallCaps;
+		//if(fontDescription.smallCaps())
+		//	textStyle.mVariant = EA::WebKit::kVariantSmallCaps;
 
 		//Pitch is pretty much ignored as the font family itself determines the type of the pitch
 
@@ -235,7 +235,7 @@ static EA::WebKit::IFont* createFont(const FontDescription& fontDescription, con
 
 	return nullptr;
 }
-std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDescription& fontDescription, const AtomicString& familyName)
+std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontCascadeDescription& fontDescription, const AtomicString& familyName)
 {
 	if(EA::WebKit::IFont* pFont = createFont(fontDescription,familyName))
 	{
@@ -248,7 +248,7 @@ std::unique_ptr<FontPlatformData> FontCache::createFontPlatformData(const FontDe
 }
 
 
-RefPtr<Font> FontCache::systemFallbackForCharacters(const FontDescription& fontDescription, const WebCore::Font*, bool, const UChar* sampleChars, unsigned length)
+RefPtr<Font> FontCache::systemFallbackForCharacters(const FontCascadeDescription& fontDescription, const WebCore::Font*, bool, const UChar* sampleChars, unsigned length)
 {
     // This function is called if WebCore can't display the character with the font data it received from the platform earlier. The situation mostly arises for lightweight font resources.
 	// For example, by default, our "Times New Roman" does not contain foreign language characters (such as Chinese). A page might request Times New Roman for Chinese script. Since during the initial query
@@ -273,7 +273,7 @@ Vector<String> FontCache::systemFontFamilies()
     return fontFamilies;
 }
 
-Ref<Font> FontCache::lastResortFallbackFont(const FontDescription& fontDescription)
+Ref<Font> FontCache::lastResortFallbackFont(const FontCascadeDescription& fontDescription)
 {
 	// If a font could not be obtained, just get one which the application trusts most. This will also be the font that will
 	// be used in case downloadable font fails.
@@ -284,9 +284,10 @@ Ref<Font> FontCache::lastResortFallbackFont(const FontDescription& fontDescripti
 	return fontForPlatformData(*platformData);
 }
 
-void FontCache::getTraitsInFamily(const AtomicString&, Vector<unsigned>&)
+Vector<FontTraitsMask> FontCache::getTraitsInFamily(const AtomicString&)
 {
 	//Most ports ignore this. Seems like called only for downloadable font.
+	return Vector<FontTraitsMask>();
 }
 
 

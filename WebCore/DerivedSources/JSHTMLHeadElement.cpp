@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLHeadElement.h"
 
-#include "HTMLHeadElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -63,49 +63,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLHeadElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLHeadElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLHeadElement> JSHTMLHeadElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLHeadElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLHeadElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLHeadElementConstructor>(vm.heap)) JSHTMLHeadElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLHeadElementConstructor::s_info = { "HTMLHeadElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHeadElementConstructor) };
-
-JSHTMLHeadElementConstructor::JSHTMLHeadElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLHeadElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLHeadElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLHeadElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLHeadElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLHeadElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLHeadElementConstructor::s_info = { "HTMLHeadElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHeadElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLHeadElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHeadElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "profile", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHeadElementProfile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHeadElementProfile) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHeadElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "profile", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLHeadElementProfile), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLHeadElementProfile) } },
 };
 
 const ClassInfo JSHTMLHeadElementPrototype::s_info = { "HTMLHeadElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHeadElementPrototype) };
@@ -118,7 +92,7 @@ void JSHTMLHeadElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLHeadElement::s_info = { "HTMLHeadElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLHeadElement) };
 
-JSHTMLHeadElement::JSHTMLHeadElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLHeadElement>&& impl)
+JSHTMLHeadElement::JSHTMLHeadElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLHeadElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -133,46 +107,46 @@ JSObject* JSHTMLHeadElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLHeadElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLHeadElementProfile(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLHeadElementProfile(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLHeadElement* castedThis = jsDynamicCast<JSHTMLHeadElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLHeadElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLHeadElement", "profile");
-        return throwGetterTypeError(*exec, "HTMLHeadElement", "profile");
+            return reportDeprecatedGetterError(*state, "HTMLHeadElement", "profile");
+        return throwGetterTypeError(*state, "HTMLHeadElement", "profile");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::profileAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::profileAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLHeadElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLHeadElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLHeadElementPrototype* domObject = jsDynamicCast<JSHTMLHeadElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLHeadElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLHeadElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLHeadElementProfile(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLHeadElementProfile(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLHeadElement* castedThis = jsDynamicCast<JSHTMLHeadElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLHeadElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLHeadElement", "profile");
+            reportDeprecatedSetterError(*state, "HTMLHeadElement", "profile");
         else
-            throwSetterTypeError(*exec, "HTMLHeadElement", "profile");
+            throwSetterTypeError(*state, "HTMLHeadElement", "profile");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::profileAttr, nativeValue);
 }
@@ -180,7 +154,7 @@ void setJSHTMLHeadElementProfile(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSHTMLHeadElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLHeadElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLHeadElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

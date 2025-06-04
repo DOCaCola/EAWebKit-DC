@@ -25,7 +25,7 @@
 #include "JSWebGLRenderingContext.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLRenderingContext.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLRenderingContextConstructor : public DOMConstructorObject {
-private:
-    JSWebGLRenderingContextConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLRenderingContext> JSWebGLRenderingContextConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLRenderingContextConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLRenderingContextConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContextConstructor>(vm.heap)) JSWebGLRenderingContextConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLRenderingContextConstructor::s_info = { "WebGLRenderingContextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContextConstructor) };
-
-JSWebGLRenderingContextConstructor::JSWebGLRenderingContextConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLRenderingContextConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLRenderingContextConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLRenderingContext::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLRenderingContext::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLRenderingContext"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLRenderingContextConstructor::s_info = { "WebGLRenderingContextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContextConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLRenderingContextPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLRenderingContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLRenderingContextPrototype::s_info = { "WebGLRenderingContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContextPrototype) };
@@ -115,7 +89,7 @@ void JSWebGLRenderingContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLRenderingContext::s_info = { "WebGLRenderingContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLRenderingContext) };
 
-JSWebGLRenderingContext::JSWebGLRenderingContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderingContext>&& impl)
+JSWebGLRenderingContext::JSWebGLRenderingContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLRenderingContext>&& impl)
     : JSWebGLRenderingContextBase(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,17 +104,17 @@ JSObject* JSWebGLRenderingContext::getPrototype(VM& vm, JSGlobalObject* globalOb
     return getDOMPrototype<JSWebGLRenderingContext>(vm, globalObject);
 }
 
-EncodedJSValue jsWebGLRenderingContextConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLRenderingContextConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLRenderingContextPrototype* domObject = jsDynamicCast<JSWebGLRenderingContextPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLRenderingContext::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLRenderingContext::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLRenderingContext::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLRenderingContextConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLRenderingContextConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 void JSWebGLRenderingContext::visitChildren(JSCell* cell, SlotVisitor& visitor)

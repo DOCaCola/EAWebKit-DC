@@ -35,11 +35,11 @@
 
 namespace WebCore {
 
-    class JSDOMWrapper;
+    class JSDOMObject;
     class JSDOMGlobalObject;
     class MathMLElement;
 
-    JSDOMWrapper* createJSMathMLWrapper(JSDOMGlobalObject*, PassRefPtr<MathMLElement>);
+    JSDOMObject* createJSMathMLWrapper(JSDOMGlobalObject*, PassRefPtr<MathMLElement>);
 
 }
  

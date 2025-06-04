@@ -22,9 +22,9 @@
 #include "JSHTMLMarqueeElement.h"
 
 #include "ExceptionCode.h"
-#include "HTMLMarqueeElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -90,61 +90,35 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLMarqueeElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLMarqueeElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLMarqueeElement> JSHTMLMarqueeElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLMarqueeElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLMarqueeElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLMarqueeElementConstructor>(vm.heap)) JSHTMLMarqueeElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLMarqueeElementConstructor::s_info = { "HTMLMarqueeElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMarqueeElementConstructor) };
-
-JSHTMLMarqueeElementConstructor::JSHTMLMarqueeElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLMarqueeElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLMarqueeElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLMarqueeElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLMarqueeElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLMarqueeElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLMarqueeElementConstructor::s_info = { "HTMLMarqueeElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMarqueeElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLMarqueeElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "behavior", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementBehavior), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementBehavior) },
-    { "bgColor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementBgColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementBgColor) },
-    { "direction", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementDirection) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementHeight) },
-    { "hspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementHspace) },
-    { "loop", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementLoop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementLoop) },
-    { "scrollAmount", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementScrollAmount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementScrollAmount) },
-    { "scrollDelay", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementScrollDelay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementScrollDelay) },
-    { "trueSpeed", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementTrueSpeed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementTrueSpeed) },
-    { "vspace", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementVspace) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementWidth) },
-    { "start", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLMarqueeElementPrototypeFunctionStart), (intptr_t) (0) },
-    { "stop", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLMarqueeElementPrototypeFunctionStop), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "behavior", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementBehavior), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementBehavior) } },
+    { "bgColor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementBgColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementBgColor) } },
+    { "direction", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementDirection) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementHeight) } },
+    { "hspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementHspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementHspace) } },
+    { "loop", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementLoop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementLoop) } },
+    { "scrollAmount", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementScrollAmount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementScrollAmount) } },
+    { "scrollDelay", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementScrollDelay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementScrollDelay) } },
+    { "trueSpeed", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementTrueSpeed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementTrueSpeed) } },
+    { "vspace", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementVspace), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementVspace) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLMarqueeElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLMarqueeElementWidth) } },
+    { "start", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLMarqueeElementPrototypeFunctionStart), (intptr_t) (0) } },
+    { "stop", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLMarqueeElementPrototypeFunctionStop), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLMarqueeElementPrototype::s_info = { "HTMLMarqueeElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMarqueeElementPrototype) };
@@ -157,7 +131,7 @@ void JSHTMLMarqueeElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLMarqueeElement::s_info = { "HTMLMarqueeElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLMarqueeElement) };
 
-JSHTMLMarqueeElement::JSHTMLMarqueeElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMarqueeElement>&& impl)
+JSHTMLMarqueeElement::JSHTMLMarqueeElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLMarqueeElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -172,422 +146,422 @@ JSObject* JSHTMLMarqueeElement::getPrototype(VM& vm, JSGlobalObject* globalObjec
     return getDOMPrototype<JSHTMLMarqueeElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLMarqueeElementBehavior(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementBehavior(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "behavior");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "behavior");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "behavior");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "behavior");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::behaviorAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::behaviorAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementBgColor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementBgColor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "bgColor");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "bgColor");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "bgColor");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "bgColor");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::bgcolorAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::bgcolorAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementDirection(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementDirection(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "direction");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "direction");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "direction");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "direction");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::directionAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::directionAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "height");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "height");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "height");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "height");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementHspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementHspace(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "hspace");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "hspace");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "hspace");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "hspace");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::hspaceAttr)));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementLoop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementLoop(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "loop");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "loop");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "loop");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "loop");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.loop());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementScrollAmount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementScrollAmount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "scrollAmount");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "scrollAmount");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "scrollAmount");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "scrollAmount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.scrollAmount());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementScrollDelay(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementScrollDelay(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "scrollDelay");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "scrollDelay");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "scrollDelay");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "scrollDelay");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.scrollDelay());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementTrueSpeed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementTrueSpeed(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "trueSpeed");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "trueSpeed");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "trueSpeed");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "trueSpeed");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::truespeedAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementVspace(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementVspace(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "vspace");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "vspace");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "vspace");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "vspace");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::vspaceAttr)));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLMarqueeElement", "width");
-        return throwGetterTypeError(*exec, "HTMLMarqueeElement", "width");
+            return reportDeprecatedGetterError(*state, "HTMLMarqueeElement", "width");
+        return throwGetterTypeError(*state, "HTMLMarqueeElement", "width");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLMarqueeElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLMarqueeElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLMarqueeElementPrototype* domObject = jsDynamicCast<JSHTMLMarqueeElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLMarqueeElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLMarqueeElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLMarqueeElementBehavior(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementBehavior(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "behavior");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "behavior");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "behavior");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "behavior");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::behaviorAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementBgColor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementBgColor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "bgColor");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "bgColor");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "bgColor");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "bgColor");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::bgcolorAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementDirection(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementDirection(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "direction");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "direction");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "direction");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "direction");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::directionAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementHeight(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "height");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "height");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "height");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "height");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::heightAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementHspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementHspace(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "hspace");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "hspace");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "hspace");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "hspace");
         return;
     }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::hspaceAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementLoop(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementLoop(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "loop");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "loop");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "loop");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "loop");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLoop(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLMarqueeElementScrollAmount(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementScrollAmount(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "scrollAmount");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "scrollAmount");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "scrollAmount");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "scrollAmount");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setScrollAmount(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLMarqueeElementScrollDelay(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementScrollDelay(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "scrollDelay");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "scrollDelay");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "scrollDelay");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "scrollDelay");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    int nativeValue = toInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int nativeValue = toInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setScrollDelay(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSHTMLMarqueeElementTrueSpeed(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementTrueSpeed(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "trueSpeed");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "trueSpeed");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "trueSpeed");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "trueSpeed");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::truespeedAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementVspace(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementVspace(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "vspace");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "vspace");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "vspace");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "vspace");
         return;
     }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::vspaceAttr, nativeValue);
 }
 
 
-void setJSHTMLMarqueeElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLMarqueeElementWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLMarqueeElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLMarqueeElement", "width");
+            reportDeprecatedSetterError(*state, "HTMLMarqueeElement", "width");
         else
-            throwSetterTypeError(*exec, "HTMLMarqueeElement", "width");
+            throwSetterTypeError(*state, "HTMLMarqueeElement", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, nativeValue);
 }
@@ -595,29 +569,29 @@ void setJSHTMLMarqueeElementWidth(ExecState* exec, JSObject* baseObject, Encoded
 
 JSValue JSHTMLMarqueeElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLMarqueeElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLMarqueeElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLMarqueeElementPrototypeFunctionStart(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLMarqueeElementPrototypeFunctionStart(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLMarqueeElement", "start");
+        return throwThisTypeError(*state, "HTMLMarqueeElement", "start");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLMarqueeElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.start();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLMarqueeElementPrototypeFunctionStop(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLMarqueeElementPrototypeFunctionStop(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLMarqueeElement* castedThis = jsDynamicCast<JSHTMLMarqueeElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLMarqueeElement", "stop");
+        return throwThisTypeError(*state, "HTMLMarqueeElement", "stop");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLMarqueeElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.stop();
     return JSValue::encode(jsUndefined());
 }

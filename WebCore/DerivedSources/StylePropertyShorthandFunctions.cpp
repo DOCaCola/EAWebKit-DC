@@ -8,6 +8,398 @@
 
 namespace WebCore {
 
+StylePropertyShorthand allShorthand()
+{
+    static const CSSPropertyID allProperties[] = {
+        CSSPropertyColor,
+        CSSPropertyDisplay,
+        CSSPropertyFontFamily,
+        CSSPropertyFontSize,
+        CSSPropertyFontStyle,
+        CSSPropertyFontWeight,
+        CSSPropertyTextRendering,
+        CSSPropertyFontFeatureSettings,
+        CSSPropertyWebkitFontKerning,
+        CSSPropertyWebkitFontSmoothing,
+        CSSPropertyFontVariantLigatures,
+        CSSPropertyFontVariantPosition,
+        CSSPropertyFontVariantCaps,
+        CSSPropertyFontVariantNumeric,
+        CSSPropertyFontVariantAlternates,
+        CSSPropertyFontVariantEastAsian,
+        CSSPropertyWebkitLocale,
+        CSSPropertyWebkitTextOrientation,
+        CSSPropertyWebkitWritingMode,
+        CSSPropertyWebkitTextZoom,
+        CSSPropertyZoom,
+        CSSPropertyFontSynthesis,
+        CSSPropertyWebkitRubyPosition,
+        CSSPropertyAlignmentBaseline,
+        CSSPropertyAnimationDelay,
+        CSSPropertyAnimationDirection,
+        CSSPropertyAnimationDuration,
+        CSSPropertyAnimationFillMode,
+        CSSPropertyAnimationIterationCount,
+        CSSPropertyAnimationName,
+        CSSPropertyAnimationPlayState,
+        CSSPropertyAnimationTimingFunction,
+        CSSPropertyBackgroundAttachment,
+        CSSPropertyBackgroundBlendMode,
+        CSSPropertyBackgroundClip,
+        CSSPropertyBackgroundColor,
+        CSSPropertyBackgroundImage,
+        CSSPropertyBackgroundOrigin,
+        CSSPropertyBackgroundPositionX,
+        CSSPropertyBackgroundPositionY,
+        CSSPropertyBackgroundRepeatX,
+        CSSPropertyBackgroundRepeatY,
+        CSSPropertyBackgroundSize,
+        CSSPropertyBaselineShift,
+        CSSPropertyBorderBottomColor,
+        CSSPropertyBorderBottomLeftRadius,
+        CSSPropertyBorderBottomRightRadius,
+        CSSPropertyBorderBottomStyle,
+        CSSPropertyBorderBottomWidth,
+        CSSPropertyBorderCollapse,
+        CSSPropertyBorderImageOutset,
+        CSSPropertyBorderImageRepeat,
+        CSSPropertyBorderImageSlice,
+        CSSPropertyBorderImageSource,
+        CSSPropertyBorderImageWidth,
+        CSSPropertyBorderLeftColor,
+        CSSPropertyBorderLeftStyle,
+        CSSPropertyBorderLeftWidth,
+        CSSPropertyBorderRightColor,
+        CSSPropertyBorderRightStyle,
+        CSSPropertyBorderRightWidth,
+        CSSPropertyBorderTopColor,
+        CSSPropertyBorderTopLeftRadius,
+        CSSPropertyBorderTopRightRadius,
+        CSSPropertyBorderTopStyle,
+        CSSPropertyBorderTopWidth,
+        CSSPropertyBottom,
+        CSSPropertyBoxShadow,
+        CSSPropertyBoxSizing,
+        CSSPropertyBufferedRendering,
+        CSSPropertyCaptionSide,
+        CSSPropertyClear,
+        CSSPropertyClip,
+        CSSPropertyWebkitClipPath,
+        CSSPropertyClipPath,
+        CSSPropertyClipRule,
+        CSSPropertyColorInterpolation,
+        CSSPropertyColorInterpolationFilters,
+        CSSPropertyColorProfile,
+        CSSPropertyColorRendering,
+        CSSPropertyContent,
+        CSSPropertyCounterIncrement,
+        CSSPropertyCounterReset,
+        CSSPropertyCursor,
+        CSSPropertyWebkitCursorVisibility,
+        CSSPropertyCx,
+        CSSPropertyCy,
+        CSSPropertyDominantBaseline,
+        CSSPropertyEmptyCells,
+        CSSPropertyEnableBackground,
+        CSSPropertyFill,
+        CSSPropertyFillOpacity,
+        CSSPropertyFillRule,
+        CSSPropertyFloat,
+        CSSPropertyFloodColor,
+        CSSPropertyFloodOpacity,
+        CSSPropertyFontStretch,
+        CSSPropertyGlyphOrientationHorizontal,
+        CSSPropertyGlyphOrientationVertical,
+        CSSPropertyHeight,
+        CSSPropertyImageRendering,
+        CSSPropertyKerning,
+        CSSPropertyLeft,
+        CSSPropertyLetterSpacing,
+        CSSPropertyLightingColor,
+        CSSPropertyLineHeight,
+        CSSPropertyListStyleImage,
+        CSSPropertyListStylePosition,
+        CSSPropertyListStyleType,
+        CSSPropertyMarginBottom,
+        CSSPropertyMarginLeft,
+        CSSPropertyMarginRight,
+        CSSPropertyMarginTop,
+        CSSPropertyMarkerEnd,
+        CSSPropertyMarkerMid,
+        CSSPropertyMarkerStart,
+        CSSPropertyMask,
+        CSSPropertyMaskType,
+        CSSPropertyMaxHeight,
+        CSSPropertyMaxWidth,
+        CSSPropertyMinHeight,
+        CSSPropertyMinWidth,
+        CSSPropertyObjectFit,
+        CSSPropertyOpacity,
+        CSSPropertyOrphans,
+        CSSPropertyOutlineColor,
+        CSSPropertyOutlineOffset,
+        CSSPropertyOutlineStyle,
+        CSSPropertyOutlineWidth,
+        CSSPropertyOverflowWrap,
+        CSSPropertyOverflowX,
+        CSSPropertyOverflowY,
+        CSSPropertyPaddingBottom,
+        CSSPropertyPaddingLeft,
+        CSSPropertyPaddingRight,
+        CSSPropertyPaddingTop,
+        CSSPropertyPage,
+        CSSPropertyPageBreakAfter,
+        CSSPropertyPageBreakBefore,
+        CSSPropertyPageBreakInside,
+        CSSPropertyPaintOrder,
+        CSSPropertyPointerEvents,
+        CSSPropertyPosition,
+        CSSPropertyQuotes,
+        CSSPropertyR,
+        CSSPropertyResize,
+        CSSPropertyRight,
+        CSSPropertyRx,
+        CSSPropertyRy,
+        CSSPropertyShapeRendering,
+        CSSPropertySize,
+        CSSPropertySrc,
+        CSSPropertyStopColor,
+        CSSPropertyStopOpacity,
+        CSSPropertyStroke,
+        CSSPropertyStrokeDasharray,
+        CSSPropertyStrokeDashoffset,
+        CSSPropertyStrokeLinecap,
+        CSSPropertyStrokeLinejoin,
+        CSSPropertyStrokeMiterlimit,
+        CSSPropertyStrokeOpacity,
+        CSSPropertyStrokeWidth,
+        CSSPropertySpeak,
+        CSSPropertyTableLayout,
+        CSSPropertyTabSize,
+        CSSPropertyTextAlign,
+        CSSPropertyTextAnchor,
+        CSSPropertyTextDecoration,
+        CSSPropertyTextIndent,
+        CSSPropertyTextLineThrough,
+        CSSPropertyTextLineThroughColor,
+        CSSPropertyTextLineThroughMode,
+        CSSPropertyTextLineThroughStyle,
+        CSSPropertyTextLineThroughWidth,
+        CSSPropertyTextOverflow,
+        CSSPropertyTextOverline,
+        CSSPropertyTextOverlineColor,
+        CSSPropertyTextOverlineMode,
+        CSSPropertyTextOverlineStyle,
+        CSSPropertyTextOverlineWidth,
+        CSSPropertyTextShadow,
+        CSSPropertyTextTransform,
+        CSSPropertyTextUnderline,
+        CSSPropertyTextUnderlineColor,
+        CSSPropertyTextUnderlineMode,
+        CSSPropertyTextUnderlineStyle,
+        CSSPropertyTextUnderlineWidth,
+        CSSPropertyTop,
+        CSSPropertyTransitionDelay,
+        CSSPropertyTransitionDuration,
+        CSSPropertyTransitionProperty,
+        CSSPropertyTransitionTimingFunction,
+        CSSPropertyUnicodeRange,
+        CSSPropertyVectorEffect,
+        CSSPropertyVerticalAlign,
+        CSSPropertyVisibility,
+        CSSPropertyWhiteSpace,
+        CSSPropertyWidows,
+        CSSPropertyWidth,
+        CSSPropertyWillChange,
+        CSSPropertyWordBreak,
+        CSSPropertyWordSpacing,
+        CSSPropertyWordWrap,
+        CSSPropertyWritingMode,
+        CSSPropertyX,
+        CSSPropertyY,
+        CSSPropertyZIndex,
+        CSSPropertyAlt,
+        CSSPropertyWebkitAnimationDelay,
+        CSSPropertyWebkitAnimationDirection,
+        CSSPropertyWebkitAnimationDuration,
+        CSSPropertyWebkitAnimationFillMode,
+        CSSPropertyWebkitAnimationIterationCount,
+        CSSPropertyWebkitAnimationName,
+        CSSPropertyWebkitAnimationPlayState,
+        CSSPropertyWebkitAnimationTimingFunction,
+        CSSPropertyWebkitAppearance,
+        CSSPropertyWebkitAspectRatio,
+        CSSPropertyWebkitBackfaceVisibility,
+        CSSPropertyWebkitBackgroundClip,
+        CSSPropertyWebkitBackgroundComposite,
+        CSSPropertyWebkitBackgroundOrigin,
+        CSSPropertyWebkitBackgroundSize,
+        CSSPropertyWebkitBorderAfterColor,
+        CSSPropertyWebkitBorderAfterStyle,
+        CSSPropertyWebkitBorderAfterWidth,
+        CSSPropertyWebkitBorderBeforeColor,
+        CSSPropertyWebkitBorderBeforeStyle,
+        CSSPropertyWebkitBorderBeforeWidth,
+        CSSPropertyWebkitBorderEndColor,
+        CSSPropertyWebkitBorderEndStyle,
+        CSSPropertyWebkitBorderEndWidth,
+        CSSPropertyWebkitBorderFit,
+        CSSPropertyWebkitBorderHorizontalSpacing,
+        CSSPropertyWebkitBorderImage,
+        CSSPropertyWebkitBorderStartColor,
+        CSSPropertyWebkitBorderStartStyle,
+        CSSPropertyWebkitBorderStartWidth,
+        CSSPropertyWebkitBorderVerticalSpacing,
+        CSSPropertyWebkitBoxAlign,
+        CSSPropertyWebkitBoxDirection,
+        CSSPropertyWebkitBoxFlex,
+        CSSPropertyWebkitBoxFlexGroup,
+        CSSPropertyWebkitBoxLines,
+        CSSPropertyWebkitBoxOrdinalGroup,
+        CSSPropertyWebkitBoxOrient,
+        CSSPropertyWebkitBoxPack,
+        CSSPropertyWebkitBoxReflect,
+        CSSPropertyWebkitBoxShadow,
+        CSSPropertyWebkitColumnAxis,
+        CSSPropertyWebkitColumnBreakAfter,
+        CSSPropertyWebkitColumnBreakBefore,
+        CSSPropertyWebkitColumnBreakInside,
+        CSSPropertyColumnCount,
+        CSSPropertyColumnFill,
+        CSSPropertyColumnGap,
+        CSSPropertyColumnProgression,
+        CSSPropertyColumnRuleColor,
+        CSSPropertyColumnRuleStyle,
+        CSSPropertyColumnRuleWidth,
+        CSSPropertyColumnSpan,
+        CSSPropertyColumnWidth,
+        CSSPropertyWebkitBoxDecorationBreak,
+        CSSPropertyFilter,
+        CSSPropertyAlignContent,
+        CSSPropertyAlignItems,
+        CSSPropertyAlignSelf,
+        CSSPropertyFlexBasis,
+        CSSPropertyFlexDirection,
+        CSSPropertyFlexGrow,
+        CSSPropertyFlexShrink,
+        CSSPropertyFlexWrap,
+        CSSPropertyJustifyContent,
+        CSSPropertyJustifySelf,
+        CSSPropertyWebkitFontSizeDelta,
+        CSSPropertyJustifyItems,
+        CSSPropertyWebkitGridAutoColumns,
+        CSSPropertyWebkitGridAutoRows,
+        CSSPropertyWebkitGridColumnEnd,
+        CSSPropertyWebkitGridColumnGap,
+        CSSPropertyWebkitGridColumnStart,
+        CSSPropertyWebkitGridTemplateColumns,
+        CSSPropertyWebkitGridTemplateRows,
+        CSSPropertyWebkitGridRowEnd,
+        CSSPropertyWebkitGridRowGap,
+        CSSPropertyWebkitGridRowStart,
+        CSSPropertyWebkitGridTemplateAreas,
+        CSSPropertyWebkitGridAutoFlow,
+        CSSPropertyWebkitHyphenateCharacter,
+        CSSPropertyWebkitHyphenateLimitAfter,
+        CSSPropertyWebkitHyphenateLimitBefore,
+        CSSPropertyWebkitHyphenateLimitLines,
+        CSSPropertyWebkitHyphens,
+        CSSPropertyWebkitInitialLetter,
+        CSSPropertyWebkitLineBoxContain,
+        CSSPropertyWebkitLineAlign,
+        CSSPropertyWebkitLineBreak,
+        CSSPropertyWebkitLineClamp,
+        CSSPropertyWebkitLineGrid,
+        CSSPropertyWebkitLineSnap,
+        CSSPropertyWebkitLogicalWidth,
+        CSSPropertyWebkitLogicalHeight,
+        CSSPropertyWebkitMarginAfterCollapse,
+        CSSPropertyWebkitMarginBeforeCollapse,
+        CSSPropertyWebkitMarginBottomCollapse,
+        CSSPropertyWebkitMarginTopCollapse,
+        CSSPropertyWebkitMarginAfter,
+        CSSPropertyWebkitMarginBefore,
+        CSSPropertyWebkitMarginEnd,
+        CSSPropertyWebkitMarginStart,
+        CSSPropertyWebkitMarqueeDirection,
+        CSSPropertyWebkitMarqueeIncrement,
+        CSSPropertyWebkitMarqueeRepetition,
+        CSSPropertyWebkitMarqueeSpeed,
+        CSSPropertyWebkitMarqueeStyle,
+        CSSPropertyWebkitMaskBoxImage,
+        CSSPropertyWebkitMaskBoxImageOutset,
+        CSSPropertyWebkitMaskBoxImageRepeat,
+        CSSPropertyWebkitMaskBoxImageSlice,
+        CSSPropertyWebkitMaskBoxImageSource,
+        CSSPropertyWebkitMaskBoxImageWidth,
+        CSSPropertyWebkitMaskClip,
+        CSSPropertyWebkitMaskComposite,
+        CSSPropertyWebkitMaskImage,
+        CSSPropertyWebkitMaskOrigin,
+        CSSPropertyWebkitMaskPositionX,
+        CSSPropertyWebkitMaskPositionY,
+        CSSPropertyWebkitMaskRepeatX,
+        CSSPropertyWebkitMaskRepeatY,
+        CSSPropertyWebkitMaskSize,
+        CSSPropertyWebkitMaskSourceType,
+        CSSPropertyWebkitMaxLogicalWidth,
+        CSSPropertyWebkitMaxLogicalHeight,
+        CSSPropertyWebkitMinLogicalWidth,
+        CSSPropertyWebkitMinLogicalHeight,
+        CSSPropertyWebkitNbspMode,
+        CSSPropertyOrder,
+        CSSPropertyWebkitPaddingAfter,
+        CSSPropertyWebkitPaddingBefore,
+        CSSPropertyWebkitPaddingEnd,
+        CSSPropertyWebkitPaddingStart,
+        CSSPropertyPerspective,
+        CSSPropertyPerspectiveOriginX,
+        CSSPropertyPerspectiveOriginY,
+        CSSPropertyWebkitPrintColorAdjust,
+        CSSPropertyWebkitRtlOrdering,
+        CSSPropertyWebkitSvgShadow,
+        CSSPropertyWebkitTextCombine,
+        CSSPropertyWebkitTextDecorationLine,
+        CSSPropertyWebkitTextDecorationStyle,
+        CSSPropertyWebkitTextDecorationColor,
+        CSSPropertyWebkitTextDecorationSkip,
+        CSSPropertyWebkitTextUnderlinePosition,
+        CSSPropertyWebkitTextDecorationsInEffect,
+        CSSPropertyWebkitTextEmphasisColor,
+        CSSPropertyWebkitTextEmphasisPosition,
+        CSSPropertyWebkitTextEmphasisStyle,
+        CSSPropertyWebkitTextFillColor,
+        CSSPropertyWebkitTextSecurity,
+        CSSPropertyWebkitTextStrokeColor,
+        CSSPropertyWebkitTextStrokeWidth,
+        CSSPropertyTransform,
+        CSSPropertyTransformOriginX,
+        CSSPropertyTransformOriginY,
+        CSSPropertyTransformOriginZ,
+        CSSPropertyTransformStyle,
+        CSSPropertyWebkitTransformStyle,
+        CSSPropertyWebkitTransitionDelay,
+        CSSPropertyWebkitTransitionDuration,
+        CSSPropertyWebkitTransitionProperty,
+        CSSPropertyWebkitTransitionTimingFunction,
+        CSSPropertyWebkitUserDrag,
+        CSSPropertyWebkitUserModify,
+        CSSPropertyWebkitUserSelect,
+        CSSPropertyWebkitFlowInto,
+        CSSPropertyWebkitFlowFrom,
+        CSSPropertyWebkitRegionFragment,
+        CSSPropertyWebkitRegionBreakAfter,
+        CSSPropertyWebkitRegionBreakBefore,
+        CSSPropertyWebkitRegionBreakInside,
+        CSSPropertyWebkitShapeOutside,
+        CSSPropertyWebkitShapeMargin,
+        CSSPropertyWebkitShapeImageThreshold,
+        CSSPropertyWebkitTapHighlightColor,
+        CSSPropertyTouchAction,
+    };
+    return StylePropertyShorthand(CSSPropertyAll, allProperties);
+}
+
 StylePropertyShorthand animationShorthand()
 {
     static const CSSPropertyID animationProperties[] = {
@@ -187,11 +579,24 @@ StylePropertyShorthand fontShorthand()
         CSSPropertyFontFamily,
         CSSPropertyFontSize,
         CSSPropertyFontStyle,
-        CSSPropertyFontVariant,
+        CSSPropertyFontVariantCaps,
         CSSPropertyFontWeight,
         CSSPropertyLineHeight,
     };
     return StylePropertyShorthand(CSSPropertyFont, fontProperties);
+}
+
+StylePropertyShorthand fontVariantShorthand()
+{
+    static const CSSPropertyID fontVariantProperties[] = {
+        CSSPropertyFontVariantLigatures,
+        CSSPropertyFontVariantPosition,
+        CSSPropertyFontVariantCaps,
+        CSSPropertyFontVariantNumeric,
+        CSSPropertyFontVariantAlternates,
+        CSSPropertyFontVariantEastAsian,
+    };
+    return StylePropertyShorthand(CSSPropertyFontVariant, fontVariantProperties);
 }
 
 StylePropertyShorthand listStyleShorthand()
@@ -388,7 +793,7 @@ StylePropertyShorthand webkitGridAreaShorthand()
         CSSPropertyWebkitGridRowStart,
         CSSPropertyWebkitGridColumnStart,
         CSSPropertyWebkitGridRowEnd,
-        CSSPropertyWebkitGridRowStart,
+        CSSPropertyWebkitGridColumnEnd,
     };
     return StylePropertyShorthand(CSSPropertyWebkitGridArea, webkitGridAreaProperties);
 }
@@ -410,6 +815,15 @@ StylePropertyShorthand webkitGridColumnShorthand()
         CSSPropertyWebkitGridColumnEnd,
     };
     return StylePropertyShorthand(CSSPropertyWebkitGridColumn, webkitGridColumnProperties);
+}
+
+StylePropertyShorthand webkitGridGapShorthand()
+{
+    static const CSSPropertyID webkitGridGapProperties[] = {
+        CSSPropertyWebkitGridColumnGap,
+        CSSPropertyWebkitGridRowGap,
+    };
+    return StylePropertyShorthand(CSSPropertyWebkitGridGap, webkitGridGapProperties);
 }
 
 StylePropertyShorthand webkitGridRowShorthand()
@@ -539,6 +953,8 @@ StylePropertyShorthand shorthandForProperty(CSSPropertyID propertyID)
     static NeverDestroyed<StylePropertyShorthand> emptyShorthand;
 
     switch (propertyID) {
+    case CSSPropertyAll:
+        return allShorthand();
     case CSSPropertyAnimation:
         return animationShorthand();
     case CSSPropertyBackground:
@@ -571,6 +987,8 @@ StylePropertyShorthand shorthandForProperty(CSSPropertyID propertyID)
         return borderWidthShorthand();
     case CSSPropertyFont:
         return fontShorthand();
+    case CSSPropertyFontVariant:
+        return fontVariantShorthand();
     case CSSPropertyListStyle:
         return listStyleShorthand();
     case CSSPropertyMargin:
@@ -613,6 +1031,8 @@ StylePropertyShorthand shorthandForProperty(CSSPropertyID propertyID)
         return webkitGridTemplateShorthand();
     case CSSPropertyWebkitGridColumn:
         return webkitGridColumnShorthand();
+    case CSSPropertyWebkitGridGap:
+        return webkitGridGapShorthand();
     case CSSPropertyWebkitGridRow:
         return webkitGridRowShorthand();
     case CSSPropertyWebkitMarginCollapse:
@@ -651,111 +1071,357 @@ Vector<StylePropertyShorthand> matchingShorthandsForLonghand(CSSPropertyID prope
     case CSSPropertyAnimationIterationCount:
     case CSSPropertyAnimationName:
     case CSSPropertyAnimationTimingFunction:
-        return Vector<StylePropertyShorthand>{animationShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), animationShorthand()};
     case CSSPropertyBackgroundPositionX:
     case CSSPropertyBackgroundPositionY:
-        return Vector<StylePropertyShorthand>{backgroundShorthand(), backgroundPositionShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), backgroundShorthand(), backgroundPositionShorthand()};
     case CSSPropertyBackgroundRepeatX:
     case CSSPropertyBackgroundRepeatY:
-        return Vector<StylePropertyShorthand>{backgroundShorthand(), backgroundRepeatShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), backgroundShorthand(), backgroundRepeatShorthand()};
     case CSSPropertyBackgroundAttachment:
     case CSSPropertyBackgroundClip:
     case CSSPropertyBackgroundColor:
     case CSSPropertyBackgroundImage:
     case CSSPropertyBackgroundOrigin:
     case CSSPropertyBackgroundSize:
-        return Vector<StylePropertyShorthand>{backgroundShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), backgroundShorthand()};
     case CSSPropertyBorderImageOutset:
     case CSSPropertyBorderImageRepeat:
     case CSSPropertyBorderImageSlice:
     case CSSPropertyBorderImageSource:
     case CSSPropertyBorderImageWidth:
-        return Vector<StylePropertyShorthand>{borderImageShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderImageShorthand()};
     case CSSPropertyBorderBottomColor:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderBottomShorthand(), borderColorShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderBottomShorthand(), borderColorShorthand()};
     case CSSPropertyBorderBottomStyle:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderBottomShorthand(), borderStyleShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderBottomShorthand(), borderStyleShorthand()};
     case CSSPropertyBorderBottomWidth:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderBottomShorthand(), borderWidthShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderBottomShorthand(), borderWidthShorthand()};
     case CSSPropertyBorderLeftColor:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderColorShorthand(), borderLeftShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderColorShorthand(), borderLeftShorthand()};
     case CSSPropertyBorderRightColor:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderColorShorthand(), borderRightShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderColorShorthand(), borderRightShorthand()};
     case CSSPropertyBorderTopColor:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderColorShorthand(), borderTopShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderColorShorthand(), borderTopShorthand()};
     case CSSPropertyBorderLeftStyle:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderLeftShorthand(), borderStyleShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderLeftShorthand(), borderStyleShorthand()};
     case CSSPropertyBorderLeftWidth:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderLeftShorthand(), borderWidthShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderLeftShorthand(), borderWidthShorthand()};
     case CSSPropertyBorderRightStyle:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderRightShorthand(), borderStyleShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderRightShorthand(), borderStyleShorthand()};
     case CSSPropertyBorderRightWidth:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderRightShorthand(), borderWidthShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderRightShorthand(), borderWidthShorthand()};
     case CSSPropertyBorderTopStyle:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderStyleShorthand(), borderTopShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderStyleShorthand(), borderTopShorthand()};
     case CSSPropertyBorderTopWidth:
-        return Vector<StylePropertyShorthand>{borderShorthand(), borderTopShorthand(), borderWidthShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderShorthand(), borderTopShorthand(), borderWidthShorthand()};
     case CSSPropertyWebkitBorderHorizontalSpacing:
     case CSSPropertyWebkitBorderVerticalSpacing:
-        return Vector<StylePropertyShorthand>{borderSpacingShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), borderSpacingShorthand()};
     case CSSPropertyColumnRuleColor:
     case CSSPropertyColumnRuleStyle:
     case CSSPropertyColumnRuleWidth:
-        return Vector<StylePropertyShorthand>{columnRuleShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), columnRuleShorthand()};
     case CSSPropertyColumnCount:
     case CSSPropertyColumnWidth:
-        return Vector<StylePropertyShorthand>{columnsShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), columnsShorthand()};
     case CSSPropertyFlexDirection:
     case CSSPropertyFlexWrap:
-        return Vector<StylePropertyShorthand>{flexFlowShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), flexFlowShorthand()};
     case CSSPropertyFlexBasis:
     case CSSPropertyFlexGrow:
     case CSSPropertyFlexShrink:
-        return Vector<StylePropertyShorthand>{flexShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), flexShorthand()};
+    case CSSPropertyFontVariantCaps:
+        return Vector<StylePropertyShorthand>{allShorthand(), fontShorthand(), fontVariantShorthand()};
     case CSSPropertyFontFamily:
     case CSSPropertyFontSize:
     case CSSPropertyFontStyle:
-    case CSSPropertyFontVariant:
     case CSSPropertyFontWeight:
     case CSSPropertyLineHeight:
-        return Vector<StylePropertyShorthand>{fontShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), fontShorthand()};
+    case CSSPropertyFontVariantAlternates:
+    case CSSPropertyFontVariantEastAsian:
+    case CSSPropertyFontVariantLigatures:
+    case CSSPropertyFontVariantNumeric:
+    case CSSPropertyFontVariantPosition:
+        return Vector<StylePropertyShorthand>{allShorthand(), fontVariantShorthand()};
     case CSSPropertyListStyleImage:
     case CSSPropertyListStylePosition:
     case CSSPropertyListStyleType:
-        return Vector<StylePropertyShorthand>{listStyleShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), listStyleShorthand()};
     case CSSPropertyMarginBottom:
     case CSSPropertyMarginLeft:
     case CSSPropertyMarginRight:
     case CSSPropertyMarginTop:
-        return Vector<StylePropertyShorthand>{marginShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), marginShorthand()};
     case CSSPropertyMarkerEnd:
     case CSSPropertyMarkerMid:
     case CSSPropertyMarkerStart:
-        return Vector<StylePropertyShorthand>{markerShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), markerShorthand()};
     case CSSPropertyOutlineColor:
     case CSSPropertyOutlineStyle:
     case CSSPropertyOutlineWidth:
-        return Vector<StylePropertyShorthand>{outlineShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), outlineShorthand()};
     case CSSPropertyOverflowX:
     case CSSPropertyOverflowY:
-        return Vector<StylePropertyShorthand>{overflowShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), overflowShorthand()};
     case CSSPropertyPaddingBottom:
     case CSSPropertyPaddingLeft:
     case CSSPropertyPaddingRight:
     case CSSPropertyPaddingTop:
-        return Vector<StylePropertyShorthand>{paddingShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), paddingShorthand()};
     case CSSPropertyPerspectiveOriginX:
     case CSSPropertyPerspectiveOriginY:
-        return Vector<StylePropertyShorthand>{perspectiveOriginShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), perspectiveOriginShorthand()};
     case CSSPropertyTransformOriginX:
     case CSSPropertyTransformOriginY:
     case CSSPropertyTransformOriginZ:
-        return Vector<StylePropertyShorthand>{transformOriginShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), transformOriginShorthand()};
     case CSSPropertyTransitionDelay:
     case CSSPropertyTransitionDuration:
     case CSSPropertyTransitionProperty:
     case CSSPropertyTransitionTimingFunction:
-        return Vector<StylePropertyShorthand>{transitionShorthand()};
+        return Vector<StylePropertyShorthand>{allShorthand(), transitionShorthand()};
+    case CSSPropertyWebkitAnimationPlayState:
+    case CSSPropertyWebkitAppearance:
+    case CSSPropertyWebkitAspectRatio:
+    case CSSPropertyWebkitBackfaceVisibility:
+    case CSSPropertyWebkitBackgroundClip:
+    case CSSPropertyWebkitBackgroundComposite:
+    case CSSPropertyWebkitBackgroundOrigin:
+    case CSSPropertyWebkitBackgroundSize:
+    case CSSPropertyWebkitBorderFit:
+    case CSSPropertyWebkitBorderImage:
+    case CSSPropertyWebkitBoxAlign:
+    case CSSPropertyWebkitBoxDecorationBreak:
+    case CSSPropertyWebkitBoxDirection:
+    case CSSPropertyWebkitBoxFlex:
+    case CSSPropertyWebkitBoxFlexGroup:
+    case CSSPropertyWebkitBoxLines:
+    case CSSPropertyWebkitBoxOrdinalGroup:
+    case CSSPropertyWebkitBoxOrient:
+    case CSSPropertyWebkitBoxPack:
+    case CSSPropertyWebkitBoxReflect:
+    case CSSPropertyWebkitBoxShadow:
+    case CSSPropertyWebkitClipPath:
+    case CSSPropertyWebkitColumnAxis:
+    case CSSPropertyWebkitColumnBreakAfter:
+    case CSSPropertyWebkitColumnBreakBefore:
+    case CSSPropertyWebkitColumnBreakInside:
+    case CSSPropertyWebkitCursorVisibility:
+    case CSSPropertyWebkitFlowFrom:
+    case CSSPropertyWebkitFlowInto:
+    case CSSPropertyWebkitFontKerning:
+    case CSSPropertyWebkitFontSizeDelta:
+    case CSSPropertyWebkitFontSmoothing:
+    case CSSPropertyWebkitHyphenateCharacter:
+    case CSSPropertyWebkitHyphenateLimitAfter:
+    case CSSPropertyWebkitHyphenateLimitBefore:
+    case CSSPropertyWebkitHyphenateLimitLines:
+    case CSSPropertyWebkitHyphens:
+    case CSSPropertyWebkitInitialLetter:
+    case CSSPropertyWebkitLineAlign:
+    case CSSPropertyWebkitLineBoxContain:
+    case CSSPropertyWebkitLineBreak:
+    case CSSPropertyWebkitLineClamp:
+    case CSSPropertyWebkitLineGrid:
+    case CSSPropertyWebkitLineSnap:
+    case CSSPropertyWebkitLocale:
+    case CSSPropertyWebkitLogicalHeight:
+    case CSSPropertyWebkitLogicalWidth:
+    case CSSPropertyWebkitMarginAfter:
+    case CSSPropertyWebkitMarginBefore:
+    case CSSPropertyWebkitMarginBottomCollapse:
+    case CSSPropertyWebkitMarginEnd:
+    case CSSPropertyWebkitMarginStart:
+    case CSSPropertyWebkitMarginTopCollapse:
+    case CSSPropertyWebkitMaskBoxImage:
+    case CSSPropertyWebkitMaskBoxImageOutset:
+    case CSSPropertyWebkitMaskBoxImageRepeat:
+    case CSSPropertyWebkitMaskBoxImageSlice:
+    case CSSPropertyWebkitMaskBoxImageSource:
+    case CSSPropertyWebkitMaskBoxImageWidth:
+    case CSSPropertyWebkitMaskComposite:
+    case CSSPropertyWebkitMaxLogicalHeight:
+    case CSSPropertyWebkitMaxLogicalWidth:
+    case CSSPropertyWebkitMinLogicalHeight:
+    case CSSPropertyWebkitMinLogicalWidth:
+    case CSSPropertyWebkitNbspMode:
+    case CSSPropertyWebkitPaddingAfter:
+    case CSSPropertyWebkitPaddingBefore:
+    case CSSPropertyWebkitPaddingEnd:
+    case CSSPropertyWebkitPaddingStart:
+    case CSSPropertyWebkitPrintColorAdjust:
+    case CSSPropertyWebkitRegionBreakAfter:
+    case CSSPropertyWebkitRegionBreakBefore:
+    case CSSPropertyWebkitRegionBreakInside:
+    case CSSPropertyWebkitRegionFragment:
+    case CSSPropertyWebkitRtlOrdering:
+    case CSSPropertyWebkitRubyPosition:
+    case CSSPropertyWebkitShapeImageThreshold:
+    case CSSPropertyWebkitShapeMargin:
+    case CSSPropertyWebkitShapeOutside:
+    case CSSPropertyWebkitSvgShadow:
+    case CSSPropertyWebkitTapHighlightColor:
+    case CSSPropertyWebkitTextCombine:
+    case CSSPropertyWebkitTextDecorationSkip:
+    case CSSPropertyWebkitTextDecorationsInEffect:
+    case CSSPropertyWebkitTextEmphasisPosition:
+    case CSSPropertyWebkitTextFillColor:
+    case CSSPropertyWebkitTextOrientation:
+    case CSSPropertyWebkitTextSecurity:
+    case CSSPropertyWebkitTextUnderlinePosition:
+    case CSSPropertyWebkitTextZoom:
+    case CSSPropertyWebkitTransformStyle:
+    case CSSPropertyWebkitUserDrag:
+    case CSSPropertyWebkitUserModify:
+    case CSSPropertyWebkitUserSelect:
+    case CSSPropertyWebkitWritingMode:
+    case CSSPropertyAlignContent:
+    case CSSPropertyAlignItems:
+    case CSSPropertyAlignSelf:
+    case CSSPropertyAlignmentBaseline:
+    case CSSPropertyAlt:
+    case CSSPropertyAnimationPlayState:
+    case CSSPropertyBackgroundBlendMode:
+    case CSSPropertyBaselineShift:
+    case CSSPropertyBorderCollapse:
+    case CSSPropertyBottom:
+    case CSSPropertyBoxShadow:
+    case CSSPropertyBoxSizing:
+    case CSSPropertyBufferedRendering:
+    case CSSPropertyCaptionSide:
+    case CSSPropertyClear:
+    case CSSPropertyClip:
+    case CSSPropertyClipPath:
+    case CSSPropertyClipRule:
+    case CSSPropertyColor:
+    case CSSPropertyColorInterpolation:
+    case CSSPropertyColorInterpolationFilters:
+    case CSSPropertyColorProfile:
+    case CSSPropertyColorRendering:
+    case CSSPropertyColumnFill:
+    case CSSPropertyColumnGap:
+    case CSSPropertyColumnProgression:
+    case CSSPropertyColumnSpan:
+    case CSSPropertyContent:
+    case CSSPropertyCounterIncrement:
+    case CSSPropertyCounterReset:
+    case CSSPropertyCursor:
+    case CSSPropertyCx:
+    case CSSPropertyCy:
+    case CSSPropertyDisplay:
+    case CSSPropertyDominantBaseline:
+    case CSSPropertyEmptyCells:
+    case CSSPropertyEnableBackground:
+    case CSSPropertyFill:
+    case CSSPropertyFillOpacity:
+    case CSSPropertyFillRule:
+    case CSSPropertyFilter:
+    case CSSPropertyFloat:
+    case CSSPropertyFloodColor:
+    case CSSPropertyFloodOpacity:
+    case CSSPropertyFontFeatureSettings:
+    case CSSPropertyFontStretch:
+    case CSSPropertyFontSynthesis:
+    case CSSPropertyGlyphOrientationHorizontal:
+    case CSSPropertyGlyphOrientationVertical:
+    case CSSPropertyHeight:
+    case CSSPropertyImageRendering:
+    case CSSPropertyJustifyContent:
+    case CSSPropertyJustifyItems:
+    case CSSPropertyJustifySelf:
+    case CSSPropertyKerning:
+    case CSSPropertyLeft:
+    case CSSPropertyLetterSpacing:
+    case CSSPropertyLightingColor:
+    case CSSPropertyMask:
+    case CSSPropertyMaskType:
+    case CSSPropertyMaxHeight:
+    case CSSPropertyMaxWidth:
+    case CSSPropertyMinHeight:
+    case CSSPropertyMinWidth:
+    case CSSPropertyObjectFit:
+    case CSSPropertyOpacity:
+    case CSSPropertyOrder:
+    case CSSPropertyOrphans:
+    case CSSPropertyOutlineOffset:
+    case CSSPropertyOverflowWrap:
+    case CSSPropertyPage:
+    case CSSPropertyPageBreakAfter:
+    case CSSPropertyPageBreakBefore:
+    case CSSPropertyPageBreakInside:
+    case CSSPropertyPaintOrder:
+    case CSSPropertyPerspective:
+    case CSSPropertyPointerEvents:
+    case CSSPropertyPosition:
+    case CSSPropertyQuotes:
+    case CSSPropertyR:
+    case CSSPropertyResize:
+    case CSSPropertyRight:
+    case CSSPropertyRx:
+    case CSSPropertyRy:
+    case CSSPropertyShapeRendering:
+    case CSSPropertySize:
+    case CSSPropertySpeak:
+    case CSSPropertySrc:
+    case CSSPropertyStopColor:
+    case CSSPropertyStopOpacity:
+    case CSSPropertyStroke:
+    case CSSPropertyStrokeDasharray:
+    case CSSPropertyStrokeDashoffset:
+    case CSSPropertyStrokeLinecap:
+    case CSSPropertyStrokeLinejoin:
+    case CSSPropertyStrokeMiterlimit:
+    case CSSPropertyStrokeOpacity:
+    case CSSPropertyStrokeWidth:
+    case CSSPropertyTabSize:
+    case CSSPropertyTableLayout:
+    case CSSPropertyTextAlign:
+    case CSSPropertyTextAnchor:
+    case CSSPropertyTextDecoration:
+    case CSSPropertyTextIndent:
+    case CSSPropertyTextLineThrough:
+    case CSSPropertyTextLineThroughColor:
+    case CSSPropertyTextLineThroughMode:
+    case CSSPropertyTextLineThroughStyle:
+    case CSSPropertyTextLineThroughWidth:
+    case CSSPropertyTextOverflow:
+    case CSSPropertyTextOverline:
+    case CSSPropertyTextOverlineColor:
+    case CSSPropertyTextOverlineMode:
+    case CSSPropertyTextOverlineStyle:
+    case CSSPropertyTextOverlineWidth:
+    case CSSPropertyTextRendering:
+    case CSSPropertyTextShadow:
+    case CSSPropertyTextTransform:
+    case CSSPropertyTextUnderline:
+    case CSSPropertyTextUnderlineColor:
+    case CSSPropertyTextUnderlineMode:
+    case CSSPropertyTextUnderlineStyle:
+    case CSSPropertyTextUnderlineWidth:
+    case CSSPropertyTop:
+    case CSSPropertyTouchAction:
+    case CSSPropertyTransform:
+    case CSSPropertyTransformStyle:
+    case CSSPropertyUnicodeRange:
+    case CSSPropertyVectorEffect:
+    case CSSPropertyVerticalAlign:
+    case CSSPropertyVisibility:
+    case CSSPropertyWhiteSpace:
+    case CSSPropertyWidows:
+    case CSSPropertyWidth:
+    case CSSPropertyWillChange:
+    case CSSPropertyWordBreak:
+    case CSSPropertyWordSpacing:
+    case CSSPropertyWordWrap:
+    case CSSPropertyWritingMode:
+    case CSSPropertyX:
+    case CSSPropertyY:
+    case CSSPropertyZIndex:
+    case CSSPropertyZoom:
+        return Vector<StylePropertyShorthand>{allShorthand()};
     case CSSPropertyWebkitAnimationDelay:
     case CSSPropertyWebkitAnimationDirection:
     case CSSPropertyWebkitAnimationDuration:
@@ -763,80 +1429,81 @@ Vector<StylePropertyShorthand> matchingShorthandsForLonghand(CSSPropertyID prope
     case CSSPropertyWebkitAnimationIterationCount:
     case CSSPropertyWebkitAnimationName:
     case CSSPropertyWebkitAnimationTimingFunction:
-        return Vector<StylePropertyShorthand>{webkitAnimationShorthand()};
+        return Vector<StylePropertyShorthand>{webkitAnimationShorthand(), allShorthand()};
     case CSSPropertyWebkitBorderAfterColor:
     case CSSPropertyWebkitBorderAfterStyle:
     case CSSPropertyWebkitBorderAfterWidth:
-        return Vector<StylePropertyShorthand>{webkitBorderAfterShorthand()};
+        return Vector<StylePropertyShorthand>{webkitBorderAfterShorthand(), allShorthand()};
     case CSSPropertyWebkitBorderBeforeColor:
     case CSSPropertyWebkitBorderBeforeStyle:
     case CSSPropertyWebkitBorderBeforeWidth:
-        return Vector<StylePropertyShorthand>{webkitBorderBeforeShorthand()};
+        return Vector<StylePropertyShorthand>{webkitBorderBeforeShorthand(), allShorthand()};
     case CSSPropertyWebkitBorderEndColor:
     case CSSPropertyWebkitBorderEndStyle:
     case CSSPropertyWebkitBorderEndWidth:
-        return Vector<StylePropertyShorthand>{webkitBorderEndShorthand()};
+        return Vector<StylePropertyShorthand>{webkitBorderEndShorthand(), allShorthand()};
     case CSSPropertyBorderBottomLeftRadius:
     case CSSPropertyBorderBottomRightRadius:
     case CSSPropertyBorderTopLeftRadius:
     case CSSPropertyBorderTopRightRadius:
-        return Vector<StylePropertyShorthand>{webkitBorderRadiusShorthand(), borderRadiusShorthand()};
+        return Vector<StylePropertyShorthand>{webkitBorderRadiusShorthand(), allShorthand(), borderRadiusShorthand()};
     case CSSPropertyWebkitBorderStartColor:
     case CSSPropertyWebkitBorderStartStyle:
     case CSSPropertyWebkitBorderStartWidth:
-        return Vector<StylePropertyShorthand>{webkitBorderStartShorthand()};
-    case CSSPropertyWebkitGridRowStart:
-        return Vector<StylePropertyShorthand>{webkitGridAreaShorthand(), webkitGridAreaShorthand(), webkitGridRowShorthand()};
-    case CSSPropertyWebkitGridColumnStart:
-        return Vector<StylePropertyShorthand>{webkitGridAreaShorthand(), webkitGridColumnShorthand()};
-    case CSSPropertyWebkitGridRowEnd:
-        return Vector<StylePropertyShorthand>{webkitGridAreaShorthand(), webkitGridRowShorthand()};
+        return Vector<StylePropertyShorthand>{webkitBorderStartShorthand(), allShorthand()};
     case CSSPropertyWebkitGridColumnEnd:
-        return Vector<StylePropertyShorthand>{webkitGridColumnShorthand()};
-    case CSSPropertyWebkitGridTemplateAreas:
-    case CSSPropertyWebkitGridTemplateColumns:
-    case CSSPropertyWebkitGridTemplateRows:
-        return Vector<StylePropertyShorthand>{webkitGridShorthand(), webkitGridTemplateShorthand()};
+    case CSSPropertyWebkitGridColumnStart:
+        return Vector<StylePropertyShorthand>{webkitGridAreaShorthand(), webkitGridColumnShorthand(), allShorthand()};
+    case CSSPropertyWebkitGridRowEnd:
+    case CSSPropertyWebkitGridRowStart:
+        return Vector<StylePropertyShorthand>{webkitGridAreaShorthand(), webkitGridRowShorthand(), allShorthand()};
+    case CSSPropertyWebkitGridColumnGap:
+    case CSSPropertyWebkitGridRowGap:
+        return Vector<StylePropertyShorthand>{webkitGridGapShorthand(), allShorthand()};
     case CSSPropertyWebkitGridAutoColumns:
     case CSSPropertyWebkitGridAutoFlow:
     case CSSPropertyWebkitGridAutoRows:
-        return Vector<StylePropertyShorthand>{webkitGridShorthand()};
+        return Vector<StylePropertyShorthand>{webkitGridShorthand(), allShorthand()};
+    case CSSPropertyWebkitGridTemplateAreas:
+    case CSSPropertyWebkitGridTemplateColumns:
+    case CSSPropertyWebkitGridTemplateRows:
+        return Vector<StylePropertyShorthand>{webkitGridShorthand(), webkitGridTemplateShorthand(), allShorthand()};
     case CSSPropertyWebkitMarginAfterCollapse:
     case CSSPropertyWebkitMarginBeforeCollapse:
-        return Vector<StylePropertyShorthand>{webkitMarginCollapseShorthand()};
+        return Vector<StylePropertyShorthand>{webkitMarginCollapseShorthand(), allShorthand()};
     case CSSPropertyWebkitMarqueeDirection:
     case CSSPropertyWebkitMarqueeIncrement:
     case CSSPropertyWebkitMarqueeRepetition:
     case CSSPropertyWebkitMarqueeSpeed:
     case CSSPropertyWebkitMarqueeStyle:
-        return Vector<StylePropertyShorthand>{webkitMarqueeShorthand()};
-    case CSSPropertyWebkitMaskPositionX:
-    case CSSPropertyWebkitMaskPositionY:
-        return Vector<StylePropertyShorthand>{webkitMaskShorthand(), webkitMaskPositionShorthand()};
-    case CSSPropertyWebkitMaskRepeatX:
-    case CSSPropertyWebkitMaskRepeatY:
-        return Vector<StylePropertyShorthand>{webkitMaskShorthand(), webkitMaskRepeatShorthand()};
+        return Vector<StylePropertyShorthand>{webkitMarqueeShorthand(), allShorthand()};
     case CSSPropertyWebkitMaskClip:
     case CSSPropertyWebkitMaskImage:
     case CSSPropertyWebkitMaskOrigin:
     case CSSPropertyWebkitMaskSize:
     case CSSPropertyWebkitMaskSourceType:
-        return Vector<StylePropertyShorthand>{webkitMaskShorthand()};
+        return Vector<StylePropertyShorthand>{webkitMaskShorthand(), allShorthand()};
+    case CSSPropertyWebkitMaskPositionX:
+    case CSSPropertyWebkitMaskPositionY:
+        return Vector<StylePropertyShorthand>{webkitMaskShorthand(), webkitMaskPositionShorthand(), allShorthand()};
+    case CSSPropertyWebkitMaskRepeatX:
+    case CSSPropertyWebkitMaskRepeatY:
+        return Vector<StylePropertyShorthand>{webkitMaskShorthand(), webkitMaskRepeatShorthand(), allShorthand()};
     case CSSPropertyWebkitTextDecorationColor:
     case CSSPropertyWebkitTextDecorationLine:
     case CSSPropertyWebkitTextDecorationStyle:
-        return Vector<StylePropertyShorthand>{webkitTextDecorationShorthand()};
+        return Vector<StylePropertyShorthand>{webkitTextDecorationShorthand(), allShorthand()};
     case CSSPropertyWebkitTextEmphasisColor:
     case CSSPropertyWebkitTextEmphasisStyle:
-        return Vector<StylePropertyShorthand>{webkitTextEmphasisShorthand()};
+        return Vector<StylePropertyShorthand>{webkitTextEmphasisShorthand(), allShorthand()};
     case CSSPropertyWebkitTextStrokeColor:
     case CSSPropertyWebkitTextStrokeWidth:
-        return Vector<StylePropertyShorthand>{webkitTextStrokeShorthand()};
+        return Vector<StylePropertyShorthand>{webkitTextStrokeShorthand(), allShorthand()};
     case CSSPropertyWebkitTransitionDelay:
     case CSSPropertyWebkitTransitionDuration:
     case CSSPropertyWebkitTransitionProperty:
     case CSSPropertyWebkitTransitionTimingFunction:
-        return Vector<StylePropertyShorthand>{webkitTransitionShorthand()};
+        return Vector<StylePropertyShorthand>{webkitTransitionShorthand(), allShorthand()};
     default:
         return { };
     }

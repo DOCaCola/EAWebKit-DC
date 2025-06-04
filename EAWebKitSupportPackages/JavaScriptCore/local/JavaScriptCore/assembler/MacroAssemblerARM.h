@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2013, 2014 Apple Inc.
+ * Copyright (C) 2008, 2013-2015 Apple Inc.
  * Copyright (C) 2009, 2010 University of Szeged
  * All rights reserved.
  *
@@ -825,7 +825,7 @@ public:
         return branchMul32(cond, src, dest, dest);
     }
 
-    Jump branchMul32(ResultCondition cond, TrustedImm32 imm, RegisterID src, RegisterID dest)
+    Jump branchMul32(ResultCondition cond, RegisterID src, TrustedImm32 imm, RegisterID dest)
     {
         ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
         if (cond == Overflow) {
@@ -902,6 +902,11 @@ public:
     {
         m_assembler.loadBranchTarget(ARMRegisters::S1, ARMAssembler::AL, true);
         return Call(m_assembler.blx(ARMRegisters::S1), Call::LinkableNear);
+    }
+
+    Call nearTailCall()
+    {
+        return Call(m_assembler.jmp(), Call::LinkableNearTail);
     }
 
     Call call(RegisterID target)
@@ -1117,6 +1122,7 @@ public:
         return s_isVFPPresent;
     }
     static bool supportsFloatingPointAbs() { return false; }
+    static bool supportsFloatingPointCeil() { return false; }
 
     void loadFloat(BaseIndex address, FPRegisterID dest)
     {
@@ -1137,6 +1143,12 @@ public:
     {
         move(TrustedImm32(reinterpret_cast<ARMWord>(address.m_value)), ARMRegisters::S0);
         m_assembler.doubleDtrUp(ARMAssembler::LoadDouble, dest, ARMRegisters::S0, 0);
+    }
+
+    NO_RETURN_DUE_TO_CRASH void ceilDouble(FPRegisterID, FPRegisterID)
+    {
+        ASSERT(!supportsFloatingPointCeil());
+        CRASH();
     }
 
     void storeFloat(FPRegisterID src, BaseIndex address)
@@ -1432,13 +1444,18 @@ public:
         UNREACHABLE_FOR_PLATFORM();
     }
 
+    static void repatchCall(CodeLocationCall call, CodeLocationLabel destination)
+    {
+        ARMAssembler::relinkCall(call.dataLocation(), destination.executableAddress());
+    }
+
+    static void repatchCall(CodeLocationCall call, FunctionPtr destination)
+    {
+        ARMAssembler::relinkCall(call.dataLocation(), destination.executableAddress());
+    }
+
 #if ENABLE(MASM_PROBE)
-    // Methods required by the MASM_PROBE mechanism as defined in
-    // AbstractMacroAssembler.h. 
-    static void printCPURegisters(CPUState&, int indentation = 0);
-    static void printRegister(CPUState&, RegisterID);
-    static void printRegister(CPUState&, FPRegisterID);
-    void probe(ProbeFunction, void* arg1 = 0, void* arg2 = 0);
+    void probe(ProbeFunction, void* arg1, void* arg2);
 #endif // ENABLE(MASM_PROBE)
 
 protected:
@@ -1470,7 +1487,6 @@ protected:
 
 private:
     friend class LinkBuffer;
-    friend class RepatchBuffer;
 
     void internalCompare32(RegisterID left, TrustedImm32 right)
     {
@@ -1483,18 +1499,12 @@ private:
 
     static void linkCall(void* code, Call call, FunctionPtr function)
     {
-        ARMAssembler::linkCall(code, call.m_label, function.value());
+        if (call.isFlagSet(Call::Tail))
+            ARMAssembler::linkJump(code, call.m_label, function.value());
+        else
+            ARMAssembler::linkCall(code, call.m_label, function.value());
     }
 
-    static void repatchCall(CodeLocationCall call, CodeLocationLabel destination)
-    {
-        ARMAssembler::relinkCall(call.dataLocation(), destination.executableAddress());
-    }
-
-    static void repatchCall(CodeLocationCall call, FunctionPtr destination)
-    {
-        ARMAssembler::relinkCall(call.dataLocation(), destination.executableAddress());
-    }
 
 #if ENABLE(MASM_PROBE)
     inline TrustedImm32 trustedImm32FromPtr(void* ptr)

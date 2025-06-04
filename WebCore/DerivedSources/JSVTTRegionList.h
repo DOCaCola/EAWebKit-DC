@@ -21,7 +21,7 @@
 #ifndef JSVTTRegionList_h
 #define JSVTTRegionList_h
 
-#if ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#if ENABLE(VIDEO_TRACK)
 
 #include "JSDOMWrapper.h"
 #include "VTTRegionList.h"
@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSVTTRegionList : public JSDOMWrapper {
+class JSVTTRegionList : public JSDOMWrapper<VTTRegionList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<VTTRegionList> Base;
     static JSVTTRegionList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTRegionList>&& impl)
     {
-        JSVTTRegionList* ptr = new (NotNull, JSC::allocateCell<JSVTTRegionList>(globalObject->vm().heap)) JSVTTRegionList(structure, globalObject, WTF::move(impl));
+        JSVTTRegionList* ptr = new (NotNull, JSC::allocateCell<JSVTTRegionList>(globalObject->vm().heap)) JSVTTRegionList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSVTTRegionList();
 
     DECLARE_INFO;
 
@@ -55,15 +54,10 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    VTTRegionList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    VTTRegionList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSVTTRegionList(JSC::Structure*, JSDOMGlobalObject*, Ref<VTTRegionList>&&);
+    JSVTTRegionList(JSC::Structure*, JSDOMGlobalObject&, Ref<VTTRegionList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -86,11 +80,12 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, VTTRegionList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VTTRegionList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VTTRegionList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTRegionList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, VTTRegionList*);
 
 
 } // namespace WebCore
 
-#endif // ENABLE(VIDEO_TRACK) && ENABLE(WEBVTT_REGIONS)
+#endif // ENABLE(VIDEO_TRACK)
 
 #endif

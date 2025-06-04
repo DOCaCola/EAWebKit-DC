@@ -625,6 +625,12 @@ public:
         RELEASE_ASSERT_NOT_REACHED();
     }
 
+    NO_RETURN_DUE_TO_CRASH void ceilDouble(FPRegisterID, FPRegisterID)
+    {
+        ASSERT(!supportsFloatingPointCeil());
+        CRASH();
+    }
+
     ConvertibleLoadLabel convertibleLoadPtr(Address address, RegisterID dest)
     {
         ConvertibleLoadLabel result(this);
@@ -1209,6 +1215,7 @@ public:
 #endif
     }
     static bool supportsFloatingPointAbs() { return false; }
+    static bool supportsFloatingPointCeil() { return false; }
 
     // Stack manipulation operations:
     //
@@ -1819,7 +1826,7 @@ public:
         return Jump();
     }
 
-    Jump branchMul32(ResultCondition cond, TrustedImm32 imm, RegisterID src, RegisterID dest)
+    Jump branchMul32(ResultCondition cond, RegisterID src, TrustedImm32 imm, RegisterID dest)
     {
         move(imm, immTempRegister);
         return branchMul32(cond, immTempRegister, src, dest);
@@ -1973,6 +1980,16 @@ public:
         m_assembler.jal();
         m_assembler.nop();
         return Call(m_assembler.label(), Call::LinkableNear);
+    }
+
+    Call nearTailCall()
+    {
+        m_assembler.nop();
+        m_assembler.nop();
+        m_assembler.beq(MIPSRegisters::zero, MIPSRegisters::zero, 0);
+        m_assembler.nop();
+        insertRelaxationWords();
+        return Call(m_assembler.label(), Call::LinkableNearTail);
     }
 
     Call call()
@@ -2796,11 +2813,13 @@ private:
     bool m_fixedWidth;
 
     friend class LinkBuffer;
-    friend class RepatchBuffer;
 
     static void linkCall(void* code, Call call, FunctionPtr function)
     {
-        MIPSAssembler::linkCall(code, call.m_label, function.value());
+        if (call.isFlagSet(Call::Tail))
+            MIPSAssembler::linkJump(code, call.m_label, function.value());
+        else
+            MIPSAssembler::linkCall(code, call.m_label, function.value());
     }
 
     static void repatchCall(CodeLocationCall call, CodeLocationLabel destination)

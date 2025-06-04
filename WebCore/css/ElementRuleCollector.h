@@ -50,11 +50,6 @@ public:
         , m_style(style)
         , m_ruleSets(ruleSets)
         , m_selectorFilter(selectorFilter)
-        , m_isPrintStyle(false)
-        , m_regionForStyling(nullptr)
-        , m_pseudoStyleRequest(NOPSEUDO)
-        , m_sameOriginOnly(false)
-        , m_mode(SelectorChecker::Mode::ResolvingStyle)
         , m_canUseFastReject(m_selectorFilter.parentStackIsConsistent(element.parentNode()))
     {
     }
@@ -75,13 +70,16 @@ public:
     StyleResolver::MatchResult& matchedResult();
     const Vector<RefPtr<StyleRule>>& matchedRuleList() const;
 
-    bool hasMatchedRules() const { return m_matchedRules && !m_matchedRules->isEmpty(); }
+    bool hasMatchedRules() const { return !m_matchedRules.isEmpty(); }
     void clearMatchedRules();
 
 private:
     void addElementStyleProperties(const StyleProperties*, bool isCacheable = true);
 
     void matchUARules(RuleSet*);
+#if ENABLE(SHADOW_DOM)
+    void matchHostPseudoClassRules(bool includeEmptyRules);
+#endif
 
     void collectMatchingRules(const MatchRequest&, StyleResolver::RuleRange&);
     void collectMatchingRulesForRegion(const MatchRequest&, StyleResolver::RuleRange&);
@@ -98,14 +96,14 @@ private:
     const DocumentRuleSets& m_ruleSets;
     const SelectorFilter& m_selectorFilter;
 
-    bool m_isPrintStyle;
-    const RenderRegion* m_regionForStyling;
-    PseudoStyleRequest m_pseudoStyleRequest;
-    bool m_sameOriginOnly;
-    SelectorChecker::Mode m_mode;
+    bool m_isPrintStyle { false };
+    const RenderRegion* m_regionForStyling { nullptr };
+    PseudoStyleRequest m_pseudoStyleRequest { NOPSEUDO };
+    bool m_sameOriginOnly { false };
+    SelectorChecker::Mode m_mode { SelectorChecker::Mode::ResolvingStyle };
     bool m_canUseFastReject;
 
-    std::unique_ptr<Vector<MatchedRule, 32>> m_matchedRules;
+    Vector<MatchedRule, 64> m_matchedRules;
 
     // Output.
     Vector<RefPtr<StyleRule>> m_matchedRuleList;

@@ -22,6 +22,7 @@
 #ifndef SearchPopupMenuEA_h
 #define SearchPopupMenuEA_h
 
+#include "PopupMenu.h"
 #include "SearchPopupMenu.h"
 
 namespace WebCore {
@@ -31,8 +32,8 @@ public:
     SearchPopupMenuEA(PassRefPtr<PopupMenu> popup);
 
     virtual PopupMenu* popupMenu();
-    virtual void saveRecentSearches(const AtomicString& name, const Vector<String>& searchItems);
-    virtual void loadRecentSearches(const AtomicString& name, Vector<String>& searchItems);
+    void saveRecentSearches(const AtomicString& name, const Vector<RecentSearch>&) override;
+    void loadRecentSearches(const AtomicString& name, Vector<RecentSearch>&) override;
     virtual bool enabled();
 
 private:

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSOESVertexArrayObject : public JSDOMWrapper {
+class JSOESVertexArrayObject : public JSDOMWrapper<OESVertexArrayObject> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<OESVertexArrayObject> Base;
     static JSOESVertexArrayObject* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESVertexArrayObject>&& impl)
     {
-        JSOESVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSOESVertexArrayObject>(globalObject->vm().heap)) JSOESVertexArrayObject(structure, globalObject, WTF::move(impl));
+        JSOESVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSOESVertexArrayObject>(globalObject->vm().heap)) JSOESVertexArrayObject(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static OESVertexArrayObject* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSOESVertexArrayObject();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    OESVertexArrayObject& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    OESVertexArrayObject* m_impl;
 protected:
-    JSOESVertexArrayObject(JSC::Structure*, JSDOMGlobalObject*, Ref<OESVertexArrayObject>&&);
+    JSOESVertexArrayObject(JSC::Structure*, JSDOMGlobalObject&, Ref<OESVertexArrayObject>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, OESVertexArrayObject
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OESVertexArrayObject*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OESVertexArrayObject& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OESVertexArrayObject& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OESVertexArrayObject*);
 
 
 } // namespace WebCore

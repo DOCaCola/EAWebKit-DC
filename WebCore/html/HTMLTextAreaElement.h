@@ -68,6 +68,7 @@ private:
     enum WrapMethod { NoWrap, SoftWrap, HardWrap };
 
     virtual void didAddUserAgentShadowRoot(ShadowRoot*) override;
+    virtual bool canHaveUserAgentShadowRoot() const override final { return true; }
 
     void handleBeforeTextInsertedEvent(BeforeTextInsertedEvent*) const;
     static String sanitizeUserInputValue(const String&, unsigned maxLength);
@@ -107,7 +108,7 @@ private:
     virtual bool hasCustomFocusLogic() const override;
     virtual bool isMouseFocusable() const override;
     virtual bool isKeyboardFocusable(KeyboardEvent*) const override;
-    virtual void updateFocusAppearance(bool restorePreviousSelection) override;
+    virtual void updateFocusAppearance(SelectionRestorationMode, SelectionRevealMode) override;
 
     virtual void accessKeyAction(bool sendMouseEvents) override;
 

@@ -732,7 +732,7 @@ bool MediaSource::isTypeSupported(const String& type)
     if (type.isNull() || type.isEmpty())
         return false;
 
-    ContentType contentType(type);
+    ContentType contentType(type.lower());
     String codecs = contentType.parameter("codecs");
 
     // 2. If type does not contain a valid MIME type string, then return false.
@@ -814,7 +814,7 @@ void MediaSource::stop()
     m_private = nullptr;
 }
 
-bool MediaSource::canSuspendForPageCache() const
+bool MediaSource::canSuspendForDocumentSuspension() const
 {
     return isClosed() && !m_asyncEventQueue.hasPendingEvents();
 }

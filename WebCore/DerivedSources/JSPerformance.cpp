@@ -26,9 +26,9 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSPerformanceNavigation.h"
 #include "JSPerformanceTiming.h"
-#include "Performance.h"
 #include "PerformanceNavigation.h"
 #include "PerformanceTiming.h"
 #include <runtime/Error.h>
@@ -73,51 +73,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSPerformanceConstructor : public DOMConstructorObject {
-private:
-    JSPerformanceConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSPerformance> JSPerformanceConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSPerformanceConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSPerformanceConstructor* ptr = new (NotNull, JSC::allocateCell<JSPerformanceConstructor>(vm.heap)) JSPerformanceConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSPerformanceConstructor::s_info = { "PerformanceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceConstructor) };
-
-JSPerformanceConstructor::JSPerformanceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSPerformanceConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSPerformanceConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSPerformance::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSPerformance::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Performance"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSPerformanceConstructor::s_info = { "PerformanceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformanceConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSPerformancePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "navigation", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "timing", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceTiming), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "now", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionNow), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "navigation", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceNavigation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "timing", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPerformanceTiming), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "now", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsPerformancePrototypeFunctionNow), (intptr_t) (0) } },
 };
 
 const ClassInfo JSPerformancePrototype::s_info = { "PerformancePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformancePrototype) };
@@ -130,9 +104,8 @@ void JSPerformancePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSPerformance::s_info = { "Performance", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPerformance) };
 
-JSPerformance::JSPerformance(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Performance>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPerformance::JSPerformance(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Performance>&& impl)
+    : JSDOMWrapper<Performance>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -152,66 +125,61 @@ void JSPerformance::destroy(JSC::JSCell* cell)
     thisObject->JSPerformance::~JSPerformance();
 }
 
-JSPerformance::~JSPerformance()
+EncodedJSValue jsPerformanceNavigation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsPerformanceNavigation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSPerformancePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Performance", "navigation");
-        return throwGetterTypeError(*exec, "Performance", "navigation");
+            return reportDeprecatedGetterError(*state, "Performance", "navigation");
+        return throwGetterTypeError(*state, "Performance", "navigation");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.navigation()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.navigation()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsPerformanceTiming(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsPerformanceTiming(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSPerformancePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Performance", "timing");
-        return throwGetterTypeError(*exec, "Performance", "timing");
+            return reportDeprecatedGetterError(*state, "Performance", "timing");
+        return throwGetterTypeError(*state, "Performance", "timing");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.timing()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.timing()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsPerformanceConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsPerformanceConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSPerformancePrototype* domObject = jsDynamicCast<JSPerformancePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSPerformance::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSPerformance::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSPerformance::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSPerformanceConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSPerformanceConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionNow(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsPerformancePrototypeFunctionNow(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSPerformance* castedThis = jsDynamicCast<JSPerformance*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Performance", "now");
+        return throwThisTypeError(*state, "Performance", "now");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSPerformance::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.now());
     return JSValue::encode(result);
 }
@@ -221,13 +189,13 @@ void JSPerformance::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSPerformance*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSPerformanceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsPerformance = jsCast<JSPerformance*>(handle.slot()->asCell());
-    if (jsPerformance->impl().isFiringEventListeners())
+    if (jsPerformance->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -237,7 +205,7 @@ void JSPerformanceOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsPerformance = jsCast<JSPerformance*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPerformance->impl(), jsPerformance);
+    uncacheWrapper(world, &jsPerformance->wrapped(), jsPerformance);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -248,6 +216,14 @@ extern "C" { extern void (*const __identifier("??_7Performance@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11PerformanceE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSPerformance>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance* impl)
 {
     if (!impl)
@@ -279,7 +255,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Performance*
 Performance* JSPerformance::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSPerformance*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

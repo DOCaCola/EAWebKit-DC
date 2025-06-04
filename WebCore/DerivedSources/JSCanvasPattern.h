@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCanvasPattern : public JSDOMWrapper {
+class JSCanvasPattern : public JSDOMWrapper<CanvasPattern> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CanvasPattern> Base;
     static JSCanvasPattern* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasPattern>&& impl)
     {
-        JSCanvasPattern* ptr = new (NotNull, JSC::allocateCell<JSCanvasPattern>(globalObject->vm().heap)) JSCanvasPattern(structure, globalObject, WTF::move(impl));
+        JSCanvasPattern* ptr = new (NotNull, JSC::allocateCell<JSCanvasPattern>(globalObject->vm().heap)) JSCanvasPattern(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CanvasPattern* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCanvasPattern();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CanvasPattern& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CanvasPattern* m_impl;
 protected:
-    JSCanvasPattern(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasPattern>&&);
+    JSCanvasPattern(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasPattern>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasPattern*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasPattern*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CanvasPattern& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasPattern& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CanvasPattern*);
 
 
 } // namespace WebCore

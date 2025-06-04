@@ -135,6 +135,10 @@
 #define ENABLE_RESPECT_EXIF_ORIENTATION 1
 #endif
 
+#if !defined(ENABLE_SHADOW_DOM)
+#define ENABLE_SHADOW_DOM 1
+#endif
+
 #if !defined(ENABLE_TEXT_CARET)
 #define ENABLE_TEXT_CARET 0
 #endif
@@ -163,12 +167,6 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 
 #if !defined(ENABLE_WEBGL)
 #define ENABLE_WEBGL 1
-#endif
-
-/* FIXME: Remove this logic and always enable XSLT once we support XSLT when building against
-the public iOS SDK. We will also need to update the FeatureDefines.xcconfig files. */
-#if !defined(ENABLE_XSLT) && !USE(APPLE_INTERNAL_SDK)
-#define ENABLE_XSLT 0
 #endif
 
 #if !defined(ENABLE_PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
@@ -203,14 +201,12 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_FULLSCREEN_API 1
 #endif
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #if !defined(ENABLE_REMOTE_INSPECTOR)
 #define ENABLE_REMOTE_INSPECTOR 1
 #endif
 
 #if !defined(ENABLE_INSPECTOR_ALTERNATE_DISPATCHERS)
 #define ENABLE_INSPECTOR_ALTERNATE_DISPATCHERS 1
-#endif
 #endif
 
 #if !defined(ENABLE_SMOOTH_SCROLLING)
@@ -257,6 +253,16 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 
 #if !defined(ENABLE_PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
 #define ENABLE_PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC 1
+#endif
+
+#if !defined(ENABLE_SHADOW_DOM)
+#define ENABLE_SHADOW_DOM 1
+#endif
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101100
+#if !defined(ENABLE_MAC_GESTURE_EVENTS) && USE(APPLE_INTERNAL_SDK)
+#define ENABLE_MAC_GESTURE_EVENTS 1
+#endif
 #endif
 
 #endif /* PLATFORM(MAC) */
@@ -364,6 +370,10 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_ES6_CLASS_SYNTAX 1
 #endif
 
+#if !defined(ENABLE_ES6_CLASS_SYNTAX)
+#define ENABLE_ES6_GENERATORS 1
+#endif
+
 #if !defined(ENABLE_ES6_MODULES)
 #define ENABLE_ES6_MODULES 0
 #endif
@@ -454,6 +464,10 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 
 #if !defined(ENABLE_ENCRYPTED_MEDIA_V2)
 #define ENABLE_ENCRYPTED_MEDIA_V2 0
+#endif
+
+#if !defined(ENABLE_FETCH_API)
+#define ENABLE_FETCH_API 1
 #endif
 
 #if !defined(ENABLE_FILTERS_LEVEL_2)
@@ -638,10 +652,6 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_NOTIFICATIONS 0
 #endif
 
-#if !defined(ENABLE_OPENCL)
-#define ENABLE_OPENCL 0
-#endif
-
 #if !defined(ENABLE_OPENTYPE_VERTICAL)
 #define ENABLE_OPENTYPE_VERTICAL 0
 #endif
@@ -684,8 +694,8 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_RUBBER_BANDING 0
 #endif
 
-#if !defined(ENABLE_SATURATED_LAYOUT_ARITHMETIC)
-#define ENABLE_SATURATED_LAYOUT_ARITHMETIC 1
+#if !defined(ENABLE_SHADOW_DOM)
+#define ENABLE_SHADOW_DOM 0
 #endif
 
 #if !defined(ENABLE_SMOOTH_SCROLLING)
@@ -701,7 +711,11 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #endif
 
 #if !defined(ENABLE_STREAMS_API)
+#if PLATFORM(WIN)
+#define ENABLE_STREAMS_API 0
+#else
 #define ENABLE_STREAMS_API 1
+#endif
 #endif
 
 #if !defined(ENABLE_SVG_FONTS)
@@ -772,6 +786,10 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_GRAPHICS_CONTEXT_3D ENABLE_WEBGL
 #endif
 
+#if !defined(ENABLE_WEB_ANIMATIONS)
+#define ENABLE_WEB_ANIMATIONS 0
+#endif
+
 #if !defined(ENABLE_WEB_ARCHIVE)
 #define ENABLE_WEB_ARCHIVE 0
 #endif
@@ -788,8 +806,8 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 #define ENABLE_WEB_SOCKETS 1
 #endif
 
-#if !defined(ENABLE_PICTURE_SIZES)
-#define ENABLE_PICTURE_SIZES 0
+#if !defined(ENABLE_CURRENTSRC)
+#define ENABLE_CURRENTSRC 0
 #endif
 
 #if !defined(ENABLE_WEB_TIMING)
@@ -798,10 +816,6 @@ the public iOS SDK. We will also need to update the FeatureDefines.xcconfig file
 
 #if !defined(ENABLE_WILL_REVEAL_EDGE_EVENTS)
 #define ENABLE_WILL_REVEAL_EDGE_EVENTS 1
-#endif
-
-#if !defined(ENABLE_XHR_TIMEOUT)
-#define ENABLE_XHR_TIMEOUT 0
 #endif
 
 #if !defined(ENABLE_XSLT)

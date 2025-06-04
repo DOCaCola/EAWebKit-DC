@@ -79,7 +79,7 @@ public:
     bool containsUncommonAttributeSelector() const { return m_containsUncommonAttributeSelector; }
     unsigned linkMatchType() const { return m_linkMatchType; }
     bool hasDocumentSecurityOrigin() const { return m_hasDocumentSecurityOrigin; }
-    PropertyWhitelistType propertyWhitelistType(bool isMatchingUARules = false) const { return isMatchingUARules ? PropertyWhitelistNone : static_cast<PropertyWhitelistType>(m_propertyWhitelistType); }
+    PropertyWhitelistType propertyWhitelistType() const { return static_cast<PropertyWhitelistType>(m_propertyWhitelistType); }
     // Try to balance between memory usage (there can be lots of RuleData objects) and good filtering performance.
     static const unsigned maximumIdentifierCount = 4;
     const unsigned* descendantSelectorIdentifierHashes() const { return m_descendantSelectorIdentifierHashes; }
@@ -159,7 +159,7 @@ public:
     typedef Vector<RuleData, 1> RuleDataVector;
     typedef HashMap<AtomicStringImpl*, std::unique_ptr<RuleDataVector>> AtomRuleMap;
 
-    void addRulesFromSheet(StyleSheetContents*, const MediaQueryEvaluator&, StyleResolver* = 0);
+    void addRulesFromSheet(StyleSheetContents&, const MediaQueryEvaluator&, StyleResolver* = 0);
 
     void addStyleRule(StyleRule*, AddRuleFlags);
     void addRule(StyleRule*, unsigned selectorIndex, AddRuleFlags);
@@ -179,6 +179,9 @@ public:
 #if ENABLE(VIDEO_TRACK)
     const RuleDataVector* cuePseudoRules() const { return &m_cuePseudoRules; }
 #endif
+#if ENABLE(SHADOW_DOM)
+    const RuleDataVector& hostPseudoClassRules() const { return m_hostPseudoClassRules; }
+#endif
     const RuleDataVector* focusPseudoClassRules() const { return &m_focusPseudoClassRules; }
     const RuleDataVector* universalRules() const { return &m_universalRules; }
 
@@ -187,7 +190,8 @@ public:
 
     unsigned ruleCount() const { return m_ruleCount; }
 
-    bool hasShadowPseudoElementRules() const { return !m_shadowPseudoElementRules.isEmpty(); }
+    bool hasShadowPseudoElementRules() const;
+    void copyShadowPseudoElementRulesFrom(const RuleSet&);
 
 private:
     void addChildRules(const Vector<RefPtr<StyleRuleBase>>&, const MediaQueryEvaluator& medium, StyleResolver*, bool hasDocumentSecurityOrigin, bool isInitiatingElementInUserAgentShadowTree, AddRuleFlags);
@@ -200,6 +204,9 @@ private:
     RuleDataVector m_linkPseudoClassRules;
 #if ENABLE(VIDEO_TRACK)
     RuleDataVector m_cuePseudoRules;
+#endif
+#if ENABLE(SHADOW_DOM)
+    RuleDataVector m_hostPseudoClassRules;
 #endif
     RuleDataVector m_focusPseudoClassRules;
     RuleDataVector m_universalRules;

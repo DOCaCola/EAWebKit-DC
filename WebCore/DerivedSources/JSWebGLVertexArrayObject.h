@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLVertexArrayObject : public JSDOMWrapper {
+class JSWebGLVertexArrayObject : public JSDOMWrapper<WebGLVertexArrayObject> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLVertexArrayObject> Base;
     static JSWebGLVertexArrayObject* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLVertexArrayObject>&& impl)
     {
-        JSWebGLVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSWebGLVertexArrayObject>(globalObject->vm().heap)) JSWebGLVertexArrayObject(structure, globalObject, WTF::move(impl));
+        JSWebGLVertexArrayObject* ptr = new (NotNull, JSC::allocateCell<JSWebGLVertexArrayObject>(globalObject->vm().heap)) JSWebGLVertexArrayObject(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLVertexArrayObject* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLVertexArrayObject();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLVertexArrayObject& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLVertexArrayObject* m_impl;
 protected:
-    JSWebGLVertexArrayObject(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLVertexArrayObject>&&);
+    JSWebGLVertexArrayObject(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLVertexArrayObject>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLVertexArrayObje
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLVertexArrayObject*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLVertexArrayObject& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLVertexArrayObject*);
 
 
 } // namespace WebCore

@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSDOMWindowCSS.h"
 
-#include "DOMWindowCSS.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include <runtime/Error.h>
@@ -64,7 +63,7 @@ private:
 
 static const HashTableValue JSDOMWindowCSSPrototypeTableValues[] =
 {
-    { "supports", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMWindowCSSPrototypeFunctionSupports), (intptr_t) (2) },
+    { "supports", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMWindowCSSPrototypeFunctionSupports), (intptr_t) (2) } },
 };
 
 const ClassInfo JSDOMWindowCSSPrototype::s_info = { "CSSPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMWindowCSSPrototype) };
@@ -77,9 +76,8 @@ void JSDOMWindowCSSPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMWindowCSS::s_info = { "CSS", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMWindowCSS) };
 
-JSDOMWindowCSS::JSDOMWindowCSS(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMWindowCSS>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMWindowCSS::JSDOMWindowCSS(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMWindowCSS>&& impl)
+    : JSDOMWrapper<DOMWindowCSS>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -99,58 +97,53 @@ void JSDOMWindowCSS::destroy(JSC::JSCell* cell)
     thisObject->JSDOMWindowCSS::~JSDOMWindowCSS();
 }
 
-JSDOMWindowCSS::~JSDOMWindowCSS()
+static EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports1(ExecState* state)
 {
-    releaseImpl();
-}
-
-static EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports1(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMWindowCSS* castedThis = jsDynamicCast<JSDOMWindowCSS*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMWindowCSS", "supports");
+        return throwThisTypeError(*state, "DOMWindowCSS", "supports");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMWindowCSS::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String property = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String property = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String value = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String value = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.supports(property, value));
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMWindowCSS* castedThis = jsDynamicCast<JSDOMWindowCSS*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMWindowCSS", "supports");
+        return throwThisTypeError(*state, "DOMWindowCSS", "supports");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMWindowCSS::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String conditionText = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String conditionText = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.supports(conditionText));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMWindowCSSPrototypeFunctionSupports(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
     if (argsCount == 2)
-        return jsDOMWindowCSSPrototypeFunctionSupports1(exec);
+        return jsDOMWindowCSSPrototypeFunctionSupports1(state);
     if (argsCount == 1)
-        return jsDOMWindowCSSPrototypeFunctionSupports2(exec);
+        return jsDOMWindowCSSPrototypeFunctionSupports2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
 bool JSDOMWindowCSSOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -164,7 +157,14 @@ void JSDOMWindowCSSOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsDOMWindowCSS = jsCast<JSDOMWindowCSS*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMWindowCSS->impl(), jsDOMWindowCSS);
+    uncacheWrapper(world, &jsDOMWindowCSS->wrapped(), jsDOMWindowCSS);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMWindowCSS* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMWindowCSS>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMWindowCSS* impl)
@@ -186,7 +186,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMWindowCSS
 DOMWindowCSS* JSDOMWindowCSS::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMWindowCSS*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

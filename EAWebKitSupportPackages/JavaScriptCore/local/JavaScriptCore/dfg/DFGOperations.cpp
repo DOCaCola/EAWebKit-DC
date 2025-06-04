@@ -142,64 +142,6 @@ char* newTypedArrayWithSize(ExecState* exec, Structure* structure, int32_t size)
     return bitwise_cast<char*>(ViewClass::create(exec, structure, size));
 }
 
-template<typename ViewClass>
-char* newTypedArrayWithOneArgument(
-    ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
-{
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-    
-    JSValue value = JSValue::decode(encodedValue);
-    
-    if (JSArrayBuffer* jsBuffer = jsDynamicCast<JSArrayBuffer*>(value)) {
-        RefPtr<ArrayBuffer> buffer = jsBuffer->impl();
-        
-        if (buffer->byteLength() % ViewClass::elementSize) {
-            vm.throwException(exec, createRangeError(exec, ASCIILiteral("ArrayBuffer length minus the byteOffset is not a multiple of the element size")));
-            return 0;
-        }
-        return bitwise_cast<char*>(
-            ViewClass::create(
-                exec, structure, buffer, 0, buffer->byteLength() / ViewClass::elementSize));
-    }
-    
-    if (JSObject* object = jsDynamicCast<JSObject*>(value)) {
-        unsigned length = object->get(exec, vm.propertyNames->length).toUInt32(exec);
-        if (exec->hadException())
-            return 0;
-        
-        ViewClass* result = ViewClass::createUninitialized(exec, structure, length);
-        if (!result)
-            return 0;
-        
-        if (!result->set(exec, object, 0, length))
-            return 0;
-        
-        return bitwise_cast<char*>(result);
-    }
-    
-    int length;
-    if (value.isInt32())
-        length = value.asInt32();
-    else if (!value.isNumber()) {
-        vm.throwException(exec, createTypeError(exec, ASCIILiteral("Invalid array length argument")));
-        return 0;
-    } else {
-        length = static_cast<int>(value.asNumber());
-        if (length != value.asNumber()) {
-            vm.throwException(exec, createTypeError(exec, ASCIILiteral("Invalid array length argument (fractional lengths not allowed)")));
-            return 0;
-        }
-    }
-    
-    if (length < 0) {
-        vm.throwException(exec, createRangeError(exec, ASCIILiteral("Requested length is negative")));
-        return 0;
-    }
-    
-    return bitwise_cast<char*>(ViewClass::create(exec, structure, length));
-}
-
 extern "C" {
 
 EncodedJSValue JIT_OPERATION operationToThis(ExecState* exec, EncodedJSValue encodedOp)
@@ -223,12 +165,85 @@ JSCell* JIT_OPERATION operationCreateThis(ExecState* exec, JSObject* constructor
     VM& vm = exec->vm();
     NativeCallFrameTracer tracer(&vm, exec);
 
-#if !ASSERT_DISABLED
-    ConstructData constructData;
-    ASSERT(jsCast<JSFunction*>(constructor)->methodTable(vm)->getConstructData(jsCast<JSFunction*>(constructor), constructData) == ConstructTypeJS);
-#endif
-    
     return constructEmptyObject(exec, jsCast<JSFunction*>(constructor)->rareData(exec, inlineCapacity)->allocationProfile()->structure());
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitAnd(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    int32_t a = op1.toInt32(exec);
+    int32_t b = op2.toInt32(exec);
+    return JSValue::encode(jsNumber(a & b));
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitOr(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    int32_t a = op1.toInt32(exec);
+    int32_t b = op2.toInt32(exec);
+    return JSValue::encode(jsNumber(a | b));
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitXor(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    int32_t a = op1.toInt32(exec);
+    int32_t b = op2.toInt32(exec);
+    return JSValue::encode(jsNumber(a ^ b));
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitLShift(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    int32_t a = op1.toInt32(exec);
+    uint32_t b = op2.toUInt32(exec);
+    return JSValue::encode(jsNumber(a << (b & 0x1f)));
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitRShift(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    int32_t a = op1.toInt32(exec);
+    uint32_t b = op2.toUInt32(exec);
+    return JSValue::encode(jsNumber(a >> (b & 0x1f)));
+}
+
+EncodedJSValue JIT_OPERATION operationValueBitURShift(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    uint32_t a = op1.toUInt32(exec);
+    uint32_t b = op2.toUInt32(exec);
+    return JSValue::encode(jsNumber(static_cast<int32_t>(a >> (b & 0x1f))));
 }
 
 EncodedJSValue JIT_OPERATION operationValueAdd(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
@@ -256,6 +271,45 @@ EncodedJSValue JIT_OPERATION operationValueAddNotNumber(ExecState* exec, Encoded
         return JSValue::encode(jsString(exec, asString(op1), op2.toString(exec)));
 
     return JSValue::encode(jsAddSlowCase(exec, op1, op2));
+}
+
+EncodedJSValue JIT_OPERATION operationValueDiv(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    double a = op1.toNumber(exec);
+    double b = op2.toNumber(exec);
+    return JSValue::encode(jsNumber(a / b));
+}
+
+EncodedJSValue JIT_OPERATION operationValueMul(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    double a = op1.toNumber(exec);
+    double b = op2.toNumber(exec);
+    return JSValue::encode(jsNumber(a * b));
+}
+
+EncodedJSValue JIT_OPERATION operationValueSub(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+    
+    JSValue op1 = JSValue::decode(encodedOp1);
+    JSValue op2 = JSValue::decode(encodedOp2);
+
+    double a = op1.toNumber(exec);
+    double b = op2.toNumber(exec);
+    return JSValue::encode(jsNumber(a - b));
 }
 
 static ALWAYS_INLINE EncodedJSValue getByVal(ExecState* exec, JSCell* base, uint32_t index)
@@ -643,7 +697,9 @@ char* JIT_OPERATION operationNewArrayWithSize(ExecState* exec, Structure* arrayS
     if (UNLIKELY(size < 0))
         return bitwise_cast<char*>(exec->vm().throwException(exec, createRangeError(exec, ASCIILiteral("Array size is not a small enough positive integer."))));
 
-    return bitwise_cast<char*>(JSArray::create(*vm, arrayStructure, size));
+    JSArray* result = JSArray::create(*vm, arrayStructure, size);
+    result->butterfly(); // Ensure that the backing store is in to-space.
+    return bitwise_cast<char*>(result);
 }
 
 char* JIT_OPERATION operationNewArrayBuffer(ExecState* exec, Structure* arrayStructure, size_t start, size_t size)
@@ -662,7 +718,7 @@ char* JIT_OPERATION operationNewInt8ArrayWithSize(
 char* JIT_OPERATION operationNewInt8ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSInt8Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSInt8Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewInt16ArrayWithSize(
@@ -674,7 +730,7 @@ char* JIT_OPERATION operationNewInt16ArrayWithSize(
 char* JIT_OPERATION operationNewInt16ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSInt16Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSInt16Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewInt32ArrayWithSize(
@@ -686,7 +742,7 @@ char* JIT_OPERATION operationNewInt32ArrayWithSize(
 char* JIT_OPERATION operationNewInt32ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSInt32Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSInt32Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewUint8ArrayWithSize(
@@ -698,7 +754,7 @@ char* JIT_OPERATION operationNewUint8ArrayWithSize(
 char* JIT_OPERATION operationNewUint8ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSUint8Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSUint8Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewUint8ClampedArrayWithSize(
@@ -710,7 +766,7 @@ char* JIT_OPERATION operationNewUint8ClampedArrayWithSize(
 char* JIT_OPERATION operationNewUint8ClampedArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSUint8ClampedArray>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSUint8ClampedArray>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewUint16ArrayWithSize(
@@ -722,7 +778,7 @@ char* JIT_OPERATION operationNewUint16ArrayWithSize(
 char* JIT_OPERATION operationNewUint16ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSUint16Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSUint16Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewUint32ArrayWithSize(
@@ -734,7 +790,7 @@ char* JIT_OPERATION operationNewUint32ArrayWithSize(
 char* JIT_OPERATION operationNewUint32ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSUint32Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSUint32Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewFloat32ArrayWithSize(
@@ -746,7 +802,7 @@ char* JIT_OPERATION operationNewFloat32ArrayWithSize(
 char* JIT_OPERATION operationNewFloat32ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSFloat32Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSFloat32Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 char* JIT_OPERATION operationNewFloat64ArrayWithSize(
@@ -758,7 +814,7 @@ char* JIT_OPERATION operationNewFloat64ArrayWithSize(
 char* JIT_OPERATION operationNewFloat64ArrayWithOneArgument(
     ExecState* exec, Structure* structure, EncodedJSValue encodedValue)
 {
-    return newTypedArrayWithOneArgument<JSFloat64Array>(exec, structure, encodedValue);
+    return reinterpret_cast<char*>(constructGenericTypedArrayViewWithArguments<JSFloat64Array>(exec, structure, encodedValue, 0, Nullopt));
 }
 
 JSCell* JIT_OPERATION operationCreateActivationDirect(ExecState* exec, Structure* structure, JSScope* scope, SymbolTable* table, EncodedJSValue initialValueEncoded)
@@ -859,6 +915,16 @@ JSCell* JIT_OPERATION operationCreateClonedArgumentsDuringExit(ExecState* exec, 
     result->putDirect(vm, vm.propertyNames->length, jsNumber(length));
     
     return result;
+}
+
+void JIT_OPERATION operationCopyRest(ExecState* exec, JSCell* arrayAsCell, Register* argumentStart, unsigned numberOfParamsToSkip, unsigned arraySize)
+{
+    ASSERT(arraySize);
+    JSArray* array = jsCast<JSArray*>(arrayAsCell);
+    ASSERT(arraySize == array->length());
+    array->setLength(exec, arraySize);
+    for (unsigned i = 0; i < arraySize; i++)
+        array->putDirectIndex(exec, i, argumentStart[i + numberOfParamsToSkip].jsValue());
 }
 
 size_t JIT_OPERATION operationObjectIsObject(ExecState* exec, JSGlobalObject* globalObject, JSCell* object)
@@ -1108,6 +1174,44 @@ JSCell* JIT_OPERATION operationMakeRope3(ExecState* exec, JSString* a, JSString*
     return JSRopeString::create(vm, a, b, c);
 }
 
+JSCell* JIT_OPERATION operationStrCat2(ExecState* exec, EncodedJSValue a, EncodedJSValue b)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    JSString* str1 = JSValue::decode(a).toString(exec);
+    ASSERT(!exec->hadException()); // Impossible, since we must have been given primitives.
+    JSString* str2 = JSValue::decode(b).toString(exec);
+    ASSERT(!exec->hadException());
+
+    if (sumOverflows<int32_t>(str1->length(), str2->length())) {
+        throwOutOfMemoryError(exec);
+        return nullptr;
+    }
+
+    return JSRopeString::create(vm, str1, str2);
+}
+    
+JSCell* JIT_OPERATION operationStrCat3(ExecState* exec, EncodedJSValue a, EncodedJSValue b, EncodedJSValue c)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    JSString* str1 = JSValue::decode(a).toString(exec);
+    ASSERT(!exec->hadException()); // Impossible, since we must have been given primitives.
+    JSString* str2 = JSValue::decode(b).toString(exec);
+    ASSERT(!exec->hadException());
+    JSString* str3 = JSValue::decode(c).toString(exec);
+    ASSERT(!exec->hadException());
+
+    if (sumOverflows<int32_t>(str1->length(), str2->length(), str3->length())) {
+        throwOutOfMemoryError(exec);
+        return nullptr;
+    }
+
+    return JSRopeString::create(vm, str1, str2, str3);
+}
+
 char* JIT_OPERATION operationFindSwitchImmTargetForDouble(
     ExecState* exec, EncodedJSValue encodedValue, size_t tableIndex)
 {
@@ -1136,6 +1240,22 @@ int32_t JIT_OPERATION operationSwitchStringAndGetBranchOffset(ExecState* exec, s
     NativeCallFrameTracer tracer(&vm, exec);
 
     return exec->codeBlock()->stringSwitchJumpTable(tableIndex).offsetForValue(string->value(exec).impl(), std::numeric_limits<int32_t>::min());
+}
+
+char* JIT_OPERATION operationGetButterfly(ExecState* exec, JSCell* cell)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    return bitwise_cast<char*>(jsCast<JSObject*>(cell)->butterfly());
+}
+
+char* JIT_OPERATION operationGetArrayBufferVector(ExecState* exec, JSCell* cell)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    return bitwise_cast<char*>(jsCast<JSArrayBufferView*>(cell)->vector());
 }
 
 void JIT_OPERATION operationNotifyWrite(ExecState* exec, WatchpointSet* set)
@@ -1179,6 +1299,13 @@ double JIT_OPERATION operationFModOnInts(int32_t a, int32_t b)
     return fmod(a, b);
 }
 
+#if USE(JSVALUE32_64)
+double JIT_OPERATION operationRandom(JSGlobalObject* globalObject)
+{
+    return globalObject->weakRandomNumber();
+}
+#endif
+
 JSCell* JIT_OPERATION operationStringFromCharCode(ExecState* exec, int32_t op1)
 {
     VM* vm = &exec->vm();
@@ -1202,15 +1329,6 @@ int64_t JIT_OPERATION operationConvertDoubleToInt52(double value)
 void JIT_OPERATION operationProcessTypeProfilerLogDFG(ExecState* exec) 
 {
     exec->vm().typeProfilerLog()->processLogEntries(ASCIILiteral("Log Full, called from inside DFG."));
-}
-
-size_t JIT_OPERATION dfgConvertJSValueToInt32(ExecState* exec, EncodedJSValue value)
-{
-    VM* vm = &exec->vm();
-    NativeCallFrameTracer tracer(vm, exec);
-    
-    // toInt32/toUInt32 return the same value; we want the value zero extended to fill the register.
-    return JSValue::decode(value).toUInt32(exec);
 }
 
 void JIT_OPERATION debugOperationPrintSpeculationFailure(ExecState* exec, void* debugInfoRaw, void* scratch)
@@ -1277,8 +1395,8 @@ extern "C" void JIT_OPERATION triggerReoptimizationNow(CodeBlock* codeBlock, OSR
     ASSERT(JITCode::isOptimizingJIT(optimizedCodeBlock->jitType()));
     
     bool didTryToEnterIntoInlinedLoops = false;
-    for (InlineCallFrame* inlineCallFrame = exit->m_codeOrigin.inlineCallFrame; inlineCallFrame; inlineCallFrame = inlineCallFrame->caller.inlineCallFrame) {
-        if (inlineCallFrame->executable->didTryToEnterInLoop()) {
+    for (InlineCallFrame* inlineCallFrame = exit->m_codeOrigin.inlineCallFrame; inlineCallFrame; inlineCallFrame = inlineCallFrame->directCaller.inlineCallFrame) {
+        if (inlineCallFrame->baselineCodeBlock->ownerScriptExecutable()->didTryToEnterInLoop()) {
             didTryToEnterIntoInlinedLoops = true;
             break;
         }
@@ -1348,8 +1466,8 @@ static void triggerFTLReplacementCompile(VM* vm, CodeBlock* codeBlock, JITCode* 
 
     // We need to compile the code.
     compile(
-        *vm, codeBlock->newReplacement().get(), codeBlock, FTLMode, UINT_MAX,
-        Operands<JSValue>(), ToFTLDeferredCompilationCallback::create(codeBlock));
+        *vm, codeBlock->newReplacement(), codeBlock, FTLMode, UINT_MAX,
+        Operands<JSValue>(), ToFTLDeferredCompilationCallback::create());
 }
 
 static void triggerTierUpNowCommon(ExecState* exec, bool inLoop)
@@ -1434,7 +1552,7 @@ char* JIT_OPERATION triggerOSREntryNow(
     if (worklistState == Worklist::Compiling)
         return 0;
     
-    if (CodeBlock* entryBlock = jitCode->osrEntryBlock.get()) {
+    if (CodeBlock* entryBlock = jitCode->osrEntryBlock()) {
         void* address = FTL::prepareOSREntry(
             exec, codeBlock, entryBlock, bytecodeIndex, streamIndex);
         if (address)
@@ -1448,7 +1566,7 @@ char* JIT_OPERATION triggerOSREntryNow(
         
         // OSR entry failed. Oh no! This implies that we need to retry. We retry
         // without exponential backoff and we only do this for the entry code block.
-        jitCode->osrEntryBlock = nullptr;
+        jitCode->clearOSREntryBlock();
         jitCode->osrEntryRetry = 0;
         return 0;
     }
@@ -1465,21 +1583,19 @@ char* JIT_OPERATION triggerOSREntryNow(
     Operands<JSValue> mustHandleValues;
     jitCode->reconstruct(
         exec, codeBlock, CodeOrigin(bytecodeIndex), streamIndex, mustHandleValues);
-    RefPtr<CodeBlock> replacementCodeBlock = codeBlock->newReplacement();
+    CodeBlock* replacementCodeBlock = codeBlock->newReplacement();
     CompilationResult forEntryResult = compile(
-        *vm, replacementCodeBlock.get(), codeBlock, FTLForOSREntryMode, bytecodeIndex,
-        mustHandleValues, ToFTLForOSREntryDeferredCompilationCallback::create(codeBlock));
+        *vm, replacementCodeBlock, codeBlock, FTLForOSREntryMode, bytecodeIndex,
+        mustHandleValues, ToFTLForOSREntryDeferredCompilationCallback::create());
     
-    if (forEntryResult != CompilationSuccessful) {
-        ASSERT(forEntryResult == CompilationDeferred || replacementCodeBlock->hasOneRef());
+    if (forEntryResult != CompilationSuccessful)
         return 0;
-    }
 
     // It's possible that the for-entry compile already succeeded. In that case OSR
     // entry will succeed unless we ran out of stack. It's not clear what we should do.
     // We signal to try again after a while if that happens.
     void* address = FTL::prepareOSREntry(
-        exec, codeBlock, jitCode->osrEntryBlock.get(), bytecodeIndex, streamIndex);
+        exec, codeBlock, jitCode->osrEntryBlock(), bytecodeIndex, streamIndex);
     return static_cast<char*>(address);
 }
 #endif // ENABLE(FTL_JIT)

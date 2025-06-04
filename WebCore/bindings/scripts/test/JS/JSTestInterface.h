@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSTestInterface : public JSDOMWrapper {
+class WEBCORE_EXPORT JSTestInterface : public JSDOMWrapper<TestInterface> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TestInterface> Base;
     static JSTestInterface* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TestInterface>&& impl)
     {
-        JSTestInterface* ptr = new (NotNull, JSC::allocateCell<JSTestInterface>(globalObject->vm().heap)) JSTestInterface(structure, globalObject, WTF::move(impl));
+        JSTestInterface* ptr = new (NotNull, JSC::allocateCell<JSTestInterface>(globalObject->vm().heap)) JSTestInterface(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,7 +47,6 @@ public:
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTestInterface();
 
     DECLARE_INFO;
 
@@ -60,34 +59,29 @@ public:
 
     // Custom attributes
 #if ENABLE(Condition22) || ENABLE(Condition23)
-    JSC::JSValue implementsStr3(JSC::ExecState*) const;
+    JSC::JSValue implementsStr3(JSC::ExecState&) const;
 #endif
 #if ENABLE(Condition22) || ENABLE(Condition23)
-    void setImplementsStr3(JSC::ExecState*, JSC::JSValue);
+    void setImplementsStr3(JSC::ExecState&, JSC::JSValue);
 #endif
 #if ENABLE(Condition11) || ENABLE(Condition12)
-    JSC::JSValue supplementalStr3(JSC::ExecState*) const;
+    JSC::JSValue supplementalStr3(JSC::ExecState&) const;
 #endif
 #if ENABLE(Condition11) || ENABLE(Condition12)
-    void setSupplementalStr3(JSC::ExecState*, JSC::JSValue);
+    void setSupplementalStr3(JSC::ExecState&, JSC::JSValue);
 #endif
 
     // Custom functions
 #if ENABLE(Condition22) || ENABLE(Condition23)
-    JSC::JSValue implementsMethod3(JSC::ExecState*);
+    JSC::JSValue implementsMethod3(JSC::ExecState&);
 #endif
 #if ENABLE(Condition11) || ENABLE(Condition12)
-    JSC::JSValue supplementalMethod3(JSC::ExecState*);
+    JSC::JSValue supplementalMethod3(JSC::ExecState&);
 #endif
-    TestInterface& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TestInterface* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTestInterface(JSC::Structure*, JSDOMGlobalObject*, Ref<TestInterface>&&);
+    JSTestInterface(JSC::Structure*, JSDOMGlobalObject&, Ref<TestInterface>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -110,7 +104,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TestInterface*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TestInterface*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TestInterface& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TestInterface& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TestInterface*);
 
 
 } // namespace WebCore

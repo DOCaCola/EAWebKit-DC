@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSMediaStreamAudioDestinationNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamAudioDestinationNode>&& impl)
     {
-        JSMediaStreamAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamAudioDestinationNode>(globalObject->vm().heap)) JSMediaStreamAudioDestinationNode(structure, globalObject, WTF::move(impl));
+        JSMediaStreamAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamAudioDestinationNode>(globalObject->vm().heap)) JSMediaStreamAudioDestinationNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaStreamAudioDestinationNode& impl() const
+    MediaStreamAudioDestinationNode& wrapped() const
     {
-        return static_cast<MediaStreamAudioDestinationNode&>(Base::impl());
+        return static_cast<MediaStreamAudioDestinationNode&>(Base::wrapped());
     }
 protected:
-    JSMediaStreamAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStreamAudioDestinationNode>&&);
+    JSMediaStreamAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStreamAudioDestinationNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamAudioDestinationNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaStreamAudioDestinationNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaStreamAudioDestinationNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaStreamAudioDestinationNode*);
 
 
 } // namespace WebCore

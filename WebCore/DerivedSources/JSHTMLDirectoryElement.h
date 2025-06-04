@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLDirectoryElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDirectoryElement>&& impl)
     {
-        JSHTMLDirectoryElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDirectoryElement>(globalObject->vm().heap)) JSHTMLDirectoryElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDirectoryElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDirectoryElement>(globalObject->vm().heap)) JSHTMLDirectoryElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLDirectoryElement& impl() const
+    HTMLDirectoryElement& wrapped() const
     {
-        return static_cast<HTMLDirectoryElement&>(Base::impl());
+        return static_cast<HTMLDirectoryElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDirectoryElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDirectoryElement>&&);
+    JSHTMLDirectoryElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDirectoryElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

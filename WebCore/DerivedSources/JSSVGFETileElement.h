@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFETileElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFETileElement>&& impl)
     {
-        JSSVGFETileElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETileElement>(globalObject->vm().heap)) JSSVGFETileElement(structure, globalObject, WTF::move(impl));
+        JSSVGFETileElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETileElement>(globalObject->vm().heap)) JSSVGFETileElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFETileElement& impl() const
+    SVGFETileElement& wrapped() const
     {
-        return static_cast<SVGFETileElement&>(Base::impl());
+        return static_cast<SVGFETileElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFETileElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFETileElement>&&);
+    JSSVGFETileElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFETileElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

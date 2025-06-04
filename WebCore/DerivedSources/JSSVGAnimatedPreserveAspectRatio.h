@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedPreserveAspectRatio : public JSDOMWrapper {
+class JSSVGAnimatedPreserveAspectRatio : public JSDOMWrapper<SVGAnimatedPreserveAspectRatio> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedPreserveAspectRatio> Base;
     static JSSVGAnimatedPreserveAspectRatio* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedPreserveAspectRatio>&& impl)
     {
-        JSSVGAnimatedPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedPreserveAspectRatio>(globalObject->vm().heap)) JSSVGAnimatedPreserveAspectRatio(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedPreserveAspectRatio* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedPreserveAspectRatio>(globalObject->vm().heap)) JSSVGAnimatedPreserveAspectRatio(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedPreserveAspectRatio* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedPreserveAspectRatio();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedPreserveAspectRatio& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedPreserveAspectRatio* m_impl;
 protected:
-    JSSVGAnimatedPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedPreserveAspectRatio>&&);
+    JSSVGAnimatedPreserveAspectRatio(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedPreserveAspectRatio>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedPreserveA
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedPreserveAspectRatio*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedPreserveAspectRatio& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedPreserveAspectRatio& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedPreserveAspectRatio*);
 
 
 } // namespace WebCore

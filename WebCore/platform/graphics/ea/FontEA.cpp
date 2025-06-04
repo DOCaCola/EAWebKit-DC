@@ -144,7 +144,7 @@ float Font::platformWidthForGlyph(Glyph glyphId) const
 }
 
 //EAWebKitTODO: a proper implementation
-PassRefPtr<Font> Font::platformCreateScaledFont(const FontDescription&, float scaleFactor) const
+RefPtr<Font> Font::platformCreateScaledFont(const FontDescription&, float scaleFactor) const
 {
 	notImplemented();
     return nullptr;

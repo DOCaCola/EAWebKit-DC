@@ -32,7 +32,7 @@ public:
     typedef JSEventTarget Base;
     static JSWorker* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Worker>&& impl)
     {
-        JSWorker* ptr = new (NotNull, JSC::allocateCell<JSWorker>(globalObject->vm().heap)) JSWorker(structure, globalObject, WTF::move(impl));
+        JSWorker* ptr = new (NotNull, JSC::allocateCell<JSWorker>(globalObject->vm().heap)) JSWorker(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,13 +51,13 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue postMessage(JSC::ExecState*);
-    Worker& impl() const
+    JSC::JSValue postMessage(JSC::ExecState&);
+    Worker& wrapped() const
     {
-        return static_cast<Worker&>(Base::impl());
+        return static_cast<Worker&>(Base::wrapped());
     }
 protected:
-    JSWorker(JSC::Structure*, JSDOMGlobalObject*, Ref<Worker>&&);
+    JSWorker(JSC::Structure*, JSDOMGlobalObject&, Ref<Worker>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Worker*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Worker*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Worker& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Worker& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Worker*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSWorker(JSC::ExecState*);

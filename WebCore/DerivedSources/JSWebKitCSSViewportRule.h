@@ -33,7 +33,7 @@ public:
     typedef JSCSSRule Base;
     static JSWebKitCSSViewportRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSViewportRule>&& impl)
     {
-        JSWebKitCSSViewportRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRule>(globalObject->vm().heap)) JSWebKitCSSViewportRule(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSViewportRule* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSViewportRule>(globalObject->vm().heap)) JSWebKitCSSViewportRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSViewportRule& impl() const
+    WebKitCSSViewportRule& wrapped() const
     {
-        return static_cast<WebKitCSSViewportRule&>(Base::impl());
+        return static_cast<WebKitCSSViewportRule&>(Base::wrapped());
     }
 protected:
-    JSWebKitCSSViewportRule(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSViewportRule>&&);
+    JSWebKitCSSViewportRule(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSViewportRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

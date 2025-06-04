@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLBuffer : public JSDOMWrapper {
+class JSWebGLBuffer : public JSDOMWrapper<WebGLBuffer> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLBuffer> Base;
     static JSWebGLBuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLBuffer>&& impl)
     {
-        JSWebGLBuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLBuffer>(globalObject->vm().heap)) JSWebGLBuffer(structure, globalObject, WTF::move(impl));
+        JSWebGLBuffer* ptr = new (NotNull, JSC::allocateCell<JSWebGLBuffer>(globalObject->vm().heap)) JSWebGLBuffer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLBuffer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLBuffer();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLBuffer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLBuffer* m_impl;
 protected:
-    JSWebGLBuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLBuffer>&&);
+    JSWebGLBuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLBuffer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLBuffer*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLBuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLBuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLBuffer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLBuffer*);
 
 
 } // namespace WebCore

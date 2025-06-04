@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Google Inc. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -60,10 +61,12 @@
 #include "IDBTransaction.h"
 #include "InspectorPageAgent.h"
 #include "InstrumentingAgents.h"
+#include "LegacyDatabase.h"
 #include "SecurityOrigin.h"
 #include <inspector/InjectedScript.h>
 #include <inspector/InjectedScriptManager.h>
 #include <inspector/InspectorFrontendDispatchers.h>
+#include <inspector/InspectorFrontendRouter.h>
 #include <inspector/InspectorValues.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/Vector.h>
@@ -114,13 +117,13 @@ public:
         }
 
         IDBRequest* idbRequest = static_cast<IDBRequest*>(event->target());
-        ExceptionCode ec = 0;
+        ExceptionCodeWithMessage ec;
         RefPtr<IDBAny> requestResult = idbRequest->result(ec);
-        if (ec) {
+        if (ec.code) {
             m_requestCallback->sendFailure("Could not get result in callback.");
             return;
         }
-        if (requestResult->type() != IDBAny::DOMStringListType) {
+        if (requestResult->type() != IDBAny::Type::DOMStringList) {
             m_requestCallback->sendFailure("Unexpected result type.");
             return;
         }
@@ -147,7 +150,7 @@ public:
         : m_context(context) { }
     virtual ~ExecutableWithDatabase() { };
     void start(IDBFactory*, SecurityOrigin*, const String& databaseName);
-    virtual void execute(RefPtr<IDBDatabase>&&) = 0;
+    virtual void execute(RefPtr<LegacyDatabase>&&) = 0;
     virtual RequestCallback& requestCallback() = 0;
     ScriptExecutionContext* context() { return m_context; };
 private:
@@ -176,18 +179,22 @@ public:
         }
 
         IDBOpenDBRequest* idbOpenDBRequest = static_cast<IDBOpenDBRequest*>(event->target());
-        ExceptionCode ec = 0;
+        ExceptionCodeWithMessage ec;
         RefPtr<IDBAny> requestResult = idbOpenDBRequest->result(ec);
-        if (ec) {
+        if (ec.code) {
             m_executableWithDatabase->requestCallback().sendFailure("Could not get result in callback.");
             return;
         }
-        if (requestResult->type() != IDBAny::IDBDatabaseType) {
+        if (requestResult->type() != IDBAny::Type::IDBDatabase) {
             m_executableWithDatabase->requestCallback().sendFailure("Unexpected result type.");
             return;
         }
+        if (!requestResult->isLegacy()) {
+            m_executableWithDatabase->requestCallback().sendFailure("Only Legacy IDB is supported right now.");
+            return;
+        }
 
-        RefPtr<IDBDatabase> idbDatabase = requestResult->idbDatabase();
+        RefPtr<LegacyDatabase> idbDatabase = adoptRef(static_cast<LegacyDatabase*>(requestResult->idbDatabase().leakRef()));
         m_executableWithDatabase->execute(WTF::move(idbDatabase));
         IDBPendingTransactionMonitor::deactivateNewTransactions();
         idbDatabase->close();
@@ -214,52 +221,51 @@ void ExecutableWithDatabase::start(IDBFactory* idbFactory, SecurityOrigin*, cons
 
 static RefPtr<IDBTransaction> transactionForDatabase(ScriptExecutionContext* scriptExecutionContext, IDBDatabase* idbDatabase, const String& objectStoreName, const String& mode = IDBTransaction::modeReadOnly())
 {
-    ExceptionCode ec = 0;
+    ExceptionCodeWithMessage ec;
     RefPtr<IDBTransaction> idbTransaction = idbDatabase->transaction(scriptExecutionContext, objectStoreName, mode, ec);
-    if (ec)
+    if (ec.code)
         return nullptr;
-    return WTF::move(idbTransaction);
+    return idbTransaction;
 }
 
 static RefPtr<IDBObjectStore> objectStoreForTransaction(IDBTransaction* idbTransaction, const String& objectStoreName)
 {
-    ExceptionCode ec = 0;
+    ExceptionCodeWithMessage ec;
     RefPtr<IDBObjectStore> idbObjectStore = idbTransaction->objectStore(objectStoreName, ec);
-    if (ec)
+    if (ec.code)
         return nullptr;
-    return WTF::move(idbObjectStore);
+    return idbObjectStore;
 }
 
 static RefPtr<IDBIndex> indexForObjectStore(IDBObjectStore* idbObjectStore, const String& indexName)
 {
-    ExceptionCode ec = 0;
+    ExceptionCodeWithMessage ec;
     RefPtr<IDBIndex> idbIndex = idbObjectStore->index(indexName, ec);
-    if (ec)
+    if (ec.code)
         return nullptr;
-    return WTF::move(idbIndex);
+    return idbIndex;
 }
 
 static RefPtr<KeyPath> keyPathFromIDBKeyPath(const IDBKeyPath& idbKeyPath)
 {
     RefPtr<KeyPath> keyPath;
     switch (idbKeyPath.type()) {
-    case IDBKeyPath::NullType:
+    case IndexedDB::KeyPathType::Null:
         keyPath = KeyPath::create()
             .setType(KeyPath::Type::Null)
             .release();
         break;
-    case IDBKeyPath::StringType:
+    case IndexedDB::KeyPathType::String:
         keyPath = KeyPath::create()
             .setType(KeyPath::Type::String)
             .release();
         keyPath->setString(idbKeyPath.string());
 
         break;
-    case IDBKeyPath::ArrayType: {
+    case IndexedDB::KeyPathType::Array: {
         auto array = Inspector::Protocol::Array<String>::create();
-        const Vector<String>& stringArray = idbKeyPath.array();
-        for (size_t i = 0; i < stringArray.size(); ++i)
-            array->addItem(stringArray[i]);
+        for (auto& string : idbKeyPath.array())
+            array->addItem(string);
         keyPath = KeyPath::create()
             .setType(KeyPath::Type::Array)
             .release();
@@ -270,7 +276,7 @@ static RefPtr<KeyPath> keyPathFromIDBKeyPath(const IDBKeyPath& idbKeyPath)
         ASSERT_NOT_REACHED();
     }
 
-    return WTF::move(keyPath);
+    return keyPath;
 }
 
 class DatabaseLoader : public ExecutableWithDatabase {
@@ -282,7 +288,7 @@ public:
 
     virtual ~DatabaseLoader() { }
 
-    virtual void execute(RefPtr<IDBDatabase>&& database) override
+    virtual void execute(RefPtr<LegacyDatabase>&& database) override
     {
         if (!requestCallback().isActive())
             return;
@@ -339,10 +345,10 @@ static RefPtr<IDBKey> idbKeyFromInspectorObject(InspectorObject* key)
     if (!key->getString("type", type))
         return nullptr;
 
-    NeverDestroyed<const String> numberType(ASCIILiteral("number"));
-    NeverDestroyed<const String> stringType(ASCIILiteral("string"));
-    NeverDestroyed<const String> dateType(ASCIILiteral("date"));
-    NeverDestroyed<const String> arrayType(ASCIILiteral("array"));
+    static NeverDestroyed<const String> numberType(ASCIILiteral("number"));
+    static NeverDestroyed<const String> stringType(ASCIILiteral("string"));
+    static NeverDestroyed<const String> dateType(ASCIILiteral("date"));
+    static NeverDestroyed<const String> arrayType(ASCIILiteral("array"));
 
     if (type == numberType) {
         double number;
@@ -360,7 +366,7 @@ static RefPtr<IDBKey> idbKeyFromInspectorObject(InspectorObject* key)
             return nullptr;
         idbKey = IDBKey::createDate(date);
     } else if (type == arrayType) {
-        IDBKey::KeyArray keyArray;
+        Vector<RefPtr<IDBKey>> keyArray;
         RefPtr<InspectorArray> array;
         if (!key->getArray("array", array))
             return nullptr;
@@ -431,17 +437,17 @@ public:
         }
 
         IDBRequest* idbRequest = static_cast<IDBRequest*>(event->target());
-        ExceptionCode ec = 0;
-        RefPtr<IDBAny> requestResult = idbRequest->result(ec);
-        if (ec) {
+        ExceptionCodeWithMessage ecwm;
+        RefPtr<IDBAny> requestResult = idbRequest->result(ecwm);
+        if (ecwm.code) {
             m_requestCallback->sendFailure("Could not get result in callback.");
             return;
         }
-        if (requestResult->type() == IDBAny::ScriptValueType) {
+        if (requestResult->type() == IDBAny::Type::ScriptValue) {
             end(false);
             return;
         }
-        if (requestResult->type() != IDBAny::IDBCursorWithValueType) {
+        if (requestResult->type() != IDBAny::Type::IDBCursorWithValue) {
             m_requestCallback->sendFailure("Unexpected result type.");
             return;
         }
@@ -449,9 +455,9 @@ public:
         RefPtr<IDBCursorWithValue> idbCursor = requestResult->idbCursorWithValue();
 
         if (m_skipCount) {
-            ExceptionCode ec = 0;
+            ExceptionCodeWithMessage ec;
             idbCursor->advance(m_skipCount, ec);
-            if (ec)
+            if (ec.code)
                 m_requestCallback->sendFailure("Could not advance cursor.");
             m_skipCount = 0;
             return;
@@ -463,8 +469,9 @@ public:
         }
 
         // Continue cursor before making injected script calls, otherwise transaction might be finished.
+        ExceptionCodeWithMessage ec;
         idbCursor->continueFunction(nullptr, ec);
-        if (ec) {
+        if (ec.code) {
             m_requestCallback->sendFailure("Could not continue cursor.");
             return;
         }
@@ -511,7 +518,7 @@ public:
 
     virtual ~DataLoader() { }
 
-    virtual void execute(RefPtr<IDBDatabase>&& database) override
+    virtual void execute(RefPtr<LegacyDatabase>&& database) override
     {
         if (!requestCallback().isActive())
             return;
@@ -528,7 +535,7 @@ public:
 
         Ref<OpenCursorCallback> openCursorCallback = OpenCursorCallback::create(m_injectedScript, m_requestCallback.copyRef(), m_skipCount, m_pageSize);
 
-        ExceptionCode ec = 0;
+        ExceptionCodeWithMessage ec;
         RefPtr<IDBRequest> idbRequest;
         if (!m_indexName.isEmpty()) {
             RefPtr<IDBIndex> idbIndex = indexForObjectStore(idbObjectStore.get(), m_indexName);
@@ -537,9 +544,9 @@ public:
                 return;
             }
 
-            idbRequest = idbIndex->openCursor(context(), m_idbKeyRange.copyRef(), ec);
+            idbRequest = idbIndex->openCursor(context(), m_idbKeyRange.get(), ec);
         } else
-            idbRequest = idbObjectStore->openCursor(context(), m_idbKeyRange.copyRef(), ec);
+            idbRequest = idbObjectStore->openCursor(context(), m_idbKeyRange.get(), ec);
         idbRequest->addEventListener(eventNames().successEvent, WTF::move(openCursorCallback), false);
     }
 
@@ -564,9 +571,10 @@ public:
 
 } // namespace
 
-InspectorIndexedDBAgent::InspectorIndexedDBAgent(InstrumentingAgents* instrumentingAgents, InjectedScriptManager* injectedScriptManager, InspectorPageAgent* pageAgent)
-    : InspectorAgentBase(ASCIILiteral("IndexedDB"), instrumentingAgents)
-    , m_injectedScriptManager(injectedScriptManager)
+InspectorIndexedDBAgent::InspectorIndexedDBAgent(WebAgentContext& context, InspectorPageAgent* pageAgent)
+    : InspectorAgentBase(ASCIILiteral("IndexedDB"), context)
+    , m_injectedScriptManager(context.injectedScriptManager)
+    , m_backendDispatcher(Inspector::IndexedDBBackendDispatcher::create(context.backendDispatcher, this))
     , m_pageAgent(pageAgent)
 {
 }
@@ -575,15 +583,12 @@ InspectorIndexedDBAgent::~InspectorIndexedDBAgent()
 {
 }
 
-void InspectorIndexedDBAgent::didCreateFrontendAndBackend(Inspector::FrontendChannel*, Inspector::BackendDispatcher* backendDispatcher)
+void InspectorIndexedDBAgent::didCreateFrontendAndBackend(Inspector::FrontendRouter*, Inspector::BackendDispatcher*)
 {
-    m_backendDispatcher = Inspector::IndexedDBBackendDispatcher::create(backendDispatcher, this);
 }
 
 void InspectorIndexedDBAgent::willDestroyFrontendAndBackend(Inspector::DisconnectReason)
 {
-    m_backendDispatcher = nullptr;
-
     ErrorString unused;
     disable(unused);
 }
@@ -666,7 +671,7 @@ void InspectorIndexedDBAgent::requestData(ErrorString& errorString, const String
     if (!idbFactory)
         return;
 
-    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(mainWorldExecState(frame));
+    InjectedScript injectedScript = m_injectedScriptManager.injectedScriptFor(mainWorldExecState(frame));
 
     RefPtr<IDBKeyRange> idbKeyRange = keyRange ? idbKeyRangeFromKeyRange(keyRange) : nullptr;
     if (keyRange && !idbKeyRange) {
@@ -729,7 +734,7 @@ public:
     {
     }
 
-    virtual void execute(RefPtr<IDBDatabase>&& database) override
+    virtual void execute(RefPtr<LegacyDatabase>&& database) override
     {
         if (!requestCallback().isActive())
             return;
@@ -744,11 +749,11 @@ public:
             return;
         }
 
-        ExceptionCode ec = 0;
+        ExceptionCodeWithMessage ec;
         RefPtr<IDBRequest> idbRequest = idbObjectStore->clear(context(), ec);
-        ASSERT(!ec);
-        if (ec) {
-            m_requestCallback->sendFailure(String::format("Could not clear object store '%s': %d", m_objectStoreName.utf8().data(), ec));
+        ASSERT(!ec.code);
+        if (ec.code) {
+            m_requestCallback->sendFailure(String::format("Could not clear object store '%s': %d", m_objectStoreName.utf8().data(), ec.code));
             return;
         }
         idbTransaction->addEventListener(eventNames().completeEvent, ClearObjectStoreListener::create(m_requestCallback.copyRef()), false);

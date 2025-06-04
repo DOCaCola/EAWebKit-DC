@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSStorageEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StorageEvent>&& impl)
     {
-        JSStorageEvent* ptr = new (NotNull, JSC::allocateCell<JSStorageEvent>(globalObject->vm().heap)) JSStorageEvent(structure, globalObject, WTF::move(impl));
+        JSStorageEvent* ptr = new (NotNull, JSC::allocateCell<JSStorageEvent>(globalObject->vm().heap)) JSStorageEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    StorageEvent& impl() const
+    StorageEvent& wrapped() const
     {
-        return static_cast<StorageEvent&>(Base::impl());
+        return static_cast<StorageEvent&>(Base::wrapped());
     }
 protected:
-    JSStorageEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<StorageEvent>&&);
+    JSStorageEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<StorageEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSScreen : public JSDOMWrapper {
+class JSScreen : public JSDOMWrapper<Screen> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Screen> Base;
     static JSScreen* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Screen>&& impl)
     {
-        JSScreen* ptr = new (NotNull, JSC::allocateCell<JSScreen>(globalObject->vm().heap)) JSScreen(structure, globalObject, WTF::move(impl));
+        JSScreen* ptr = new (NotNull, JSC::allocateCell<JSScreen>(globalObject->vm().heap)) JSScreen(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Screen* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSScreen();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Screen& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Screen* m_impl;
 protected:
-    JSScreen(JSC::Structure*, JSDOMGlobalObject*, Ref<Screen>&&);
+    JSScreen(JSC::Structure*, JSDOMGlobalObject&, Ref<Screen>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Screen*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Screen*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Screen& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Screen& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Screen*);
 
 
 } // namespace WebCore

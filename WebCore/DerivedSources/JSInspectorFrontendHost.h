@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSInspectorFrontendHost : public JSDOMWrapper {
+class JSInspectorFrontendHost : public JSDOMWrapper<InspectorFrontendHost> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<InspectorFrontendHost> Base;
     static JSInspectorFrontendHost* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<InspectorFrontendHost>&& impl)
     {
-        JSInspectorFrontendHost* ptr = new (NotNull, JSC::allocateCell<JSInspectorFrontendHost>(globalObject->vm().heap)) JSInspectorFrontendHost(structure, globalObject, WTF::move(impl));
+        JSInspectorFrontendHost* ptr = new (NotNull, JSC::allocateCell<JSInspectorFrontendHost>(globalObject->vm().heap)) JSInspectorFrontendHost(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static InspectorFrontendHost* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSInspectorFrontendHost();
 
     DECLARE_INFO;
 
@@ -52,16 +51,9 @@ public:
 
 
     // Custom functions
-    JSC::JSValue platform(JSC::ExecState*);
-    JSC::JSValue port(JSC::ExecState*);
-    JSC::JSValue showContextMenu(JSC::ExecState*);
-    InspectorFrontendHost& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    InspectorFrontendHost* m_impl;
+    JSC::JSValue showContextMenu(JSC::ExecState&);
 protected:
-    JSInspectorFrontendHost(JSC::Structure*, JSDOMGlobalObject*, Ref<InspectorFrontendHost>&&);
+    JSInspectorFrontendHost(JSC::Structure*, JSDOMGlobalObject&, Ref<InspectorFrontendHost>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, InspectorFrontendHos
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, InspectorFrontendHost*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, InspectorFrontendHost& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, InspectorFrontendHost& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, InspectorFrontendHost*);
 
 
 } // namespace WebCore

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSAudioParam : public JSDOMWrapper {
+class JSAudioParam : public JSDOMWrapper<AudioParam> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<AudioParam> Base;
     static JSAudioParam* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioParam>&& impl)
     {
-        JSAudioParam* ptr = new (NotNull, JSC::allocateCell<JSAudioParam>(globalObject->vm().heap)) JSAudioParam(structure, globalObject, WTF::move(impl));
+        JSAudioParam* ptr = new (NotNull, JSC::allocateCell<JSAudioParam>(globalObject->vm().heap)) JSAudioParam(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static AudioParam* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSAudioParam();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioParam& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    AudioParam* m_impl;
 protected:
-    JSAudioParam(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioParam>&&);
+    JSAudioParam(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioParam>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, AudioParam*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioParam*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioParam& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioParam& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioParam*);
 
 
 } // namespace WebCore

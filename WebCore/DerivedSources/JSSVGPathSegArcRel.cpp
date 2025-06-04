@@ -22,7 +22,7 @@
 #include "JSSVGPathSegArcRel.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSegArcRel.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -73,55 +73,29 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegArcRelConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegArcRelConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPathSegArcRel> JSSVGPathSegArcRelConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegArcRelConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegArcRelConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegArcRelConstructor>(vm.heap)) JSSVGPathSegArcRelConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathSegArcRelConstructor::s_info = { "SVGPathSegArcRelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegArcRelConstructor) };
-
-JSSVGPathSegArcRelConstructor::JSSVGPathSegArcRelConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPathSegArcRelConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPathSegArcRelConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegArcRel::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegArcRel::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegArcRel"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegArcRelConstructor::s_info = { "SVGPathSegArcRelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegArcRelConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegArcRelPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelY) },
-    { "r1", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelR1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelR1) },
-    { "r2", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelR2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelR2) },
-    { "angle", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelAngle) },
-    { "largeArcFlag", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelLargeArcFlag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelLargeArcFlag) },
-    { "sweepFlag", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelSweepFlag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelSweepFlag) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelY) } },
+    { "r1", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelR1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelR1) } },
+    { "r2", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelR2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelR2) } },
+    { "angle", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelAngle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelAngle) } },
+    { "largeArcFlag", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelLargeArcFlag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelLargeArcFlag) } },
+    { "sweepFlag", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegArcRelSweepFlag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegArcRelSweepFlag) } },
 };
 
 const ClassInfo JSSVGPathSegArcRelPrototype::s_info = { "SVGPathSegArcRelPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegArcRelPrototype) };
@@ -134,7 +108,7 @@ void JSSVGPathSegArcRelPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSegArcRel::s_info = { "SVGPathSegArcRel", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegArcRel) };
 
-JSSVGPathSegArcRel::JSSVGPathSegArcRel(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegArcRel>&& impl)
+JSSVGPathSegArcRel::JSSVGPathSegArcRel(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegArcRel>&& impl)
     : JSSVGPathSeg(structure, globalObject, WTF::move(impl))
 {
 }
@@ -149,268 +123,268 @@ JSObject* JSSVGPathSegArcRel::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGPathSegArcRel>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathSegArcRelX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "x");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "x");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "x");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "y");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "y");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "y");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelR1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelR1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "r1");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "r1");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "r1");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "r1");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.r1());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelR2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelR2(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "r2");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "r2");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "r2");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "r2");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.r2());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelAngle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelAngle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "angle");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "angle");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "angle");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "angle");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.angle());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelLargeArcFlag(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelLargeArcFlag(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "largeArcFlag");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "largeArcFlag");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "largeArcFlag");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "largeArcFlag");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.largeArcFlag());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelSweepFlag(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelSweepFlag(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegArcRel", "sweepFlag");
-        return throwGetterTypeError(*exec, "SVGPathSegArcRel", "sweepFlag");
+            return reportDeprecatedGetterError(*state, "SVGPathSegArcRel", "sweepFlag");
+        return throwGetterTypeError(*state, "SVGPathSegArcRel", "sweepFlag");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.sweepFlag());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegArcRelConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPathSegArcRelConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPathSegArcRelPrototype* domObject = jsDynamicCast<JSSVGPathSegArcRelPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegArcRel::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPathSegArcRel::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGPathSegArcRelX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "x");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "x");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "x");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "x");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setX(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "y");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "y");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "y");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "y");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setY(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelR1(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelR1(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "r1");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "r1");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "r1");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "r1");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setR1(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelR2(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelR2(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "r2");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "r2");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "r2");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "r2");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setR2(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelAngle(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelAngle(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "angle");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "angle");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "angle");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "angle");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAngle(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelLargeArcFlag(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelLargeArcFlag(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "largeArcFlag");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "largeArcFlag");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "largeArcFlag");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "largeArcFlag");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLargeArcFlag(nativeValue);
 }
 
 
-void setJSSVGPathSegArcRelSweepFlag(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegArcRelSweepFlag(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegArcRel* castedThis = jsDynamicCast<JSSVGPathSegArcRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegArcRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegArcRel", "sweepFlag");
+            reportDeprecatedSetterError(*state, "SVGPathSegArcRel", "sweepFlag");
         else
-            throwSetterTypeError(*exec, "SVGPathSegArcRel", "sweepFlag");
+            throwSetterTypeError(*state, "SVGPathSegArcRel", "sweepFlag");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSweepFlag(nativeValue);
 }
@@ -418,7 +392,7 @@ void setJSSVGPathSegArcRelSweepFlag(ExecState* exec, JSObject* baseObject, Encod
 
 JSValue JSSVGPathSegArcRel::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPathSegArcRelConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegArcRelConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

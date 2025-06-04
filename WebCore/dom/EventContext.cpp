@@ -67,7 +67,6 @@ bool EventContext::isTouchEventContext() const
 
 MouseOrFocusEventContext::MouseOrFocusEventContext(PassRefPtr<Node> node, PassRefPtr<EventTarget> currentTarget, PassRefPtr<EventTarget> target)
     : EventContext(node, currentTarget, target)
-    , m_relatedTarget(0)
 {
 }
 

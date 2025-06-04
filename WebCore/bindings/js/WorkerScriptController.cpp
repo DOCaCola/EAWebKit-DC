@@ -34,7 +34,6 @@
 #include "WebCoreJSClientData.h"
 #include "WorkerGlobalScope.h"
 #include "WorkerObjectProxy.h"
-#include "WorkerScriptDebugServer.h"
 #include "WorkerThread.h"
 #include <bindings/ScriptValue.h>
 #include <heap/StrongInlines.h>
@@ -146,23 +145,23 @@ void WorkerScriptController::setException(JSC::Exception* exception)
     exec->vm().throwException(exec, exception);
 }
 
- void WorkerScriptController::scheduleExecutionTermination()
- {
+void WorkerScriptController::scheduleExecutionTermination()
+{
     // The mutex provides a memory barrier to ensure that once
     // termination is scheduled, isTerminatingExecution() will
     // accurately reflect that state when called from another thread.
-    MutexLocker locker(m_scheduledTerminationMutex);
+    LockHolder locker(m_scheduledTerminationMutex);
     m_isTerminatingExecution = true;
 
-    ASSERT(m_vm->watchdog);
-    m_vm->watchdog->terminateSoon();
+    ASSERT(m_vm->watchdog());
+    m_vm->watchdog()->terminateSoon();
 }
 
 bool WorkerScriptController::isTerminatingExecution() const
 {
     // See comments in scheduleExecutionTermination regarding mutex usage.
-    MutexLocker locker(m_scheduledTerminationMutex);
-    return m_isTerminatingExecution; 
+    LockHolder locker(m_scheduledTerminationMutex);
+    return m_isTerminatingExecution;
 }
 
 void WorkerScriptController::forbidExecution()

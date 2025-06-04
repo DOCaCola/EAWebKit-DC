@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCConfiguration : public JSDOMWrapper {
+class JSRTCConfiguration : public JSDOMWrapper<RTCConfiguration> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCConfiguration> Base;
     static JSRTCConfiguration* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCConfiguration>&& impl)
     {
-        JSRTCConfiguration* ptr = new (NotNull, JSC::allocateCell<JSRTCConfiguration>(globalObject->vm().heap)) JSRTCConfiguration(structure, globalObject, WTF::move(impl));
+        JSRTCConfiguration* ptr = new (NotNull, JSC::allocateCell<JSRTCConfiguration>(globalObject->vm().heap)) JSRTCConfiguration(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCConfiguration* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCConfiguration();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCConfiguration& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCConfiguration* m_impl;
 protected:
-    JSRTCConfiguration(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCConfiguration>&&);
+    JSRTCConfiguration(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCConfiguration>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCConfiguration*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCConfiguration*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCConfiguration& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCConfiguration& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCConfiguration*);
 
 
 } // namespace WebCore

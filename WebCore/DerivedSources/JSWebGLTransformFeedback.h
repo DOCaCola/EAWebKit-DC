@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLTransformFeedback : public JSDOMWrapper {
+class JSWebGLTransformFeedback : public JSDOMWrapper<WebGLTransformFeedback> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLTransformFeedback> Base;
     static JSWebGLTransformFeedback* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLTransformFeedback>&& impl)
     {
-        JSWebGLTransformFeedback* ptr = new (NotNull, JSC::allocateCell<JSWebGLTransformFeedback>(globalObject->vm().heap)) JSWebGLTransformFeedback(structure, globalObject, WTF::move(impl));
+        JSWebGLTransformFeedback* ptr = new (NotNull, JSC::allocateCell<JSWebGLTransformFeedback>(globalObject->vm().heap)) JSWebGLTransformFeedback(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLTransformFeedback* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLTransformFeedback();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebGLTransformFeedback& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLTransformFeedback* m_impl;
 protected:
-    JSWebGLTransformFeedback(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLTransformFeedback>&&);
+    JSWebGLTransformFeedback(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLTransformFeedback>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLTransformFeedba
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLTransformFeedback*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLTransformFeedback& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLTransformFeedback& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLTransformFeedback*);
 
 
 } // namespace WebCore

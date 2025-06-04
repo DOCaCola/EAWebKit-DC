@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSRTCDataChannelEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCDataChannelEvent>&& impl)
     {
-        JSRTCDataChannelEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannelEvent>(globalObject->vm().heap)) JSRTCDataChannelEvent(structure, globalObject, WTF::move(impl));
+        JSRTCDataChannelEvent* ptr = new (NotNull, JSC::allocateCell<JSRTCDataChannelEvent>(globalObject->vm().heap)) JSRTCDataChannelEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCDataChannelEvent& impl() const
+    RTCDataChannelEvent& wrapped() const
     {
-        return static_cast<RTCDataChannelEvent&>(Base::impl());
+        return static_cast<RTCDataChannelEvent&>(Base::wrapped());
     }
 protected:
-    JSRTCDataChannelEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCDataChannelEvent>&&);
+    JSRTCDataChannelEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCDataChannelEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

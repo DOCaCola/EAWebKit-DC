@@ -22,8 +22,8 @@
 #include "JSSVGFEPointLightElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedNumber.h"
-#include "SVGFEPointLightElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -62,51 +62,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEPointLightElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEPointLightElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEPointLightElement> JSSVGFEPointLightElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEPointLightElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEPointLightElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEPointLightElementConstructor>(vm.heap)) JSSVGFEPointLightElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEPointLightElementConstructor::s_info = { "SVGFEPointLightElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEPointLightElementConstructor) };
-
-JSSVGFEPointLightElementConstructor::JSSVGFEPointLightElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEPointLightElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEPointLightElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEPointLightElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEPointLightElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEPointLightElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEPointLightElementConstructor::s_info = { "SVGFEPointLightElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEPointLightElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEPointLightElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "z", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementZ), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "z", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEPointLightElementZ), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEPointLightElementPrototype::s_info = { "SVGFEPointLightElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEPointLightElementPrototype) };
@@ -119,7 +93,7 @@ void JSSVGFEPointLightElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEPointLightElement::s_info = { "SVGFEPointLightElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEPointLightElement) };
 
-JSSVGFEPointLightElement::JSSVGFEPointLightElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEPointLightElement>&& impl)
+JSSVGFEPointLightElement::JSSVGFEPointLightElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEPointLightElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,71 +108,71 @@ JSObject* JSSVGFEPointLightElement::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSSVGFEPointLightElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEPointLightElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEPointLightElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEPointLightElement* castedThis = jsDynamicCast<JSSVGFEPointLightElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEPointLightElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEPointLightElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEPointLightElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGFEPointLightElement", "x");
+        return throwGetterTypeError(*state, "SVGFEPointLightElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEPointLightElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEPointLightElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEPointLightElement* castedThis = jsDynamicCast<JSSVGFEPointLightElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEPointLightElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEPointLightElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEPointLightElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGFEPointLightElement", "y");
+        return throwGetterTypeError(*state, "SVGFEPointLightElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEPointLightElementZ(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEPointLightElementZ(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEPointLightElement* castedThis = jsDynamicCast<JSSVGFEPointLightElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEPointLightElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEPointLightElement", "z");
-        return throwGetterTypeError(*exec, "SVGFEPointLightElement", "z");
+            return reportDeprecatedGetterError(*state, "SVGFEPointLightElement", "z");
+        return throwGetterTypeError(*state, "SVGFEPointLightElement", "z");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.zAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEPointLightElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEPointLightElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEPointLightElementPrototype* domObject = jsDynamicCast<JSSVGFEPointLightElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEPointLightElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEPointLightElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEPointLightElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEPointLightElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEPointLightElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

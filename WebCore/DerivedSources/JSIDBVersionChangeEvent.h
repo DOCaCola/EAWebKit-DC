@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSIDBVersionChangeEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBVersionChangeEvent>&& impl)
     {
-        JSIDBVersionChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSIDBVersionChangeEvent>(globalObject->vm().heap)) JSIDBVersionChangeEvent(structure, globalObject, WTF::move(impl));
+        JSIDBVersionChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSIDBVersionChangeEvent>(globalObject->vm().heap)) JSIDBVersionChangeEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBVersionChangeEvent& impl() const
+    IDBVersionChangeEvent& wrapped() const
     {
-        return static_cast<IDBVersionChangeEvent&>(Base::impl());
+        return static_cast<IDBVersionChangeEvent&>(Base::wrapped());
     }
 protected:
-    JSIDBVersionChangeEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBVersionChangeEvent>&&);
+    JSIDBVersionChangeEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBVersionChangeEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

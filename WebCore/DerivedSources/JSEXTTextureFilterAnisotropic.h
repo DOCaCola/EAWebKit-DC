@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSEXTTextureFilterAnisotropic : public JSDOMWrapper {
+class JSEXTTextureFilterAnisotropic : public JSDOMWrapper<EXTTextureFilterAnisotropic> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<EXTTextureFilterAnisotropic> Base;
     static JSEXTTextureFilterAnisotropic* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTTextureFilterAnisotropic>&& impl)
     {
-        JSEXTTextureFilterAnisotropic* ptr = new (NotNull, JSC::allocateCell<JSEXTTextureFilterAnisotropic>(globalObject->vm().heap)) JSEXTTextureFilterAnisotropic(structure, globalObject, WTF::move(impl));
+        JSEXTTextureFilterAnisotropic* ptr = new (NotNull, JSC::allocateCell<JSEXTTextureFilterAnisotropic>(globalObject->vm().heap)) JSEXTTextureFilterAnisotropic(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static EXTTextureFilterAnisotropic* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEXTTextureFilterAnisotropic();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    EXTTextureFilterAnisotropic& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EXTTextureFilterAnisotropic* m_impl;
 protected:
-    JSEXTTextureFilterAnisotropic(JSC::Structure*, JSDOMGlobalObject*, Ref<EXTTextureFilterAnisotropic>&&);
+    JSEXTTextureFilterAnisotropic(JSC::Structure*, JSDOMGlobalObject&, Ref<EXTTextureFilterAnisotropic>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EXTTextureFilterAnis
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EXTTextureFilterAnisotropic*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EXTTextureFilterAnisotropic& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EXTTextureFilterAnisotropic& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, EXTTextureFilterAnisotropic*);
 
 
 } // namespace WebCore

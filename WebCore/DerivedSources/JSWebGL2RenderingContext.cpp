@@ -26,6 +26,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLCanvasElement.h"
 #include "JSHTMLImageElement.h"
 #include "JSHTMLVideoElement.h"
@@ -39,7 +40,6 @@
 #include "JSWebGLTransformFeedback.h"
 #include "JSWebGLUniformLocation.h"
 #include "JSWebGLVertexArrayObject.h"
-#include "WebGL2RenderingContext.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLQuery.h"
 #include "WebGLSampler.h"
@@ -173,709 +173,683 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGL2RenderingContextConstructor : public DOMConstructorObject {
-private:
-    JSWebGL2RenderingContextConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGL2RenderingContextConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGL2RenderingContextConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGL2RenderingContextConstructor>(vm.heap)) JSWebGL2RenderingContextConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSWebGL2RenderingContext> JSWebGL2RenderingContextConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSWebGL2RenderingContextConstructorTableValues[] =
 {
-    { "READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C02), (intptr_t) (0) },
-    { "UNPACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF2), (intptr_t) (0) },
-    { "UNPACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF3), (intptr_t) (0) },
-    { "UNPACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF4), (intptr_t) (0) },
-    { "PACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D02), (intptr_t) (0) },
-    { "PACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D03), (intptr_t) (0) },
-    { "PACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D04), (intptr_t) (0) },
-    { "COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1800), (intptr_t) (0) },
-    { "DEPTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1801), (intptr_t) (0) },
-    { "STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1802), (intptr_t) (0) },
-    { "RED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1903), (intptr_t) (0) },
-    { "RGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8051), (intptr_t) (0) },
-    { "RGBA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8058), (intptr_t) (0) },
-    { "RGB10_A2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8059), (intptr_t) (0) },
-    { "TEXTURE_BINDING_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806A), (intptr_t) (0) },
-    { "UNPACK_SKIP_IMAGES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806D), (intptr_t) (0) },
-    { "UNPACK_IMAGE_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806E), (intptr_t) (0) },
-    { "TEXTURE_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806F), (intptr_t) (0) },
-    { "TEXTURE_WRAP_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8072), (intptr_t) (0) },
-    { "MAX_3D_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8073), (intptr_t) (0) },
-    { "UNSIGNED_INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8368), (intptr_t) (0) },
-    { "MAX_ELEMENTS_VERTICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80E8), (intptr_t) (0) },
-    { "MAX_ELEMENTS_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80E9), (intptr_t) (0) },
-    { "TEXTURE_MIN_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813A), (intptr_t) (0) },
-    { "TEXTURE_MAX_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813B), (intptr_t) (0) },
-    { "TEXTURE_BASE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813C), (intptr_t) (0) },
-    { "TEXTURE_MAX_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813D), (intptr_t) (0) },
-    { "MIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8007), (intptr_t) (0) },
-    { "MAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8008), (intptr_t) (0) },
-    { "DEPTH_COMPONENT24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x81A6), (intptr_t) (0) },
-    { "MAX_TEXTURE_LOD_BIAS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84FD), (intptr_t) (0) },
-    { "TEXTURE_COMPARE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884C), (intptr_t) (0) },
-    { "TEXTURE_COMPARE_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884D), (intptr_t) (0) },
-    { "CURRENT_QUERY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8865), (intptr_t) (0) },
-    { "QUERY_RESULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8866), (intptr_t) (0) },
-    { "QUERY_RESULT_AVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8867), (intptr_t) (0) },
-    { "STREAM_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E1), (intptr_t) (0) },
-    { "STREAM_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E2), (intptr_t) (0) },
-    { "STATIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E5), (intptr_t) (0) },
-    { "STATIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E6), (intptr_t) (0) },
-    { "DYNAMIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E9), (intptr_t) (0) },
-    { "DYNAMIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EA), (intptr_t) (0) },
-    { "MAX_DRAW_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8824), (intptr_t) (0) },
-    { "DRAW_BUFFER0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8825), (intptr_t) (0) },
-    { "DRAW_BUFFER1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8826), (intptr_t) (0) },
-    { "DRAW_BUFFER2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8827), (intptr_t) (0) },
-    { "DRAW_BUFFER3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8828), (intptr_t) (0) },
-    { "DRAW_BUFFER4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8829), (intptr_t) (0) },
-    { "DRAW_BUFFER5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882A), (intptr_t) (0) },
-    { "DRAW_BUFFER6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882B), (intptr_t) (0) },
-    { "DRAW_BUFFER7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882C), (intptr_t) (0) },
-    { "DRAW_BUFFER8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882D), (intptr_t) (0) },
-    { "DRAW_BUFFER9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882E), (intptr_t) (0) },
-    { "DRAW_BUFFER10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882F), (intptr_t) (0) },
-    { "DRAW_BUFFER11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8830), (intptr_t) (0) },
-    { "DRAW_BUFFER12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8831), (intptr_t) (0) },
-    { "DRAW_BUFFER13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8832), (intptr_t) (0) },
-    { "DRAW_BUFFER14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8833), (intptr_t) (0) },
-    { "DRAW_BUFFER15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8834), (intptr_t) (0) },
-    { "MAX_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B49), (intptr_t) (0) },
-    { "MAX_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4A), (intptr_t) (0) },
-    { "SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5F), (intptr_t) (0) },
-    { "SAMPLER_2D_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B62), (intptr_t) (0) },
-    { "FRAGMENT_SHADER_DERIVATIVE_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B8B), (intptr_t) (0) },
-    { "PIXEL_PACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EB), (intptr_t) (0) },
-    { "PIXEL_UNPACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EC), (intptr_t) (0) },
-    { "PIXEL_PACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88ED), (intptr_t) (0) },
-    { "PIXEL_UNPACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EF), (intptr_t) (0) },
-    { "FLOAT_MAT2x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B65), (intptr_t) (0) },
-    { "FLOAT_MAT2x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B66), (intptr_t) (0) },
-    { "FLOAT_MAT3x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B67), (intptr_t) (0) },
-    { "FLOAT_MAT3x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B68), (intptr_t) (0) },
-    { "FLOAT_MAT4x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B69), (intptr_t) (0) },
-    { "FLOAT_MAT4x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B6A), (intptr_t) (0) },
-    { "SRGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C40), (intptr_t) (0) },
-    { "SRGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C41), (intptr_t) (0) },
-    { "SRGB8_ALPHA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C43), (intptr_t) (0) },
-    { "COMPARE_REF_TO_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884E), (intptr_t) (0) },
-    { "RGBA32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8814), (intptr_t) (0) },
-    { "RGB32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8815), (intptr_t) (0) },
-    { "RGBA16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x881A), (intptr_t) (0) },
-    { "RGB16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x881B), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FD), (intptr_t) (0) },
-    { "MAX_ARRAY_TEXTURE_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FF), (intptr_t) (0) },
-    { "MIN_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8904), (intptr_t) (0) },
-    { "MAX_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8905), (intptr_t) (0) },
-    { "MAX_VARYING_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4B), (intptr_t) (0) },
-    { "TEXTURE_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C1A), (intptr_t) (0) },
-    { "TEXTURE_BINDING_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C1D), (intptr_t) (0) },
-    { "R11F_G11F_B10F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3A), (intptr_t) (0) },
-    { "UNSIGNED_INT_10F_11F_11F_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3B), (intptr_t) (0) },
-    { "RGB9_E5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3D), (intptr_t) (0) },
-    { "UNSIGNED_INT_5_9_9_9_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3E), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C7F), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C80), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_VARYINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C83), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C84), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C85), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C88), (intptr_t) (0) },
-    { "RASTERIZER_DISCARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C89), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8A), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8B), (intptr_t) (0) },
-    { "INTERLEAVED_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8C), (intptr_t) (0) },
-    { "SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8D), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8E), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8F), (intptr_t) (0) },
-    { "RGBA32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D70), (intptr_t) (0) },
-    { "RGB32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D71), (intptr_t) (0) },
-    { "RGBA16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D76), (intptr_t) (0) },
-    { "RGB16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D77), (intptr_t) (0) },
-    { "RGBA8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D7C), (intptr_t) (0) },
-    { "RGB8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D7D), (intptr_t) (0) },
-    { "RGBA32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D82), (intptr_t) (0) },
-    { "RGB32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D83), (intptr_t) (0) },
-    { "RGBA16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D88), (intptr_t) (0) },
-    { "RGB16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D89), (intptr_t) (0) },
-    { "RGBA8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D8E), (intptr_t) (0) },
-    { "RGB8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D8F), (intptr_t) (0) },
-    { "RED_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D94), (intptr_t) (0) },
-    { "RGB_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D98), (intptr_t) (0) },
-    { "RGBA_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D99), (intptr_t) (0) },
-    { "SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC1), (intptr_t) (0) },
-    { "SAMPLER_2D_ARRAY_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC4), (intptr_t) (0) },
-    { "SAMPLER_CUBE_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC5), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC6), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC7), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC8), (intptr_t) (0) },
-    { "INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCA), (intptr_t) (0) },
-    { "INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCB), (intptr_t) (0) },
-    { "INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCC), (intptr_t) (0) },
-    { "INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCF), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD2), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD3), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD4), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD7), (intptr_t) (0) },
-    { "DEPTH_COMPONENT32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAC), (intptr_t) (0) },
-    { "DEPTH32F_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAD), (intptr_t) (0) },
-    { "FLOAT_32_UNSIGNED_INT_24_8_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DAD), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8210), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8211), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8212), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8213), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8214), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8215), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8216), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8217), (intptr_t) (0) },
-    { "FRAMEBUFFER_DEFAULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8218), (intptr_t) (0) },
-    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x821A), (intptr_t) (0) },
-    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84F9), (intptr_t) (0) },
-    { "UNSIGNED_INT_24_8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84FA), (intptr_t) (0) },
-    { "DEPTH24_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88F0), (intptr_t) (0) },
-    { "UNSIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C17), (intptr_t) (0) },
-    { "DRAW_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA6), (intptr_t) (0) },
-    { "READ_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA8), (intptr_t) (0) },
-    { "DRAW_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA9), (intptr_t) (0) },
-    { "READ_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAA), (intptr_t) (0) },
-    { "RENDERBUFFER_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAB), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD4), (intptr_t) (0) },
-    { "MAX_COLOR_ATTACHMENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CDF), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE1), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE2), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE3), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE4), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE5), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE6), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE7), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE8), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE9), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEA), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEB), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEC), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CED), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEE), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEF), (intptr_t) (0) },
-    { "FRAMEBUFFER_INCOMPLETE_MULTISAMPLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D56), (intptr_t) (0) },
-    { "MAX_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D57), (intptr_t) (0) },
-    { "HALF_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x140B), (intptr_t) (0) },
-    { "RG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8227), (intptr_t) (0) },
-    { "RG_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8228), (intptr_t) (0) },
-    { "R8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8229), (intptr_t) (0) },
-    { "RG8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822B), (intptr_t) (0) },
-    { "R16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822D), (intptr_t) (0) },
-    { "R32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822E), (intptr_t) (0) },
-    { "RG16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822F), (intptr_t) (0) },
-    { "RG32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8230), (intptr_t) (0) },
-    { "R8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8231), (intptr_t) (0) },
-    { "R8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8232), (intptr_t) (0) },
-    { "R16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8233), (intptr_t) (0) },
-    { "R16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8234), (intptr_t) (0) },
-    { "R32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8235), (intptr_t) (0) },
-    { "R32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8236), (intptr_t) (0) },
-    { "RG8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8237), (intptr_t) (0) },
-    { "RG8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8238), (intptr_t) (0) },
-    { "RG16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8239), (intptr_t) (0) },
-    { "RG16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823A), (intptr_t) (0) },
-    { "RG32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823B), (intptr_t) (0) },
-    { "RG32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823C), (intptr_t) (0) },
-    { "VERTEX_ARRAY_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x85B5), (intptr_t) (0) },
-    { "R8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F94), (intptr_t) (0) },
-    { "RG8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F95), (intptr_t) (0) },
-    { "RGB8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F96), (intptr_t) (0) },
-    { "RGBA8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F97), (intptr_t) (0) },
-    { "SIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F9C), (intptr_t) (0) },
-    { "PRIMITIVE_RESTART_FIXED_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D69), (intptr_t) (0) },
-    { "COPY_READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F36), (intptr_t) (0) },
-    { "COPY_WRITE_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F37), (intptr_t) (0) },
-    { "COPY_READ_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F36), (intptr_t) (0) },
-    { "COPY_WRITE_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F37), (intptr_t) (0) },
-    { "UNIFORM_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A11), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A28), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A29), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2A), (intptr_t) (0) },
-    { "MAX_VERTEX_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2B), (intptr_t) (0) },
-    { "MAX_FRAGMENT_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2D), (intptr_t) (0) },
-    { "MAX_COMBINED_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2E), (intptr_t) (0) },
-    { "MAX_UNIFORM_BUFFER_BINDINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2F), (intptr_t) (0) },
-    { "MAX_UNIFORM_BLOCK_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A30), (intptr_t) (0) },
-    { "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A31), (intptr_t) (0) },
-    { "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A33), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_OFFSET_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A34), (intptr_t) (0) },
-    { "ACTIVE_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A36), (intptr_t) (0) },
-    { "UNIFORM_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A37), (intptr_t) (0) },
-    { "UNIFORM_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A38), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3A), (intptr_t) (0) },
-    { "UNIFORM_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3B), (intptr_t) (0) },
-    { "UNIFORM_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3C), (intptr_t) (0) },
-    { "UNIFORM_MATRIX_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3D), (intptr_t) (0) },
-    { "UNIFORM_IS_ROW_MAJOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3E), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3F), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_DATA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A40), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A42), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A43), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A44), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A46), (intptr_t) (0) },
-    { "INVALID_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFF), (intptr_t) (0) },
-    { "MAX_VERTEX_OUTPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9122), (intptr_t) (0) },
-    { "MAX_FRAGMENT_INPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9125), (intptr_t) (0) },
-    { "MAX_SERVER_WAIT_TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9111), (intptr_t) (0) },
-    { "OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9112), (intptr_t) (0) },
-    { "SYNC_CONDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9113), (intptr_t) (0) },
-    { "SYNC_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9114), (intptr_t) (0) },
-    { "SYNC_FLAGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9115), (intptr_t) (0) },
-    { "SYNC_FENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9116), (intptr_t) (0) },
-    { "SYNC_GPU_COMMANDS_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9117), (intptr_t) (0) },
-    { "UNSIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9118), (intptr_t) (0) },
-    { "SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9119), (intptr_t) (0) },
-    { "ALREADY_SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911A), (intptr_t) (0) },
-    { "TIMEOUT_EXPIRED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911B), (intptr_t) (0) },
-    { "CONDITION_SATISFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911C), (intptr_t) (0) },
-    { "WAIT_FAILED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911D), (intptr_t) (0) },
-    { "SYNC_FLUSH_COMMANDS_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000001), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_DIVISOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FE), (intptr_t) (0) },
-    { "ANY_SAMPLES_PASSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C2F), (intptr_t) (0) },
-    { "ANY_SAMPLES_PASSED_CONSERVATIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D6A), (intptr_t) (0) },
-    { "SAMPLER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8919), (intptr_t) (0) },
-    { "RGB10_A2UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x906F), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E42), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E43), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E44), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E45), (intptr_t) (0) },
-    { "GREEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1904), (intptr_t) (0) },
-    { "BLUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1905), (intptr_t) (0) },
-    { "INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D9F), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E22), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_PAUSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E23), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_ACTIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E24), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E25), (intptr_t) (0) },
-    { "COMPRESSED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9270), (intptr_t) (0) },
-    { "COMPRESSED_SIGNED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9271), (intptr_t) (0) },
-    { "COMPRESSED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9272), (intptr_t) (0) },
-    { "COMPRESSED_SIGNED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9273), (intptr_t) (0) },
-    { "COMPRESSED_RGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9274), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9275), (intptr_t) (0) },
-    { "COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9276), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9277), (intptr_t) (0) },
-    { "COMPRESSED_RGBA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9278), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_ALPHA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9279), (intptr_t) (0) },
-    { "TEXTURE_IMMUTABLE_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x912F), (intptr_t) (0) },
-    { "MAX_ELEMENT_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D6B), (intptr_t) (0) },
-    { "NUM_SAMPLE_COUNTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9380), (intptr_t) (0) },
-    { "TEXTURE_IMMUTABLE_LEVELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x82DF), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FE), (intptr_t) (0) },
-    { "TIMEOUT_IGNORED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFFFFFFFFFF), (intptr_t) (0) },
+    { "READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C02) } },
+    { "UNPACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF2) } },
+    { "UNPACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF3) } },
+    { "UNPACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF4) } },
+    { "PACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D02) } },
+    { "PACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D03) } },
+    { "PACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D04) } },
+    { "COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1800) } },
+    { "DEPTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1801) } },
+    { "STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1802) } },
+    { "RED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1903) } },
+    { "RGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8051) } },
+    { "RGBA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8058) } },
+    { "RGB10_A2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8059) } },
+    { "TEXTURE_BINDING_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806A) } },
+    { "UNPACK_SKIP_IMAGES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806D) } },
+    { "UNPACK_IMAGE_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806E) } },
+    { "TEXTURE_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806F) } },
+    { "TEXTURE_WRAP_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8072) } },
+    { "MAX_3D_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8073) } },
+    { "UNSIGNED_INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8368) } },
+    { "MAX_ELEMENTS_VERTICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80E8) } },
+    { "MAX_ELEMENTS_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80E9) } },
+    { "TEXTURE_MIN_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813A) } },
+    { "TEXTURE_MAX_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813B) } },
+    { "TEXTURE_BASE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813C) } },
+    { "TEXTURE_MAX_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813D) } },
+    { "MIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8007) } },
+    { "MAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8008) } },
+    { "DEPTH_COMPONENT24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x81A6) } },
+    { "MAX_TEXTURE_LOD_BIAS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84FD) } },
+    { "TEXTURE_COMPARE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884C) } },
+    { "TEXTURE_COMPARE_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884D) } },
+    { "CURRENT_QUERY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8865) } },
+    { "QUERY_RESULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8866) } },
+    { "QUERY_RESULT_AVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8867) } },
+    { "STREAM_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E1) } },
+    { "STREAM_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E2) } },
+    { "STATIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E5) } },
+    { "STATIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E6) } },
+    { "DYNAMIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E9) } },
+    { "DYNAMIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EA) } },
+    { "MAX_DRAW_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8824) } },
+    { "DRAW_BUFFER0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8825) } },
+    { "DRAW_BUFFER1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8826) } },
+    { "DRAW_BUFFER2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8827) } },
+    { "DRAW_BUFFER3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8828) } },
+    { "DRAW_BUFFER4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8829) } },
+    { "DRAW_BUFFER5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882A) } },
+    { "DRAW_BUFFER6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882B) } },
+    { "DRAW_BUFFER7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882C) } },
+    { "DRAW_BUFFER8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882D) } },
+    { "DRAW_BUFFER9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882E) } },
+    { "DRAW_BUFFER10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882F) } },
+    { "DRAW_BUFFER11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8830) } },
+    { "DRAW_BUFFER12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8831) } },
+    { "DRAW_BUFFER13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8832) } },
+    { "DRAW_BUFFER14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8833) } },
+    { "DRAW_BUFFER15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8834) } },
+    { "MAX_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B49) } },
+    { "MAX_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4A) } },
+    { "SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5F) } },
+    { "SAMPLER_2D_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B62) } },
+    { "FRAGMENT_SHADER_DERIVATIVE_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B8B) } },
+    { "PIXEL_PACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EB) } },
+    { "PIXEL_UNPACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EC) } },
+    { "PIXEL_PACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88ED) } },
+    { "PIXEL_UNPACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EF) } },
+    { "FLOAT_MAT2x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B65) } },
+    { "FLOAT_MAT2x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B66) } },
+    { "FLOAT_MAT3x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B67) } },
+    { "FLOAT_MAT3x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B68) } },
+    { "FLOAT_MAT4x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B69) } },
+    { "FLOAT_MAT4x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B6A) } },
+    { "SRGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C40) } },
+    { "SRGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C41) } },
+    { "SRGB8_ALPHA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C43) } },
+    { "COMPARE_REF_TO_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884E) } },
+    { "RGBA32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8814) } },
+    { "RGB32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8815) } },
+    { "RGBA16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x881A) } },
+    { "RGB16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x881B) } },
+    { "VERTEX_ATTRIB_ARRAY_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FD) } },
+    { "MAX_ARRAY_TEXTURE_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FF) } },
+    { "MIN_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8904) } },
+    { "MAX_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8905) } },
+    { "MAX_VARYING_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4B) } },
+    { "TEXTURE_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C1A) } },
+    { "TEXTURE_BINDING_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C1D) } },
+    { "R11F_G11F_B10F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3A) } },
+    { "UNSIGNED_INT_10F_11F_11F_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3B) } },
+    { "RGB9_E5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3D) } },
+    { "UNSIGNED_INT_5_9_9_9_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3E) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C7F) } },
+    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C80) } },
+    { "TRANSFORM_FEEDBACK_VARYINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C83) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C84) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C85) } },
+    { "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C88) } },
+    { "RASTERIZER_DISCARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C89) } },
+    { "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8A) } },
+    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8B) } },
+    { "INTERLEAVED_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8C) } },
+    { "SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8D) } },
+    { "TRANSFORM_FEEDBACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8E) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8F) } },
+    { "RGBA32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D70) } },
+    { "RGB32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D71) } },
+    { "RGBA16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D76) } },
+    { "RGB16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D77) } },
+    { "RGBA8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D7C) } },
+    { "RGB8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D7D) } },
+    { "RGBA32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D82) } },
+    { "RGB32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D83) } },
+    { "RGBA16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D88) } },
+    { "RGB16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D89) } },
+    { "RGBA8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D8E) } },
+    { "RGB8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D8F) } },
+    { "RED_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D94) } },
+    { "RGB_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D98) } },
+    { "RGBA_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D99) } },
+    { "SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC1) } },
+    { "SAMPLER_2D_ARRAY_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC4) } },
+    { "SAMPLER_CUBE_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC5) } },
+    { "UNSIGNED_INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC6) } },
+    { "UNSIGNED_INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC7) } },
+    { "UNSIGNED_INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC8) } },
+    { "INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCA) } },
+    { "INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCB) } },
+    { "INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCC) } },
+    { "INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCF) } },
+    { "UNSIGNED_INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD2) } },
+    { "UNSIGNED_INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD3) } },
+    { "UNSIGNED_INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD4) } },
+    { "UNSIGNED_INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD7) } },
+    { "DEPTH_COMPONENT32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAC) } },
+    { "DEPTH32F_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAD) } },
+    { "FLOAT_32_UNSIGNED_INT_24_8_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DAD) } },
+    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8210) } },
+    { "FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8211) } },
+    { "FRAMEBUFFER_ATTACHMENT_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8212) } },
+    { "FRAMEBUFFER_ATTACHMENT_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8213) } },
+    { "FRAMEBUFFER_ATTACHMENT_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8214) } },
+    { "FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8215) } },
+    { "FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8216) } },
+    { "FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8217) } },
+    { "FRAMEBUFFER_DEFAULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8218) } },
+    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x821A) } },
+    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84F9) } },
+    { "UNSIGNED_INT_24_8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84FA) } },
+    { "DEPTH24_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88F0) } },
+    { "UNSIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C17) } },
+    { "DRAW_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA6) } },
+    { "READ_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA8) } },
+    { "DRAW_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA9) } },
+    { "READ_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAA) } },
+    { "RENDERBUFFER_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAB) } },
+    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD4) } },
+    { "MAX_COLOR_ATTACHMENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CDF) } },
+    { "COLOR_ATTACHMENT1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE1) } },
+    { "COLOR_ATTACHMENT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE2) } },
+    { "COLOR_ATTACHMENT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE3) } },
+    { "COLOR_ATTACHMENT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE4) } },
+    { "COLOR_ATTACHMENT5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE5) } },
+    { "COLOR_ATTACHMENT6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE6) } },
+    { "COLOR_ATTACHMENT7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE7) } },
+    { "COLOR_ATTACHMENT8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE8) } },
+    { "COLOR_ATTACHMENT9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE9) } },
+    { "COLOR_ATTACHMENT10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEA) } },
+    { "COLOR_ATTACHMENT11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEB) } },
+    { "COLOR_ATTACHMENT12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEC) } },
+    { "COLOR_ATTACHMENT13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CED) } },
+    { "COLOR_ATTACHMENT14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEE) } },
+    { "COLOR_ATTACHMENT15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEF) } },
+    { "FRAMEBUFFER_INCOMPLETE_MULTISAMPLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D56) } },
+    { "MAX_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D57) } },
+    { "HALF_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x140B) } },
+    { "RG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8227) } },
+    { "RG_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8228) } },
+    { "R8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8229) } },
+    { "RG8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822B) } },
+    { "R16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822D) } },
+    { "R32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822E) } },
+    { "RG16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822F) } },
+    { "RG32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8230) } },
+    { "R8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8231) } },
+    { "R8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8232) } },
+    { "R16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8233) } },
+    { "R16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8234) } },
+    { "R32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8235) } },
+    { "R32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8236) } },
+    { "RG8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8237) } },
+    { "RG8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8238) } },
+    { "RG16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8239) } },
+    { "RG16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823A) } },
+    { "RG32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823B) } },
+    { "RG32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823C) } },
+    { "VERTEX_ARRAY_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x85B5) } },
+    { "R8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F94) } },
+    { "RG8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F95) } },
+    { "RGB8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F96) } },
+    { "RGBA8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F97) } },
+    { "SIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F9C) } },
+    { "PRIMITIVE_RESTART_FIXED_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D69) } },
+    { "COPY_READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F36) } },
+    { "COPY_WRITE_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F37) } },
+    { "COPY_READ_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F36) } },
+    { "COPY_WRITE_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F37) } },
+    { "UNIFORM_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A11) } },
+    { "UNIFORM_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A28) } },
+    { "UNIFORM_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A29) } },
+    { "UNIFORM_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2A) } },
+    { "MAX_VERTEX_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2B) } },
+    { "MAX_FRAGMENT_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2D) } },
+    { "MAX_COMBINED_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2E) } },
+    { "MAX_UNIFORM_BUFFER_BINDINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2F) } },
+    { "MAX_UNIFORM_BLOCK_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A30) } },
+    { "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A31) } },
+    { "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A33) } },
+    { "UNIFORM_BUFFER_OFFSET_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A34) } },
+    { "ACTIVE_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A36) } },
+    { "UNIFORM_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A37) } },
+    { "UNIFORM_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A38) } },
+    { "UNIFORM_BLOCK_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3A) } },
+    { "UNIFORM_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3B) } },
+    { "UNIFORM_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3C) } },
+    { "UNIFORM_MATRIX_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3D) } },
+    { "UNIFORM_IS_ROW_MAJOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3E) } },
+    { "UNIFORM_BLOCK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3F) } },
+    { "UNIFORM_BLOCK_DATA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A40) } },
+    { "UNIFORM_BLOCK_ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A42) } },
+    { "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A43) } },
+    { "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A44) } },
+    { "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A46) } },
+    { "INVALID_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0xFFFFFFFF) } },
+    { "MAX_VERTEX_OUTPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9122) } },
+    { "MAX_FRAGMENT_INPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9125) } },
+    { "MAX_SERVER_WAIT_TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9111) } },
+    { "OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9112) } },
+    { "SYNC_CONDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9113) } },
+    { "SYNC_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9114) } },
+    { "SYNC_FLAGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9115) } },
+    { "SYNC_FENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9116) } },
+    { "SYNC_GPU_COMMANDS_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9117) } },
+    { "UNSIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9118) } },
+    { "SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9119) } },
+    { "ALREADY_SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911A) } },
+    { "TIMEOUT_EXPIRED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911B) } },
+    { "CONDITION_SATISFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911C) } },
+    { "WAIT_FAILED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911D) } },
+    { "SYNC_FLUSH_COMMANDS_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000001) } },
+    { "VERTEX_ATTRIB_ARRAY_DIVISOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FE) } },
+    { "ANY_SAMPLES_PASSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C2F) } },
+    { "ANY_SAMPLES_PASSED_CONSERVATIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D6A) } },
+    { "SAMPLER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8919) } },
+    { "RGB10_A2UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x906F) } },
+    { "TEXTURE_SWIZZLE_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E42) } },
+    { "TEXTURE_SWIZZLE_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E43) } },
+    { "TEXTURE_SWIZZLE_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E44) } },
+    { "TEXTURE_SWIZZLE_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E45) } },
+    { "GREEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1904) } },
+    { "BLUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1905) } },
+    { "INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D9F) } },
+    { "TRANSFORM_FEEDBACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E22) } },
+    { "TRANSFORM_FEEDBACK_PAUSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E23) } },
+    { "TRANSFORM_FEEDBACK_ACTIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E24) } },
+    { "TRANSFORM_FEEDBACK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E25) } },
+    { "COMPRESSED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9270) } },
+    { "COMPRESSED_SIGNED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9271) } },
+    { "COMPRESSED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9272) } },
+    { "COMPRESSED_SIGNED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9273) } },
+    { "COMPRESSED_RGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9274) } },
+    { "COMPRESSED_SRGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9275) } },
+    { "COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9276) } },
+    { "COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9277) } },
+    { "COMPRESSED_RGBA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9278) } },
+    { "COMPRESSED_SRGB8_ALPHA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9279) } },
+    { "TEXTURE_IMMUTABLE_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x912F) } },
+    { "MAX_ELEMENT_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D6B) } },
+    { "NUM_SAMPLE_COUNTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9380) } },
+    { "TEXTURE_IMMUTABLE_LEVELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x82DF) } },
+    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FE) } },
+    { "TIMEOUT_IGNORED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0xFFFFFFFFFFFFFFFF) } },
 };
 
-const ClassInfo JSWebGL2RenderingContextConstructor::s_info = { "WebGL2RenderingContextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGL2RenderingContextConstructor) };
-
-JSWebGL2RenderingContextConstructor::JSWebGL2RenderingContextConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGL2RenderingContextConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGL2RenderingContextConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGL2RenderingContext::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGL2RenderingContext::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGL2RenderingContext"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSWebGL2RenderingContextConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSWebGL2RenderingContextConstructor::s_info = { "WebGL2RenderingContextConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGL2RenderingContextConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGL2RenderingContextPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGL2RenderingContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0C02), (intptr_t) (0) },
-    { "UNPACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF2), (intptr_t) (0) },
-    { "UNPACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF3), (intptr_t) (0) },
-    { "UNPACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0CF4), (intptr_t) (0) },
-    { "PACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D02), (intptr_t) (0) },
-    { "PACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D03), (intptr_t) (0) },
-    { "PACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x0D04), (intptr_t) (0) },
-    { "COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1800), (intptr_t) (0) },
-    { "DEPTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1801), (intptr_t) (0) },
-    { "STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1802), (intptr_t) (0) },
-    { "RED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1903), (intptr_t) (0) },
-    { "RGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8051), (intptr_t) (0) },
-    { "RGBA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8058), (intptr_t) (0) },
-    { "RGB10_A2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8059), (intptr_t) (0) },
-    { "TEXTURE_BINDING_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806A), (intptr_t) (0) },
-    { "UNPACK_SKIP_IMAGES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806D), (intptr_t) (0) },
-    { "UNPACK_IMAGE_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806E), (intptr_t) (0) },
-    { "TEXTURE_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x806F), (intptr_t) (0) },
-    { "TEXTURE_WRAP_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8072), (intptr_t) (0) },
-    { "MAX_3D_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8073), (intptr_t) (0) },
-    { "UNSIGNED_INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8368), (intptr_t) (0) },
-    { "MAX_ELEMENTS_VERTICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80E8), (intptr_t) (0) },
-    { "MAX_ELEMENTS_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x80E9), (intptr_t) (0) },
-    { "TEXTURE_MIN_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813A), (intptr_t) (0) },
-    { "TEXTURE_MAX_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813B), (intptr_t) (0) },
-    { "TEXTURE_BASE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813C), (intptr_t) (0) },
-    { "TEXTURE_MAX_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x813D), (intptr_t) (0) },
-    { "MIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8007), (intptr_t) (0) },
-    { "MAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8008), (intptr_t) (0) },
-    { "DEPTH_COMPONENT24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x81A6), (intptr_t) (0) },
-    { "MAX_TEXTURE_LOD_BIAS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84FD), (intptr_t) (0) },
-    { "TEXTURE_COMPARE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884C), (intptr_t) (0) },
-    { "TEXTURE_COMPARE_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884D), (intptr_t) (0) },
-    { "CURRENT_QUERY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8865), (intptr_t) (0) },
-    { "QUERY_RESULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8866), (intptr_t) (0) },
-    { "QUERY_RESULT_AVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8867), (intptr_t) (0) },
-    { "STREAM_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E1), (intptr_t) (0) },
-    { "STREAM_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E2), (intptr_t) (0) },
-    { "STATIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E5), (intptr_t) (0) },
-    { "STATIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E6), (intptr_t) (0) },
-    { "DYNAMIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88E9), (intptr_t) (0) },
-    { "DYNAMIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EA), (intptr_t) (0) },
-    { "MAX_DRAW_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8824), (intptr_t) (0) },
-    { "DRAW_BUFFER0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8825), (intptr_t) (0) },
-    { "DRAW_BUFFER1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8826), (intptr_t) (0) },
-    { "DRAW_BUFFER2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8827), (intptr_t) (0) },
-    { "DRAW_BUFFER3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8828), (intptr_t) (0) },
-    { "DRAW_BUFFER4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8829), (intptr_t) (0) },
-    { "DRAW_BUFFER5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882A), (intptr_t) (0) },
-    { "DRAW_BUFFER6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882B), (intptr_t) (0) },
-    { "DRAW_BUFFER7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882C), (intptr_t) (0) },
-    { "DRAW_BUFFER8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882D), (intptr_t) (0) },
-    { "DRAW_BUFFER9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882E), (intptr_t) (0) },
-    { "DRAW_BUFFER10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x882F), (intptr_t) (0) },
-    { "DRAW_BUFFER11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8830), (intptr_t) (0) },
-    { "DRAW_BUFFER12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8831), (intptr_t) (0) },
-    { "DRAW_BUFFER13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8832), (intptr_t) (0) },
-    { "DRAW_BUFFER14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8833), (intptr_t) (0) },
-    { "DRAW_BUFFER15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8834), (intptr_t) (0) },
-    { "MAX_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B49), (intptr_t) (0) },
-    { "MAX_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4A), (intptr_t) (0) },
-    { "SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B5F), (intptr_t) (0) },
-    { "SAMPLER_2D_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B62), (intptr_t) (0) },
-    { "FRAGMENT_SHADER_DERIVATIVE_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B8B), (intptr_t) (0) },
-    { "PIXEL_PACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EB), (intptr_t) (0) },
-    { "PIXEL_UNPACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EC), (intptr_t) (0) },
-    { "PIXEL_PACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88ED), (intptr_t) (0) },
-    { "PIXEL_UNPACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88EF), (intptr_t) (0) },
-    { "FLOAT_MAT2x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B65), (intptr_t) (0) },
-    { "FLOAT_MAT2x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B66), (intptr_t) (0) },
-    { "FLOAT_MAT3x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B67), (intptr_t) (0) },
-    { "FLOAT_MAT3x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B68), (intptr_t) (0) },
-    { "FLOAT_MAT4x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B69), (intptr_t) (0) },
-    { "FLOAT_MAT4x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B6A), (intptr_t) (0) },
-    { "SRGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C40), (intptr_t) (0) },
-    { "SRGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C41), (intptr_t) (0) },
-    { "SRGB8_ALPHA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C43), (intptr_t) (0) },
-    { "COMPARE_REF_TO_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x884E), (intptr_t) (0) },
-    { "RGBA32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8814), (intptr_t) (0) },
-    { "RGB32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8815), (intptr_t) (0) },
-    { "RGBA16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x881A), (intptr_t) (0) },
-    { "RGB16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x881B), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FD), (intptr_t) (0) },
-    { "MAX_ARRAY_TEXTURE_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FF), (intptr_t) (0) },
-    { "MIN_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8904), (intptr_t) (0) },
-    { "MAX_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8905), (intptr_t) (0) },
-    { "MAX_VARYING_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8B4B), (intptr_t) (0) },
-    { "TEXTURE_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C1A), (intptr_t) (0) },
-    { "TEXTURE_BINDING_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C1D), (intptr_t) (0) },
-    { "R11F_G11F_B10F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3A), (intptr_t) (0) },
-    { "UNSIGNED_INT_10F_11F_11F_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3B), (intptr_t) (0) },
-    { "RGB9_E5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3D), (intptr_t) (0) },
-    { "UNSIGNED_INT_5_9_9_9_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C3E), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C7F), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C80), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_VARYINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C83), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C84), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C85), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C88), (intptr_t) (0) },
-    { "RASTERIZER_DISCARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C89), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8A), (intptr_t) (0) },
-    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8B), (intptr_t) (0) },
-    { "INTERLEAVED_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8C), (intptr_t) (0) },
-    { "SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8D), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8E), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C8F), (intptr_t) (0) },
-    { "RGBA32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D70), (intptr_t) (0) },
-    { "RGB32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D71), (intptr_t) (0) },
-    { "RGBA16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D76), (intptr_t) (0) },
-    { "RGB16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D77), (intptr_t) (0) },
-    { "RGBA8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D7C), (intptr_t) (0) },
-    { "RGB8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D7D), (intptr_t) (0) },
-    { "RGBA32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D82), (intptr_t) (0) },
-    { "RGB32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D83), (intptr_t) (0) },
-    { "RGBA16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D88), (intptr_t) (0) },
-    { "RGB16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D89), (intptr_t) (0) },
-    { "RGBA8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D8E), (intptr_t) (0) },
-    { "RGB8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D8F), (intptr_t) (0) },
-    { "RED_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D94), (intptr_t) (0) },
-    { "RGB_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D98), (intptr_t) (0) },
-    { "RGBA_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D99), (intptr_t) (0) },
-    { "SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC1), (intptr_t) (0) },
-    { "SAMPLER_2D_ARRAY_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC4), (intptr_t) (0) },
-    { "SAMPLER_CUBE_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC5), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC6), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC7), (intptr_t) (0) },
-    { "UNSIGNED_INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DC8), (intptr_t) (0) },
-    { "INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCA), (intptr_t) (0) },
-    { "INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCB), (intptr_t) (0) },
-    { "INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCC), (intptr_t) (0) },
-    { "INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DCF), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD2), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD3), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD4), (intptr_t) (0) },
-    { "UNSIGNED_INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DD7), (intptr_t) (0) },
-    { "DEPTH_COMPONENT32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAC), (intptr_t) (0) },
-    { "DEPTH32F_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAD), (intptr_t) (0) },
-    { "FLOAT_32_UNSIGNED_INT_24_8_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8DAD), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8210), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8211), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8212), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8213), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8214), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8215), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8216), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8217), (intptr_t) (0) },
-    { "FRAMEBUFFER_DEFAULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8218), (intptr_t) (0) },
-    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x821A), (intptr_t) (0) },
-    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84F9), (intptr_t) (0) },
-    { "UNSIGNED_INT_24_8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84FA), (intptr_t) (0) },
-    { "DEPTH24_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88F0), (intptr_t) (0) },
-    { "UNSIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C17), (intptr_t) (0) },
-    { "DRAW_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA6), (intptr_t) (0) },
-    { "READ_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA8), (intptr_t) (0) },
-    { "DRAW_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CA9), (intptr_t) (0) },
-    { "READ_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAA), (intptr_t) (0) },
-    { "RENDERBUFFER_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CAB), (intptr_t) (0) },
-    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CD4), (intptr_t) (0) },
-    { "MAX_COLOR_ATTACHMENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CDF), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE1), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE2), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE3), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE4), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE5), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE6), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE7), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE8), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CE9), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEA), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEB), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEC), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CED), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEE), (intptr_t) (0) },
-    { "COLOR_ATTACHMENT15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8CEF), (intptr_t) (0) },
-    { "FRAMEBUFFER_INCOMPLETE_MULTISAMPLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D56), (intptr_t) (0) },
-    { "MAX_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D57), (intptr_t) (0) },
-    { "HALF_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x140B), (intptr_t) (0) },
-    { "RG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8227), (intptr_t) (0) },
-    { "RG_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8228), (intptr_t) (0) },
-    { "R8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8229), (intptr_t) (0) },
-    { "RG8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822B), (intptr_t) (0) },
-    { "R16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822D), (intptr_t) (0) },
-    { "R32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822E), (intptr_t) (0) },
-    { "RG16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x822F), (intptr_t) (0) },
-    { "RG32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8230), (intptr_t) (0) },
-    { "R8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8231), (intptr_t) (0) },
-    { "R8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8232), (intptr_t) (0) },
-    { "R16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8233), (intptr_t) (0) },
-    { "R16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8234), (intptr_t) (0) },
-    { "R32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8235), (intptr_t) (0) },
-    { "R32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8236), (intptr_t) (0) },
-    { "RG8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8237), (intptr_t) (0) },
-    { "RG8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8238), (intptr_t) (0) },
-    { "RG16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8239), (intptr_t) (0) },
-    { "RG16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823A), (intptr_t) (0) },
-    { "RG32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823B), (intptr_t) (0) },
-    { "RG32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x823C), (intptr_t) (0) },
-    { "VERTEX_ARRAY_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x85B5), (intptr_t) (0) },
-    { "R8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F94), (intptr_t) (0) },
-    { "RG8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F95), (intptr_t) (0) },
-    { "RGB8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F96), (intptr_t) (0) },
-    { "RGBA8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F97), (intptr_t) (0) },
-    { "SIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F9C), (intptr_t) (0) },
-    { "PRIMITIVE_RESTART_FIXED_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D69), (intptr_t) (0) },
-    { "COPY_READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F36), (intptr_t) (0) },
-    { "COPY_WRITE_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F37), (intptr_t) (0) },
-    { "COPY_READ_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F36), (intptr_t) (0) },
-    { "COPY_WRITE_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8F37), (intptr_t) (0) },
-    { "UNIFORM_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A11), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A28), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A29), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2A), (intptr_t) (0) },
-    { "MAX_VERTEX_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2B), (intptr_t) (0) },
-    { "MAX_FRAGMENT_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2D), (intptr_t) (0) },
-    { "MAX_COMBINED_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2E), (intptr_t) (0) },
-    { "MAX_UNIFORM_BUFFER_BINDINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A2F), (intptr_t) (0) },
-    { "MAX_UNIFORM_BLOCK_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A30), (intptr_t) (0) },
-    { "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A31), (intptr_t) (0) },
-    { "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A33), (intptr_t) (0) },
-    { "UNIFORM_BUFFER_OFFSET_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A34), (intptr_t) (0) },
-    { "ACTIVE_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A36), (intptr_t) (0) },
-    { "UNIFORM_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A37), (intptr_t) (0) },
-    { "UNIFORM_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A38), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3A), (intptr_t) (0) },
-    { "UNIFORM_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3B), (intptr_t) (0) },
-    { "UNIFORM_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3C), (intptr_t) (0) },
-    { "UNIFORM_MATRIX_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3D), (intptr_t) (0) },
-    { "UNIFORM_IS_ROW_MAJOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3E), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A3F), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_DATA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A40), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A42), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A43), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A44), (intptr_t) (0) },
-    { "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8A46), (intptr_t) (0) },
-    { "INVALID_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFF), (intptr_t) (0) },
-    { "MAX_VERTEX_OUTPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9122), (intptr_t) (0) },
-    { "MAX_FRAGMENT_INPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9125), (intptr_t) (0) },
-    { "MAX_SERVER_WAIT_TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9111), (intptr_t) (0) },
-    { "OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9112), (intptr_t) (0) },
-    { "SYNC_CONDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9113), (intptr_t) (0) },
-    { "SYNC_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9114), (intptr_t) (0) },
-    { "SYNC_FLAGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9115), (intptr_t) (0) },
-    { "SYNC_FENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9116), (intptr_t) (0) },
-    { "SYNC_GPU_COMMANDS_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9117), (intptr_t) (0) },
-    { "UNSIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9118), (intptr_t) (0) },
-    { "SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9119), (intptr_t) (0) },
-    { "ALREADY_SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911A), (intptr_t) (0) },
-    { "TIMEOUT_EXPIRED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911B), (intptr_t) (0) },
-    { "CONDITION_SATISFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911C), (intptr_t) (0) },
-    { "WAIT_FAILED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x911D), (intptr_t) (0) },
-    { "SYNC_FLUSH_COMMANDS_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000001), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_DIVISOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FE), (intptr_t) (0) },
-    { "ANY_SAMPLES_PASSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8C2F), (intptr_t) (0) },
-    { "ANY_SAMPLES_PASSED_CONSERVATIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D6A), (intptr_t) (0) },
-    { "SAMPLER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8919), (intptr_t) (0) },
-    { "RGB10_A2UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x906F), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E42), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E43), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E44), (intptr_t) (0) },
-    { "TEXTURE_SWIZZLE_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E45), (intptr_t) (0) },
-    { "GREEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1904), (intptr_t) (0) },
-    { "BLUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x1905), (intptr_t) (0) },
-    { "INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D9F), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E22), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_PAUSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E23), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_ACTIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E24), (intptr_t) (0) },
-    { "TRANSFORM_FEEDBACK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8E25), (intptr_t) (0) },
-    { "COMPRESSED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9270), (intptr_t) (0) },
-    { "COMPRESSED_SIGNED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9271), (intptr_t) (0) },
-    { "COMPRESSED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9272), (intptr_t) (0) },
-    { "COMPRESSED_SIGNED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9273), (intptr_t) (0) },
-    { "COMPRESSED_RGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9274), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9275), (intptr_t) (0) },
-    { "COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9276), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9277), (intptr_t) (0) },
-    { "COMPRESSED_RGBA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9278), (intptr_t) (0) },
-    { "COMPRESSED_SRGB8_ALPHA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9279), (intptr_t) (0) },
-    { "TEXTURE_IMMUTABLE_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x912F), (intptr_t) (0) },
-    { "MAX_ELEMENT_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x8D6B), (intptr_t) (0) },
-    { "NUM_SAMPLE_COUNTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9380), (intptr_t) (0) },
-    { "TEXTURE_IMMUTABLE_LEVELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x82DF), (intptr_t) (0) },
-    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x88FE), (intptr_t) (0) },
-    { "TIMEOUT_IGNORED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFFFFFFFFFF), (intptr_t) (0) },
-    { "copyBufferSubData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCopyBufferSubData), (intptr_t) (5) },
-    { "getBufferSubData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData), (intptr_t) (3) },
-    { "blitFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBlitFramebuffer), (intptr_t) (10) },
-    { "framebufferTextureLayer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionFramebufferTextureLayer), (intptr_t) (5) },
-    { "getInternalformatParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetInternalformatParameter), (intptr_t) (3) },
-    { "invalidateFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionInvalidateFramebuffer), (intptr_t) (2) },
-    { "invalidateSubFramebuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionInvalidateSubFramebuffer), (intptr_t) (6) },
-    { "readBuffer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionReadBuffer), (intptr_t) (1) },
-    { "renderbufferStorageMultisample", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionRenderbufferStorageMultisample), (intptr_t) (5) },
-    { "texStorage2D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexStorage2D), (intptr_t) (5) },
-    { "texStorage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexStorage3D), (intptr_t) (6) },
-    { "texImage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexImage3D), (intptr_t) (10) },
-    { "texSubImage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D), (intptr_t) (11) },
-    { "copyTexSubImage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCopyTexSubImage3D), (intptr_t) (9) },
-    { "compressedTexImage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCompressedTexImage3D), (intptr_t) (9) },
-    { "compressedTexSubImage3D", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCompressedTexSubImage3D), (intptr_t) (11) },
-    { "getFragDataLocation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetFragDataLocation), (intptr_t) (2) },
-    { "uniform1ui", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform1ui), (intptr_t) (2) },
-    { "uniform2ui", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform2ui), (intptr_t) (3) },
-    { "uniform3ui", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform3ui), (intptr_t) (4) },
-    { "uniform4ui", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform4ui), (intptr_t) (5) },
-    { "uniform1uiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform1uiv), (intptr_t) (2) },
-    { "uniform2uiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform2uiv), (intptr_t) (2) },
-    { "uniform3uiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform3uiv), (intptr_t) (2) },
-    { "uniform4uiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform4uiv), (intptr_t) (2) },
-    { "uniformMatrix2x3fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x3fv), (intptr_t) (3) },
-    { "uniformMatrix3x2fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x2fv), (intptr_t) (3) },
-    { "uniformMatrix2x4fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x4fv), (intptr_t) (3) },
-    { "uniformMatrix4x2fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x2fv), (intptr_t) (3) },
-    { "uniformMatrix3x4fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x4fv), (intptr_t) (3) },
-    { "uniformMatrix4x3fv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x3fv), (intptr_t) (3) },
-    { "vertexAttribI4i", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4i), (intptr_t) (5) },
-    { "vertexAttribI4iv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4iv), (intptr_t) (2) },
-    { "vertexAttribI4ui", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4ui), (intptr_t) (5) },
-    { "vertexAttribI4uiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4uiv), (intptr_t) (2) },
-    { "vertexAttribIPointer", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribIPointer), (intptr_t) (5) },
-    { "vertexAttribDivisor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribDivisor), (intptr_t) (2) },
-    { "drawArraysInstanced", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawArraysInstanced), (intptr_t) (4) },
-    { "drawElementsInstanced", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawElementsInstanced), (intptr_t) (5) },
-    { "drawRangeElements", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawRangeElements), (intptr_t) (6) },
-    { "drawBuffers", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawBuffers), (intptr_t) (1) },
-    { "clearBufferiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferiv), (intptr_t) (3) },
-    { "clearBufferuiv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferuiv), (intptr_t) (3) },
-    { "clearBufferfv", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferfv), (intptr_t) (3) },
-    { "clearBufferfi", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferfi), (intptr_t) (4) },
-    { "createQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateQuery), (intptr_t) (0) },
-    { "deleteQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteQuery), (intptr_t) (1) },
-    { "isQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsQuery), (intptr_t) (1) },
-    { "beginQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBeginQuery), (intptr_t) (2) },
-    { "endQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionEndQuery), (intptr_t) (1) },
-    { "getQuery", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetQuery), (intptr_t) (2) },
-    { "getQueryParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetQueryParameter), (intptr_t) (2) },
-    { "createSampler", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateSampler), (intptr_t) (0) },
-    { "deleteSampler", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteSampler), (intptr_t) (1) },
-    { "isSampler", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsSampler), (intptr_t) (1) },
-    { "bindSampler", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindSampler), (intptr_t) (2) },
-    { "samplerParameteri", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionSamplerParameteri), (intptr_t) (3) },
-    { "samplerParameterf", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionSamplerParameterf), (intptr_t) (3) },
-    { "getSamplerParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetSamplerParameter), (intptr_t) (2) },
-    { "fenceSync", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionFenceSync), (intptr_t) (2) },
-    { "isSync", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsSync), (intptr_t) (1) },
-    { "deleteSync", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteSync), (intptr_t) (1) },
-    { "clientWaitSync", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClientWaitSync), (intptr_t) (3) },
-    { "waitSync", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionWaitSync), (intptr_t) (3) },
-    { "getSyncParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetSyncParameter), (intptr_t) (2) },
-    { "createTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateTransformFeedback), (intptr_t) (0) },
-    { "deleteTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteTransformFeedback), (intptr_t) (1) },
-    { "isTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsTransformFeedback), (intptr_t) (1) },
-    { "bindTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindTransformFeedback), (intptr_t) (2) },
-    { "beginTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBeginTransformFeedback), (intptr_t) (1) },
-    { "endTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionEndTransformFeedback), (intptr_t) (0) },
-    { "transformFeedbackVaryings", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTransformFeedbackVaryings), (intptr_t) (3) },
-    { "getTransformFeedbackVarying", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetTransformFeedbackVarying), (intptr_t) (2) },
-    { "pauseTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionPauseTransformFeedback), (intptr_t) (0) },
-    { "resumeTransformFeedback", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionResumeTransformFeedback), (intptr_t) (0) },
-    { "bindBufferBase", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindBufferBase), (intptr_t) (3) },
-    { "bindBufferRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindBufferRange), (intptr_t) (5) },
-    { "getIndexedParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetIndexedParameter), (intptr_t) (2) },
-    { "getUniformIndices", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetUniformIndices), (intptr_t) (2) },
-    { "getActiveUniforms", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniforms), (intptr_t) (3) },
-    { "getUniformBlockIndex", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetUniformBlockIndex), (intptr_t) (2) },
-    { "getActiveUniformBlockParameter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockParameter), (intptr_t) (3) },
-    { "getActiveUniformBlockName", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockName), (intptr_t) (2) },
-    { "uniformBlockBinding", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformBlockBinding), (intptr_t) (3) },
-    { "createVertexArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateVertexArray), (intptr_t) (0) },
-    { "deleteVertexArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteVertexArray), (intptr_t) (1) },
-    { "isVertexArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsVertexArray), (intptr_t) (1) },
-    { "bindVertexArray", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindVertexArray), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGL2RenderingContextConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0C02) } },
+    { "UNPACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF2) } },
+    { "UNPACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF3) } },
+    { "UNPACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0CF4) } },
+    { "PACK_ROW_LENGTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D02) } },
+    { "PACK_SKIP_ROWS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D03) } },
+    { "PACK_SKIP_PIXELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x0D04) } },
+    { "COLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1800) } },
+    { "DEPTH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1801) } },
+    { "STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1802) } },
+    { "RED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1903) } },
+    { "RGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8051) } },
+    { "RGBA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8058) } },
+    { "RGB10_A2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8059) } },
+    { "TEXTURE_BINDING_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806A) } },
+    { "UNPACK_SKIP_IMAGES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806D) } },
+    { "UNPACK_IMAGE_HEIGHT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806E) } },
+    { "TEXTURE_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x806F) } },
+    { "TEXTURE_WRAP_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8072) } },
+    { "MAX_3D_TEXTURE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8073) } },
+    { "UNSIGNED_INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8368) } },
+    { "MAX_ELEMENTS_VERTICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80E8) } },
+    { "MAX_ELEMENTS_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x80E9) } },
+    { "TEXTURE_MIN_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813A) } },
+    { "TEXTURE_MAX_LOD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813B) } },
+    { "TEXTURE_BASE_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813C) } },
+    { "TEXTURE_MAX_LEVEL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x813D) } },
+    { "MIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8007) } },
+    { "MAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8008) } },
+    { "DEPTH_COMPONENT24", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x81A6) } },
+    { "MAX_TEXTURE_LOD_BIAS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84FD) } },
+    { "TEXTURE_COMPARE_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884C) } },
+    { "TEXTURE_COMPARE_FUNC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884D) } },
+    { "CURRENT_QUERY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8865) } },
+    { "QUERY_RESULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8866) } },
+    { "QUERY_RESULT_AVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8867) } },
+    { "STREAM_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E1) } },
+    { "STREAM_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E2) } },
+    { "STATIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E5) } },
+    { "STATIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E6) } },
+    { "DYNAMIC_READ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88E9) } },
+    { "DYNAMIC_COPY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EA) } },
+    { "MAX_DRAW_BUFFERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8824) } },
+    { "DRAW_BUFFER0", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8825) } },
+    { "DRAW_BUFFER1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8826) } },
+    { "DRAW_BUFFER2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8827) } },
+    { "DRAW_BUFFER3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8828) } },
+    { "DRAW_BUFFER4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8829) } },
+    { "DRAW_BUFFER5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882A) } },
+    { "DRAW_BUFFER6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882B) } },
+    { "DRAW_BUFFER7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882C) } },
+    { "DRAW_BUFFER8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882D) } },
+    { "DRAW_BUFFER9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882E) } },
+    { "DRAW_BUFFER10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x882F) } },
+    { "DRAW_BUFFER11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8830) } },
+    { "DRAW_BUFFER12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8831) } },
+    { "DRAW_BUFFER13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8832) } },
+    { "DRAW_BUFFER14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8833) } },
+    { "DRAW_BUFFER15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8834) } },
+    { "MAX_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B49) } },
+    { "MAX_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4A) } },
+    { "SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B5F) } },
+    { "SAMPLER_2D_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B62) } },
+    { "FRAGMENT_SHADER_DERIVATIVE_HINT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B8B) } },
+    { "PIXEL_PACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EB) } },
+    { "PIXEL_UNPACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EC) } },
+    { "PIXEL_PACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88ED) } },
+    { "PIXEL_UNPACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88EF) } },
+    { "FLOAT_MAT2x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B65) } },
+    { "FLOAT_MAT2x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B66) } },
+    { "FLOAT_MAT3x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B67) } },
+    { "FLOAT_MAT3x4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B68) } },
+    { "FLOAT_MAT4x2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B69) } },
+    { "FLOAT_MAT4x3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B6A) } },
+    { "SRGB", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C40) } },
+    { "SRGB8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C41) } },
+    { "SRGB8_ALPHA8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C43) } },
+    { "COMPARE_REF_TO_TEXTURE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x884E) } },
+    { "RGBA32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8814) } },
+    { "RGB32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8815) } },
+    { "RGBA16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x881A) } },
+    { "RGB16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x881B) } },
+    { "VERTEX_ATTRIB_ARRAY_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FD) } },
+    { "MAX_ARRAY_TEXTURE_LAYERS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FF) } },
+    { "MIN_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8904) } },
+    { "MAX_PROGRAM_TEXEL_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8905) } },
+    { "MAX_VARYING_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8B4B) } },
+    { "TEXTURE_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C1A) } },
+    { "TEXTURE_BINDING_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C1D) } },
+    { "R11F_G11F_B10F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3A) } },
+    { "UNSIGNED_INT_10F_11F_11F_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3B) } },
+    { "RGB9_E5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3D) } },
+    { "UNSIGNED_INT_5_9_9_9_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C3E) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_MODE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C7F) } },
+    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C80) } },
+    { "TRANSFORM_FEEDBACK_VARYINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C83) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C84) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C85) } },
+    { "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C88) } },
+    { "RASTERIZER_DISCARD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C89) } },
+    { "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8A) } },
+    { "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8B) } },
+    { "INTERLEAVED_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8C) } },
+    { "SEPARATE_ATTRIBS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8D) } },
+    { "TRANSFORM_FEEDBACK_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8E) } },
+    { "TRANSFORM_FEEDBACK_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C8F) } },
+    { "RGBA32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D70) } },
+    { "RGB32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D71) } },
+    { "RGBA16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D76) } },
+    { "RGB16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D77) } },
+    { "RGBA8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D7C) } },
+    { "RGB8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D7D) } },
+    { "RGBA32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D82) } },
+    { "RGB32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D83) } },
+    { "RGBA16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D88) } },
+    { "RGB16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D89) } },
+    { "RGBA8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D8E) } },
+    { "RGB8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D8F) } },
+    { "RED_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D94) } },
+    { "RGB_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D98) } },
+    { "RGBA_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D99) } },
+    { "SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC1) } },
+    { "SAMPLER_2D_ARRAY_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC4) } },
+    { "SAMPLER_CUBE_SHADOW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC5) } },
+    { "UNSIGNED_INT_VEC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC6) } },
+    { "UNSIGNED_INT_VEC3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC7) } },
+    { "UNSIGNED_INT_VEC4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DC8) } },
+    { "INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCA) } },
+    { "INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCB) } },
+    { "INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCC) } },
+    { "INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DCF) } },
+    { "UNSIGNED_INT_SAMPLER_2D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD2) } },
+    { "UNSIGNED_INT_SAMPLER_3D", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD3) } },
+    { "UNSIGNED_INT_SAMPLER_CUBE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD4) } },
+    { "UNSIGNED_INT_SAMPLER_2D_ARRAY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DD7) } },
+    { "DEPTH_COMPONENT32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAC) } },
+    { "DEPTH32F_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAD) } },
+    { "FLOAT_32_UNSIGNED_INT_24_8_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8DAD) } },
+    { "FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8210) } },
+    { "FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8211) } },
+    { "FRAMEBUFFER_ATTACHMENT_RED_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8212) } },
+    { "FRAMEBUFFER_ATTACHMENT_GREEN_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8213) } },
+    { "FRAMEBUFFER_ATTACHMENT_BLUE_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8214) } },
+    { "FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8215) } },
+    { "FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8216) } },
+    { "FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8217) } },
+    { "FRAMEBUFFER_DEFAULT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8218) } },
+    { "DEPTH_STENCIL_ATTACHMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x821A) } },
+    { "DEPTH_STENCIL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84F9) } },
+    { "UNSIGNED_INT_24_8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84FA) } },
+    { "DEPTH24_STENCIL8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88F0) } },
+    { "UNSIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C17) } },
+    { "DRAW_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA6) } },
+    { "READ_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA8) } },
+    { "DRAW_FRAMEBUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CA9) } },
+    { "READ_FRAMEBUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAA) } },
+    { "RENDERBUFFER_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CAB) } },
+    { "FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CD4) } },
+    { "MAX_COLOR_ATTACHMENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CDF) } },
+    { "COLOR_ATTACHMENT1", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE1) } },
+    { "COLOR_ATTACHMENT2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE2) } },
+    { "COLOR_ATTACHMENT3", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE3) } },
+    { "COLOR_ATTACHMENT4", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE4) } },
+    { "COLOR_ATTACHMENT5", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE5) } },
+    { "COLOR_ATTACHMENT6", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE6) } },
+    { "COLOR_ATTACHMENT7", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE7) } },
+    { "COLOR_ATTACHMENT8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE8) } },
+    { "COLOR_ATTACHMENT9", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CE9) } },
+    { "COLOR_ATTACHMENT10", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEA) } },
+    { "COLOR_ATTACHMENT11", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEB) } },
+    { "COLOR_ATTACHMENT12", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEC) } },
+    { "COLOR_ATTACHMENT13", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CED) } },
+    { "COLOR_ATTACHMENT14", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEE) } },
+    { "COLOR_ATTACHMENT15", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8CEF) } },
+    { "FRAMEBUFFER_INCOMPLETE_MULTISAMPLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D56) } },
+    { "MAX_SAMPLES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D57) } },
+    { "HALF_FLOAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x140B) } },
+    { "RG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8227) } },
+    { "RG_INTEGER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8228) } },
+    { "R8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8229) } },
+    { "RG8", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822B) } },
+    { "R16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822D) } },
+    { "R32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822E) } },
+    { "RG16F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x822F) } },
+    { "RG32F", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8230) } },
+    { "R8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8231) } },
+    { "R8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8232) } },
+    { "R16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8233) } },
+    { "R16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8234) } },
+    { "R32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8235) } },
+    { "R32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8236) } },
+    { "RG8I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8237) } },
+    { "RG8UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8238) } },
+    { "RG16I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8239) } },
+    { "RG16UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823A) } },
+    { "RG32I", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823B) } },
+    { "RG32UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x823C) } },
+    { "VERTEX_ARRAY_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x85B5) } },
+    { "R8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F94) } },
+    { "RG8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F95) } },
+    { "RGB8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F96) } },
+    { "RGBA8_SNORM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F97) } },
+    { "SIGNED_NORMALIZED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F9C) } },
+    { "PRIMITIVE_RESTART_FIXED_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D69) } },
+    { "COPY_READ_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F36) } },
+    { "COPY_WRITE_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F37) } },
+    { "COPY_READ_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F36) } },
+    { "COPY_WRITE_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8F37) } },
+    { "UNIFORM_BUFFER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A11) } },
+    { "UNIFORM_BUFFER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A28) } },
+    { "UNIFORM_BUFFER_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A29) } },
+    { "UNIFORM_BUFFER_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2A) } },
+    { "MAX_VERTEX_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2B) } },
+    { "MAX_FRAGMENT_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2D) } },
+    { "MAX_COMBINED_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2E) } },
+    { "MAX_UNIFORM_BUFFER_BINDINGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A2F) } },
+    { "MAX_UNIFORM_BLOCK_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A30) } },
+    { "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A31) } },
+    { "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A33) } },
+    { "UNIFORM_BUFFER_OFFSET_ALIGNMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A34) } },
+    { "ACTIVE_UNIFORM_BLOCKS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A36) } },
+    { "UNIFORM_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A37) } },
+    { "UNIFORM_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A38) } },
+    { "UNIFORM_BLOCK_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3A) } },
+    { "UNIFORM_OFFSET", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3B) } },
+    { "UNIFORM_ARRAY_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3C) } },
+    { "UNIFORM_MATRIX_STRIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3D) } },
+    { "UNIFORM_IS_ROW_MAJOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3E) } },
+    { "UNIFORM_BLOCK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A3F) } },
+    { "UNIFORM_BLOCK_DATA_SIZE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A40) } },
+    { "UNIFORM_BLOCK_ACTIVE_UNIFORMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A42) } },
+    { "UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A43) } },
+    { "UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A44) } },
+    { "UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8A46) } },
+    { "INVALID_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0xFFFFFFFF) } },
+    { "MAX_VERTEX_OUTPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9122) } },
+    { "MAX_FRAGMENT_INPUT_COMPONENTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9125) } },
+    { "MAX_SERVER_WAIT_TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9111) } },
+    { "OBJECT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9112) } },
+    { "SYNC_CONDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9113) } },
+    { "SYNC_STATUS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9114) } },
+    { "SYNC_FLAGS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9115) } },
+    { "SYNC_FENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9116) } },
+    { "SYNC_GPU_COMMANDS_COMPLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9117) } },
+    { "UNSIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9118) } },
+    { "SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9119) } },
+    { "ALREADY_SIGNALED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911A) } },
+    { "TIMEOUT_EXPIRED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911B) } },
+    { "CONDITION_SATISFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911C) } },
+    { "WAIT_FAILED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x911D) } },
+    { "SYNC_FLUSH_COMMANDS_BIT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000001) } },
+    { "VERTEX_ATTRIB_ARRAY_DIVISOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FE) } },
+    { "ANY_SAMPLES_PASSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8C2F) } },
+    { "ANY_SAMPLES_PASSED_CONSERVATIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D6A) } },
+    { "SAMPLER_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8919) } },
+    { "RGB10_A2UI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x906F) } },
+    { "TEXTURE_SWIZZLE_R", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E42) } },
+    { "TEXTURE_SWIZZLE_G", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E43) } },
+    { "TEXTURE_SWIZZLE_B", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E44) } },
+    { "TEXTURE_SWIZZLE_A", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E45) } },
+    { "GREEN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1904) } },
+    { "BLUE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x1905) } },
+    { "INT_2_10_10_10_REV", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D9F) } },
+    { "TRANSFORM_FEEDBACK", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E22) } },
+    { "TRANSFORM_FEEDBACK_PAUSED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E23) } },
+    { "TRANSFORM_FEEDBACK_ACTIVE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E24) } },
+    { "TRANSFORM_FEEDBACK_BINDING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8E25) } },
+    { "COMPRESSED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9270) } },
+    { "COMPRESSED_SIGNED_R11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9271) } },
+    { "COMPRESSED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9272) } },
+    { "COMPRESSED_SIGNED_RG11_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9273) } },
+    { "COMPRESSED_RGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9274) } },
+    { "COMPRESSED_SRGB8_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9275) } },
+    { "COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9276) } },
+    { "COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9277) } },
+    { "COMPRESSED_RGBA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9278) } },
+    { "COMPRESSED_SRGB8_ALPHA8_ETC2_EAC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9279) } },
+    { "TEXTURE_IMMUTABLE_FORMAT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x912F) } },
+    { "MAX_ELEMENT_INDEX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x8D6B) } },
+    { "NUM_SAMPLE_COUNTS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9380) } },
+    { "TEXTURE_IMMUTABLE_LEVELS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x82DF) } },
+    { "VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x88FE) } },
+    { "TIMEOUT_IGNORED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0xFFFFFFFFFFFFFFFF) } },
+    { "copyBufferSubData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCopyBufferSubData), (intptr_t) (5) } },
+    { "getBufferSubData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData), (intptr_t) (3) } },
+    { "blitFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBlitFramebuffer), (intptr_t) (10) } },
+    { "framebufferTextureLayer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionFramebufferTextureLayer), (intptr_t) (5) } },
+    { "getInternalformatParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetInternalformatParameter), (intptr_t) (3) } },
+    { "invalidateFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionInvalidateFramebuffer), (intptr_t) (2) } },
+    { "invalidateSubFramebuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionInvalidateSubFramebuffer), (intptr_t) (6) } },
+    { "readBuffer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionReadBuffer), (intptr_t) (1) } },
+    { "renderbufferStorageMultisample", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionRenderbufferStorageMultisample), (intptr_t) (5) } },
+    { "texStorage2D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexStorage2D), (intptr_t) (5) } },
+    { "texStorage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexStorage3D), (intptr_t) (6) } },
+    { "texImage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexImage3D), (intptr_t) (10) } },
+    { "texSubImage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D), (intptr_t) (11) } },
+    { "copyTexSubImage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCopyTexSubImage3D), (intptr_t) (9) } },
+    { "compressedTexImage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCompressedTexImage3D), (intptr_t) (9) } },
+    { "compressedTexSubImage3D", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCompressedTexSubImage3D), (intptr_t) (11) } },
+    { "getFragDataLocation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetFragDataLocation), (intptr_t) (2) } },
+    { "uniform1ui", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform1ui), (intptr_t) (2) } },
+    { "uniform2ui", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform2ui), (intptr_t) (3) } },
+    { "uniform3ui", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform3ui), (intptr_t) (4) } },
+    { "uniform4ui", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform4ui), (intptr_t) (5) } },
+    { "uniform1uiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform1uiv), (intptr_t) (2) } },
+    { "uniform2uiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform2uiv), (intptr_t) (2) } },
+    { "uniform3uiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform3uiv), (intptr_t) (2) } },
+    { "uniform4uiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniform4uiv), (intptr_t) (2) } },
+    { "uniformMatrix2x3fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x3fv), (intptr_t) (3) } },
+    { "uniformMatrix3x2fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x2fv), (intptr_t) (3) } },
+    { "uniformMatrix2x4fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x4fv), (intptr_t) (3) } },
+    { "uniformMatrix4x2fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x2fv), (intptr_t) (3) } },
+    { "uniformMatrix3x4fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x4fv), (intptr_t) (3) } },
+    { "uniformMatrix4x3fv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x3fv), (intptr_t) (3) } },
+    { "vertexAttribI4i", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4i), (intptr_t) (5) } },
+    { "vertexAttribI4iv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4iv), (intptr_t) (2) } },
+    { "vertexAttribI4ui", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4ui), (intptr_t) (5) } },
+    { "vertexAttribI4uiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4uiv), (intptr_t) (2) } },
+    { "vertexAttribIPointer", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribIPointer), (intptr_t) (5) } },
+    { "vertexAttribDivisor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionVertexAttribDivisor), (intptr_t) (2) } },
+    { "drawArraysInstanced", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawArraysInstanced), (intptr_t) (4) } },
+    { "drawElementsInstanced", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawElementsInstanced), (intptr_t) (5) } },
+    { "drawRangeElements", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawRangeElements), (intptr_t) (6) } },
+    { "drawBuffers", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDrawBuffers), (intptr_t) (1) } },
+    { "clearBufferiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferiv), (intptr_t) (3) } },
+    { "clearBufferuiv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferuiv), (intptr_t) (3) } },
+    { "clearBufferfv", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferfv), (intptr_t) (3) } },
+    { "clearBufferfi", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClearBufferfi), (intptr_t) (4) } },
+    { "createQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateQuery), (intptr_t) (0) } },
+    { "deleteQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteQuery), (intptr_t) (1) } },
+    { "isQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsQuery), (intptr_t) (1) } },
+    { "beginQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBeginQuery), (intptr_t) (2) } },
+    { "endQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionEndQuery), (intptr_t) (1) } },
+    { "getQuery", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetQuery), (intptr_t) (2) } },
+    { "getQueryParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetQueryParameter), (intptr_t) (2) } },
+    { "createSampler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateSampler), (intptr_t) (0) } },
+    { "deleteSampler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteSampler), (intptr_t) (1) } },
+    { "isSampler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsSampler), (intptr_t) (1) } },
+    { "bindSampler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindSampler), (intptr_t) (2) } },
+    { "samplerParameteri", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionSamplerParameteri), (intptr_t) (3) } },
+    { "samplerParameterf", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionSamplerParameterf), (intptr_t) (3) } },
+    { "getSamplerParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetSamplerParameter), (intptr_t) (2) } },
+    { "fenceSync", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionFenceSync), (intptr_t) (2) } },
+    { "isSync", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsSync), (intptr_t) (1) } },
+    { "deleteSync", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteSync), (intptr_t) (1) } },
+    { "clientWaitSync", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionClientWaitSync), (intptr_t) (3) } },
+    { "waitSync", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionWaitSync), (intptr_t) (3) } },
+    { "getSyncParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetSyncParameter), (intptr_t) (2) } },
+    { "createTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateTransformFeedback), (intptr_t) (0) } },
+    { "deleteTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteTransformFeedback), (intptr_t) (1) } },
+    { "isTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsTransformFeedback), (intptr_t) (1) } },
+    { "bindTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindTransformFeedback), (intptr_t) (2) } },
+    { "beginTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBeginTransformFeedback), (intptr_t) (1) } },
+    { "endTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionEndTransformFeedback), (intptr_t) (0) } },
+    { "transformFeedbackVaryings", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionTransformFeedbackVaryings), (intptr_t) (3) } },
+    { "getTransformFeedbackVarying", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetTransformFeedbackVarying), (intptr_t) (2) } },
+    { "pauseTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionPauseTransformFeedback), (intptr_t) (0) } },
+    { "resumeTransformFeedback", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionResumeTransformFeedback), (intptr_t) (0) } },
+    { "bindBufferBase", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindBufferBase), (intptr_t) (3) } },
+    { "bindBufferRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindBufferRange), (intptr_t) (5) } },
+    { "getIndexedParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetIndexedParameter), (intptr_t) (2) } },
+    { "getUniformIndices", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetUniformIndices), (intptr_t) (2) } },
+    { "getActiveUniforms", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniforms), (intptr_t) (3) } },
+    { "getUniformBlockIndex", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetUniformBlockIndex), (intptr_t) (2) } },
+    { "getActiveUniformBlockParameter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockParameter), (intptr_t) (3) } },
+    { "getActiveUniformBlockName", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockName), (intptr_t) (2) } },
+    { "uniformBlockBinding", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionUniformBlockBinding), (intptr_t) (3) } },
+    { "createVertexArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionCreateVertexArray), (intptr_t) (0) } },
+    { "deleteVertexArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionDeleteVertexArray), (intptr_t) (1) } },
+    { "isVertexArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionIsVertexArray), (intptr_t) (1) } },
+    { "bindVertexArray", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGL2RenderingContextPrototypeFunctionBindVertexArray), (intptr_t) (1) } },
 };
 
 const ClassInfo JSWebGL2RenderingContextPrototype::s_info = { "WebGL2RenderingContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGL2RenderingContextPrototype) };
@@ -888,7 +862,7 @@ void JSWebGL2RenderingContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGL2RenderingContext::s_info = { "WebGL2RenderingContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGL2RenderingContext) };
 
-JSWebGL2RenderingContext::JSWebGL2RenderingContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGL2RenderingContext>&& impl)
+JSWebGL2RenderingContext::JSWebGL2RenderingContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGL2RenderingContext>&& impl)
     : JSWebGLRenderingContextBase(structure, globalObject, WTF::move(impl))
 {
 }
@@ -903,2246 +877,2246 @@ JSObject* JSWebGL2RenderingContext::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSWebGL2RenderingContext>(vm, globalObject);
 }
 
-EncodedJSValue jsWebGL2RenderingContextConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGL2RenderingContextConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGL2RenderingContextPrototype* domObject = jsDynamicCast<JSWebGL2RenderingContextPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGL2RenderingContext::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGL2RenderingContext::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGL2RenderingContext::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGL2RenderingContextConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGL2RenderingContextConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCopyBufferSubData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCopyBufferSubData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "copyBufferSubData");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "copyBufferSubData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned readTarget = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned readTarget = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned writeTarget = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned writeTarget = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long readOffset = toInt64(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long readOffset = toInt64(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long writeOffset = toInt64(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long writeOffset = toInt64(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long size = toInt64(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long size = toInt64(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getBufferSubData");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getBufferSubData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> returnedData = toArrayBufferView(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> returnedData = toArrayBufferView(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.getBufferSubData(target, offset, returnedData.get());
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getBufferSubData");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getBufferSubData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    ArrayBuffer* returnedData = toArrayBuffer(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    ArrayBuffer* returnedData = toArrayBuffer(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.getBufferSubData(target, offset, returnedData);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(3, exec->argumentCount());
-    JSValue arg2(exec->argument(2));
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    JSValue arg2(state->argument(2));
     if ((argsCount == 3 && ((arg2.isObject() && asObject(arg2)->inherits(JSArrayBufferView::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData1(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData1(state);
     if ((argsCount == 3 && ((arg2.isObject() && asObject(arg2)->inherits(JSArrayBuffer::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData2(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionGetBufferSubData2(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBlitFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBlitFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "blitFramebuffer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "blitFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 10))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    int srcX0 = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 10))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    int srcX0 = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int srcY0 = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int srcY0 = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int srcX1 = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int srcX1 = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int srcY1 = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int srcY1 = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int dstX0 = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int dstX0 = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int dstY0 = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int dstY0 = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int dstX1 = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int dstX1 = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int dstY1 = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int dstY1 = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned mask = toUInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned mask = toUInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned filter = toUInt32(exec, exec->argument(9), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned filter = toUInt32(state, state->argument(9), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionFramebufferTextureLayer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionFramebufferTextureLayer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "framebufferTextureLayer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "framebufferTextureLayer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned attachment = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned attachment = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned texture = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned texture = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int layer = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int layer = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.framebufferTextureLayer(target, attachment, texture, level, layer);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetInternalformatParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetInternalformatParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getInternalformatParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getInternalformatParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getInternalformatParameter(exec));
+    return JSValue::encode(castedThis->getInternalformatParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionInvalidateFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionInvalidateFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "invalidateFramebuffer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "invalidateFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Vector<unsigned> attachments = toNativeArray<unsigned>(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Vector<unsigned> attachments = toNativeArray<unsigned>(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.invalidateFramebuffer(target, attachments);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionInvalidateSubFramebuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionInvalidateSubFramebuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "invalidateSubFramebuffer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "invalidateSubFramebuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Vector<unsigned> attachments = toNativeArray<unsigned>(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Vector<unsigned> attachments = toNativeArray<unsigned>(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.invalidateSubFramebuffer(target, attachments, x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionReadBuffer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionReadBuffer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "readBuffer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "readBuffer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned src = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned src = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.readBuffer(src);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionRenderbufferStorageMultisample(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionRenderbufferStorageMultisample(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "renderbufferStorageMultisample");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "renderbufferStorageMultisample");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int samples = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int samples = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.renderbufferStorageMultisample(target, samples, internalformat, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexStorage2D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexStorage2D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texStorage2D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texStorage2D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int levels = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int levels = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texStorage2D(target, levels, internalformat, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexStorage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexStorage3D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texStorage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texStorage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int levels = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int levels = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int depth = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int depth = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texStorage3D(target, levels, internalformat, width, height, depth);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexImage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexImage3D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 10))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 10))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int internalformat = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int internalformat = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int depth = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int depth = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int border = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int border = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> pixels = toArrayBufferView(exec->argument(9));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> pixels = toArrayBufferView(state->argument(9));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels.get());
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 11))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 11))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int depth = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int depth = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(9), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(9), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> pixels = toArrayBufferView(exec->argument(10));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> pixels = toArrayBufferView(state->argument(10));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels.get());
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(7).isUndefinedOrNull() && !exec->argument(7).inherits(JSImageData::info()))
-        return throwArgumentTypeError(*exec, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "ImageData");
-    ImageData* source = JSImageData::toWrapped(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(7).isUndefinedOrNull() && !state->argument(7).inherits(JSImageData::info()))
+        return throwArgumentTypeError(*state, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "ImageData");
+    ImageData* source = JSImageData::toWrapped(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage3D(target, level, xoffset, yoffset, zoffset, format, type, source);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(7).isUndefinedOrNull() && !exec->argument(7).inherits(JSHTMLImageElement::info()))
-        return throwArgumentTypeError(*exec, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLImageElement");
-    HTMLImageElement* source = JSHTMLImageElement::toWrapped(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(7).isUndefinedOrNull() && !state->argument(7).inherits(JSHTMLImageElement::info()))
+        return throwArgumentTypeError(*state, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLImageElement");
+    HTMLImageElement* source = JSHTMLImageElement::toWrapped(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage3D(target, level, xoffset, yoffset, zoffset, format, type, source);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(7).isUndefinedOrNull() && !exec->argument(7).inherits(JSHTMLCanvasElement::info()))
-        return throwArgumentTypeError(*exec, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLCanvasElement");
-    HTMLCanvasElement* source = JSHTMLCanvasElement::toWrapped(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(7).isUndefinedOrNull() && !state->argument(7).inherits(JSHTMLCanvasElement::info()))
+        return throwArgumentTypeError(*state, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLCanvasElement");
+    HTMLCanvasElement* source = JSHTMLCanvasElement::toWrapped(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage3D(target, level, xoffset, yoffset, zoffset, format, type, source);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D5(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D5(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "texSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "texSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(7).isUndefinedOrNull() && !exec->argument(7).inherits(JSHTMLVideoElement::info()))
-        return throwArgumentTypeError(*exec, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLVideoElement");
-    HTMLVideoElement* source = JSHTMLVideoElement::toWrapped(exec->argument(7));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(7).isUndefinedOrNull() && !state->argument(7).inherits(JSHTMLVideoElement::info()))
+        return throwArgumentTypeError(*state, 7, "source", "WebGL2RenderingContext", "texSubImage3D", "HTMLVideoElement");
+    HTMLVideoElement* source = JSHTMLVideoElement::toWrapped(state->argument(7));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.texSubImage3D(target, level, xoffset, yoffset, zoffset, format, type, source);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(11, exec->argumentCount());
-    JSValue arg10(exec->argument(10));
+    size_t argsCount = std::min<size_t>(11, state->argumentCount());
+    JSValue arg10(state->argument(10));
     if ((argsCount == 11 && (arg10.isNull() || (arg10.isObject() && asObject(arg10)->inherits(JSArrayBufferView::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D1(exec);
-    JSValue arg7(exec->argument(7));
+        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D1(state);
+    JSValue arg7(state->argument(7));
     if ((argsCount == 8 && (arg7.isNull() || (arg7.isObject() && asObject(arg7)->inherits(JSImageData::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D2(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D2(state);
     if ((argsCount == 8 && (arg7.isNull() || (arg7.isObject() && asObject(arg7)->inherits(JSHTMLImageElement::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D3(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D3(state);
     if ((argsCount == 8 && (arg7.isNull() || (arg7.isObject() && asObject(arg7)->inherits(JSHTMLCanvasElement::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D4(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D4(state);
     if ((argsCount == 8 && (arg7.isNull() || (arg7.isObject() && asObject(arg7)->inherits(JSHTMLVideoElement::info())))))
-        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D5(exec);
+        return jsWebGL2RenderingContextPrototypeFunctionTexSubImage3D5(state);
     if (argsCount < 8)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCopyTexSubImage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCopyTexSubImage3D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "copyTexSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "copyTexSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCompressedTexImage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCompressedTexImage3D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "compressedTexImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "compressedTexImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned internalformat = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned internalformat = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int depth = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int depth = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int border = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int border = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int imageSize = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int imageSize = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(8));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(8));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.compressedTexImage3D(target, level, internalformat, width, height, depth, border, imageSize, data.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCompressedTexSubImage3D(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCompressedTexSubImage3D(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "compressedTexSubImage3D");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "compressedTexSubImage3D");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 11))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 11))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int level = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int level = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int xoffset = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int xoffset = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int yoffset = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int yoffset = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int zoffset = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int zoffset = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int depth = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int depth = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned format = toUInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned format = toUInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int imageSize = toInt32(exec, exec->argument(9), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int imageSize = toInt32(state, state->argument(9), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<ArrayBufferView> data = toArrayBufferView(exec->argument(10));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<ArrayBufferView> data = toArrayBufferView(state->argument(10));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.compressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, data.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetFragDataLocation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetFragDataLocation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getFragDataLocation");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getFragDataLocation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "getFragDataLocation", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "getFragDataLocation", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String name = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.getFragDataLocation(program, name));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform1ui(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform1ui(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform1ui");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform1ui");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform1ui", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform1ui", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v0 = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v0 = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform1ui(location, v0);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform2ui(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform2ui(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform2ui");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform2ui");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform2ui", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform2ui", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v0 = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v0 = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v1 = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v1 = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform2ui(location, v0, v1);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform3ui(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform3ui(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform3ui");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform3ui");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform3ui", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform3ui", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v0 = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v0 = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v1 = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v1 = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v2 = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v2 = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform3ui(location, v0, v1, v2);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform4ui(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform4ui(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform4ui");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform4ui");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform4ui", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform4ui", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v0 = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v0 = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v1 = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v1 = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v2 = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v2 = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned v3 = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned v3 = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform4ui(location, v0, v1, v2, v3);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform1uiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform1uiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform1uiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform1uiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform1uiv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform1uiv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> value = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> value = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform1uiv(location, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform2uiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform2uiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform2uiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform2uiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform2uiv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform2uiv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> value = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> value = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform2uiv(location, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform3uiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform3uiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform3uiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform3uiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform3uiv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform3uiv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> value = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> value = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform3uiv(location, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform4uiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniform4uiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniform4uiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniform4uiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniform4uiv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniform4uiv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> value = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> value = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniform4uiv(location, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x3fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x3fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix2x3fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix2x3fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix2x3fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix2x3fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix2x3fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x2fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x2fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix3x2fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix3x2fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix3x2fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix3x2fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix3x2fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x4fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix2x4fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix2x4fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix2x4fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix2x4fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix2x4fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix2x4fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x2fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x2fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix4x2fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix4x2fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix4x2fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix4x2fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix4x2fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x4fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix3x4fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix3x4fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix3x4fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix3x4fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix3x4fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix3x4fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x3fv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformMatrix4x3fv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformMatrix4x3fv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformMatrix4x3fv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLUniformLocation::info()))
-        return throwArgumentTypeError(*exec, 0, "location", "WebGL2RenderingContext", "uniformMatrix4x3fv", "WebGLUniformLocation");
-    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLUniformLocation::info()))
+        return throwArgumentTypeError(*state, 0, "location", "WebGL2RenderingContext", "uniformMatrix4x3fv", "WebGLUniformLocation");
+    WebGLUniformLocation* location = JSWebGLUniformLocation::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool transpose = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool transpose = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformMatrix4x3fv(location, transpose, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4i(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4i(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribI4i");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribI4i");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int x = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int x = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int z = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int z = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int w = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int w = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribI4i(index, x, y, z, w);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4iv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4iv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribI4iv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribI4iv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Int32Array> v = toInt32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Int32Array> v = toInt32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribI4iv(index, v.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4ui(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4ui(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribI4ui");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribI4ui");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned x = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned x = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned y = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned y = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned z = toUInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned z = toUInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned w = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned w = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribI4ui(index, x, y, z, w);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4uiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribI4uiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribI4uiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribI4uiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> v = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> v = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribI4uiv(index, v.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribIPointer(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribIPointer(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribIPointer");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribIPointer");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int size = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int size = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int stride = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int stride = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribIPointer(index, size, type, stride, offset);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribDivisor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionVertexAttribDivisor(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "vertexAttribDivisor");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "vertexAttribDivisor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned divisor = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned divisor = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.vertexAttribDivisor(index, divisor);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawArraysInstanced(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawArraysInstanced(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "drawArraysInstanced");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "drawArraysInstanced");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int first = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int first = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int instanceCount = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int instanceCount = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawArraysInstanced(mode, first, count, instanceCount);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawElementsInstanced(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawElementsInstanced(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "drawElementsInstanced");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "drawElementsInstanced");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int instanceCount = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int instanceCount = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawElementsInstanced(mode, count, type, offset, instanceCount);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawRangeElements(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawRangeElements(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "drawRangeElements");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "drawRangeElements");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned mode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned mode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned start = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned start = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned end = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned end = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int count = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int count = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned type = toUInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned type = toUInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawRangeElements(mode, start, end, count, type, offset);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawBuffers(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDrawBuffers(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "drawBuffers");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "drawBuffers");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Vector<unsigned> buffers = toNativeArray<unsigned>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Vector<unsigned> buffers = toNativeArray<unsigned>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawBuffers(buffers);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "clearBufferiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "clearBufferiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned buffer = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned buffer = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int drawbuffer = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int drawbuffer = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Int32Array> value = toInt32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Int32Array> value = toInt32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearBufferiv(buffer, drawbuffer, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferuiv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferuiv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "clearBufferuiv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "clearBufferuiv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned buffer = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned buffer = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int drawbuffer = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int drawbuffer = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> value = toUint32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> value = toUint32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearBufferuiv(buffer, drawbuffer, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferfv(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferfv(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "clearBufferfv");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "clearBufferfv");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned buffer = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned buffer = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int drawbuffer = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int drawbuffer = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Float32Array> value = toFloat32Array(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Float32Array> value = toFloat32Array(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearBufferfv(buffer, drawbuffer, value.get());
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferfi(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClearBufferfi(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "clearBufferfi");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "clearBufferfi");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned buffer = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned buffer = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int drawbuffer = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int drawbuffer = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float depth = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float depth = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int stencil = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int stencil = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearBufferfi(buffer, drawbuffer, depth, stencil);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "createQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "createQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createQuery()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createQuery()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "deleteQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "deleteQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLQuery::info()))
-        return throwArgumentTypeError(*exec, 0, "query", "WebGL2RenderingContext", "deleteQuery", "WebGLQuery");
-    WebGLQuery* query = JSWebGLQuery::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLQuery::info()))
+        return throwArgumentTypeError(*state, 0, "query", "WebGL2RenderingContext", "deleteQuery", "WebGLQuery");
+    WebGLQuery* query = JSWebGLQuery::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteQuery(query);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "isQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "isQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLQuery::info()))
-        return throwArgumentTypeError(*exec, 0, "query", "WebGL2RenderingContext", "isQuery", "WebGLQuery");
-    WebGLQuery* query = JSWebGLQuery::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLQuery::info()))
+        return throwArgumentTypeError(*state, 0, "query", "WebGL2RenderingContext", "isQuery", "WebGLQuery");
+    WebGLQuery* query = JSWebGLQuery::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isQuery(query));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBeginQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBeginQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "beginQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "beginQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLQuery::info()))
-        return throwArgumentTypeError(*exec, 1, "query", "WebGL2RenderingContext", "beginQuery", "WebGLQuery");
-    WebGLQuery* query = JSWebGLQuery::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLQuery::info()))
+        return throwArgumentTypeError(*state, 1, "query", "WebGL2RenderingContext", "beginQuery", "WebGLQuery");
+    WebGLQuery* query = JSWebGLQuery::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.beginQuery(target, query);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionEndQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionEndQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "endQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "endQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.endQuery(target);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetQuery(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetQuery(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getQuery");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getQuery");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getQuery(target, pname)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getQuery(target, pname)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetQueryParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetQueryParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getQueryParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getQueryParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getQueryParameter(exec));
+    return JSValue::encode(castedThis->getQueryParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateSampler(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateSampler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "createSampler");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "createSampler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createSampler()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createSampler()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteSampler(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteSampler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "deleteSampler");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "deleteSampler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSampler::info()))
-        return throwArgumentTypeError(*exec, 0, "sampler", "WebGL2RenderingContext", "deleteSampler", "WebGLSampler");
-    WebGLSampler* sampler = JSWebGLSampler::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSampler::info()))
+        return throwArgumentTypeError(*state, 0, "sampler", "WebGL2RenderingContext", "deleteSampler", "WebGLSampler");
+    WebGLSampler* sampler = JSWebGLSampler::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteSampler(sampler);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsSampler(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsSampler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "isSampler");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "isSampler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSampler::info()))
-        return throwArgumentTypeError(*exec, 0, "sampler", "WebGL2RenderingContext", "isSampler", "WebGLSampler");
-    WebGLSampler* sampler = JSWebGLSampler::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSampler::info()))
+        return throwArgumentTypeError(*state, 0, "sampler", "WebGL2RenderingContext", "isSampler", "WebGLSampler");
+    WebGLSampler* sampler = JSWebGLSampler::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isSampler(sampler));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindSampler(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindSampler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "bindSampler");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "bindSampler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned unit = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned unit = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLSampler::info()))
-        return throwArgumentTypeError(*exec, 1, "sampler", "WebGL2RenderingContext", "bindSampler", "WebGLSampler");
-    WebGLSampler* sampler = JSWebGLSampler::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLSampler::info()))
+        return throwArgumentTypeError(*state, 1, "sampler", "WebGL2RenderingContext", "bindSampler", "WebGLSampler");
+    WebGLSampler* sampler = JSWebGLSampler::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindSampler(unit, sampler);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionSamplerParameteri(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionSamplerParameteri(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "samplerParameteri");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "samplerParameteri");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSampler::info()))
-        return throwArgumentTypeError(*exec, 0, "sampler", "WebGL2RenderingContext", "samplerParameteri", "WebGLSampler");
-    WebGLSampler* sampler = JSWebGLSampler::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSampler::info()))
+        return throwArgumentTypeError(*state, 0, "sampler", "WebGL2RenderingContext", "samplerParameteri", "WebGLSampler");
+    WebGLSampler* sampler = JSWebGLSampler::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int param = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int param = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.samplerParameteri(sampler, pname, param);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionSamplerParameterf(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionSamplerParameterf(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "samplerParameterf");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "samplerParameterf");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSampler::info()))
-        return throwArgumentTypeError(*exec, 0, "sampler", "WebGL2RenderingContext", "samplerParameterf", "WebGLSampler");
-    WebGLSampler* sampler = JSWebGLSampler::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSampler::info()))
+        return throwArgumentTypeError(*state, 0, "sampler", "WebGL2RenderingContext", "samplerParameterf", "WebGLSampler");
+    WebGLSampler* sampler = JSWebGLSampler::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float param = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float param = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.samplerParameterf(sampler, pname, param);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetSamplerParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetSamplerParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getSamplerParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getSamplerParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getSamplerParameter(exec));
+    return JSValue::encode(castedThis->getSamplerParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionFenceSync(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionFenceSync(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "fenceSync");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "fenceSync");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned condition = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned condition = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned flags = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned flags = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.fenceSync(condition, flags)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.fenceSync(condition, flags)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsSync(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsSync(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "isSync");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "isSync");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSync::info()))
-        return throwArgumentTypeError(*exec, 0, "sync", "WebGL2RenderingContext", "isSync", "WebGLSync");
-    WebGLSync* sync = JSWebGLSync::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSync::info()))
+        return throwArgumentTypeError(*state, 0, "sync", "WebGL2RenderingContext", "isSync", "WebGLSync");
+    WebGLSync* sync = JSWebGLSync::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isSync(sync));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteSync(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteSync(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "deleteSync");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "deleteSync");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSync::info()))
-        return throwArgumentTypeError(*exec, 0, "sync", "WebGL2RenderingContext", "deleteSync", "WebGLSync");
-    WebGLSync* sync = JSWebGLSync::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSync::info()))
+        return throwArgumentTypeError(*state, 0, "sync", "WebGL2RenderingContext", "deleteSync", "WebGLSync");
+    WebGLSync* sync = JSWebGLSync::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteSync(sync);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClientWaitSync(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionClientWaitSync(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "clientWaitSync");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "clientWaitSync");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSync::info()))
-        return throwArgumentTypeError(*exec, 0, "sync", "WebGL2RenderingContext", "clientWaitSync", "WebGLSync");
-    WebGLSync* sync = JSWebGLSync::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSync::info()))
+        return throwArgumentTypeError(*state, 0, "sync", "WebGL2RenderingContext", "clientWaitSync", "WebGLSync");
+    WebGLSync* sync = JSWebGLSync::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned flags = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned flags = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned long long timeout = toUInt64(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned long long timeout = toUInt64(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.clientWaitSync(sync, flags, timeout));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionWaitSync(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionWaitSync(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "waitSync");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "waitSync");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLSync::info()))
-        return throwArgumentTypeError(*exec, 0, "sync", "WebGL2RenderingContext", "waitSync", "WebGLSync");
-    WebGLSync* sync = JSWebGLSync::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLSync::info()))
+        return throwArgumentTypeError(*state, 0, "sync", "WebGL2RenderingContext", "waitSync", "WebGLSync");
+    WebGLSync* sync = JSWebGLSync::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned flags = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned flags = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned long long timeout = toUInt64(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned long long timeout = toUInt64(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.waitSync(sync, flags, timeout);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetSyncParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetSyncParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getSyncParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getSyncParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getSyncParameter(exec));
+    return JSValue::encode(castedThis->getSyncParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "createTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "createTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createTransformFeedback()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createTransformFeedback()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "deleteTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "deleteTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLTransformFeedback::info()))
-        return throwArgumentTypeError(*exec, 0, "id", "WebGL2RenderingContext", "deleteTransformFeedback", "WebGLTransformFeedback");
-    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLTransformFeedback::info()))
+        return throwArgumentTypeError(*state, 0, "id", "WebGL2RenderingContext", "deleteTransformFeedback", "WebGLTransformFeedback");
+    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteTransformFeedback(id);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "isTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "isTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLTransformFeedback::info()))
-        return throwArgumentTypeError(*exec, 0, "id", "WebGL2RenderingContext", "isTransformFeedback", "WebGLTransformFeedback");
-    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLTransformFeedback::info()))
+        return throwArgumentTypeError(*state, 0, "id", "WebGL2RenderingContext", "isTransformFeedback", "WebGLTransformFeedback");
+    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isTransformFeedback(id));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "bindTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "bindTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(1).isUndefinedOrNull() && !exec->argument(1).inherits(JSWebGLTransformFeedback::info()))
-        return throwArgumentTypeError(*exec, 1, "id", "WebGL2RenderingContext", "bindTransformFeedback", "WebGLTransformFeedback");
-    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(1).isUndefinedOrNull() && !state->argument(1).inherits(JSWebGLTransformFeedback::info()))
+        return throwArgumentTypeError(*state, 1, "id", "WebGL2RenderingContext", "bindTransformFeedback", "WebGLTransformFeedback");
+    WebGLTransformFeedback* id = JSWebGLTransformFeedback::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindTransformFeedback(target, id);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBeginTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBeginTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "beginTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "beginTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned primitiveMode = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned primitiveMode = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.beginTransformFeedback(primitiveMode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionEndTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionEndTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "endTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "endTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.endTransformFeedback();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTransformFeedbackVaryings(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionTransformFeedbackVaryings(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "transformFeedbackVaryings");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "transformFeedbackVaryings");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "transformFeedbackVaryings", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "transformFeedbackVaryings", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Vector<String> varyings = toNativeArray<String>(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Vector<String> varyings = toNativeArray<String>(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned bufferMode = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned bufferMode = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.transformFeedbackVaryings(program, varyings, bufferMode);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetTransformFeedbackVarying(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetTransformFeedbackVarying(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getTransformFeedbackVarying");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getTransformFeedbackVarying");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "getTransformFeedbackVarying", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "getTransformFeedbackVarying", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getTransformFeedbackVarying(program, index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getTransformFeedbackVarying(program, index)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionPauseTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionPauseTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "pauseTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "pauseTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.pauseTransformFeedback();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionResumeTransformFeedback(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionResumeTransformFeedback(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "resumeTransformFeedback");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "resumeTransformFeedback");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.resumeTransformFeedback();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindBufferBase(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindBufferBase(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "bindBufferBase");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "bindBufferBase");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(2).isUndefinedOrNull() && !exec->argument(2).inherits(JSWebGLBuffer::info()))
-        return throwArgumentTypeError(*exec, 2, "buffer", "WebGL2RenderingContext", "bindBufferBase", "WebGLBuffer");
-    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(2).isUndefinedOrNull() && !state->argument(2).inherits(JSWebGLBuffer::info()))
+        return throwArgumentTypeError(*state, 2, "buffer", "WebGL2RenderingContext", "bindBufferBase", "WebGLBuffer");
+    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindBufferBase(target, index, buffer);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindBufferRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindBufferRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "bindBufferRange");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "bindBufferRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned target = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned target = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned index = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    if (!exec->argument(2).isUndefinedOrNull() && !exec->argument(2).inherits(JSWebGLBuffer::info()))
-        return throwArgumentTypeError(*exec, 2, "buffer", "WebGL2RenderingContext", "bindBufferRange", "WebGLBuffer");
-    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    if (!state->argument(2).isUndefinedOrNull() && !state->argument(2).inherits(JSWebGLBuffer::info()))
+        return throwArgumentTypeError(*state, 2, "buffer", "WebGL2RenderingContext", "bindBufferRange", "WebGLBuffer");
+    WebGLBuffer* buffer = JSWebGLBuffer::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long offset = toInt64(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long offset = toInt64(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    long long size = toInt64(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    long long size = toInt64(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindBufferRange(target, index, buffer, offset, size);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetIndexedParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetIndexedParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getIndexedParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getIndexedParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getIndexedParameter(exec));
+    return JSValue::encode(castedThis->getIndexedParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetUniformIndices(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetUniformIndices(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getUniformIndices");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getUniformIndices");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "getUniformIndices", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "getUniformIndices", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Vector<String> uniformNames = toNativeArray<String>(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Vector<String> uniformNames = toNativeArray<String>(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getUniformIndices(program, uniformNames)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getUniformIndices(program, uniformNames)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniforms(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniforms(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getActiveUniforms");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getActiveUniforms");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "getActiveUniforms", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "getActiveUniforms", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    RefPtr<Uint32Array> uniformIndices = toUint32Array(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    RefPtr<Uint32Array> uniformIndices = toUint32Array(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned pname = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned pname = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getActiveUniforms(program, uniformIndices.get(), pname)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getActiveUniforms(program, uniformIndices.get(), pname)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetUniformBlockIndex(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetUniformBlockIndex(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getUniformBlockIndex");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getUniformBlockIndex");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "getUniformBlockIndex", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "getUniformBlockIndex", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String uniformBlockName = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String uniformBlockName = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.getUniformBlockIndex(program, uniformBlockName));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockParameter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockParameter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getActiveUniformBlockParameter");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getActiveUniformBlockParameter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getActiveUniformBlockParameter(exec));
+    return JSValue::encode(castedThis->getActiveUniformBlockParameter(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockName(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionGetActiveUniformBlockName(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "getActiveUniformBlockName");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "getActiveUniformBlockName");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    return JSValue::encode(castedThis->getActiveUniformBlockName(exec));
+    return JSValue::encode(castedThis->getActiveUniformBlockName(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformBlockBinding(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionUniformBlockBinding(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "uniformBlockBinding");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "uniformBlockBinding");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLProgram::info()))
-        return throwArgumentTypeError(*exec, 0, "program", "WebGL2RenderingContext", "uniformBlockBinding", "WebGLProgram");
-    WebGLProgram* program = JSWebGLProgram::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLProgram::info()))
+        return throwArgumentTypeError(*state, 0, "program", "WebGL2RenderingContext", "uniformBlockBinding", "WebGLProgram");
+    WebGLProgram* program = JSWebGLProgram::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned uniformBlockIndex = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned uniformBlockIndex = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned uniformBlockBinding = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned uniformBlockBinding = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.uniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateVertexArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionCreateVertexArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "createVertexArray");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "createVertexArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createVertexArray()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createVertexArray()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteVertexArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionDeleteVertexArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "deleteVertexArray");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "deleteVertexArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLVertexArrayObject::info()))
-        return throwArgumentTypeError(*exec, 0, "vertexArray", "WebGL2RenderingContext", "deleteVertexArray", "WebGLVertexArrayObject");
-    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLVertexArrayObject::info()))
+        return throwArgumentTypeError(*state, 0, "vertexArray", "WebGL2RenderingContext", "deleteVertexArray", "WebGLVertexArrayObject");
+    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteVertexArray(vertexArray);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsVertexArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionIsVertexArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "isVertexArray");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "isVertexArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLVertexArrayObject::info()))
-        return throwArgumentTypeError(*exec, 0, "vertexArray", "WebGL2RenderingContext", "isVertexArray", "WebGLVertexArrayObject");
-    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLVertexArrayObject::info()))
+        return throwArgumentTypeError(*state, 0, "vertexArray", "WebGL2RenderingContext", "isVertexArray", "WebGLVertexArrayObject");
+    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isVertexArray(vertexArray));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindVertexArray(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGL2RenderingContextPrototypeFunctionBindVertexArray(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGL2RenderingContext* castedThis = jsDynamicCast<JSWebGL2RenderingContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGL2RenderingContext", "bindVertexArray");
+        return throwThisTypeError(*state, "WebGL2RenderingContext", "bindVertexArray");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGL2RenderingContext::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSWebGLVertexArrayObject::info()))
-        return throwArgumentTypeError(*exec, 0, "vertexArray", "WebGL2RenderingContext", "bindVertexArray", "WebGLVertexArrayObject");
-    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSWebGLVertexArrayObject::info()))
+        return throwArgumentTypeError(*state, 0, "vertexArray", "WebGL2RenderingContext", "bindVertexArray", "WebGLVertexArrayObject");
+    WebGLVertexArrayObject* vertexArray = JSWebGLVertexArrayObject::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bindVertexArray(vertexArray);
     return JSValue::encode(jsUndefined());

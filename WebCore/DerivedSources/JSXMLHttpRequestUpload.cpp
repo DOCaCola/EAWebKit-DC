@@ -24,9 +24,9 @@
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
-#include "XMLHttpRequestUpload.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -54,6 +54,8 @@ JSC::EncodedJSValue jsXMLHttpRequestUploadOnloadstart(JSC::ExecState*, JSC::JSOb
 void setJSXMLHttpRequestUploadOnloadstart(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsXMLHttpRequestUploadOnprogress(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSXMLHttpRequestUploadOnprogress(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsXMLHttpRequestUploadOntimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSXMLHttpRequestUploadOntimeout(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsXMLHttpRequestUploadConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSXMLHttpRequestUploadPrototype : public JSC::JSNonFinalObject {
@@ -81,85 +83,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXMLHttpRequestUploadConstructor : public DOMConstructorObject {
-private:
-    JSXMLHttpRequestUploadConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSXMLHttpRequestUpload> JSXMLHttpRequestUploadConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSXMLHttpRequestUploadConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXMLHttpRequestUploadConstructor* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestUploadConstructor>(vm.heap)) JSXMLHttpRequestUploadConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSXMLHttpRequestUploadTableIndex[17] = {
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 2, 16 },
-    { 5, -1 },
-    { 1, -1 },
-    { 4, -1 },
-    { 3, -1 },
-};
-
-
-static const HashTableValue JSXMLHttpRequestUploadTableValues[] =
+template<> void JSXMLHttpRequestUploadConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    { "onabort", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnabort) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnerror) },
-    { "onload", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnload) },
-    { "onloadend", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnloadend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnloadend) },
-    { "onloadstart", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnloadstart) },
-    { "onprogress", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnprogress) },
-};
-
-static const HashTable JSXMLHttpRequestUploadTable = { 6, 15, true, JSXMLHttpRequestUploadTableValues, 0, JSXMLHttpRequestUploadTableIndex };
-const ClassInfo JSXMLHttpRequestUploadConstructor::s_info = { "XMLHttpRequestUploadConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestUploadConstructor) };
-
-JSXMLHttpRequestUploadConstructor::JSXMLHttpRequestUploadConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
-}
-
-void JSXMLHttpRequestUploadConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequestUpload::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequestUpload::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XMLHttpRequestUpload"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSXMLHttpRequestUploadConstructor::s_info = { "XMLHttpRequestUploadConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestUploadConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXMLHttpRequestUploadPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onabort", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnabort) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnerror) } },
+    { "onload", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnload) } },
+    { "onloadend", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnloadend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnloadend) } },
+    { "onloadstart", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnloadstart) } },
+    { "onprogress", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOnprogress) } },
+    { "ontimeout", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestUploadOntimeout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSXMLHttpRequestUploadOntimeout) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestUploadPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSXMLHttpRequestUploadPrototype::s_info = { "XMLHttpRequestUploadPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestUploadPrototype) };
@@ -170,11 +119,10 @@ void JSXMLHttpRequestUploadPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSXMLHttpRequestUploadPrototypeTableValues, *this);
 }
 
-const ClassInfo JSXMLHttpRequestUpload::s_info = { "XMLHttpRequestUpload", &Base::s_info, &JSXMLHttpRequestUploadTable, CREATE_METHOD_TABLE(JSXMLHttpRequestUpload) };
+const ClassInfo JSXMLHttpRequestUpload::s_info = { "XMLHttpRequestUpload", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestUpload) };
 
-JSXMLHttpRequestUpload::JSXMLHttpRequestUpload(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestUpload>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXMLHttpRequestUpload::JSXMLHttpRequestUpload(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XMLHttpRequestUpload>&& impl)
+    : JSDOMWrapper<XMLHttpRequestUpload>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -194,240 +142,290 @@ void JSXMLHttpRequestUpload::destroy(JSC::JSCell* cell)
     thisObject->JSXMLHttpRequestUpload::~JSXMLHttpRequestUpload();
 }
 
-JSXMLHttpRequestUpload::~JSXMLHttpRequestUpload()
+EncodedJSValue jsXMLHttpRequestUploadOnabort(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-bool JSXMLHttpRequestUpload::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
-{
-    auto* thisObject = jsCast<JSXMLHttpRequestUpload*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSXMLHttpRequestUpload, Base>(exec, JSXMLHttpRequestUploadTable, thisObject, propertyName, slot);
-}
-
-EncodedJSValue jsXMLHttpRequestUploadOnabort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onabort");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().abortEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onabort");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onabort");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().abortEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onerror");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onerror");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onerror");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadOnload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOnload(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onload");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onload");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onload");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadOnloadend(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOnloadend(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onloadend");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadendEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onloadend");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onloadend");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadendEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadOnloadstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOnloadstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onloadstart");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadstartEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onloadstart");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onloadstart");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadstartEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadOnprogress(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOnprogress(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(slotBase);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestUpload", "onprogress");
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().progressEvent));
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "onprogress");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "onprogress");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().progressEvent));
 }
 
 
-EncodedJSValue jsXMLHttpRequestUploadConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestUploadOntimeout(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "XMLHttpRequestUpload", "ontimeout");
+        return throwGetterTypeError(*state, "XMLHttpRequestUpload", "ontimeout");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().timeoutEvent));
+}
+
+
+EncodedJSValue jsXMLHttpRequestUploadConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXMLHttpRequestUploadPrototype* domObject = jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXMLHttpRequestUpload::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXMLHttpRequestUpload::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSXMLHttpRequestUploadOnabort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnabort(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onabort");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().abortEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onabort");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onabort");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().abortEvent, value);
 }
 
 
-void setJSXMLHttpRequestUploadOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onerror");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onerror");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onerror");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().errorEvent, value);
 }
 
 
-void setJSXMLHttpRequestUploadOnload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnload(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onload");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onload");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onload");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadEvent, value);
 }
 
 
-void setJSXMLHttpRequestUploadOnloadend(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnloadend(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onloadend");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadendEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onloadend");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onloadend");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadendEvent, value);
 }
 
 
-void setJSXMLHttpRequestUploadOnloadstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnloadstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onloadstart");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadstartEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onloadstart");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onloadstart");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadstartEvent, value);
 }
 
 
-void setJSXMLHttpRequestUploadOnprogress(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSXMLHttpRequestUploadOnprogress(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSXMLHttpRequestUpload*>(baseObject);
-    JSXMLHttpRequestUpload* castedThisObject = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "XMLHttpRequestUpload", "onprogress");
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().progressEvent, value);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "onprogress");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "onprogress");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().progressEvent, value);
+}
+
+
+void setJSXMLHttpRequestUploadOntimeout(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSXMLHttpRequestUploadPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "XMLHttpRequestUpload", "ontimeout");
+        else
+            throwSetterTypeError(*state, "XMLHttpRequestUpload", "ontimeout");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().timeoutEvent, value);
 }
 
 
 JSValue JSXMLHttpRequestUpload::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXMLHttpRequestUploadConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXMLHttpRequestUploadConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequestUpload", "addEventListener");
+        return throwThisTypeError(*state, "XMLHttpRequestUpload", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequestUpload::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequestUpload", "removeEventListener");
+        return throwThisTypeError(*state, "XMLHttpRequestUpload", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequestUpload::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestUploadPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequestUpload* castedThis = jsDynamicCast<JSXMLHttpRequestUpload*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequestUpload", "dispatchEvent");
+        return throwThisTypeError(*state, "XMLHttpRequestUpload", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequestUpload::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -436,15 +434,15 @@ void JSXMLHttpRequestUpload::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSXMLHttpRequestUpload*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSXMLHttpRequestUploadOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsXMLHttpRequestUpload = jsCast<JSXMLHttpRequestUpload*>(handle.slot()->asCell());
-    if (jsXMLHttpRequestUpload->impl().isFiringEventListeners())
+    if (jsXMLHttpRequestUpload->wrapped().isFiringEventListeners())
         return true;
-    XMLHttpRequestUpload* root = &jsXMLHttpRequestUpload->impl();
+    XMLHttpRequestUpload* root = &jsXMLHttpRequestUpload->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -452,7 +450,7 @@ void JSXMLHttpRequestUploadOwner::finalize(JSC::Handle<JSC::Unknown> handle, voi
 {
     auto* jsXMLHttpRequestUpload = jsCast<JSXMLHttpRequestUpload*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXMLHttpRequestUpload->impl(), jsXMLHttpRequestUpload);
+    uncacheWrapper(world, &jsXMLHttpRequestUpload->wrapped(), jsXMLHttpRequestUpload);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -463,6 +461,14 @@ extern "C" { extern void (*const __identifier("??_7XMLHttpRequestUpload@WebCore@
 extern "C" { extern void* _ZTVN7WebCore20XMLHttpRequestUploadE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXMLHttpRequestUpload>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload* impl)
 {
     if (!impl)
@@ -494,7 +500,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpReque
 XMLHttpRequestUpload* JSXMLHttpRequestUpload::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXMLHttpRequestUpload*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

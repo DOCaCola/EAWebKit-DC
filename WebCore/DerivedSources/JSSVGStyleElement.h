@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGStyleElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGStyleElement>&& impl)
     {
-        JSSVGStyleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGStyleElement>(globalObject->vm().heap)) JSSVGStyleElement(structure, globalObject, WTF::move(impl));
+        JSSVGStyleElement* ptr = new (NotNull, JSC::allocateCell<JSSVGStyleElement>(globalObject->vm().heap)) JSSVGStyleElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGStyleElement& impl() const
+    SVGStyleElement& wrapped() const
     {
-        return static_cast<SVGStyleElement&>(Base::impl());
+        return static_cast<SVGStyleElement&>(Base::wrapped());
     }
 protected:
-    JSSVGStyleElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGStyleElement>&&);
+    JSSVGStyleElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGStyleElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

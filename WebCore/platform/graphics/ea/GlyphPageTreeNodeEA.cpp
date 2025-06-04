@@ -32,7 +32,7 @@ namespace WebCore {
 // being cached here for faster render later.
 
 // Seems like most implementations return true even if a single glyph could be found. We do the same here.
-bool GlyphPage::fill(unsigned offset, unsigned length, UChar* buffer, unsigned bufferLength, const Font* pSimpleFontData)
+bool GlyphPage::fill(UChar* characterBuffer, unsigned bufferLength)
 {
     bool haveGlyphs = false;
 
@@ -40,22 +40,24 @@ bool GlyphPage::fill(unsigned offset, unsigned length, UChar* buffer, unsigned b
 	// check. Otherwise, we run into memory corruption. This does mean that we are not rendering these characters but this is not our typical prediction scenario.
 	if (bufferLength <= GlyphPage::size)
     {
-		if (EA::WebKit::IFont* const pFont = pSimpleFontData->getEAFont())
+		if (EA::WebKit::IFont* const pFont = font().getEAFont())
 		{
 			for (unsigned i = 0; i < bufferLength; i++)
 			{
 				EA::WebKit::GlyphId glyphId = EA::WebKit::kGlyphIdInvalid;
 
 				//EAWebKitTODO: Convert this to get glyph Ids in one shot as this API is already array like.
-				pFont->GetGlyphIds(&buffer[i], 1, &glyphId, false);
+				pFont->GetGlyphIds(&characterBuffer[i], 1, &glyphId, false);
 
 				if (glyphId != EA::WebKit::kGlyphIdInvalid)
 				{
-					setGlyphDataForIndex(i, glyphId, pSimpleFontData);
+                    setGlyphForIndex(i, glyphId);
 					haveGlyphs = true;
 				}
 				else
-					setGlyphDataForIndex(i, 0, 0);
+				{
+                    setGlyphForIndex(i, 0);
+                }
 			}
 		}
     }

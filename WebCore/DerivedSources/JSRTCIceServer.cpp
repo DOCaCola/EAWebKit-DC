@@ -27,7 +27,6 @@
 #include "DOMStringList.h"
 #include "JSDOMBinding.h"
 #include "JSDOMStringList.h"
-#include "RTCIceServer.h"
 #include "URL.h"
 #include <runtime/JSArray.h>
 #include <runtime/JSString.h>
@@ -72,9 +71,9 @@ private:
 
 static const HashTableValue JSRTCIceServerPrototypeTableValues[] =
 {
-    { "urls", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUrls), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "username", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "credential", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerCredential), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "urls", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUrls), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "username", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerUsername), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "credential", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRTCIceServerCredential), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSRTCIceServerPrototype::s_info = { "RTCIceServerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceServerPrototype) };
@@ -87,9 +86,8 @@ void JSRTCIceServerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRTCIceServer::s_info = { "RTCIceServer", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRTCIceServer) };
 
-JSRTCIceServer::JSRTCIceServer(Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceServer>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRTCIceServer::JSRTCIceServer(Structure* structure, JSDOMGlobalObject& globalObject, Ref<RTCIceServer>&& impl)
+    : JSDOMWrapper<RTCIceServer>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -109,58 +107,53 @@ void JSRTCIceServer::destroy(JSC::JSCell* cell)
     thisObject->JSRTCIceServer::~JSRTCIceServer();
 }
 
-JSRTCIceServer::~JSRTCIceServer()
+EncodedJSValue jsRTCIceServerUrls(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsRTCIceServerUrls(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "urls");
-        return throwGetterTypeError(*exec, "RTCIceServer", "urls");
+            return reportDeprecatedGetterError(*state, "RTCIceServer", "urls");
+        return throwGetterTypeError(*state, "RTCIceServer", "urls");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.urls());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.urls());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRTCIceServerUsername(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCIceServerUsername(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "username");
-        return throwGetterTypeError(*exec, "RTCIceServer", "username");
+            return reportDeprecatedGetterError(*state, "RTCIceServer", "username");
+        return throwGetterTypeError(*state, "RTCIceServer", "username");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.username());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.username());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRTCIceServerCredential(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRTCIceServerCredential(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRTCIceServer* castedThis = jsDynamicCast<JSRTCIceServer*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRTCIceServerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "RTCIceServer", "credential");
-        return throwGetterTypeError(*exec, "RTCIceServer", "credential");
+            return reportDeprecatedGetterError(*state, "RTCIceServer", "credential");
+        return throwGetterTypeError(*state, "RTCIceServer", "credential");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.credential());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.credential());
     return JSValue::encode(result);
 }
 
@@ -176,7 +169,7 @@ void JSRTCIceServerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsRTCIceServer = jsCast<JSRTCIceServer*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRTCIceServer->impl(), jsRTCIceServer);
+    uncacheWrapper(world, &jsRTCIceServer->wrapped(), jsRTCIceServer);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -187,6 +180,14 @@ extern "C" { extern void (*const __identifier("??_7RTCIceServer@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12RTCIceServerE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCIceServer* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSRTCIceServer>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCIceServer* impl)
 {
     if (!impl)
@@ -218,7 +219,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, RTCIceServer
 RTCIceServer* JSRTCIceServer::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSRTCIceServer*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

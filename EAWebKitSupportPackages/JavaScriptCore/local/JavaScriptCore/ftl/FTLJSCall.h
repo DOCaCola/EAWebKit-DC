@@ -26,7 +26,9 @@
 #ifndef FTLJSCall_h
 #define FTLJSCall_h
 
-#if ENABLE(FTL_JIT)
+#include "DFGCommon.h"
+
+#if ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #include "FTLJSCallBase.h"
 
@@ -41,7 +43,9 @@ namespace FTL {
 class JSCall : public JSCallBase {
 public:
     JSCall();
-    JSCall(unsigned stackmapID, DFG::Node*);
+    JSCall(unsigned stackmapID, DFG::Node*, CodeOrigin callSiteDescriptionOrigin);
+
+    void emit(CCallHelpers&, State&, int32_t osrExitFromGenericUnwindSpillSlots);
     
     unsigned stackmapID() const { return m_stackmapID; }
     
@@ -59,7 +63,7 @@ public:
 
 } } // namespace JSC::FTL
 
-#endif // ENABLE(FTL_JIT)
+#endif // ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #endif // FTLJSCall_h
 

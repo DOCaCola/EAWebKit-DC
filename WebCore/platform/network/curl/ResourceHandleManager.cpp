@@ -68,6 +68,7 @@
 #if USE(CF)
 #include <wtf/RetainPtr.h>
 #endif
+#include <wtf/Lock.h>
 #include <wtf/Threading.h>
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
@@ -77,7 +78,7 @@ namespace WebCore {
 
 const int selectTimeoutMS = 5;
 const double pollTimeSeconds = 0.05;
-const int maxRunningJobs = 5;
+const int maxRunningJobs = 128;
 
 static const bool ignoreSSLErrors = getenv("WEBKIT_IGNORE_SSL_ERRORS");
 
@@ -133,10 +134,11 @@ static char* cookieJarPath()
 #endif
 }
 
-static Mutex* sharedResourceMutex(curl_lock_data data) {
-    DEPRECATED_DEFINE_STATIC_LOCAL(Mutex, cookieMutex, ());
-    DEPRECATED_DEFINE_STATIC_LOCAL(Mutex, dnsMutex, ());
-    DEPRECATED_DEFINE_STATIC_LOCAL(Mutex, shareMutex, ());
+static Lock* sharedResourceMutex(curl_lock_data data)
+{
+    DEPRECATED_DEFINE_STATIC_LOCAL(Lock, cookieMutex, ());
+    DEPRECATED_DEFINE_STATIC_LOCAL(Lock, dnsMutex, ());
+    DEPRECATED_DEFINE_STATIC_LOCAL(Lock, shareMutex, ());
 
     switch (data) {
         case CURL_LOCK_DATA_COOKIE:
@@ -190,13 +192,13 @@ static void calculateWebTimingInformations(ResourceHandleInternal* d)
 // cache.
 static void curl_lock_callback(CURL* /* handle */, curl_lock_data data, curl_lock_access /* access */, void* /* userPtr */)
 {
-    if (Mutex* mutex = sharedResourceMutex(data))
+    if (Lock* mutex = sharedResourceMutex(data))
         mutex->lock();
 }
 
 static void curl_unlock_callback(CURL* /* handle */, curl_lock_data data, void* /* userPtr */)
 {
-    if (Mutex* mutex = sharedResourceMutex(data))
+    if (Lock* mutex = sharedResourceMutex(data))
         mutex->unlock();
 }
 
@@ -704,7 +706,7 @@ void ResourceHandleManager::downloadTimerCallback()
             fprintf(stderr, "Curl ERROR for url='%s', error: '%s'\n", url, curl_easy_strerror(msg->data.result));
 #endif
             if (d->client()) {
-                ResourceError resourceError(String(), msg->data.result, String(url), String(curl_easy_strerror(msg->data.result)));
+                ResourceError resourceError(String(), msg->data.result, URL(ParsedURLString, String(url)), String(curl_easy_strerror(msg->data.result)));
                 resourceError.setSSLErrors(d->m_sslErrors);
                 d->client()->didFail(job, resourceError);
                 CurlCacheManager::getInstance().didFail(*job);
@@ -918,7 +920,7 @@ void ResourceHandleManager::dispatchSynchronousJob(ResourceHandle* job)
     CURLcode ret =  curl_easy_perform(handle->m_handle);
 
     if (ret != CURLE_OK) {
-        ResourceError error(String(handle->m_url), ret, String(handle->m_url), String(curl_easy_strerror(ret)));
+        ResourceError error(String(handle->m_url), ret, kurl, String(curl_easy_strerror(ret)));
         error.setSSLErrors(handle->m_sslErrors);
         handle->client()->didFail(job, error);
     } else {

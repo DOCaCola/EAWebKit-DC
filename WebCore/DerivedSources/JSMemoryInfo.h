@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSMemoryInfo : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSMemoryInfo : public JSDOMWrapper<MemoryInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MemoryInfo> Base;
     static JSMemoryInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MemoryInfo>&& impl)
     {
-        JSMemoryInfo* ptr = new (NotNull, JSC::allocateCell<JSMemoryInfo>(globalObject->vm().heap)) JSMemoryInfo(structure, globalObject, WTF::move(impl));
+        JSMemoryInfo* ptr = new (NotNull, JSC::allocateCell<JSMemoryInfo>(globalObject->vm().heap)) JSMemoryInfo(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MemoryInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMemoryInfo();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MemoryInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MemoryInfo* m_impl;
 protected:
-    JSMemoryInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<MemoryInfo>&&);
+    JSMemoryInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<MemoryInfo>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MemoryInfo*)
 }
 
 WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MemoryInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MemoryInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MemoryInfo& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MemoryInfo*);
 
 
 } // namespace WebCore

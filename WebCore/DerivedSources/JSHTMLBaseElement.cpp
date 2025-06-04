@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLBaseElement.h"
 
-#include "HTMLBaseElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -65,50 +65,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLBaseElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLBaseElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLBaseElement> JSHTMLBaseElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLBaseElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLBaseElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLBaseElementConstructor>(vm.heap)) JSHTMLBaseElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLBaseElementConstructor::s_info = { "HTMLBaseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBaseElementConstructor) };
-
-JSHTMLBaseElementConstructor::JSHTMLBaseElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLBaseElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLBaseElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLBaseElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLBaseElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLBaseElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLBaseElementConstructor::s_info = { "HTMLBaseElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBaseElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLBaseElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBaseElementHref) },
-    { "target", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBaseElementTarget) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBaseElementHref) } },
+    { "target", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLBaseElementTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLBaseElementTarget) } },
 };
 
 const ClassInfo JSHTMLBaseElementPrototype::s_info = { "HTMLBaseElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBaseElementPrototype) };
@@ -121,7 +95,7 @@ void JSHTMLBaseElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLBaseElement::s_info = { "HTMLBaseElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLBaseElement) };
 
-JSHTMLBaseElement::JSHTMLBaseElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLBaseElement>&& impl)
+JSHTMLBaseElement::JSHTMLBaseElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLBaseElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,83 +110,83 @@ JSObject* JSHTMLBaseElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLBaseElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLBaseElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLBaseElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLBaseElement* castedThis = jsDynamicCast<JSHTMLBaseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLBaseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLBaseElement", "href");
-        return throwGetterTypeError(*exec, "HTMLBaseElement", "href");
+            return reportDeprecatedGetterError(*state, "HTMLBaseElement", "href");
+        return throwGetterTypeError(*state, "HTMLBaseElement", "href");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.href());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.href());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLBaseElementTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLBaseElementTarget(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLBaseElement* castedThis = jsDynamicCast<JSHTMLBaseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLBaseElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLBaseElement", "target");
-        return throwGetterTypeError(*exec, "HTMLBaseElement", "target");
+            return reportDeprecatedGetterError(*state, "HTMLBaseElement", "target");
+        return throwGetterTypeError(*state, "HTMLBaseElement", "target");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::targetAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::targetAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLBaseElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLBaseElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLBaseElementPrototype* domObject = jsDynamicCast<JSHTMLBaseElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLBaseElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLBaseElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLBaseElementHref(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLBaseElementHref(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLBaseElement* castedThis = jsDynamicCast<JSHTMLBaseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLBaseElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLBaseElement", "href");
+            reportDeprecatedSetterError(*state, "HTMLBaseElement", "href");
         else
-            throwSetterTypeError(*exec, "HTMLBaseElement", "href");
+            throwSetterTypeError(*state, "HTMLBaseElement", "href");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setHref(nativeValue);
 }
 
 
-void setJSHTMLBaseElementTarget(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLBaseElementTarget(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLBaseElement* castedThis = jsDynamicCast<JSHTMLBaseElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLBaseElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLBaseElement", "target");
+            reportDeprecatedSetterError(*state, "HTMLBaseElement", "target");
         else
-            throwSetterTypeError(*exec, "HTMLBaseElement", "target");
+            throwSetterTypeError(*state, "HTMLBaseElement", "target");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::targetAttr, nativeValue);
 }
@@ -220,7 +194,7 @@ void setJSHTMLBaseElementTarget(ExecState* exec, JSObject* baseObject, EncodedJS
 
 JSValue JSHTMLBaseElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLBaseElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLBaseElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

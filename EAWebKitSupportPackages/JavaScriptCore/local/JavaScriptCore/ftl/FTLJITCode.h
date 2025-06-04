@@ -28,8 +28,10 @@
 
 #if ENABLE(FTL_JIT)
 
+#include "B3OpaqueByproducts.h"
 #include "DFGCommonData.h"
 #include "FTLDataSection.h"
+#include "FTLLazySlowPath.h"
 #include "FTLOSRExit.h"
 #include "FTLStackMaps.h"
 #include "FTLUnwindInfo.h"
@@ -57,41 +59,64 @@ class JITCode : public JSC::JITCode {
 public:
     JITCode();
     ~JITCode();
-    
-    CodePtr addressForCall(VM&, ExecutableBase*, ArityCheckMode, RegisterPreservationMode) override;
+
+    CodePtr addressForCall(ArityCheckMode) override;
     void* executableAddressAtOffset(size_t offset) override;
     void* dataAddressAtOffset(size_t offset) override;
     unsigned offsetOf(void* pointerIntoCode) override;
     size_t size() override;
     bool contains(void*) override;
-    
+
+#if FTL_USES_B3
+    void initializeB3Code(CodeRef);
+    void initializeB3Byproducts(std::unique_ptr<B3::OpaqueByproducts>);
+#else
     void initializeExitThunks(CodeRef);
     void addHandle(PassRefPtr<ExecutableMemoryHandle>);
     void addDataSection(PassRefPtr<DataSection>);
-    void initializeArityCheckEntrypoint(CodeRef);
+#endif
     void initializeAddressForCall(CodePtr);
+    void initializeArityCheckEntrypoint(CodeRef);
     
     void validateReferences(const TrackedReferences&) override;
-    
+
+    RegisterSet liveRegistersToPreserveAtExceptionHandlingCallSite(CodeBlock*, CallSiteIndex) override;
+
+#if FTL_USES_B3
+    CodeRef b3Code() const { return m_b3Code; }
+#else
     const Vector<RefPtr<ExecutableMemoryHandle>>& handles() const { return m_handles; }
     const Vector<RefPtr<DataSection>>& dataSections() const { return m_dataSections; }
     
     CodePtr exitThunks();
+#endif
     
     JITCode* ftl() override;
     DFG::CommonData* dfgCommon() override;
+    static ptrdiff_t commonDataOffset() { return OBJECT_OFFSETOF(JITCode, common); }
     
     DFG::CommonData common;
     SegmentedVector<OSRExit, 8> osrExit;
+    SegmentedVector<OSRExitDescriptor, 8> osrExitDescriptors;
+#if !FTL_USES_B3
     StackMaps stackmaps;
-    UnwindInfo unwindInfo;
+#endif // !FTL_USES_B3
+    Vector<std::unique_ptr<LazySlowPath>> lazySlowPaths;
+    int32_t osrExitFromGenericUnwindStackSpillSlot;
     
 private:
+    CodePtr m_addressForCall;
+#if FTL_USES_B3
+    CodeRef m_b3Code;
+    std::unique_ptr<B3::OpaqueByproducts> m_b3Byproducts;
+#else
     Vector<RefPtr<DataSection>> m_dataSections;
     Vector<RefPtr<ExecutableMemoryHandle>> m_handles;
-    CodePtr m_addressForCall;
+#endif
     CodeRef m_arityCheckEntrypoint;
+#if !FTL_USES_B3
     CodeRef m_exitThunks;
+#endif
 };
 
 } } // namespace JSC::FTL

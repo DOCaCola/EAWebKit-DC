@@ -178,8 +178,8 @@ static void paintButton(ScrollPaintInfo& info, ScrollButtonType type, GraphicsCo
     else
         fillColor = ThemeEA::kScrollButtonNormalColor;
 
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);
-    context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+    context.setFillColor(fillColor);
+    context.setStrokeColor(ThemeEA::kScrollBorderColor);
     context.setStrokeStyle(SolidStroke);
     context.drawRect(r);
 
@@ -209,7 +209,7 @@ static void paintButton(ScrollPaintInfo& info, ScrollButtonType type, GraphicsCo
          pts[1].set((c.x() - wOffset), (c.y() + hOffset));         
          pts[2].set((c.x() - wOffset), (c.y() - hOffset));         
     }
-    context.setFillColor(ThemeEA::kScrollButtonArrowColor, ColorSpaceDeviceRGB);
+    context.setFillColor(ThemeEA::kScrollButtonArrowColor);
     context.drawConvexPolygon(3, pts, true);
 
     // Highlight edges
@@ -223,8 +223,8 @@ static void paintTrack(ScrollPaintInfo& info, GraphicsContext& context, const In
         return;
 
     Color fillColor = ThemeEA::kScrollTrackColor;
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);   
-    context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+    context.setFillColor(fillColor);   
+    context.setStrokeColor(ThemeEA::kScrollBorderColor);
     context.setStrokeStyle(SolidStroke);
     context.setStrokeThickness(ThemeEA::kScrollThemeBorderThickness);        // The Cairo draw rect hardcodes the stroke thickness to 1.0 but we set it here anyway for better compatibility
     context.drawRect(r);                                        
@@ -244,7 +244,7 @@ static void paintThumb(ScrollPaintInfo& info, GraphicsContext& context, const In
     else
         fillColor = ThemeEA::kScrollThumbNormalColor;
     
-    context.setFillColor(fillColor, ColorSpaceDeviceRGB);  
+    context.setFillColor(fillColor);  
     context.setStrokeStyle(NoStroke);
     context.drawRect(r);
 
@@ -278,11 +278,11 @@ static void paintThumb(ScrollPaintInfo& info, GraphicsContext& context, const In
     context.setStrokeThickness(1.0f);  // The grip is needs to be 1.0.  Large lines just don't work well.
     for(int i = 0; i < kGripCount; i++)
     {
-        context.setStrokeColor(Color::white, ColorSpaceDeviceRGB);
+        context.setStrokeColor(Color::white);
         context.drawLine(a, b);
         a.move(dx,dy);
         b.move(dx,dy);
-        context.setStrokeColor(ThemeEA::kScrollBorderColor, ColorSpaceDeviceRGB);
+        context.setStrokeColor(ThemeEA::kScrollBorderColor);
         context.drawLine(a, b);
         a.move(dx,dy);
         b.move(dx,dy);    
@@ -299,18 +299,14 @@ void ScrollbarThemeEA::staticFinalize()
     }    
 }
 
-ScrollbarTheme* ScrollbarTheme::nativeTheme()
+ScrollbarTheme& ScrollbarTheme::nativeTheme()
 {
     if(!spThemeEA)
     {
         spThemeEA = new ScrollbarThemeEA;
         EAW_ASSERT(spThemeEA);
     }
-    return spThemeEA;
-}
-
-ScrollbarThemeEA::~ScrollbarThemeEA()
-{
+    return *spThemeEA;
 }
 
 bool ScrollbarThemeEA::paint(Scrollbar& scrollbar, GraphicsContext& context, const IntRect& damageRect)
@@ -487,22 +483,22 @@ int ScrollbarThemeEA::trackLength(Scrollbar& scrollbar)
     return length;
 }
 
-void ScrollbarThemeEA::paintScrollCorner(ScrollView* scrollView, GraphicsContext* context, const IntRect& rect)
+void ScrollbarThemeEA::paintScrollCorner(ScrollView* scrollView, GraphicsContext& context, const IntRect& cornerRect)
 {
-    if (context->updatingControlTints()) {
-       scrollView->invalidateRect(rect);
+    if (context.updatingControlTints()) {
+       scrollView->invalidateRect(cornerRect);
        return;
     }
 
-    if(rect.isEmpty())
+    if(cornerRect.isEmpty())
         return;
 
     // Draw
-    context->save();
-    context->setFillColor(ThemeEA::kScrollCornerColor, ColorSpaceDeviceRGB);
-    context->setStrokeStyle(NoStroke);
-    context->drawRect(rect);
-    context->restore();
+    context.save();
+    context.setFillColor(ThemeEA::kScrollCornerColor);
+    context.setStrokeStyle(NoStroke);
+    context.drawRect(cornerRect);
+    context.restore();
 }
 
 

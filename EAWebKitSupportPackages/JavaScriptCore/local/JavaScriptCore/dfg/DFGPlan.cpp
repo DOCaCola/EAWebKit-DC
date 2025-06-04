@@ -38,6 +38,7 @@
 #include "DFGCleanUpPhase.h"
 #include "DFGConstantFoldingPhase.h"
 #include "DFGConstantHoistingPhase.h"
+#include "DFGCopyBarrierOptimizationPhase.h"
 #include "DFGCriticalEdgeBreakingPhase.h"
 #include "DFGDCEPhase.h"
 #include "DFGFailedFinalizer.h"
@@ -48,8 +49,10 @@
 #include "DFGInvalidationPointInjectionPhase.h"
 #include "DFGJITCompiler.h"
 #include "DFGLICMPhase.h"
+#include "DFGLiveCatchVariablePreservationPhase.h"
 #include "DFGLivenessAnalysisPhase.h"
 #include "DFGLoopPreHeaderCreationPhase.h"
+#include "DFGMaximalFlushInsertionPhase.h"
 #include "DFGMovHintRemovalPhase.h"
 #include "DFGOSRAvailabilityAnalysisPhase.h"
 #include "DFGOSREntrypointCreationPhase.h"
@@ -129,7 +132,7 @@ Profiler::CompilationKind profilerCompilationKindForMode(CompilationMode mode)
 
 } // anonymous namespace
 
-Plan::Plan(PassRefPtr<CodeBlock> passedCodeBlock, CodeBlock* profiledDFGCodeBlock,
+Plan::Plan(CodeBlock* passedCodeBlock, CodeBlock* profiledDFGCodeBlock,
     CompilationMode mode, unsigned osrEntryBytecodeIndex,
     const Operands<JSValue>& mustHandleValues)
     : vm(*passedCodeBlock->vm())
@@ -138,10 +141,10 @@ Plan::Plan(PassRefPtr<CodeBlock> passedCodeBlock, CodeBlock* profiledDFGCodeBloc
     , mode(mode)
     , osrEntryBytecodeIndex(osrEntryBytecodeIndex)
     , mustHandleValues(mustHandleValues)
-    , compilation(codeBlock->vm()->m_perBytecodeProfiler ? adoptRef(new Profiler::Compilation(codeBlock->vm()->m_perBytecodeProfiler->ensureBytecodesFor(codeBlock.get()), profilerCompilationKindForMode(mode))) : 0)
+    , compilation(codeBlock->vm()->m_perBytecodeProfiler ? adoptRef(new Profiler::Compilation(codeBlock->vm()->m_perBytecodeProfiler->ensureBytecodesFor(codeBlock), profilerCompilationKindForMode(mode))) : 0)
     , inlineCallFrames(adoptRef(new InlineCallFrameSet()))
-    , identifiers(codeBlock.get())
-    , weakReferences(codeBlock.get())
+    , identifiers(codeBlock)
+    , weakReferences(codeBlock)
     , willTryToTierUp(false)
     , stage(Preparing)
 {
@@ -241,6 +244,8 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         finalizer = std::make_unique<FailedFinalizer>(*this);
         return FailPath;
     }
+
+    codeBlock->setCalleeSaveRegisters(RegisterSet::dfgCalleeSaveRegisters());
     
     // By this point the DFG bytecode parser will have potentially mutated various tables
     // in the CodeBlock. This is a good time to perform an early shrink, which is more
@@ -255,6 +260,11 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         dataLog("Graph after parsing:\n");
         dfg.dump();
     }
+
+    performLiveCatchVariablePreservationPhase(dfg);
+
+    if (Options::useMaximalFlushInsertionPhase())
+        performMaximalFlushInsertion(dfg);
     
     performCPSRethreading(dfg);
     performUnification(dfg);
@@ -334,9 +344,9 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
     // If we're doing validation, then run some analyses, to give them an opportunity
     // to self-validate. Now is as good a time as any to do this.
     if (validationEnabled()) {
-        dfg.m_dominators.computeIfNecessary(dfg);
-        dfg.m_naturalLoops.computeIfNecessary(dfg);
-        dfg.m_prePostNumbering.computeIfNecessary(dfg);
+        dfg.ensureDominators();
+        dfg.ensureNaturalLoops();
+        dfg.ensurePrePostNumbering();
     }
 
     switch (mode) {
@@ -349,6 +359,8 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         performCleanUp(dfg);
         performCPSRethreading(dfg);
         performDCE(dfg);
+        if (Options::useCopyBarrierOptimization())
+            performCopyBarrierOptimization(dfg);
         performPhantomInsertion(dfg);
         performStackLayout(dfg);
         performVirtualRegisterAllocation(dfg);
@@ -374,14 +386,16 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         
         performCleanUp(dfg); // Reduce the graph size a bit.
         performCriticalEdgeBreaking(dfg);
-        performLoopPreHeaderCreation(dfg);
+        if (Options::createPreHeaders())
+            performLoopPreHeaderCreation(dfg);
         performCPSRethreading(dfg);
         performSSAConversion(dfg);
         performSSALowering(dfg);
         
         // Ideally, these would be run to fixpoint with the object allocation sinking phase.
         performArgumentsElimination(dfg);
-        performPutStackSinking(dfg);
+        if (Options::usePutStackSinking())
+            performPutStackSinking(dfg);
         
         performConstantHoisting(dfg);
         performGlobalCSE(dfg);
@@ -393,7 +407,7 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         performCleanUp(dfg); // Reduce the graph size a lot.
         changed = false;
         changed |= performStrengthReduction(dfg);
-        if (Options::enableObjectAllocationSinking()) {
+        if (Options::useObjectAllocationSinking()) {
             changed |= performCriticalEdgeBreaking(dfg);
             changed |= performObjectAllocationSinking(dfg);
         }
@@ -423,10 +437,12 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
         performLivenessAnalysis(dfg);
         performCFA(dfg);
         performGlobalStoreBarrierInsertion(dfg);
-        if (Options::enableMovHintRemoval())
+        if (Options::useMovHintRemoval())
             performMovHintRemoval(dfg);
         performCleanUp(dfg);
         performDCE(dfg); // We rely on this to kill dead code that won't be recognized as dead by LLVM.
+        if (Options::useCopyBarrierOptimization())
+            performCopyBarrierOptimization(dfg);
         performStackLayout(dfg);
         performLivenessAnalysis(dfg);
         performOSRAvailabilityAnalysis(dfg);
@@ -437,7 +453,7 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
             return FailPath;
         }
 
-        dumpAndVerifyGraph(dfg, "Graph just before FTL lowering:", shouldShowDisassembly(mode));
+        dumpAndVerifyGraph(dfg, "Graph just before FTL lowering:", shouldDumpDisassembly(mode));
         
         bool haveLLVM;
         Safepoint::Result safepointResult;
@@ -482,10 +498,12 @@ Plan::CompilationPath Plan::compileInThreadImpl(LongLivedState& longLivedState)
             return FTLPath;
         }
 
+#if !FTL_USES_B3
         if (state.jitCode->stackmaps.stackSize() > Options::llvmMaxStackSize()) {
             FTL::fail(state);
             return FTLPath;
         }
+#endif
 
         FTL::link(state);
         
@@ -525,7 +543,7 @@ bool Plan::isStillValid()
 
 void Plan::reallyAdd(CommonData* commonData)
 {
-    watchpoints.reallyAdd(codeBlock.get(), *commonData);
+    watchpoints.reallyAdd(codeBlock, *commonData);
     identifiers.reallyAdd(vm, commonData);
     weakReferences.reallyAdd(vm, commonData);
     transitions.reallyAdd(vm, commonData);
@@ -543,14 +561,14 @@ void Plan::notifyCompiled()
 
 void Plan::notifyReady()
 {
-    callback->compilationDidBecomeReadyAsynchronously(codeBlock.get());
+    callback->compilationDidBecomeReadyAsynchronously(codeBlock, profiledDFGCodeBlock);
     stage = Ready;
 }
 
 CompilationResult Plan::finalizeWithoutNotifyingCallback()
 {
     // We will establish new references from the code block to things. So, we need a barrier.
-    vm.heap.writeBarrier(codeBlock->ownerExecutable());
+    vm.heap.writeBarrier(codeBlock);
     
     if (!isStillValid())
         return CompilationInvalidated;
@@ -586,7 +604,7 @@ CompilationResult Plan::finalizeWithoutNotifyingCallback()
 
 void Plan::finalizeAndNotifyCallback()
 {
-    callback->compilationDidComplete(codeBlock.get(), finalizeWithoutNotifyingCallback());
+    callback->compilationDidComplete(codeBlock, profiledDFGCodeBlock, finalizeWithoutNotifyingCallback());
 }
 
 CompilationKey Plan::key()
@@ -594,18 +612,37 @@ CompilationKey Plan::key()
     return CompilationKey(codeBlock->alternative(), mode);
 }
 
-void Plan::checkLivenessAndVisitChildren(SlotVisitor& visitor, CodeBlockSet& codeBlocks)
+void Plan::rememberCodeBlocks()
+{
+    // Compilation writes lots of values to a CodeBlock without performing
+    // an explicit barrier. So, we need to be pessimistic and assume that
+    // all our CodeBlocks must be visited during GC.
+
+    Heap::heap(codeBlock)->writeBarrier(codeBlock);
+    Heap::heap(codeBlock)->writeBarrier(codeBlock->alternative());
+    if (profiledDFGCodeBlock)
+        Heap::heap(profiledDFGCodeBlock)->writeBarrier(profiledDFGCodeBlock);
+}
+
+void Plan::checkLivenessAndVisitChildren(SlotVisitor& visitor)
 {
     if (!isKnownToBeLiveDuringGC())
         return;
     
     for (unsigned i = mustHandleValues.size(); i--;)
         visitor.appendUnbarrieredValue(&mustHandleValues[i]);
-    
-    codeBlocks.mark(codeBlock->alternative());
-    codeBlocks.mark(codeBlock.get());
-    codeBlocks.mark(profiledDFGCodeBlock.get());
-    
+
+    visitor.appendUnbarrieredReadOnlyPointer(codeBlock);
+    visitor.appendUnbarrieredReadOnlyPointer(codeBlock->alternative());
+    visitor.appendUnbarrieredReadOnlyPointer(profiledDFGCodeBlock);
+
+    if (inlineCallFrames) {
+        for (auto* inlineCallFrame : *inlineCallFrames) {
+            ASSERT(inlineCallFrame->baselineCodeBlock.get());
+            visitor.appendUnbarrieredReadOnlyPointer(inlineCallFrame->baselineCodeBlock.get());
+        }
+    }
+
     weakReferences.visitChildren(visitor);
     transitions.visitChildren(visitor);
 }
@@ -616,9 +653,9 @@ bool Plan::isKnownToBeLiveDuringGC()
         return false;
     if (!Heap::isMarked(codeBlock->ownerExecutable()))
         return false;
-    if (!codeBlock->alternative()->isKnownToBeLiveDuringGC())
+    if (!Heap::isMarked(codeBlock->alternative()))
         return false;
-    if (!!profiledDFGCodeBlock && !profiledDFGCodeBlock->isKnownToBeLiveDuringGC())
+    if (!!profiledDFGCodeBlock && !Heap::isMarked(profiledDFGCodeBlock))
         return false;
     return true;
 }

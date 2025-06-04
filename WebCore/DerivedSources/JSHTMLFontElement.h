@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLFontElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFontElement>&& impl)
     {
-        JSHTMLFontElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFontElement>(globalObject->vm().heap)) JSHTMLFontElement(structure, globalObject, WTF::move(impl));
+        JSHTMLFontElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLFontElement>(globalObject->vm().heap)) JSHTMLFontElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLFontElement& impl() const
+    HTMLFontElement& wrapped() const
     {
-        return static_cast<HTMLFontElement&>(Base::impl());
+        return static_cast<HTMLFontElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLFontElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLFontElement>&&);
+    JSHTMLFontElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLFontElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

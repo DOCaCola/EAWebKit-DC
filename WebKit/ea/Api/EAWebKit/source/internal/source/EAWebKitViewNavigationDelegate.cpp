@@ -144,8 +144,8 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 			WebCore::IntPoint scrollOffset;
 			if(pFrameView)
 			{
- 				scrollOffset.setX(pFrameView->scrollOffset().width());
- 				scrollOffset.setY(pFrameView->scrollOffset().height());
+ 				scrollOffset.setX(pFrameView->scrollPosition().x());
+ 				scrollOffset.setY(pFrameView->scrollPosition().y());
 			}
 
 			// We figure out the start position(It is center of the currently hovered element almost all the time but can be slightly different 
@@ -214,7 +214,7 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 		// We don't call MoveMouseCursorToNode() with last cached node as there are edge cases where we may be holding an invalid node. Using a cached frame and checking against the
 		// current valid frames safeguards against that.
 
-		WebCore::IntSize scrollOffset;
+		WebCore::ScrollPosition scrollPosition;
 		WebCore::Frame* pFrame1	= mView->GetFrame();
 		while(pFrame1)
 		{
@@ -222,7 +222,7 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 			{
 				if(pFrame1->view())
 				{
-					scrollOffset = pFrame1->view()->scrollOffset();//We read scroll offset here as it could have changed in the switch statement above.
+					scrollPosition = pFrame1->view()->scrollPosition();//We read scroll offset here as it could have changed in the switch statement above.
 					break;
 				}
 			}
@@ -230,8 +230,8 @@ bool ViewNavigationDelegate::JumpToNearestElement(EA::WebKit::JumpDirection dire
 		}
 		
 		int targetcursorPosAfterScrollX, targetcursorPosAfterScrollY;
-		targetcursorPosAfterScrollX = mBestNodeX + mBestNodeWidth / 2 - scrollOffset.width();
-		targetcursorPosAfterScrollY = mBestNodeY + mBestNodeHeight/ 2 - scrollOffset.height();
+		targetcursorPosAfterScrollX = mBestNodeX + mBestNodeWidth / 2 - scrollPosition.x();
+		targetcursorPosAfterScrollY = mBestNodeY + mBestNodeHeight/ 2 - scrollPosition.y();
 
 		EA::WebKit::MouseMoveEvent moveEvent;
 		memset( &moveEvent, 0, sizeof(moveEvent) );
@@ -284,7 +284,7 @@ void ViewNavigationDelegate::MoveMouseCursorToNode(WebCore::Node* node, bool scr
 		{
 			//Use move here instead of setX/setY as it results in 1 call instead of two and takes advantage that ctor sets x,y to 0.
 			frameOffset.move(pFrameView->x(), pFrameView->y());
-			scrollOffset.move(pFrameView->scrollOffset().width(), pFrameView->scrollOffset().height());
+			scrollOffset.move(pFrameView->scrollPosition().x(), pFrameView->scrollPosition().y());
 		}
 
 		int width = mView->GetSize().mWidth;
@@ -323,8 +323,8 @@ void ViewNavigationDelegate::MoveMouseCursorToNode(WebCore::Node* node, bool scr
 			// Read the scroll offset again as it may have changed.
 			if(pFrameView) 
 			{
-				scrollOffset.setX(pFrameView->scrollOffset().width());
-				scrollOffset.setY(pFrameView->scrollOffset().height());
+				scrollOffset.setX(pFrameView->scrollPosition().x());
+				scrollOffset.setY(pFrameView->scrollPosition().y());
 			}
 		}
 

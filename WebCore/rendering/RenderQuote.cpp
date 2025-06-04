@@ -349,9 +349,9 @@ void RenderQuote::updateText()
     m_text = text;
     // Start from the end of the child list because, if we've had a first-letter
     // renderer inserted then the remaining text will be at the end.
-	if (auto* renderText = quoteTextRenderer(lastChild())) {
-		renderText->setContentString(m_text);
-		renderText->dirtyLineBoxes(false);
+    if (auto* renderText = quoteTextRenderer(lastChild())) {
+        renderText->setContentString(m_text);
+        renderText->dirtyLineBoxes(false);
         return;
     }
     addChild(new RenderTextFragment(document(), m_text));

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSXMLHttpRequestUpload : public JSDOMWrapper {
+class JSXMLHttpRequestUpload : public JSDOMWrapper<XMLHttpRequestUpload> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XMLHttpRequestUpload> Base;
     static JSXMLHttpRequestUpload* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestUpload>&& impl)
     {
-        JSXMLHttpRequestUpload* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestUpload>(globalObject->vm().heap)) JSXMLHttpRequestUpload(structure, globalObject, WTF::move(impl));
+        JSXMLHttpRequestUpload* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestUpload>(globalObject->vm().heap)) JSXMLHttpRequestUpload(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -40,9 +40,7 @@ public:
     static JSC::JSObject* createPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static XMLHttpRequestUpload* toWrapped(JSC::JSValue);
-    static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSXMLHttpRequestUpload();
 
     DECLARE_INFO;
 
@@ -54,15 +52,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    XMLHttpRequestUpload& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XMLHttpRequestUpload* m_impl;
-public:
-    static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXMLHttpRequestUpload(JSC::Structure*, JSDOMGlobalObject*, Ref<XMLHttpRequestUpload>&&);
+    JSXMLHttpRequestUpload(JSC::Structure*, JSDOMGlobalObject&, Ref<XMLHttpRequestUpload>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XMLHttpRequestUpload
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestUpload*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XMLHttpRequestUpload& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XMLHttpRequestUpload*);
 
 
 } // namespace WebCore

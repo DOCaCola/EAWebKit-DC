@@ -22,7 +22,7 @@
 #include "JSSVGPathSegLinetoRel.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSegLinetoRel.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -63,50 +63,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegLinetoRelConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegLinetoRelConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPathSegLinetoRel> JSSVGPathSegLinetoRelConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegLinetoRelConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegLinetoRelConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoRelConstructor>(vm.heap)) JSSVGPathSegLinetoRelConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathSegLinetoRelConstructor::s_info = { "SVGPathSegLinetoRelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoRelConstructor) };
-
-JSSVGPathSegLinetoRelConstructor::JSSVGPathSegLinetoRelConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPathSegLinetoRelConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPathSegLinetoRelConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegLinetoRel::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegLinetoRel::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegLinetoRel"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegLinetoRelConstructor::s_info = { "SVGPathSegLinetoRelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoRelConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegLinetoRelPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoRelX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoRelY) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoRelX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegLinetoRelY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGPathSegLinetoRelY) } },
 };
 
 const ClassInfo JSSVGPathSegLinetoRelPrototype::s_info = { "SVGPathSegLinetoRelPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoRelPrototype) };
@@ -119,7 +93,7 @@ void JSSVGPathSegLinetoRelPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSegLinetoRel::s_info = { "SVGPathSegLinetoRel", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegLinetoRel) };
 
-JSSVGPathSegLinetoRel::JSSVGPathSegLinetoRel(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoRel>&& impl)
+JSSVGPathSegLinetoRel::JSSVGPathSegLinetoRel(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegLinetoRel>&& impl)
     : JSSVGPathSeg(structure, globalObject, WTF::move(impl))
 {
 }
@@ -134,83 +108,83 @@ JSObject* JSSVGPathSegLinetoRel::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSSVGPathSegLinetoRel>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathSegLinetoRelX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoRelX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegLinetoRel* castedThis = jsDynamicCast<JSSVGPathSegLinetoRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegLinetoRel", "x");
-        return throwGetterTypeError(*exec, "SVGPathSegLinetoRel", "x");
+            return reportDeprecatedGetterError(*state, "SVGPathSegLinetoRel", "x");
+        return throwGetterTypeError(*state, "SVGPathSegLinetoRel", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegLinetoRelY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoRelY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPathSegLinetoRel* castedThis = jsDynamicCast<JSSVGPathSegLinetoRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoRelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPathSegLinetoRel", "y");
-        return throwGetterTypeError(*exec, "SVGPathSegLinetoRel", "y");
+            return reportDeprecatedGetterError(*state, "SVGPathSegLinetoRel", "y");
+        return throwGetterTypeError(*state, "SVGPathSegLinetoRel", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPathSegLinetoRelConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPathSegLinetoRelConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPathSegLinetoRelPrototype* domObject = jsDynamicCast<JSSVGPathSegLinetoRelPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegLinetoRel::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPathSegLinetoRel::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGPathSegLinetoRelX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegLinetoRelX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegLinetoRel* castedThis = jsDynamicCast<JSSVGPathSegLinetoRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegLinetoRel", "x");
+            reportDeprecatedSetterError(*state, "SVGPathSegLinetoRel", "x");
         else
-            throwSetterTypeError(*exec, "SVGPathSegLinetoRel", "x");
+            throwSetterTypeError(*state, "SVGPathSegLinetoRel", "x");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setX(nativeValue);
 }
 
 
-void setJSSVGPathSegLinetoRelY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGPathSegLinetoRelY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGPathSegLinetoRel* castedThis = jsDynamicCast<JSSVGPathSegLinetoRel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPathSegLinetoRelPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGPathSegLinetoRel", "y");
+            reportDeprecatedSetterError(*state, "SVGPathSegLinetoRel", "y");
         else
-            throwSetterTypeError(*exec, "SVGPathSegLinetoRel", "y");
+            throwSetterTypeError(*state, "SVGPathSegLinetoRel", "y");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setY(nativeValue);
 }
@@ -218,7 +192,7 @@ void setJSSVGPathSegLinetoRelY(ExecState* exec, JSObject* baseObject, EncodedJSV
 
 JSValue JSSVGPathSegLinetoRel::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPathSegLinetoRelConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegLinetoRelConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -28,7 +28,27 @@
 
 #if ENABLE(INDEXED_DATABASE)
 
+#include "IDBKey.h"
+
 namespace WebCore {
+
+IDBKeyRangeData::IDBKeyRangeData(IDBKey* key)
+    : isNull(!key)
+    , lowerKey(key)
+    , upperKey(key)
+    , lowerOpen(false)
+    , upperOpen(false)
+{
+}
+
+IDBKeyRangeData::IDBKeyRangeData(const IDBKeyData& keyData)
+    : isNull(keyData.isNull())
+    , lowerKey(keyData)
+    , upperKey(keyData)
+    , lowerOpen(false)
+    , upperOpen(false)
+{
+}
 
 IDBKeyRangeData IDBKeyRangeData::isolatedCopy() const
 {
@@ -53,11 +73,52 @@ PassRefPtr<IDBKeyRange> IDBKeyRangeData::maybeCreateIDBKeyRange() const
 
 bool IDBKeyRangeData::isExactlyOneKey() const
 {
-    if (isNull || lowerOpen || upperOpen)
+    if (isNull || lowerOpen || upperOpen || !upperKey.isValid() || !lowerKey.isValid())
         return false;
 
     return !lowerKey.compare(upperKey);
 }
+
+bool IDBKeyRangeData::containsKey(const IDBKeyData& key) const
+{
+    if (lowerKey.isValid()) {
+        auto compare = lowerKey.compare(key);
+        if (compare > 0)
+            return false;
+        if (lowerOpen && !compare)
+            return false;
+    }
+    if (upperKey.isValid()) {
+        auto compare = upperKey.compare(key);
+        if (compare < 0)
+            return false;
+        if (upperOpen && !compare)
+            return false;
+    }
+
+    return true;
+}
+
+bool IDBKeyRangeData::isValid() const
+{
+    if (isNull)
+        return false;
+
+    if (!lowerKey.isValid() && !lowerKey.isNull())
+        return false;
+
+    if (!upperKey.isValid() && !upperKey.isNull())
+        return false;
+
+    return true;
+}
+
+#ifndef NDEBUG
+String IDBKeyRangeData::loggingString() const
+{
+    return makeString(lowerOpen ? "( " : "[ ", lowerKey.loggingString(), ", ", upperKey.loggingString(), upperOpen ? " )" : " ]");
+}
+#endif
 
 } // namespace WebCore
 

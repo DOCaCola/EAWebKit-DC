@@ -21,15 +21,20 @@
 #include "config.h"
 #include "JSCharacterData.h"
 
-#include "CharacterData.h"
 #include "Element.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSElement.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
+
+#if ENABLE(SHADOW_DOM)
+#include "HTMLSlotElement.h"
+#include "JSHTMLSlotElement.h"
+#endif
 
 using namespace JSC;
 
@@ -54,6 +59,9 @@ void setJSCharacterDataData(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue
 JSC::EncodedJSValue jsCharacterDataLength(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsCharacterDataPreviousElementSibling(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsCharacterDataNextElementSibling(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+#if ENABLE(SHADOW_DOM)
+JSC::EncodedJSValue jsCharacterDataAssignedSlot(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+#endif
 JSC::EncodedJSValue jsCharacterDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSCharacterDataPrototype : public JSC::JSNonFinalObject {
@@ -81,61 +89,40 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCharacterDataConstructor : public DOMConstructorObject {
-private:
-    JSCharacterDataConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCharacterData> JSCharacterDataConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCharacterDataConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCharacterDataConstructor* ptr = new (NotNull, JSC::allocateCell<JSCharacterDataConstructor>(vm.heap)) JSCharacterDataConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCharacterDataConstructor::s_info = { "CharacterDataConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCharacterDataConstructor) };
-
-JSCharacterDataConstructor::JSCharacterDataConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCharacterDataConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCharacterDataConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCharacterData::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCharacterData::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CharacterData"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCharacterDataConstructor::s_info = { "CharacterDataConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCharacterDataConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCharacterDataPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "data", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCharacterDataData) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "previousElementSibling", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataPreviousElementSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "nextElementSibling", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataNextElementSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "substringData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionSubstringData), (intptr_t) (0) },
-    { "appendData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionAppendData), (intptr_t) (0) },
-    { "insertData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionInsertData), (intptr_t) (0) },
-    { "deleteData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionDeleteData), (intptr_t) (0) },
-    { "replaceData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionReplaceData), (intptr_t) (0) },
-    { "before", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionBefore), (intptr_t) (1) },
-    { "after", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionAfter), (intptr_t) (1) },
-    { "replaceWith", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionReplaceWith), (intptr_t) (1) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionRemove), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "data", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataData), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCharacterDataData) } },
+    { "length", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "previousElementSibling", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataPreviousElementSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "nextElementSibling", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataNextElementSibling), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+#if ENABLE(SHADOW_DOM)
+    { "assignedSlot", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCharacterDataAssignedSlot), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+    { "substringData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionSubstringData), (intptr_t) (2) } },
+    { "appendData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionAppendData), (intptr_t) (1) } },
+    { "insertData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionInsertData), (intptr_t) (2) } },
+    { "deleteData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionDeleteData), (intptr_t) (2) } },
+    { "replaceData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionReplaceData), (intptr_t) (3) } },
+    { "before", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionBefore), (intptr_t) (0) } },
+    { "after", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionAfter), (intptr_t) (0) } },
+    { "replaceWith", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionReplaceWith), (intptr_t) (0) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCharacterDataPrototypeFunctionRemove), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCharacterDataPrototype::s_info = { "CharacterDataPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCharacterDataPrototype) };
@@ -148,7 +135,7 @@ void JSCharacterDataPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCharacterData::s_info = { "CharacterData", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCharacterData) };
 
-JSCharacterData::JSCharacterData(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CharacterData>&& impl)
+JSCharacterData::JSCharacterData(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CharacterData>&& impl)
     : JSNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -163,279 +150,278 @@ JSObject* JSCharacterData::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCharacterData>(vm, globalObject);
 }
 
-EncodedJSValue jsCharacterDataData(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCharacterDataData(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCharacterDataPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CharacterData", "data");
-        return throwGetterTypeError(*exec, "CharacterData", "data");
+            return reportDeprecatedGetterError(*state, "CharacterData", "data");
+        return throwGetterTypeError(*state, "CharacterData", "data");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.data());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.data());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCharacterDataLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCharacterDataLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCharacterDataPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CharacterData", "length");
-        return throwGetterTypeError(*exec, "CharacterData", "length");
+            return reportDeprecatedGetterError(*state, "CharacterData", "length");
+        return throwGetterTypeError(*state, "CharacterData", "length");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCharacterDataPreviousElementSibling(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCharacterDataPreviousElementSibling(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCharacterDataPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CharacterData", "previousElementSibling");
-        return throwGetterTypeError(*exec, "CharacterData", "previousElementSibling");
+            return reportDeprecatedGetterError(*state, "CharacterData", "previousElementSibling");
+        return throwGetterTypeError(*state, "CharacterData", "previousElementSibling");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.previousElementSibling()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.previousElementSibling()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCharacterDataNextElementSibling(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCharacterDataNextElementSibling(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCharacterDataPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CharacterData", "nextElementSibling");
-        return throwGetterTypeError(*exec, "CharacterData", "nextElementSibling");
+            return reportDeprecatedGetterError(*state, "CharacterData", "nextElementSibling");
+        return throwGetterTypeError(*state, "CharacterData", "nextElementSibling");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nextElementSibling()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.nextElementSibling()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCharacterDataConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+#if ENABLE(SHADOW_DOM)
+EncodedJSValue jsCharacterDataAssignedSlot(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSCharacterDataPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "CharacterData", "assignedSlot");
+        return throwGetterTypeError(*state, "CharacterData", "assignedSlot");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.assignedSlot()));
+    return JSValue::encode(result);
+}
+
+#endif
+
+EncodedJSValue jsCharacterDataConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCharacterDataPrototype* domObject = jsDynamicCast<JSCharacterDataPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCharacterData::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCharacterData::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCharacterDataData(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCharacterDataData(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCharacterDataPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CharacterData", "data");
+            reportDeprecatedSetterError(*state, "CharacterData", "data");
         else
-            throwSetterTypeError(*exec, "CharacterData", "data");
+            throwSetterTypeError(*state, "CharacterData", "data");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setData(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSCharacterData::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCharacterDataConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCharacterDataConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionSubstringData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionSubstringData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "substringData");
+        return throwThisTypeError(*state, "CharacterData", "substringData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int offset = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (offset < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
+    unsigned offset = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
+    unsigned length = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int length = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (length < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.substringData(offset, length, ec));
+    JSValue result = jsStringOrNull(state, impl.substringData(offset, length, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionAppendData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionAppendData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "appendData");
+        return throwThisTypeError(*state, "CharacterData", "appendData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    String data = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String data = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    impl.appendData(data, ec);
-    setDOMException(exec, ec);
+    impl.appendData(data);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionInsertData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionInsertData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "insertData");
+        return throwThisTypeError(*state, "CharacterData", "insertData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int offset = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (offset < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
+    unsigned offset = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String data = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String data = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.insertData(offset, data, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionDeleteData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionDeleteData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "deleteData");
+        return throwThisTypeError(*state, "CharacterData", "deleteData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int offset = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (offset < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
+    unsigned offset = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    int length = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (length < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
+    unsigned length = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.deleteData(offset, length, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionReplaceData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionReplaceData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "replaceData");
+        return throwThisTypeError(*state, "CharacterData", "replaceData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    int offset = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (offset < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
+    unsigned offset = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
+    unsigned length = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int length = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (length < 0) {
-        setDOMException(exec, INDEX_SIZE_ERR);
-        return JSValue::encode(jsUndefined());
-    }
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    String data = exec->argument(2).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String data = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.replaceData(offset, length, data, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionBefore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionBefore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "before");
+        return throwThisTypeError(*state, "CharacterData", "before");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    return JSValue::encode(castedThis->before(exec));
+    return JSValue::encode(castedThis->before(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionAfter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionAfter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "after");
+        return throwThisTypeError(*state, "CharacterData", "after");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    return JSValue::encode(castedThis->after(exec));
+    return JSValue::encode(castedThis->after(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionReplaceWith(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionReplaceWith(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "replaceWith");
+        return throwThisTypeError(*state, "CharacterData", "replaceWith");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    return JSValue::encode(castedThis->replaceWith(exec));
+    return JSValue::encode(castedThis->replaceWith(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionRemove(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCharacterDataPrototypeFunctionRemove(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCharacterData* castedThis = jsDynamicCast<JSCharacterData*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CharacterData", "remove");
+        return throwThisTypeError(*state, "CharacterData", "remove");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCharacterData::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.remove(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 

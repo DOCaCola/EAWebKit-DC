@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSBeforeUnloadEvent.h"
 
-#include "BeforeUnloadEvent.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -62,49 +62,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSBeforeUnloadEventConstructor : public DOMConstructorObject {
-private:
-    JSBeforeUnloadEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSBeforeUnloadEvent> JSBeforeUnloadEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSBeforeUnloadEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSBeforeUnloadEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSBeforeUnloadEventConstructor>(vm.heap)) JSBeforeUnloadEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSBeforeUnloadEventConstructor::s_info = { "BeforeUnloadEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeUnloadEventConstructor) };
-
-JSBeforeUnloadEventConstructor::JSBeforeUnloadEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSBeforeUnloadEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSBeforeUnloadEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSBeforeUnloadEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSBeforeUnloadEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("BeforeUnloadEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSBeforeUnloadEventConstructor::s_info = { "BeforeUnloadEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeUnloadEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSBeforeUnloadEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeUnloadEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "returnValue", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeUnloadEventReturnValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSBeforeUnloadEventReturnValue) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeUnloadEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "returnValue", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsBeforeUnloadEventReturnValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSBeforeUnloadEventReturnValue) } },
 };
 
 const ClassInfo JSBeforeUnloadEventPrototype::s_info = { "BeforeUnloadEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeUnloadEventPrototype) };
@@ -117,7 +91,7 @@ void JSBeforeUnloadEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSBeforeUnloadEvent::s_info = { "BeforeUnloadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSBeforeUnloadEvent) };
 
-JSBeforeUnloadEvent::JSBeforeUnloadEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<BeforeUnloadEvent>&& impl)
+JSBeforeUnloadEvent::JSBeforeUnloadEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<BeforeUnloadEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -132,46 +106,46 @@ JSObject* JSBeforeUnloadEvent::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSBeforeUnloadEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsBeforeUnloadEventReturnValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsBeforeUnloadEventReturnValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSBeforeUnloadEvent* castedThis = jsDynamicCast<JSBeforeUnloadEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSBeforeUnloadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "BeforeUnloadEvent", "returnValue");
-        return throwGetterTypeError(*exec, "BeforeUnloadEvent", "returnValue");
+            return reportDeprecatedGetterError(*state, "BeforeUnloadEvent", "returnValue");
+        return throwGetterTypeError(*state, "BeforeUnloadEvent", "returnValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.returnValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.returnValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsBeforeUnloadEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsBeforeUnloadEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSBeforeUnloadEventPrototype* domObject = jsDynamicCast<JSBeforeUnloadEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSBeforeUnloadEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSBeforeUnloadEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSBeforeUnloadEventReturnValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSBeforeUnloadEventReturnValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSBeforeUnloadEvent* castedThis = jsDynamicCast<JSBeforeUnloadEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSBeforeUnloadEventPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "BeforeUnloadEvent", "returnValue");
+            reportDeprecatedSetterError(*state, "BeforeUnloadEvent", "returnValue");
         else
-            throwSetterTypeError(*exec, "BeforeUnloadEvent", "returnValue");
+            throwSetterTypeError(*state, "BeforeUnloadEvent", "returnValue");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setReturnValue(nativeValue);
 }
@@ -179,7 +153,7 @@ void setJSBeforeUnloadEventReturnValue(ExecState* exec, JSObject* baseObject, En
 
 JSValue JSBeforeUnloadEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSBeforeUnloadEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSBeforeUnloadEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

@@ -45,7 +45,6 @@
 #include "HTMLParserIdioms.h"
 #include "HTMLProgressElement.h"
 #include "HTMLStyleElement.h"
-#include "InsertionPoint.h"
 #include "InspectorInstrumentation.h"
 #include "NodeRenderStyle.h"
 #include "Page.h"
@@ -240,7 +239,7 @@ SelectorChecker::MatchResult SelectorChecker::matchRecursively(const CheckingCon
                 if (context.element->shadowPseudoId() != context.selector->value())
                     return MatchResult::fails(Match::SelectorFailsLocally);
 
-                if (context.selector->pseudoElementType() == CSSSelector::PseudoElementWebKitCustom && root->type() != ShadowRoot::UserAgentShadowRoot)
+                if (context.selector->pseudoElementType() == CSSSelector::PseudoElementWebKitCustom && root->type() != ShadowRoot::Type::UserAgent)
                     return MatchResult::fails(Match::SelectorFailsLocally);
             } else
                 return MatchResult::fails(Match::SelectorFailsLocally);
@@ -353,7 +352,7 @@ SelectorChecker::MatchResult SelectorChecker::matchRecursively(const CheckingCon
         nextContext.elementStyle = nullptr;
         for (; nextContext.element; nextContext.element = nextContext.element->previousElementSibling()) {
             if (context.resolvingMode == Mode::ResolvingStyle)
-                context.element->setAffectsNextSiblingElementStyle();
+                nextContext.element->setAffectsNextSiblingElementStyle();
 
             PseudoIdSet ignoreDynamicPseudo;
             unsigned indirectAdjacentSpecificity = 0;
@@ -904,7 +903,7 @@ bool SelectorChecker::checkOne(const CheckingContextWithStatus& context, PseudoI
             }
             break;
         case CSSSelector::PseudoClassAutofill:
-            return isAutofilled(element);
+            return isAutofilled(*element);
         case CSSSelector::PseudoClassAnyLink:
         case CSSSelector::PseudoClassAnyLinkDeprecated:
         case CSSSelector::PseudoClassLink:
@@ -973,7 +972,7 @@ bool SelectorChecker::checkOne(const CheckingContextWithStatus& context, PseudoI
         case CSSSelector::PseudoClassInvalid:
             return isInvalid(element);
         case CSSSelector::PseudoClassChecked:
-            return isChecked(element);
+            return isChecked(*element);
         case CSSSelector::PseudoClassIndeterminate:
             return shouldAppearIndeterminate(element);
         case CSSSelector::PseudoClassRoot:
@@ -1013,7 +1012,11 @@ bool SelectorChecker::checkOne(const CheckingContextWithStatus& context, PseudoI
                     return true;
                 break;
             }
-
+#if ENABLE(SHADOW_DOM)
+        case CSSSelector::PseudoClassHost:
+            // :host matches based on context. Cases that reach selector checker don't match.
+            return false;
+#endif
         case CSSSelector::PseudoClassWindowInactive:
             return isWindowInactive(element);
 

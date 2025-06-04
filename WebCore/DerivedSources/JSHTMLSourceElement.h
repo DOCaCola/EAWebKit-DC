@@ -21,8 +21,6 @@
 #ifndef JSHTMLSourceElement_h
 #define JSHTMLSourceElement_h
 
-#if ENABLE(VIDEO)
-
 #include "HTMLSourceElement.h"
 #include "JSHTMLElement.h"
 
@@ -33,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLSourceElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSourceElement>&& impl)
     {
-        JSHTMLSourceElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSourceElement>(globalObject->vm().heap)) JSHTMLSourceElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSourceElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSourceElement>(globalObject->vm().heap)) JSHTMLSourceElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLSourceElement& impl() const
+    HTMLSourceElement& wrapped() const
     {
-        return static_cast<HTMLSourceElement&>(Base::impl());
+        return static_cast<HTMLSourceElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLSourceElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSourceElement>&&);
+    JSHTMLSourceElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSourceElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -67,7 +65,5 @@ protected:
 
 
 } // namespace WebCore
-
-#endif // ENABLE(VIDEO)
 
 #endif

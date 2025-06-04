@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFETurbulenceElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFETurbulenceElement>&& impl)
     {
-        JSSVGFETurbulenceElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETurbulenceElement>(globalObject->vm().heap)) JSSVGFETurbulenceElement(structure, globalObject, WTF::move(impl));
+        JSSVGFETurbulenceElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFETurbulenceElement>(globalObject->vm().heap)) JSSVGFETurbulenceElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFETurbulenceElement& impl() const
+    SVGFETurbulenceElement& wrapped() const
     {
-        return static_cast<SVGFETurbulenceElement&>(Base::impl());
+        return static_cast<SVGFETurbulenceElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFETurbulenceElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFETurbulenceElement>&&);
+    JSSVGFETurbulenceElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFETurbulenceElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

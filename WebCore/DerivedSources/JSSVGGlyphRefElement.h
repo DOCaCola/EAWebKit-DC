@@ -34,7 +34,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGGlyphRefElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGGlyphRefElement>&& impl)
     {
-        JSSVGGlyphRefElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphRefElement>(globalObject->vm().heap)) JSSVGGlyphRefElement(structure, globalObject, WTF::move(impl));
+        JSSVGGlyphRefElement* ptr = new (NotNull, JSC::allocateCell<JSSVGGlyphRefElement>(globalObject->vm().heap)) JSSVGGlyphRefElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGGlyphRefElement& impl() const
+    SVGGlyphRefElement& wrapped() const
     {
-        return static_cast<SVGGlyphRefElement&>(Base::impl());
+        return static_cast<SVGGlyphRefElement&>(Base::wrapped());
     }
 protected:
-    JSSVGGlyphRefElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGGlyphRefElement>&&);
+    JSSVGGlyphRefElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGGlyphRefElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLSpanElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLSpanElement>&& impl)
     {
-        JSHTMLSpanElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSpanElement>(globalObject->vm().heap)) JSHTMLSpanElement(structure, globalObject, WTF::move(impl));
+        JSHTMLSpanElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLSpanElement>(globalObject->vm().heap)) JSHTMLSpanElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLSpanElement& impl() const
+    HTMLSpanElement& wrapped() const
     {
-        return static_cast<HTMLSpanElement&>(Base::impl());
+        return static_cast<HTMLSpanElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLSpanElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLSpanElement>&&);
+    JSHTMLSpanElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLSpanElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

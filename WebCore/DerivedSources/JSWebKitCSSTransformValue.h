@@ -31,7 +31,7 @@ public:
     typedef JSCSSValueList Base;
     static JSWebKitCSSTransformValue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSTransformValue>&& impl)
     {
-        JSWebKitCSSTransformValue* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSTransformValue>(globalObject->vm().heap)) JSWebKitCSSTransformValue(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSTransformValue* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSTransformValue>(globalObject->vm().heap)) JSWebKitCSSTransformValue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSTransformValue& impl() const
+    WebKitCSSTransformValue& wrapped() const
     {
-        return static_cast<WebKitCSSTransformValue&>(Base::impl());
+        return static_cast<WebKitCSSTransformValue&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSWebKitCSSTransformValue(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSTransformValue>&&);
+    JSWebKitCSSTransformValue(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSTransformValue>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -33,7 +33,7 @@ public:
     typedef JSUIEvent Base;
     static JSFocusEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FocusEvent>&& impl)
     {
-        JSFocusEvent* ptr = new (NotNull, JSC::allocateCell<JSFocusEvent>(globalObject->vm().heap)) JSFocusEvent(structure, globalObject, WTF::move(impl));
+        JSFocusEvent* ptr = new (NotNull, JSC::allocateCell<JSFocusEvent>(globalObject->vm().heap)) JSFocusEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FocusEvent& impl() const
+    FocusEvent& wrapped() const
     {
-        return static_cast<FocusEvent&>(Base::impl());
+        return static_cast<FocusEvent&>(Base::wrapped());
     }
 protected:
-    JSFocusEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<FocusEvent>&&);
+    JSFocusEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<FocusEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

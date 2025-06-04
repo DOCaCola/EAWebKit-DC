@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSFileReaderSync : public JSDOMWrapper {
+class JSFileReaderSync : public JSDOMWrapper<FileReaderSync> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FileReaderSync> Base;
     static JSFileReaderSync* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FileReaderSync>&& impl)
     {
-        JSFileReaderSync* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSync>(globalObject->vm().heap)) JSFileReaderSync(structure, globalObject, WTF::move(impl));
+        JSFileReaderSync* ptr = new (NotNull, JSC::allocateCell<JSFileReaderSync>(globalObject->vm().heap)) JSFileReaderSync(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static FileReaderSync* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSFileReaderSync();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    FileReaderSync& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FileReaderSync* m_impl;
 protected:
-    JSFileReaderSync(JSC::Structure*, JSDOMGlobalObject*, Ref<FileReaderSync>&&);
+    JSFileReaderSync(JSC::Structure*, JSDOMGlobalObject&, Ref<FileReaderSync>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FileReaderSync*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FileReaderSync*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FileReaderSync& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FileReaderSync& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FileReaderSync*);
 
 
 } // namespace WebCore

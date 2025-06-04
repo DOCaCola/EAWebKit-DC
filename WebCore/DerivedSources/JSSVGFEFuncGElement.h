@@ -32,7 +32,7 @@ public:
     typedef JSSVGComponentTransferFunctionElement Base;
     static JSSVGFEFuncGElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEFuncGElement>&& impl)
     {
-        JSSVGFEFuncGElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFuncGElement>(globalObject->vm().heap)) JSSVGFEFuncGElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEFuncGElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEFuncGElement>(globalObject->vm().heap)) JSSVGFEFuncGElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEFuncGElement& impl() const
+    SVGFEFuncGElement& wrapped() const
     {
-        return static_cast<SVGFEFuncGElement&>(Base::impl());
+        return static_cast<SVGFEFuncGElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEFuncGElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEFuncGElement>&&);
+    JSSVGFEFuncGElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEFuncGElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

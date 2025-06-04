@@ -25,7 +25,7 @@
 #include "JSWebGLProgram.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLProgram.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLProgramConstructor : public DOMConstructorObject {
-private:
-    JSWebGLProgramConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLProgram> JSWebGLProgramConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLProgramConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLProgramConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLProgramConstructor>(vm.heap)) JSWebGLProgramConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLProgramConstructor::s_info = { "WebGLProgramConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramConstructor) };
-
-JSWebGLProgramConstructor::JSWebGLProgramConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLProgramConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLProgramConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLProgram::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLProgram::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLProgram"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLProgramConstructor::s_info = { "WebGLProgramConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLProgramPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLProgramConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLProgramConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLProgramPrototype::s_info = { "WebGLProgramPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgramPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLProgramPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLProgram::s_info = { "WebGLProgram", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLProgram) };
 
-JSWebGLProgram::JSWebGLProgram(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLProgram>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLProgram::JSWebGLProgram(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLProgram>&& impl)
+    : JSDOMWrapper<WebGLProgram>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLProgram::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLProgram::~JSWebGLProgram();
 }
 
-JSWebGLProgram::~JSWebGLProgram()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLProgramConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLProgramConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLProgramPrototype* domObject = jsDynamicCast<JSWebGLProgramPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLProgram::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLProgram::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLProgram::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLProgramConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLProgramConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLProgramOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLProgramOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsWebGLProgram = jsCast<JSWebGLProgram*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLProgram->impl(), jsWebGLProgram);
+    uncacheWrapper(world, &jsWebGLProgram->wrapped(), jsWebGLProgram);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLProgram@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12WebGLProgramE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLProgram>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLProgram
 WebGLProgram* JSWebGLProgram::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLProgram*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

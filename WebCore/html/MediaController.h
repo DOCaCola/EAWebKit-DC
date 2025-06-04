@@ -145,7 +145,7 @@ private:
     bool m_muted;
     ReadyState m_readyState;
     PlaybackState m_playbackState;
-    Vector<RefPtr<Event>> m_pendingEvents;
+    Vector<Ref<Event>> m_pendingEvents;
     Timer m_asyncEventTimer;
     mutable Timer m_clearPositionTimer;
     String m_mediaGroup;
@@ -154,6 +154,7 @@ private:
     ScriptExecutionContext& m_scriptExecutionContext;
     Timer m_timeupdateTimer;
     double m_previousTimeupdateTime;
+    bool m_resetCurrentTimeInNextPlay { false };
 };
 
 } // namespace WebCore

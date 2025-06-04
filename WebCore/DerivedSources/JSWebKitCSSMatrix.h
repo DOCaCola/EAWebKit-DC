@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSWebKitCSSMatrix : public JSDOMWrapper {
+class JSWebKitCSSMatrix : public JSDOMWrapper<WebKitCSSMatrix> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebKitCSSMatrix> Base;
     static JSWebKitCSSMatrix* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitCSSMatrix>&& impl)
     {
-        JSWebKitCSSMatrix* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSMatrix>(globalObject->vm().heap)) JSWebKitCSSMatrix(structure, globalObject, WTF::move(impl));
+        JSWebKitCSSMatrix* ptr = new (NotNull, JSC::allocateCell<JSWebKitCSSMatrix>(globalObject->vm().heap)) JSWebKitCSSMatrix(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitCSSMatrix* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitCSSMatrix();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitCSSMatrix& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitCSSMatrix* m_impl;
 protected:
-    JSWebKitCSSMatrix(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitCSSMatrix>&&);
+    JSWebKitCSSMatrix(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitCSSMatrix>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitCSSMatrix*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitCSSMatrix*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitCSSMatrix& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitCSSMatrix& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebKitCSSMatrix*);
 
 
 } // namespace WebCore

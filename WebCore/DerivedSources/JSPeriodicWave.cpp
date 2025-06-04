@@ -25,7 +25,7 @@
 #include "JSPeriodicWave.h"
 
 #include "JSDOMBinding.h"
-#include "PeriodicWave.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSPeriodicWaveConstructor : public DOMConstructorObject {
-private:
-    JSPeriodicWaveConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSPeriodicWave> JSPeriodicWaveConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSPeriodicWaveConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSPeriodicWaveConstructor* ptr = new (NotNull, JSC::allocateCell<JSPeriodicWaveConstructor>(vm.heap)) JSPeriodicWaveConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSPeriodicWaveConstructor::s_info = { "PeriodicWaveConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPeriodicWaveConstructor) };
-
-JSPeriodicWaveConstructor::JSPeriodicWaveConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSPeriodicWaveConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSPeriodicWaveConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSPeriodicWave::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSPeriodicWave::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("PeriodicWave"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSPeriodicWaveConstructor::s_info = { "PeriodicWaveConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPeriodicWaveConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSPeriodicWavePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPeriodicWaveConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPeriodicWaveConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSPeriodicWavePrototype::s_info = { "PeriodicWavePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPeriodicWavePrototype) };
@@ -115,9 +89,8 @@ void JSPeriodicWavePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSPeriodicWave::s_info = { "PeriodicWave", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPeriodicWave) };
 
-JSPeriodicWave::JSPeriodicWave(Structure* structure, JSDOMGlobalObject* globalObject, Ref<PeriodicWave>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPeriodicWave::JSPeriodicWave(Structure* structure, JSDOMGlobalObject& globalObject, Ref<PeriodicWave>&& impl)
+    : JSDOMWrapper<PeriodicWave>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSPeriodicWave::destroy(JSC::JSCell* cell)
     thisObject->JSPeriodicWave::~JSPeriodicWave();
 }
 
-JSPeriodicWave::~JSPeriodicWave()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsPeriodicWaveConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsPeriodicWaveConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSPeriodicWavePrototype* domObject = jsDynamicCast<JSPeriodicWavePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSPeriodicWave::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSPeriodicWave::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSPeriodicWave::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSPeriodicWaveConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSPeriodicWaveConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSPeriodicWaveOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,14 @@ void JSPeriodicWaveOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsPeriodicWave = jsCast<JSPeriodicWave*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPeriodicWave->impl(), jsPeriodicWave);
+    uncacheWrapper(world, &jsPeriodicWave->wrapped(), jsPeriodicWave);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, PeriodicWave* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSPeriodicWave>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PeriodicWave* impl)
@@ -188,7 +163,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PeriodicWave
 PeriodicWave* JSPeriodicWave::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSPeriodicWave*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

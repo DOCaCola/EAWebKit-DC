@@ -31,7 +31,7 @@ public:
     typedef JSNodeList Base;
     static JSRadioNodeList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RadioNodeList>&& impl)
     {
-        JSRadioNodeList* ptr = new (NotNull, JSC::allocateCell<JSRadioNodeList>(globalObject->vm().heap)) JSRadioNodeList(structure, globalObject, WTF::move(impl));
+        JSRadioNodeList* ptr = new (NotNull, JSC::allocateCell<JSRadioNodeList>(globalObject->vm().heap)) JSRadioNodeList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,14 +49,15 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    RadioNodeList& impl() const
+    static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
+    RadioNodeList& wrapped() const
     {
-        return static_cast<RadioNodeList&>(Base::impl());
+        return static_cast<RadioNodeList&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSRadioNodeList(JSC::Structure*, JSDOMGlobalObject*, Ref<RadioNodeList>&&);
+    JSRadioNodeList(JSC::Structure*, JSDOMGlobalObject&, Ref<RadioNodeList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -67,7 +68,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RadioNodeList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RadioNodeList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RadioNodeList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RadioNodeList*);
 
 
 } // namespace WebCore

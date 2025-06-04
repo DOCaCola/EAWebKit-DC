@@ -32,7 +32,7 @@ public:
     typedef JSSVGGradientElement Base;
     static JSSVGLinearGradientElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLinearGradientElement>&& impl)
     {
-        JSSVGLinearGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLinearGradientElement>(globalObject->vm().heap)) JSSVGLinearGradientElement(structure, globalObject, WTF::move(impl));
+        JSSVGLinearGradientElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLinearGradientElement>(globalObject->vm().heap)) JSSVGLinearGradientElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGLinearGradientElement& impl() const
+    SVGLinearGradientElement& wrapped() const
     {
-        return static_cast<SVGLinearGradientElement&>(Base::impl());
+        return static_cast<SVGLinearGradientElement&>(Base::wrapped());
     }
 protected:
-    JSSVGLinearGradientElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGLinearGradientElement>&&);
+    JSSVGLinearGradientElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGLinearGradientElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

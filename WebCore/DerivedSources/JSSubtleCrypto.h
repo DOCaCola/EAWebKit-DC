@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSubtleCrypto : public JSDOMWrapper {
+class JSSubtleCrypto : public JSDOMWrapper<SubtleCrypto> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SubtleCrypto> Base;
     static JSSubtleCrypto* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SubtleCrypto>&& impl)
     {
-        JSSubtleCrypto* ptr = new (NotNull, JSC::allocateCell<JSSubtleCrypto>(globalObject->vm().heap)) JSSubtleCrypto(structure, globalObject, WTF::move(impl));
+        JSSubtleCrypto* ptr = new (NotNull, JSC::allocateCell<JSSubtleCrypto>(globalObject->vm().heap)) JSSubtleCrypto(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SubtleCrypto* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSubtleCrypto();
 
     DECLARE_INFO;
 
@@ -54,23 +53,18 @@ public:
 
 
     // Custom functions
-    JSC::JSValue encrypt(JSC::ExecState*);
-    JSC::JSValue decrypt(JSC::ExecState*);
-    JSC::JSValue sign(JSC::ExecState*);
-    JSC::JSValue verify(JSC::ExecState*);
-    JSC::JSValue digest(JSC::ExecState*);
-    JSC::JSValue generateKey(JSC::ExecState*);
-    JSC::JSValue importKey(JSC::ExecState*);
-    JSC::JSValue exportKey(JSC::ExecState*);
-    JSC::JSValue wrapKey(JSC::ExecState*);
-    JSC::JSValue unwrapKey(JSC::ExecState*);
-    SubtleCrypto& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SubtleCrypto* m_impl;
+    JSC::JSValue encrypt(JSC::ExecState&);
+    JSC::JSValue decrypt(JSC::ExecState&);
+    JSC::JSValue sign(JSC::ExecState&);
+    JSC::JSValue verify(JSC::ExecState&);
+    JSC::JSValue digest(JSC::ExecState&);
+    JSC::JSValue generateKey(JSC::ExecState&);
+    JSC::JSValue importKey(JSC::ExecState&);
+    JSC::JSValue exportKey(JSC::ExecState&);
+    JSC::JSValue wrapKey(JSC::ExecState&);
+    JSC::JSValue unwrapKey(JSC::ExecState&);
 protected:
-    JSSubtleCrypto(JSC::Structure*, JSDOMGlobalObject*, Ref<SubtleCrypto>&&);
+    JSSubtleCrypto(JSC::Structure*, JSDOMGlobalObject&, Ref<SubtleCrypto>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -93,7 +87,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SubtleCrypto*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SubtleCrypto*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SubtleCrypto& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SubtleCrypto& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SubtleCrypto*);
 
 
 } // namespace WebCore

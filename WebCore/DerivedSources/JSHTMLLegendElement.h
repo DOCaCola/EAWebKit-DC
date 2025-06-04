@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLLegendElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLegendElement>&& impl)
     {
-        JSHTMLLegendElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLegendElement>(globalObject->vm().heap)) JSHTMLLegendElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLegendElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLegendElement>(globalObject->vm().heap)) JSHTMLLegendElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLLegendElement& impl() const
+    HTMLLegendElement& wrapped() const
     {
-        return static_cast<HTMLLegendElement&>(Base::impl());
+        return static_cast<HTMLLegendElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLLegendElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLegendElement>&&);
+    JSHTMLLegendElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLegendElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

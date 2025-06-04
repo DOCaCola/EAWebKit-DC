@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012, 2013 Apple Inc. All rights reserved.
- * Copyright (C) 2015 Electronic Arts, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -176,18 +175,13 @@ void* MarkedAllocator::allocateSlowCase(size_t bytes)
 MarkedBlock* MarkedAllocator::allocateBlock(size_t bytes)
 {
     size_t minBlockSize = MarkedBlock::blockSize;
+    size_t minAllocationSize = WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(sizeof(MarkedBlock)) + WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(bytes);
+    minAllocationSize = WTF::roundUpToMultipleOf(WTF::pageSize(), minAllocationSize);
+    size_t blockSize = std::max(minBlockSize, minAllocationSize);
 
-	//+EAWebKitChange
-	// 11/03/2015 - integrate change from open source https://trac.webkit.org/changeset/189012/trunk/Source/JavaScriptCore/heap/MarkedAllocator.cpp
-	// If we end up with an allocation that is perfectly aligned to the page size, then we will be short 8 bytes.
-	size_t minAllocationSize = WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(sizeof(MarkedBlock)) + WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(bytes);
-	minAllocationSize = WTF::roundUpToMultipleOf(WTF::pageSize(), minAllocationSize);     
-	//-EAWebKitChange
-
-	size_t blockSize = std::max(minBlockSize, minAllocationSize);
     size_t cellSize = m_cellSize ? m_cellSize : WTF::roundUpToMultipleOf<MarkedBlock::atomSize>(bytes);
 
-    return MarkedBlock::create(this, blockSize, cellSize, m_needsDestruction);
+    return MarkedBlock::create(*m_heap, this, blockSize, cellSize, m_needsDestruction);
 }
 
 void MarkedAllocator::addBlock(MarkedBlock* block)

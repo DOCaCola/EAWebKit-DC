@@ -32,7 +32,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLEmbedElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLEmbedElement>&& impl)
     {
-        JSHTMLEmbedElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLEmbedElement>(globalObject->vm().heap)) JSHTMLEmbedElement(structure, globalObject, WTF::move(impl));
+        JSHTMLEmbedElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLEmbedElement>(globalObject->vm().heap)) JSHTMLEmbedElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -56,14 +56,14 @@ public:
     static JSC::CallType getCallData(JSC::JSCell*, JSC::CallData&);
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLEmbedElement& impl() const
+    HTMLEmbedElement& wrapped() const
     {
-        return static_cast<HTMLEmbedElement&>(Base::impl());
+        return static_cast<HTMLEmbedElement&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::TypeOfShouldCallGetCallData | Base::StructureFlags;
 protected:
-    JSHTMLEmbedElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLEmbedElement>&&);
+    JSHTMLEmbedElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLEmbedElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

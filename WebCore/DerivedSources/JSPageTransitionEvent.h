@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSPageTransitionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PageTransitionEvent>&& impl)
     {
-        JSPageTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSPageTransitionEvent>(globalObject->vm().heap)) JSPageTransitionEvent(structure, globalObject, WTF::move(impl));
+        JSPageTransitionEvent* ptr = new (NotNull, JSC::allocateCell<JSPageTransitionEvent>(globalObject->vm().heap)) JSPageTransitionEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PageTransitionEvent& impl() const
+    PageTransitionEvent& wrapped() const
     {
-        return static_cast<PageTransitionEvent&>(Base::impl());
+        return static_cast<PageTransitionEvent&>(Base::wrapped());
     }
 protected:
-    JSPageTransitionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<PageTransitionEvent>&&);
+    JSPageTransitionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<PageTransitionEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

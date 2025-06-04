@@ -22,9 +22,9 @@
 #include "JSHTMLEmbedElement.h"
 
 #include "ExceptionCode.h"
-#include "HTMLEmbedElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGDocument.h"
 #include "SVGDocument.h"
 #include "URL.h"
@@ -81,26 +81,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLEmbedElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLEmbedElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLEmbedElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLEmbedElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLEmbedElementConstructor>(vm.heap)) JSHTMLEmbedElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLEmbedElement> JSHTMLEmbedElementConstructor;
 
 /* Hash table */
 
@@ -112,37 +93,30 @@ static const struct CompactHashIndex JSHTMLEmbedElementTableIndex[2] = {
 
 static const HashTableValue JSHTMLEmbedElementTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSHTMLEmbedElementTable = { 1, 1, true, JSHTMLEmbedElementTableValues, 0, JSHTMLEmbedElementTableIndex };
-const ClassInfo JSHTMLEmbedElementConstructor::s_info = { "HTMLEmbedElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLEmbedElementConstructor) };
-
-JSHTMLEmbedElementConstructor::JSHTMLEmbedElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHTMLEmbedElementTable = { 1, 1, true, JSHTMLEmbedElementTableValues, JSHTMLEmbedElementTableIndex };
+template<> void JSHTMLEmbedElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLEmbedElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLEmbedElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLEmbedElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLEmbedElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLEmbedElementConstructor::s_info = { "HTMLEmbedElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLEmbedElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLEmbedElementPrototypeTableValues[] =
 {
-    { "align", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementAlign) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementHeight) },
-    { "name", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementName) },
-    { "src", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementSrc) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementType) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementWidth) },
-    { "getSVGDocument", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLEmbedElementPrototypeFunctionGetSVGDocument), (intptr_t) (0) },
+    { "align", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementAlign) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementHeight) } },
+    { "name", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementName) } },
+    { "src", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementSrc) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementType) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLEmbedElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLEmbedElementWidth) } },
+    { "getSVGDocument", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLEmbedElementPrototypeFunctionGetSVGDocument), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLEmbedElementPrototype::s_info = { "HTMLEmbedElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLEmbedElementPrototype) };
@@ -155,7 +129,7 @@ void JSHTMLEmbedElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLEmbedElement::s_info = { "HTMLEmbedElement", &Base::s_info, &JSHTMLEmbedElementTable, CREATE_METHOD_TABLE(JSHTMLEmbedElement) };
 
-JSHTMLEmbedElement::JSHTMLEmbedElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLEmbedElement>&& impl)
+JSHTMLEmbedElement::JSHTMLEmbedElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLEmbedElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -170,270 +144,272 @@ JSObject* JSHTMLEmbedElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLEmbedElement>(vm, globalObject);
 }
 
-bool JSHTMLEmbedElement::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLEmbedElement::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLEmbedElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSHTMLEmbedElement, Base>(exec, JSHTMLEmbedElementTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSHTMLEmbedElement, Base>(state, JSHTMLEmbedElementTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSHTMLEmbedElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLEmbedElement::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLEmbedElement*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLEmbedElementAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "align");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "align");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "align");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "align");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::alignAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "height");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "height");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "height");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "height");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::heightAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "name");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "name");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "name");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getNameAttribute());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getNameAttribute());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementSrc(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementSrc(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "src");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "src");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "src");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "src");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "type");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "type");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLEmbedElement", "width");
-        return throwGetterTypeError(*exec, "HTMLEmbedElement", "width");
+            return reportDeprecatedGetterError(*state, "HTMLEmbedElement", "width");
+        return throwGetterTypeError(*state, "HTMLEmbedElement", "width");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::widthAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLEmbedElementConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLEmbedElementConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSHTMLEmbedElement* domObject = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLEmbedElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLEmbedElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHTMLEmbedElement::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSHTMLEmbedElement::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLEmbedElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSHTMLEmbedElement::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSHTMLEmbedElement::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSHTMLEmbedElement*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
-void setJSHTMLEmbedElementAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "align");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "align");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "align");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "align");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::alignAttr, nativeValue);
 }
 
 
-void setJSHTMLEmbedElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementHeight(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "height");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "height");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "height");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "height");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::heightAttr, nativeValue);
 }
 
 
-void setJSHTMLEmbedElementName(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementName(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "name");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "name");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "name");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "name");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::nameAttr, nativeValue);
 }
 
 
-void setJSHTMLEmbedElementSrc(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementSrc(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "src");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "src");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "src");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "src");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcAttr, nativeValue);
 }
 
 
-void setJSHTMLEmbedElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementType(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "type");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "type");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "type");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "type");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, nativeValue);
 }
 
 
-void setJSHTMLEmbedElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLEmbedElementWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLEmbedElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLEmbedElement", "width");
+            reportDeprecatedSetterError(*state, "HTMLEmbedElement", "width");
         else
-            throwSetterTypeError(*exec, "HTMLEmbedElement", "width");
+            throwSetterTypeError(*state, "HTMLEmbedElement", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::widthAttr, nativeValue);
 }
@@ -441,23 +417,23 @@ void setJSHTMLEmbedElementWidth(ExecState* exec, JSObject* baseObject, EncodedJS
 
 JSValue JSHTMLEmbedElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLEmbedElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLEmbedElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLEmbedElementPrototypeFunctionGetSVGDocument(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLEmbedElementPrototypeFunctionGetSVGDocument(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLEmbedElement* castedThis = jsDynamicCast<JSHTMLEmbedElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLEmbedElement", "getSVGDocument");
+        return throwThisTypeError(*state, "HTMLEmbedElement", "getSVGDocument");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLEmbedElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    if (!shouldAllowAccessToNode(exec, impl.getSVGDocument(ec)))
+    if (!shouldAllowAccessToNode(state, impl.getSVGDocument(ec)))
         return JSValue::encode(jsNull());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getSVGDocument(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getSVGDocument(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 

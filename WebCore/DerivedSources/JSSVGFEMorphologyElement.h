@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEMorphologyElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEMorphologyElement>&& impl)
     {
-        JSSVGFEMorphologyElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMorphologyElement>(globalObject->vm().heap)) JSSVGFEMorphologyElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEMorphologyElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEMorphologyElement>(globalObject->vm().heap)) JSSVGFEMorphologyElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEMorphologyElement& impl() const
+    SVGFEMorphologyElement& wrapped() const
     {
-        return static_cast<SVGFEMorphologyElement&>(Base::impl());
+        return static_cast<SVGFEMorphologyElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEMorphologyElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEMorphologyElement>&&);
+    JSSVGFEMorphologyElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEMorphologyElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

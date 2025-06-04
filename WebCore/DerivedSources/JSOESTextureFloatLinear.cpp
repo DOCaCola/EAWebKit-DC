@@ -25,7 +25,6 @@
 #include "JSOESTextureFloatLinear.h"
 
 #include "JSDOMBinding.h"
-#include "OESTextureFloatLinear.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSOESTextureFloatLinearPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSOESTextureFloatLinearPrototype::s_info = { "OESTextureFloatLinearPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureFloatLinearPrototype) };
@@ -74,9 +73,8 @@ void JSOESTextureFloatLinearPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSOESTextureFloatLinear::s_info = { "OESTextureFloatLinear", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureFloatLinear) };
 
-JSOESTextureFloatLinear::JSOESTextureFloatLinear(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureFloatLinear>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSOESTextureFloatLinear::JSOESTextureFloatLinear(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OESTextureFloatLinear>&& impl)
+    : JSDOMWrapper<OESTextureFloatLinear>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSOESTextureFloatLinear::destroy(JSC::JSCell* cell)
     thisObject->JSOESTextureFloatLinear::~JSOESTextureFloatLinear();
 }
 
-JSOESTextureFloatLinear::~JSOESTextureFloatLinear()
-{
-    releaseImpl();
-}
-
 bool JSOESTextureFloatLinearOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsOESTextureFloatLinear = jsCast<JSOESTextureFloatLinear*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureFloatLinear->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureFloatLinear->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSOESTextureFloatLinearOwner::finalize(JSC::Handle<JSC::Unknown> handle, vo
 {
     auto* jsOESTextureFloatLinear = jsCast<JSOESTextureFloatLinear*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsOESTextureFloatLinear->impl(), jsOESTextureFloatLinear);
+    uncacheWrapper(world, &jsOESTextureFloatLinear->wrapped(), jsOESTextureFloatLinear);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7OESTextureFloatLinear@WebCore
 extern "C" { extern void* _ZTVN7WebCore21OESTextureFloatLinearE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFloatLinear* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSOESTextureFloatLinear>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFloatLinear* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFl
 OESTextureFloatLinear* JSOESTextureFloatLinear::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSOESTextureFloatLinear*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

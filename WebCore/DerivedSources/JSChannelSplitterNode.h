@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSChannelSplitterNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelSplitterNode>&& impl)
     {
-        JSChannelSplitterNode* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNode>(globalObject->vm().heap)) JSChannelSplitterNode(structure, globalObject, WTF::move(impl));
+        JSChannelSplitterNode* ptr = new (NotNull, JSC::allocateCell<JSChannelSplitterNode>(globalObject->vm().heap)) JSChannelSplitterNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    ChannelSplitterNode& impl() const
+    ChannelSplitterNode& wrapped() const
     {
-        return static_cast<ChannelSplitterNode&>(Base::impl());
+        return static_cast<ChannelSplitterNode&>(Base::wrapped());
     }
 protected:
-    JSChannelSplitterNode(JSC::Structure*, JSDOMGlobalObject*, Ref<ChannelSplitterNode>&&);
+    JSChannelSplitterNode(JSC::Structure*, JSDOMGlobalObject&, Ref<ChannelSplitterNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ChannelSplitterNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ChannelSplitterNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ChannelSplitterNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ChannelSplitterNode*);
 
 
 } // namespace WebCore

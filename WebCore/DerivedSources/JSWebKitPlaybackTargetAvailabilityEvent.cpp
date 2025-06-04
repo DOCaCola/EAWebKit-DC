@@ -25,9 +25,9 @@
 #include "JSWebKitPlaybackTargetAvailabilityEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "URL.h"
-#include "WebKitPlaybackTargetAvailabilityEvent.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -66,51 +66,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitPlaybackTargetAvailabilityEventConstructor : public DOMConstructorObject {
-private:
-    JSWebKitPlaybackTargetAvailabilityEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSWebKitPlaybackTargetAvailabilityEvent> JSWebKitPlaybackTargetAvailabilityEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitPlaybackTargetAvailabilityEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitPlaybackTargetAvailabilityEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitPlaybackTargetAvailabilityEventConstructor>(vm.heap)) JSWebKitPlaybackTargetAvailabilityEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitPlaybackTargetAvailabilityEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSWebKitPlaybackTargetAvailabilityEventConstructor::constructJSWebKitPlaybackTargetAvailabilityEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSWebKitPlaybackTargetAvailabilityEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSWebKitPlaybackTargetAvailabilityEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSWebKitPlaybackTargetAvailabilityEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     WebKitPlaybackTargetAvailabilityEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillWebKitPlaybackTargetAvailabilityEventInit(eventInit, dictionary))
@@ -118,7 +98,7 @@ EncodedJSValue JSC_HOST_CALL JSWebKitPlaybackTargetAvailabilityEventConstructor:
     }
 
     RefPtr<WebKitPlaybackTargetAvailabilityEvent> event = WebKitPlaybackTargetAvailabilityEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillWebKitPlaybackTargetAvailabilityEventInit(WebKitPlaybackTargetAvailabilityEventInit& eventInit, JSDictionary& dictionary)
@@ -131,34 +111,21 @@ bool fillWebKitPlaybackTargetAvailabilityEventInit(WebKitPlaybackTargetAvailabil
     return true;
 }
 
-const ClassInfo JSWebKitPlaybackTargetAvailabilityEventConstructor::s_info = { "WebKitPlaybackTargetAvailabilityEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitPlaybackTargetAvailabilityEventConstructor) };
-
-JSWebKitPlaybackTargetAvailabilityEventConstructor::JSWebKitPlaybackTargetAvailabilityEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebKitPlaybackTargetAvailabilityEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebKitPlaybackTargetAvailabilityEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitPlaybackTargetAvailabilityEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitPlaybackTargetAvailabilityEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitPlaybackTargetAvailabilityEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSWebKitPlaybackTargetAvailabilityEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWebKitPlaybackTargetAvailabilityEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSWebKitPlaybackTargetAvailabilityEventConstructor::s_info = { "WebKitPlaybackTargetAvailabilityEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitPlaybackTargetAvailabilityEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitPlaybackTargetAvailabilityEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitPlaybackTargetAvailabilityEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "availability", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitPlaybackTargetAvailabilityEventAvailability), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitPlaybackTargetAvailabilityEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "availability", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitPlaybackTargetAvailabilityEventAvailability), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitPlaybackTargetAvailabilityEventPrototype::s_info = { "WebKitPlaybackTargetAvailabilityEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitPlaybackTargetAvailabilityEventPrototype) };
@@ -171,7 +138,7 @@ void JSWebKitPlaybackTargetAvailabilityEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitPlaybackTargetAvailabilityEvent::s_info = { "WebKitPlaybackTargetAvailabilityEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitPlaybackTargetAvailabilityEvent) };
 
-JSWebKitPlaybackTargetAvailabilityEvent::JSWebKitPlaybackTargetAvailabilityEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitPlaybackTargetAvailabilityEvent>&& impl)
+JSWebKitPlaybackTargetAvailabilityEvent::JSWebKitPlaybackTargetAvailabilityEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitPlaybackTargetAvailabilityEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -186,34 +153,34 @@ JSObject* JSWebKitPlaybackTargetAvailabilityEvent::getPrototype(VM& vm, JSGlobal
     return getDOMPrototype<JSWebKitPlaybackTargetAvailabilityEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsWebKitPlaybackTargetAvailabilityEventAvailability(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitPlaybackTargetAvailabilityEventAvailability(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitPlaybackTargetAvailabilityEvent* castedThis = jsDynamicCast<JSWebKitPlaybackTargetAvailabilityEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitPlaybackTargetAvailabilityEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitPlaybackTargetAvailabilityEvent", "availability");
-        return throwGetterTypeError(*exec, "WebKitPlaybackTargetAvailabilityEvent", "availability");
+            return reportDeprecatedGetterError(*state, "WebKitPlaybackTargetAvailabilityEvent", "availability");
+        return throwGetterTypeError(*state, "WebKitPlaybackTargetAvailabilityEvent", "availability");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.availability());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.availability());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitPlaybackTargetAvailabilityEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebKitPlaybackTargetAvailabilityEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebKitPlaybackTargetAvailabilityEventPrototype* domObject = jsDynamicCast<JSWebKitPlaybackTargetAvailabilityEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitPlaybackTargetAvailabilityEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebKitPlaybackTargetAvailabilityEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebKitPlaybackTargetAvailabilityEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebKitPlaybackTargetAvailabilityEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitPlaybackTargetAvailabilityEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

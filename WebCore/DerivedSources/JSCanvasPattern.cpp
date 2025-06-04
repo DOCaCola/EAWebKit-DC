@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSCanvasPattern.h"
 
-#include "CanvasPattern.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCanvasPatternConstructor : public DOMConstructorObject {
-private:
-    JSCanvasPatternConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCanvasPattern> JSCanvasPatternConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCanvasPatternConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCanvasPatternConstructor* ptr = new (NotNull, JSC::allocateCell<JSCanvasPatternConstructor>(vm.heap)) JSCanvasPatternConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCanvasPatternConstructor::s_info = { "CanvasPatternConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasPatternConstructor) };
-
-JSCanvasPatternConstructor::JSCanvasPatternConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCanvasPatternConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCanvasPatternConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCanvasPattern::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCanvasPattern::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CanvasPattern"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCanvasPatternConstructor::s_info = { "CanvasPatternConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasPatternConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCanvasPatternPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasPatternConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasPatternConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCanvasPatternPrototype::s_info = { "CanvasPatternPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasPatternPrototype) };
@@ -112,9 +86,8 @@ void JSCanvasPatternPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCanvasPattern::s_info = { "CanvasPattern", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasPattern) };
 
-JSCanvasPattern::JSCanvasPattern(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasPattern>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCanvasPattern::JSCanvasPattern(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CanvasPattern>&& impl)
+    : JSDOMWrapper<CanvasPattern>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -134,22 +107,17 @@ void JSCanvasPattern::destroy(JSC::JSCell* cell)
     thisObject->JSCanvasPattern::~JSCanvasPattern();
 }
 
-JSCanvasPattern::~JSCanvasPattern()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsCanvasPatternConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCanvasPatternConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCanvasPatternPrototype* domObject = jsDynamicCast<JSCanvasPatternPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCanvasPattern::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCanvasPattern::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSCanvasPattern::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCanvasPatternConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCanvasPatternConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSCanvasPatternOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -163,7 +131,14 @@ void JSCanvasPatternOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsCanvasPattern = jsCast<JSCanvasPattern*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCanvasPattern->impl(), jsCanvasPattern);
+    uncacheWrapper(world, &jsCanvasPattern->wrapped(), jsCanvasPattern);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasPattern* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSCanvasPattern>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasPattern* impl)
@@ -185,7 +160,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CanvasPatter
 CanvasPattern* JSCanvasPattern::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCanvasPattern*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

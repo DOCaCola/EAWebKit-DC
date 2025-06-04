@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCSSRuleList : public JSDOMWrapper {
+class JSCSSRuleList : public JSDOMWrapper<CSSRuleList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CSSRuleList> Base;
     static JSCSSRuleList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSRuleList>&& impl)
     {
-        JSCSSRuleList* ptr = new (NotNull, JSC::allocateCell<JSCSSRuleList>(globalObject->vm().heap)) JSCSSRuleList(structure, globalObject, WTF::move(impl));
+        JSCSSRuleList* ptr = new (NotNull, JSC::allocateCell<JSCSSRuleList>(globalObject->vm().heap)) JSCSSRuleList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSCSSRuleList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSRuleList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CSSRuleList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSCSSRuleList(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSRuleList>&&);
+    JSCSSRuleList(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSRuleList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CSSRuleList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CSSRuleList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CSSRuleList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSRuleList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CSSRuleList*);
 
 
 } // namespace WebCore

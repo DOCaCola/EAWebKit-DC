@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSDataTransferItemList : public JSDOMWrapper {
+class JSDataTransferItemList : public JSDOMWrapper<DataTransferItemList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DataTransferItemList> Base;
     static JSDataTransferItemList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DataTransferItemList>&& impl)
     {
-        JSDataTransferItemList* ptr = new (NotNull, JSC::allocateCell<JSDataTransferItemList>(globalObject->vm().heap)) JSDataTransferItemList(structure, globalObject, WTF::move(impl));
+        JSDataTransferItemList* ptr = new (NotNull, JSC::allocateCell<JSDataTransferItemList>(globalObject->vm().heap)) JSDataTransferItemList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDataTransferItemList();
 
     DECLARE_INFO;
 
@@ -55,15 +54,10 @@ public:
     }
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
-    DataTransferItemList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DataTransferItemList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDataTransferItemList(JSC::Structure*, JSDOMGlobalObject*, Ref<DataTransferItemList>&&);
+    JSDataTransferItemList(JSC::Structure*, JSDOMGlobalObject&, Ref<DataTransferItemList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -86,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DataTransferItemList
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DataTransferItemList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DataTransferItemList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DataTransferItemList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DataTransferItemList*);
 
 
 } // namespace WebCore

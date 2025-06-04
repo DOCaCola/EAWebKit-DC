@@ -96,8 +96,7 @@ void ParsedStyleSheet::setText(const String& text)
 
 static void flattenSourceData(RuleSourceDataList* dataList, RuleSourceDataList* target)
 {
-    for (size_t i = 0; i < dataList->size(); ++i) {
-        RefPtr<CSSRuleSourceData>& data = dataList->at(i);
+    for (auto& data : *dataList) {
         if (data->type == CSSRuleSourceData::STYLE_RULE)
             target->append(data);
         else if (data->type == CSSRuleSourceData::MEDIA_RULE)
@@ -184,7 +183,7 @@ static Ref<Inspector::Protocol::CSS::CSSMedia> buildMediaObject(const MediaList*
         mediaObject->setSourceURL(sourceURL);
         mediaObject->setSourceLine(media->queries()->lastLine());
     }
-    return WTF::move(mediaObject);
+    return mediaObject;
 }
 
 static RefPtr<CSSRuleList> asCSSRuleList(CSSStyleSheet* styleSheet)
@@ -319,8 +318,8 @@ Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSComputedStylePropert
     Vector<InspectorStyleProperty> properties;
     populateAllProperties(&properties);
 
-    for (Vector<InspectorStyleProperty>::iterator it = properties.begin(), itEnd = properties.end(); it != itEnd; ++it) {
-        const CSSPropertySourceData& propertyEntry = it->sourceData;
+    for (auto& property : properties) {
+        const CSSPropertySourceData& propertyEntry = property.sourceData;
         auto entry = Inspector::Protocol::CSS::CSSComputedStyleProperty::create()
             .setName(propertyEntry.name)
             .setValue(propertyEntry.value)
@@ -328,7 +327,7 @@ Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSComputedStylePropert
         result->addItem(WTF::move(entry));
     }
 
-    return WTF::move(result);
+    return result;
 }
 
 bool InspectorStyle::getText(String* result) const
@@ -348,6 +347,14 @@ bool InspectorStyle::getText(String* result) const
     return true;
 }
 
+static String lowercasePropertyName(const String& name)
+{
+    // Custom properties are case-sensitive.
+    if (name.length() > 2 && name.characterAt(0) == '-' && name.characterAt(1) == '-')
+        return name;
+    return name.lower();
+}
+
 bool InspectorStyle::populateAllProperties(Vector<InspectorStyleProperty>* result) const
 {
     HashSet<String> sourcePropertyNames;
@@ -358,20 +365,20 @@ bool InspectorStyle::populateAllProperties(Vector<InspectorStyleProperty>* resul
         String styleDeclaration;
         bool isStyleTextKnown = getText(&styleDeclaration);
         ASSERT_UNUSED(isStyleTextKnown, isStyleTextKnown);
-        for (Vector<CSSPropertySourceData>::const_iterator it = sourcePropertyData->begin(); it != sourcePropertyData->end(); ++it) {
-            InspectorStyleProperty p(*it, true, false);
+        for (auto& sourceData : *sourcePropertyData) {
+            InspectorStyleProperty p(sourceData, true, false);
             p.setRawTextFromStyleDeclaration(styleDeclaration);
             result->append(p);
-            sourcePropertyNames.add(it->name.lower());
+            sourcePropertyNames.add(lowercasePropertyName(sourceData.name));
         }
     }
 
     for (int i = 0, size = m_style->length(); i < size; ++i) {
         String name = m_style->item(i);
-        if (sourcePropertyNames.contains(name.lower()))
+        String lowerName = lowercasePropertyName(name);
+        if (sourcePropertyNames.contains(lowerName))
             continue;
-
-        sourcePropertyNames.add(name.lower());
+        sourcePropertyNames.add(lowerName);
         result->append(InspectorStyleProperty(CSSPropertySourceData(name, m_style->getPropertyValue(name), !m_style->getPropertyPriority(name).isEmpty(), true, SourceRange()), false, false));
     }
 
@@ -726,7 +733,7 @@ CSSStyleRule* InspectorStyleSheet::addRule(const String& selector, ExceptionCode
 
     styleSheetText.append(selector);
     styleSheetText.appendLiteral(" {}");
-    // Using setText() as this operation changes the style sheet rule set.
+    // Using setText() as this operation changes the stylesheet rule set.
     setText(styleSheetText.toString(), ASSERT_NO_EXCEPTION);
 
     fireStyleSheetChanged();
@@ -814,6 +821,9 @@ RefPtr<Inspector::Protocol::CSS::CSSStyleSheetHeader> InspectorStyleSheet::build
         .setSourceURL(finalURL())
         .setTitle(styleSheet->title())
         .setFrameId(m_pageAgent->frameId(frame))
+        .setIsInline(styleSheet->isInline() && styleSheet->startPosition() != TextPosition::minimumPosition())
+        .setStartLine(styleSheet->startPosition().m_line.zeroBasedInt())
+        .setStartColumn(styleSheet->startPosition().m_column.zeroBasedInt())
         .release();
 }
 
@@ -865,7 +875,7 @@ static Ref<Inspector::Protocol::CSS::CSSSelector> buildObjectForSelectorHelper(c
         }
     }
 
-    return WTF::move(inspectorSelector);
+    return inspectorSelector;
 }
 
 static Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSSelector>> selectorsFromSource(const CSSRuleSourceData* sourceData, const String& sheetText, const CSSSelectorList& selectorList, Element* element)
@@ -873,16 +883,14 @@ static Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSSelector>> se
     DEPRECATED_DEFINE_STATIC_LOCAL(JSC::Yarr::RegularExpression, comment, ("/\\*[^]*?\\*/", TextCaseSensitive, JSC::Yarr::MultilineEnabled));
 
     auto result = Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSSelector>::create();
-    const SelectorRangeList& ranges = sourceData->selectorRanges;
     const CSSSelector* selector = selectorList.first();
-    for (size_t i = 0, size = ranges.size(); i < size; ++i) {
+    for (auto& range : sourceData->selectorRanges) {
         // If we don't have a selector, that means the SourceData for this CSSStyleSheet
         // no longer matches up with the actual rules in the CSSStyleSheet.
         ASSERT(selector);
         if (!selector)
             break;
 
-        const SourceRange& range = ranges.at(i);
         String selectorText = sheetText.substring(range.start, range.length());
 
         // We don't want to see any comments in the selector components, only the meaningful parts.
@@ -891,7 +899,7 @@ static Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSSelector>> se
 
         selector = CSSSelectorList::next(selector);
     }
-    return WTF::move(result);
+    return result;
 }
 
 Ref<Inspector::Protocol::CSS::CSSSelector> InspectorStyleSheet::buildObjectForSelector(const CSSSelector* selector, Element* element)
@@ -923,7 +931,7 @@ Ref<Inspector::Protocol::CSS::SelectorList> InspectorStyleSheet::buildObjectForS
         .release();
     if (sourceData)
         result->setRange(buildSourceRangeObject(sourceData->ruleHeaderRange, lineEndings().get()));
-    return WTF::move(result);
+    return result;
 }
 
 RefPtr<Inspector::Protocol::CSS::CSSRule> InspectorStyleSheet::buildObjectForRule(CSSStyleRule* rule, Element* element)
@@ -984,7 +992,7 @@ RefPtr<Inspector::Protocol::CSS::CSSStyle> InspectorStyleSheet::buildObjectForSt
         }
     }
 
-    return WTF::move(result);
+    return result;
 }
 
 bool InspectorStyleSheet::setStyleText(const InspectorCSSId& id, const String& text, String* oldText, ExceptionCode& ec)
@@ -1065,8 +1073,8 @@ unsigned InspectorStyleSheet::ruleIndexByStyle(CSSStyleDeclaration* pageStyle) c
 {
     ensureFlatRules();
     unsigned index = 0;
-    for (unsigned i = 0, size = m_flatRules.size(); i < size; ++i) {
-        if (&m_flatRules.at(i)->style() == pageStyle)
+    for (auto& rule : m_flatRules) {
+        if (&rule->style() == pageStyle)
             return index;
 
         ++index;
@@ -1223,16 +1231,16 @@ Ref<Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSRule>> InspectorStyl
 {
     auto result = Inspector::Protocol::Array<Inspector::Protocol::CSS::CSSRule>::create();
     if (!ruleList)
-        return WTF::move(result);
+        return result;
 
     RefPtr<CSSRuleList> refRuleList = ruleList;
     CSSStyleRuleVector rules;
     collectFlatRules(WTF::move(refRuleList), &rules);
 
-    for (unsigned i = 0, size = rules.size(); i < size; ++i)
-        result->addItem(buildObjectForRule(rules.at(i).get(), nullptr));
+    for (auto& rule : rules)
+        result->addItem(buildObjectForRule(rule.get(), nullptr));
 
-    return WTF::move(result);
+    return result;
 }
 
 void InspectorStyleSheet::collectFlatRules(RefPtr<CSSRuleList>&& ruleList, CSSStyleRuleVector* result)
@@ -1292,7 +1300,7 @@ bool InspectorStyleSheetForInlineStyle::setStyleText(CSSStyleDeclaration* style,
     ASSERT_UNUSED(style, style == inlineStyle());
 
     {
-        InspectorCSSAgent::InlineStyleOverrideScope overrideScope(&m_element->document());
+        InspectorCSSAgent::InlineStyleOverrideScope overrideScope(m_element->document());
         m_element->setAttribute("style", text, ec);
     }
 

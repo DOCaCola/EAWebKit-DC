@@ -61,7 +61,7 @@ bool MediaResourceLoader::start(const ResourceRequest& request, LoadOptions opti
     StoredCredentials allowCredentials = m_crossOriginMode.isNull() || equalIgnoringCase(m_crossOriginMode, "use-credentials") ? AllowStoredCredentials : DoNotAllowStoredCredentials;
 
     // ContentSecurityPolicyImposition::DoPolicyCheck is a placeholder value. It does not affect the request since Content Security Policy does not apply to raw resources.
-    CachedResourceRequest cacheRequest(request, ResourceLoaderOptions(SendCallbacks, DoNotSniffContent, bufferingPolicy, allowCredentials, DoNotAskClientForCrossOriginCredentials, DoSecurityCheck, corsPolicy, DoNotIncludeCertificateInfo, ContentSecurityPolicyImposition::DoPolicyCheck));
+    CachedResourceRequest cacheRequest(request, ResourceLoaderOptions(SendCallbacks, DoNotSniffContent, bufferingPolicy, allowCredentials, DoNotAskClientForCrossOriginCredentials, DoSecurityCheck, corsPolicy, DoNotIncludeCertificateInfo, ContentSecurityPolicyImposition::DoPolicyCheck, DefersLoadingPolicy::AllowDefersLoading));
 
     if (!m_crossOriginMode.isNull())
         updateRequestForAccessControl(cacheRequest.mutableResourceRequest(), m_document.securityOrigin(), allowCredentials);
@@ -100,7 +100,7 @@ void MediaResourceLoader::responseReceived(CachedResource* resource, const Resou
         static NeverDestroyed<const String> consoleMessage("Cross-origin media resource load denied by Cross-Origin Resource Sharing policy.");
         m_document.addConsoleMessage(MessageSource::Security, MessageLevel::Error, consoleMessage.get());
         m_didPassAccessControlCheck = false;
-        m_client->accessControlCheckFailed(ResourceError(errorDomainWebKitInternal, 0, response.url().string(), consoleMessage.get()));
+        m_client->accessControlCheckFailed(ResourceError(errorDomainWebKitInternal, 0, response.url(), consoleMessage.get()));
         stop();
         return;
     }

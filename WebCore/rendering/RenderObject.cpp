@@ -43,6 +43,7 @@
 #include "HTMLTableCellElement.h"
 #include "HTMLTableElement.h"
 #include "HitTestResult.h"
+#include "Logging.h"
 #include "LogicalSelectionOffsetCaches.h"
 #include "Page.h"
 #include "PseudoElement.h"
@@ -58,6 +59,8 @@
 #include "RenderNamedFlowThread.h" 
 #include "RenderSVGResourceContainer.h"
 #include "RenderScrollbarPart.h"
+#include "RenderTableRow.h"
+#include "RenderTableSection.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
 #include "RenderWidget.h"
@@ -79,6 +82,8 @@ namespace WebCore {
 using namespace HTMLNames;
 
 #ifndef NDEBUG
+void printRenderTreeForLiveDocuments();
+
 RenderObject::SetLayoutNeededForbiddenScope::SetLayoutNeededForbiddenScope(RenderObject* renderObject, bool isForbidden)
     : m_renderObject(renderObject)
     , m_preexistingForbidden(m_renderObject->isSetNeedsLayoutForbidden())
@@ -117,20 +122,24 @@ RenderObject::RenderObject(Node& node)
 #endif
     , m_bitfields(node)
 {
-    if (!node.isDocumentNode())
-        view().didCreateRenderer();
+    if (RenderView* renderView = node.document().renderView())
+        renderView->didCreateRenderer();
 #ifndef NDEBUG
     renderObjectCounter.increment();
+    static std::once_flag onceFlag;
+    std::call_once(onceFlag, [] {
+        registerNotifyCallback("com.apple.WebKit.showRenderTree", printRenderTreeForLiveDocuments);
+    });
 #endif
 }
 
 RenderObject::~RenderObject()
 {
+    view().didDestroyRenderer();
 #ifndef NDEBUG
     ASSERT(!m_hasAXObject);
     renderObjectCounter.decrement();
 #endif
-    view().didDestroyRenderer();
     ASSERT(!hasRareData());
 }
 
@@ -721,7 +730,7 @@ void RenderObject::addPDFURLRect(PaintInfo& paintInfo, const LayoutPoint& paintO
     const AtomicString& href = downcast<Element>(*node).getAttribute(hrefAttr);
     if (href.isNull())
         return;
-    paintInfo.context->setURLForRect(node->document().completeURL(href), snappedIntRect(urlRect));
+    paintInfo.context().setURLForRect(node->document().completeURL(href), snappedIntRect(urlRect));
 }
 
 #if PLATFORM(IOS)
@@ -804,7 +813,7 @@ void RenderObject::absoluteFocusRingQuads(Vector<FloatQuad>& quads)
 
 FloatRect RenderObject::absoluteBoundingBoxRectForRange(const Range* range)
 {
-    if (!range || !range->startContainer())
+    if (!range)
         return FloatRect();
 
     range->ownerDocument().updateLayout();
@@ -882,10 +891,8 @@ void RenderObject::repaintUsingContainer(const RenderLayerModelObject* repaintCo
     if (r.isEmpty())
         return;
 
-    if (!repaintContainer) {
-        view().repaintViewRectangle(r);
-        return;
-    }
+    if (!repaintContainer)
+        repaintContainer = &view();
 
     if (is<RenderFlowThread>(*repaintContainer)) {
         downcast<RenderFlowThread>(*repaintContainer).repaintRectangleInRegions(r);
@@ -897,18 +904,22 @@ void RenderObject::repaintUsingContainer(const RenderLayerModelObject* repaintCo
         return;
     }
 
-    RenderView& v = view();
     if (repaintContainer->isRenderView()) {
-        ASSERT(repaintContainer == &v);
-        bool viewHasCompositedLayer = v.hasLayer() && v.layer()->isComposited();
-        if (!viewHasCompositedLayer || v.layer()->backing()->paintsIntoWindow()) {
-            v.repaintViewRectangle(viewHasCompositedLayer && v.layer()->transform() ? LayoutRect(v.layer()->transform()->mapRect(snapRectToDevicePixels(r, document().deviceScaleFactor()))) : r);
+        RenderView& view = this->view();
+        ASSERT(repaintContainer == &view);
+        bool viewHasCompositedLayer = view.isComposited();
+        if (!viewHasCompositedLayer || view.layer()->backing()->paintsIntoWindow()) {
+            LayoutRect rect = r;
+            if (viewHasCompositedLayer && view.layer()->transform())
+                rect = LayoutRect(view.layer()->transform()->mapRect(snapRectToDevicePixels(rect, document().deviceScaleFactor())));
+            view.repaintViewRectangle(rect);
             return;
         }
     }
     
-    if (v.usesCompositing()) {
-        ASSERT(repaintContainer->hasLayer() && repaintContainer->layer()->isComposited());
+
+    if (view().usesCompositing()) {
+        ASSERT(repaintContainer->isComposited());
         repaintContainer->layer()->setBackingNeedsRepaintInRect(r, shouldClipToLayer ? GraphicsLayer::ClipToLayer : GraphicsLayer::DoNotClipToLayer);
     }
 }
@@ -924,7 +935,7 @@ void RenderObject::repaint() const
         return;
 
     RenderLayerModelObject* repaintContainer = containerForRepaint();
-    repaintUsingContainer(repaintContainer ? repaintContainer : &view, clippedOverflowRectForRepaint(repaintContainer));
+    repaintUsingContainer(repaintContainer, clippedOverflowRectForRepaint(repaintContainer));
 }
 
 void RenderObject::repaintRectangle(const LayoutRect& r, bool shouldClipToLayer) const
@@ -943,8 +954,7 @@ void RenderObject::repaintRectangle(const LayoutRect& r, bool shouldClipToLayer)
     dirtyRect.move(view.layoutDelta());
 
     RenderLayerModelObject* repaintContainer = containerForRepaint();
-    computeRectForRepaint(repaintContainer, dirtyRect);
-    repaintUsingContainer(repaintContainer ? repaintContainer : &view, dirtyRect, shouldClipToLayer);
+    repaintUsingContainer(repaintContainer, computeRectForRepaint(dirtyRect, repaintContainer), shouldClipToLayer);
 }
 
 void RenderObject::repaintSlowRepaintObject() const
@@ -965,7 +975,7 @@ void RenderObject::repaintSlowRepaintObject() const
     IntRect repaintRect;
     // If this is the root background, we need to check if there is an extended background rect. If
     // there is, then we should not allow painting to clip to the layer size.
-    if (isRoot() || isBody()) {
+    if (isDocumentElementRenderer() || isBody()) {
         shouldClipToLayer = !view.frameView().hasExtendedBackgroundRectForPainting();
         repaintRect = snappedIntRect(view.backgroundRect());
     } else
@@ -997,25 +1007,28 @@ LayoutRect RenderObject::clippedOverflowRectForRepaint(const RenderLayerModelObj
     return LayoutRect();
 }
 
-void RenderObject::computeRectForRepaint(const RenderLayerModelObject* repaintContainer, LayoutRect& rect, bool fixed) const
+LayoutRect RenderObject::computeRectForRepaint(const LayoutRect& rect, const RenderLayerModelObject* repaintContainer, bool fixed) const
 {
     if (repaintContainer == this)
-        return;
+        return rect;
 
-    if (auto* parent = this->parent()) {
-        if (parent->hasOverflowClip()) {
-            downcast<RenderBox>(*parent).applyCachedClipAndScrollOffsetForRepaint(rect);
-            if (rect.isEmpty())
-                return;
-        }
+    auto* parent = this->parent();
+    if (!parent)
+        return rect;
 
-        parent->computeRectForRepaint(repaintContainer, rect, fixed);
+    LayoutRect adjustedRect = rect;
+    if (parent->hasOverflowClip()) {
+        downcast<RenderBox>(*parent).applyCachedClipAndScrollOffsetForRepaint(adjustedRect);
+        if (adjustedRect.isEmpty())
+            return adjustedRect;
     }
+    return parent->computeRectForRepaint(adjustedRect, repaintContainer, fixed);
 }
 
-void RenderObject::computeFloatRectForRepaint(const RenderLayerModelObject*, FloatRect&, bool) const
+FloatRect RenderObject::computeFloatRectForRepaint(const FloatRect&, const RenderLayerModelObject*, bool) const
 {
     ASSERT_NOT_REACHED();
+    return FloatRect();
 }
 
 #if ENABLE(TREE_DEBUGGING)
@@ -1090,20 +1103,6 @@ void RenderObject::showRegionsInformation() const
 
 void RenderObject::showRenderObject(bool mark, int depth) const
 {
-#if COMPILER(CLANG)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-#pragma clang diagnostic ignored "-Wundefined-bool-conversion"
-#endif
-    // As this function is intended to be used when debugging, the |this| pointer may be 0.
-    if (!this) {
-        fprintf(stderr, "(null)\n");
-        return;
-    }
-#if COMPILER(CLANG)
-#pragma clang diagnostic pop
-#endif
-
     if (isPositioned()) {
         if (isRelPositioned())
             fputc('R', stderr);
@@ -1210,18 +1209,6 @@ void RenderObject::showRenderObject(bool mark, int depth) const
 
 void RenderObject::showRenderSubTreeAndMark(const RenderObject* markedObject, int depth) const
 {
-#if COMPILER(CLANG)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-#pragma clang diagnostic ignored "-Wundefined-bool-conversion"
-#endif
-    // As this function is intended to be used when debugging, the |this| pointer may be nullptr.
-    if (!this)
-        return;
-#if COMPILER(CLANG)
-#pragma clang diagnostic pop
-#endif
-
     showRenderObject(markedObject == this, depth);
     if (is<RenderBlockFlow>(*this))
         downcast<RenderBlockFlow>(*this).showLineTreeAndMark(nullptr, depth + 1);
@@ -1639,6 +1626,45 @@ void RenderObject::invalidateFlowThreadContainingBlockIncludingDescendants(Rende
         child->invalidateFlowThreadContainingBlockIncludingDescendants(flowThread);
 }
 
+static void collapseAnonymousTableRowsIfNeeded(const RenderObject& rendererToBeDestroyed)
+{
+    if (!is<RenderTableRow>(rendererToBeDestroyed))
+        return;
+
+    auto& rowToBeDestroyed = downcast<RenderTableRow>(rendererToBeDestroyed);
+    auto* section = downcast<RenderTableSection>(rowToBeDestroyed.parent());
+    if (!section)
+        return;
+
+    // All siblings generated?
+    for (auto* current = section->firstRow(); current; current = current->nextRow()) {
+        if (current == &rendererToBeDestroyed)
+            continue;
+        if (!current->isAnonymous())
+            return;
+    }
+
+    RenderTableRow* rowToInsertInto = nullptr;
+    auto* currentRow = section->firstRow();
+    while (currentRow) {
+        if (currentRow == &rendererToBeDestroyed) {
+            currentRow = currentRow->nextRow();
+            continue;
+        }
+        if (!rowToInsertInto) {
+            rowToInsertInto = currentRow;
+            currentRow = currentRow->nextRow();
+            continue;
+        }
+        currentRow->moveAllChildrenTo(rowToInsertInto);
+        auto* destroyThis = currentRow;
+        currentRow = currentRow->nextRow();
+        destroyThis->destroy();
+    }
+    if (rowToInsertInto)
+        rowToInsertInto->setNeedsLayout();
+}
+
 void RenderObject::destroyAndCleanupAnonymousWrappers()
 {
     // If the tree is destroyed, there is no need for a clean-up phase.
@@ -1647,19 +1673,20 @@ void RenderObject::destroyAndCleanupAnonymousWrappers()
         return;
     }
 
-    RenderObject* destroyRoot = this;
-    for (auto destroyRootParent = destroyRoot->parent(); destroyRootParent && destroyRootParent->isAnonymous(); destroyRoot = destroyRootParent, destroyRootParent = destroyRootParent->parent()) {
-        // Currently we only remove anonymous cells' and table sections' wrappers but we should remove all unneeded
-        // wrappers. See http://webkit.org/b/52123 as an example where this is needed.
-        if (!destroyRootParent->isTableCell() && !destroyRootParent->isTableSection())
+    auto* destroyRoot = this;
+    auto* destroyRootParent = destroyRoot->parent();
+    while (destroyRootParent && destroyRootParent->isAnonymous()) {
+        if (!destroyRootParent->isTableCell() && !destroyRootParent->isTableRow()
+            && !destroyRootParent->isTableCaption() && !destroyRootParent->isTableSection() && !destroyRootParent->isTable())
             break;
-
-        if (destroyRootParent->firstChild() != this || destroyRootParent->lastChild() != this)
+        // single child?
+        if (!(destroyRootParent->firstChild() == destroyRoot && destroyRootParent->lastChild() == destroyRoot))
             break;
+        destroyRoot = destroyRootParent;
+        destroyRootParent = destroyRootParent->parent();
     }
-
+    collapseAnonymousTableRowsIfNeeded(*destroyRoot);
     destroyRoot->destroy();
-
     // WARNING: |this| is deleted here.
 }
 
@@ -1733,7 +1760,7 @@ void RenderObject::updateHitTestResult(HitTestResult& result, const LayoutPoint&
     // If we hit the anonymous renderers inside generated content we should
     // actually hit the generated content so walk up to the PseudoElement.
     if (!node && parent() && parent()->isBeforeOrAfterContent()) {
-        for (auto renderer = parent(); renderer && !node; renderer = renderer->parent())
+        for (auto* renderer = parent(); renderer && !node; renderer = renderer->parent())
             node = renderer->element();
     }
 
@@ -1774,9 +1801,9 @@ static Color decorationColor(RenderStyle* style)
 }
 
 void RenderObject::getTextDecorationColorsAndStyles(int decorations, Color& underlineColor, Color& overlineColor, Color& linethroughColor,
-    TextDecorationStyle& underlineStyle, TextDecorationStyle& overlineStyle, TextDecorationStyle& linethroughStyle, bool firstlineStyle)
+    TextDecorationStyle& underlineStyle, TextDecorationStyle& overlineStyle, TextDecorationStyle& linethroughStyle, bool firstlineStyle) const
 {
-    RenderObject* current = this;
+    const RenderObject* current = this;
     RenderStyle* styleToUse = nullptr;
     TextDecoration currDecs = TextDecorationNone;
     Color resultColor;
@@ -1878,11 +1905,11 @@ void RenderObject::collectAnnotatedRegions(Vector<AnnotatedRegionValue>& regions
 }
 #endif
 
-int RenderObject::maximalOutlineSize(PaintPhase p) const
+void RenderObject::adjustRectWithMaximumOutline(PaintPhase phase, LayoutRect& rect) const
 {
-    if (p != PaintPhaseOutline && p != PaintPhaseSelfOutline && p != PaintPhaseChildOutlines)
-        return 0;
-    return view().maximalOutlineSize();
+    if (phase != PaintPhaseOutline && phase != PaintPhaseSelfOutline && phase != PaintPhaseChildOutlines)
+        return;
+    rect.inflate(view().maximalOutlineSize());
 }
 
 int RenderObject::caretMinOffset() const
@@ -1916,12 +1943,13 @@ int RenderObject::nextOffset(int current) const
 
 void RenderObject::adjustRectForOutlineAndShadow(LayoutRect& rect) const
 {
-    int outlineSize = outlineStyleForRepaint().outlineSize();
+    float outlineSize = outlineStyleForRepaint().outlineSize();
+    if (outlineStyleForRepaint().outlineStyleIsAuto())
+        outlineSize = std::max(theme().platformFocusRingWidth() + outlineStyleForRepaint().outlineOffset(), outlineSize);
     if (const ShadowData* boxShadow = style().boxShadow()) {
         boxShadow->adjustRectForShadow(rect, outlineSize);
         return;
     }
-
     rect.inflate(outlineSize);
 }
 
@@ -1936,7 +1964,7 @@ RenderBoxModelObject* RenderObject::offsetParent() const
     // A is the root element.
     // A is the HTML body element.
     // The computed value of the position property for element A is fixed.
-    if (isRoot() || isBody() || (isOutOfFlowPositioned() && style().position() == FixedPosition))
+    if (isDocumentElementRenderer() || isBody() || (isOutOfFlowPositioned() && style().position() == FixedPosition))
         return nullptr;
 
     // If A is an area HTML element which has a map HTML element somewhere in the ancestor
@@ -2168,6 +2196,18 @@ void RenderObject::setIsRenderFlowThread(bool isFlowThread)
         ensureRareData().setIsRenderFlowThread(isFlowThread);
 }
 
+void RenderObject::setIsRegisteredForVisibleInViewportCallback(bool registered)
+{
+    if (registered || hasRareData())
+        ensureRareData().setIsRegisteredForVisibleInViewportCallback(registered);
+}
+
+void RenderObject::setVisibleInViewportState(VisibleInViewportState visible)
+{
+    if (visible != VisibilityUnknown || hasRareData())
+        ensureRareData().setVisibleInViewportState(visible);
+}
+
 RenderObject::RareDataHash& RenderObject::rareDataMap()
 {
     static NeverDestroyed<RareDataHash> map;
@@ -2194,6 +2234,19 @@ void RenderObject::removeRareData()
     setHasRareData(false);
 }
 
+#ifndef NDEBUG
+void printRenderTreeForLiveDocuments()
+{
+    for (const auto* document : Document::allDocuments()) {
+        if (!document->renderView() || document->inPageCache())
+            continue;
+        if (document->frame() && document->frame()->isMainFrame())
+            fprintf(stderr, "----------------------main frame--------------------------\n");
+        fprintf(stderr, "%s", document->url().string().utf8().data());
+        showRenderTree(document->renderView());
+    }
+}
+#endif
 } // namespace WebCore
 
 #if ENABLE(TREE_DEBUGGING)

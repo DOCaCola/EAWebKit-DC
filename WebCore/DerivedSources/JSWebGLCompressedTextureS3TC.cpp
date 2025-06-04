@@ -25,7 +25,6 @@
 #include "JSWebGLCompressedTextureS3TC.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLCompressedTextureS3TC.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,10 +60,10 @@ private:
 
 static const HashTableValue JSWebGLCompressedTextureS3TCPrototypeTableValues[] =
 {
-    { "COMPRESSED_RGB_S3TC_DXT1_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x83F0), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_S3TC_DXT1_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x83F1), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_S3TC_DXT3_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x83F2), (intptr_t) (0) },
-    { "COMPRESSED_RGBA_S3TC_DXT5_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x83F3), (intptr_t) (0) },
+    { "COMPRESSED_RGB_S3TC_DXT1_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x83F0) } },
+    { "COMPRESSED_RGBA_S3TC_DXT1_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x83F1) } },
+    { "COMPRESSED_RGBA_S3TC_DXT3_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x83F2) } },
+    { "COMPRESSED_RGBA_S3TC_DXT5_EXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x83F3) } },
 };
 
 const ClassInfo JSWebGLCompressedTextureS3TCPrototype::s_info = { "WebGLCompressedTextureS3TCPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureS3TCPrototype) };
@@ -77,9 +76,8 @@ void JSWebGLCompressedTextureS3TCPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLCompressedTextureS3TC::s_info = { "WebGLCompressedTextureS3TC", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLCompressedTextureS3TC) };
 
-JSWebGLCompressedTextureS3TC::JSWebGLCompressedTextureS3TC(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTextureS3TC>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLCompressedTextureS3TC::JSWebGLCompressedTextureS3TC(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLCompressedTextureS3TC>&& impl)
+    : JSDOMWrapper<WebGLCompressedTextureS3TC>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -99,15 +97,10 @@ void JSWebGLCompressedTextureS3TC::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLCompressedTextureS3TC::~JSWebGLCompressedTextureS3TC();
 }
 
-JSWebGLCompressedTextureS3TC::~JSWebGLCompressedTextureS3TC()
-{
-    releaseImpl();
-}
-
 bool JSWebGLCompressedTextureS3TCOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLCompressedTextureS3TC = jsCast<JSWebGLCompressedTextureS3TC*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureS3TC->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLCompressedTextureS3TC->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -115,7 +108,7 @@ void JSWebGLCompressedTextureS3TCOwner::finalize(JSC::Handle<JSC::Unknown> handl
 {
     auto* jsWebGLCompressedTextureS3TC = jsCast<JSWebGLCompressedTextureS3TC*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLCompressedTextureS3TC->impl(), jsWebGLCompressedTextureS3TC);
+    uncacheWrapper(world, &jsWebGLCompressedTextureS3TC->wrapped(), jsWebGLCompressedTextureS3TC);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -126,6 +119,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLCompressedTextureS3TC@We
 extern "C" { extern void* _ZTVN7WebCore26WebGLCompressedTextureS3TCE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTextureS3TC* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLCompressedTextureS3TC>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompressedTextureS3TC* impl)
 {
     if (!impl)
@@ -157,7 +158,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLCompres
 WebGLCompressedTextureS3TC* JSWebGLCompressedTextureS3TC::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLCompressedTextureS3TC*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

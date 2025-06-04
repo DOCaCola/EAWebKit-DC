@@ -25,7 +25,6 @@
 #include "JSWebGLDebugRendererInfo.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLDebugRendererInfo.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,8 +60,8 @@ private:
 
 static const HashTableValue JSWebGLDebugRendererInfoPrototypeTableValues[] =
 {
-    { "UNMASKED_VENDOR_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9245), (intptr_t) (0) },
-    { "UNMASKED_RENDERER_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x9246), (intptr_t) (0) },
+    { "UNMASKED_VENDOR_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9245) } },
+    { "UNMASKED_RENDERER_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x9246) } },
 };
 
 const ClassInfo JSWebGLDebugRendererInfoPrototype::s_info = { "WebGLDebugRendererInfoPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDebugRendererInfoPrototype) };
@@ -75,9 +74,8 @@ void JSWebGLDebugRendererInfoPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLDebugRendererInfo::s_info = { "WebGLDebugRendererInfo", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDebugRendererInfo) };
 
-JSWebGLDebugRendererInfo::JSWebGLDebugRendererInfo(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDebugRendererInfo>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLDebugRendererInfo::JSWebGLDebugRendererInfo(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLDebugRendererInfo>&& impl)
+    : JSDOMWrapper<WebGLDebugRendererInfo>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -97,15 +95,10 @@ void JSWebGLDebugRendererInfo::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLDebugRendererInfo::~JSWebGLDebugRendererInfo();
 }
 
-JSWebGLDebugRendererInfo::~JSWebGLDebugRendererInfo()
-{
-    releaseImpl();
-}
-
 bool JSWebGLDebugRendererInfoOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLDebugRendererInfo = jsCast<JSWebGLDebugRendererInfo*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDebugRendererInfo->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDebugRendererInfo->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -113,7 +106,7 @@ void JSWebGLDebugRendererInfoOwner::finalize(JSC::Handle<JSC::Unknown> handle, v
 {
     auto* jsWebGLDebugRendererInfo = jsCast<JSWebGLDebugRendererInfo*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLDebugRendererInfo->impl(), jsWebGLDebugRendererInfo);
+    uncacheWrapper(world, &jsWebGLDebugRendererInfo->wrapped(), jsWebGLDebugRendererInfo);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -124,6 +117,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLDebugRendererInfo@WebCor
 extern "C" { extern void* _ZTVN7WebCore22WebGLDebugRendererInfoE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLDebugRendererInfo>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugRendererInfo* impl)
 {
     if (!impl)
@@ -155,7 +156,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDebugRe
 WebGLDebugRendererInfo* JSWebGLDebugRendererInfo::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLDebugRendererInfo*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

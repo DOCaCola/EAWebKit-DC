@@ -63,7 +63,6 @@ public:
     void setAlwaysUseAcceleratedOverflowScroll(bool alwaysUseAcceleratedOverflowScroll);
     void setAntialiased2dCanvasEnabled(bool antialiased2dCanvasEnabled);
     void setAppleMailPaginationQuirkEnabled(bool appleMailPaginationQuirkEnabled);
-    void setApplyDeviceScaleFactorInCompositor(bool applyDeviceScaleFactorInCompositor);
     void setAsynchronousSpellCheckingEnabled(bool asynchronousSpellCheckingEnabled);
     void setAttachmentElementEnabled(bool attachmentElementEnabled);
     void setAudioPlaybackRequiresUserGesture(bool audioPlaybackRequiresUserGesture);
@@ -103,11 +102,12 @@ public:
     void setFullScreenEnabled(bool fullScreenEnabled);
     void setHttpEquivEnabled(bool httpEquivEnabled);
     void setHyperlinkAuditingEnabled(bool hyperlinkAuditingEnabled);
-    void setIgnoreViewportScalingConstraints(bool ignoreViewportScalingConstraints);
     void setImageControlsEnabled(bool imageControlsEnabled);
     void setImageSubsamplingEnabled(bool imageSubsamplingEnabled);
     void setIncrementalRenderingSuppressionTimeoutInSeconds(double incrementalRenderingSuppressionTimeoutInSeconds);
+    void setInlineMediaPlaybackRequiresPlaysInlineAttribute(bool inlineMediaPlaybackRequiresPlaysInlineAttribute);
     void setInteractiveFormValidationEnabled(bool interactiveFormValidationEnabled);
+    void setInvisibleAutoplayNotPermitted(bool invisibleAutoplayNotPermitted);
     void setJavaScriptCanAccessClipboard(bool javaScriptCanAccessClipboard);
     void setJavaScriptCanOpenWindowsAutomatically(bool javaScriptCanOpenWindowsAutomatically);
     void setLayoutFallbackWidth(int layoutFallbackWidth);
@@ -117,7 +117,6 @@ public:
     void setLocalStorageDatabasePath(const String& localStorageDatabasePath);
     void setLocalStorageEnabled(bool localStorageEnabled);
     void setLogsPageMessagesToSystemConsoleEnabled(bool logsPageMessagesToSystemConsoleEnabled);
-    void setLongMousePressEnabled(bool longMousePressEnabled);
     void setMaxParseDuration(double maxParseDuration);
     void setMaximumHTMLParserDOMTreeDepth(unsigned maximumHTMLParserDOMTreeDepth);
     void setMaximumPlugInSnapshotAttempts(unsigned maximumPlugInSnapshotAttempts);
@@ -145,7 +144,6 @@ public:
     void setPlugInSnapshottingEnabled(bool plugInSnapshottingEnabled);
     void setPreventKeyboardDOMEventDispatch(bool preventKeyboardDOMEventDispatch);
     void setPrimaryPlugInSnapshotDetectionEnabled(bool primaryPlugInSnapshotDetectionEnabled);
-    void setPrivilegedWebGLExtensionsEnabled(bool privilegedWebGLExtensionsEnabled);
     void setRequestAnimationFrameEnabled(bool requestAnimationFrameEnabled);
     void setRequiresUserGestureForMediaPlayback(bool requiresUserGestureForMediaPlayback);
     void setRubberBandingForSubScrollableRegionsEnabled(bool rubberBandingForSubScrollableRegionsEnabled);
@@ -186,6 +184,7 @@ public:
     void setTreatsAnyTextCSSLinkAsStylesheet(bool treatsAnyTextCSSLinkAsStylesheet);
     void setUnifiedTextCheckerEnabled(bool unifiedTextCheckerEnabled);
     void setUnsafePluginPastingEnabled(bool unsafePluginPastingEnabled);
+    void setUseGiantTiles(bool useGiantTiles);
     void setUseImageDocumentForSubframePDF(bool useImageDocumentForSubframePDF);
     void setUseLegacyBackgroundSizeShorthandBehavior(bool useLegacyBackgroundSizeShorthandBehavior);
     void setUseLegacyTextAlignPositionedElementBehavior(bool useLegacyTextAlignPositionedElementBehavior);
@@ -229,7 +228,6 @@ private:
     bool m_alwaysUseAcceleratedOverflowScroll;
     bool m_antialiased2dCanvasEnabled;
     bool m_appleMailPaginationQuirkEnabled;
-    bool m_applyDeviceScaleFactorInCompositor;
     bool m_asynchronousSpellCheckingEnabled;
 #if ENABLE(ATTACHMENT_ELEMENT)
     bool m_attachmentElementEnabled;
@@ -273,13 +271,14 @@ private:
 #endif
     bool m_httpEquivEnabled;
     bool m_hyperlinkAuditingEnabled;
-    bool m_ignoreViewportScalingConstraints;
 #if ENABLE(SERVICE_CONTROLS)
     bool m_imageControlsEnabled;
 #endif
     bool m_imageSubsamplingEnabled;
     double m_incrementalRenderingSuppressionTimeoutInSeconds;
+    bool m_inlineMediaPlaybackRequiresPlaysInlineAttribute;
     bool m_interactiveFormValidationEnabled;
+    bool m_invisibleAutoplayNotPermitted;
     bool m_javaScriptCanAccessClipboard;
     bool m_javaScriptCanOpenWindowsAutomatically;
     int m_layoutFallbackWidth;
@@ -289,7 +288,6 @@ private:
     String m_localStorageDatabasePath;
     bool m_localStorageEnabled;
     bool m_logsPageMessagesToSystemConsoleEnabled;
-    bool m_longMousePressEnabled;
     double m_maxParseDuration;
     unsigned m_maximumHTMLParserDOMTreeDepth;
     unsigned m_maximumPlugInSnapshotAttempts;
@@ -323,7 +321,6 @@ private:
     bool m_plugInSnapshottingEnabled;
     bool m_preventKeyboardDOMEventDispatch;
     bool m_primaryPlugInSnapshotDetectionEnabled;
-    bool m_privilegedWebGLExtensionsEnabled;
     bool m_requestAnimationFrameEnabled;
     bool m_requiresUserGestureForMediaPlayback;
 #if ENABLE(RUBBER_BANDING)
@@ -376,6 +373,7 @@ private:
     bool m_treatsAnyTextCSSLinkAsStylesheet;
     bool m_unifiedTextCheckerEnabled;
     bool m_unsafePluginPastingEnabled;
+    bool m_useGiantTiles;
     bool m_useImageDocumentForSubframePDF;
     bool m_useLegacyBackgroundSizeShorthandBehavior;
     bool m_useLegacyTextAlignPositionedElementBehavior;

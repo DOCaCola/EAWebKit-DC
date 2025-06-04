@@ -138,7 +138,7 @@ namespace WebCore {
         void disconnectOwnerElement();
 
         MainFrame& mainFrame() const;
-        bool isMainFrame() const;
+        WEBCORE_EXPORT bool isMainFrame() const;
 
         Page* page() const;
         HTMLFrameOwnerElement* ownerElement() const;
@@ -242,8 +242,10 @@ namespace WebCore {
         WEBCORE_EXPORT NSRect rectForScrollToVisible() const;
         WEBCORE_EXPORT DOMCSSStyleDeclaration* styleAtSelectionStart() const;
         WEBCORE_EXPORT unsigned formElementsCharacterCount() const;
+
+        // This function is used by Legacy WebKit.
         WEBCORE_EXPORT void setTimersPaused(bool);
-        bool timersPaused() const { return m_timersPausedCount; }
+
         WEBCORE_EXPORT void dispatchPageHideEventBeforePause();
         WEBCORE_EXPORT void dispatchPageShowEventBeforeResume();
         WEBCORE_EXPORT void setRangedSelectionBaseToCurrentSelection();
@@ -306,7 +308,6 @@ namespace WebCore {
         IntPoint m_overflowAutoScrollPos;
         ViewportArguments m_viewportArguments;
         bool m_selectionChangeCallbacksDisabled;
-        int m_timersPausedCount;
         VisibleSelection m_rangedSelectionBase;
         VisibleSelection m_rangedSelectionInitialExtent;
 #endif

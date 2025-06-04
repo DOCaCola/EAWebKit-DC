@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSKeyframeRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSKeyframeRule>&& impl)
     {
-        JSCSSKeyframeRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframeRule>(globalObject->vm().heap)) JSCSSKeyframeRule(structure, globalObject, WTF::move(impl));
+        JSCSSKeyframeRule* ptr = new (NotNull, JSC::allocateCell<JSCSSKeyframeRule>(globalObject->vm().heap)) JSCSSKeyframeRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSKeyframeRule& impl() const
+    CSSKeyframeRule& wrapped() const
     {
-        return static_cast<CSSKeyframeRule&>(Base::impl());
+        return static_cast<CSSKeyframeRule&>(Base::wrapped());
     }
 protected:
-    JSCSSKeyframeRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSKeyframeRule>&&);
+    JSCSSKeyframeRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSKeyframeRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

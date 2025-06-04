@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSDOMSecurityPolicy : public JSDOMWrapper {
+class JSDOMSecurityPolicy : public JSDOMWrapper<DOMSecurityPolicy> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMSecurityPolicy> Base;
     static JSDOMSecurityPolicy* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMSecurityPolicy>&& impl)
     {
-        JSDOMSecurityPolicy* ptr = new (NotNull, JSC::allocateCell<JSDOMSecurityPolicy>(globalObject->vm().heap)) JSDOMSecurityPolicy(structure, globalObject, WTF::move(impl));
+        JSDOMSecurityPolicy* ptr = new (NotNull, JSC::allocateCell<JSDOMSecurityPolicy>(globalObject->vm().heap)) JSDOMSecurityPolicy(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMSecurityPolicy* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMSecurityPolicy();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMSecurityPolicy& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMSecurityPolicy* m_impl;
 protected:
-    JSDOMSecurityPolicy(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMSecurityPolicy>&&);
+    JSDOMSecurityPolicy(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMSecurityPolicy>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMSecurityPolicy*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMSecurityPolicy*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMSecurityPolicy& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMSecurityPolicy& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMSecurityPolicy*);
 
 
 } // namespace WebCore

@@ -29,6 +29,7 @@
 #include "JSClientRect.h"
 #include "JSClientRectList.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDocumentFragment.h"
 #include "JSNode.h"
 #include "JSRange.h"
@@ -66,9 +67,9 @@ JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionDetach(JSC::ExecState*
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetClientRects(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetBoundingClientRect(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCreateContextualFragment(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIntersectsNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCompareNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionComparePoint(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIntersectsNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIsPointInRange(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionExpand(JSC::ExecState*);
 
@@ -107,42 +108,20 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSRangeConstructor : public DOMConstructorObject {
-private:
-    JSRangeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSRangeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSRangeConstructor* ptr = new (NotNull, JSC::allocateCell<JSRangeConstructor>(vm.heap)) JSRangeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSRange(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSRange> JSRangeConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSRangeConstructorTableValues[] =
 {
-    { "START_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "START_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "END_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "END_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "NODE_BEFORE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "NODE_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "NODE_BEFORE_AND_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "NODE_INSIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "START_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "START_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "END_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "END_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "NODE_BEFORE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "NODE_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "NODE_BEFORE_AND_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "NODE_INSIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 
@@ -155,85 +134,72 @@ COMPILE_ASSERT(1 == Range::NODE_AFTER, RangeEnumNODE_AFTERIsWrongUseDoNotCheckCo
 COMPILE_ASSERT(2 == Range::NODE_BEFORE_AND_AFTER, RangeEnumNODE_BEFORE_AND_AFTERIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(3 == Range::NODE_INSIDE, RangeEnumNODE_INSIDEIsWrongUseDoNotCheckConstants);
 
-EncodedJSValue JSC_HOST_CALL JSRangeConstructor::constructJSRange(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSRangeConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSRangeConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSRangeConstructor*>(state->callee());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "Range");
+        return throwConstructorDocumentUnavailableError(*state, "Range");
     auto& document = downcast<Document>(*context);
     RefPtr<Range> object = Range::create(document);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSRangeConstructor::s_info = { "RangeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRangeConstructor) };
-
-JSRangeConstructor::JSRangeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSRangeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSRangeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSRange::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSRange::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Range"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSRangeConstructorTableValues, *this);
 }
 
-ConstructType JSRangeConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSRange;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSRangeConstructor::s_info = { "RangeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRangeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSRangePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "startContainer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeStartContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "startOffset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeStartOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "endContainer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeEndContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "endOffset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeEndOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "collapsed", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeCollapsed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "commonAncestorContainer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeCommonAncestorContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "START_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "START_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "END_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "END_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "NODE_BEFORE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "NODE_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "NODE_BEFORE_AND_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "NODE_INSIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "setStart", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStart), (intptr_t) (0) },
-    { "setEnd", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEnd), (intptr_t) (0) },
-    { "setStartBefore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStartBefore), (intptr_t) (0) },
-    { "setStartAfter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStartAfter), (intptr_t) (0) },
-    { "setEndBefore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEndBefore), (intptr_t) (0) },
-    { "setEndAfter", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEndAfter), (intptr_t) (0) },
-    { "collapse", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCollapse), (intptr_t) (0) },
-    { "selectNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSelectNode), (intptr_t) (0) },
-    { "selectNodeContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSelectNodeContents), (intptr_t) (0) },
-    { "compareBoundaryPoints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCompareBoundaryPoints), (intptr_t) (0) },
-    { "deleteContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionDeleteContents), (intptr_t) (0) },
-    { "extractContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionExtractContents), (intptr_t) (0) },
-    { "cloneContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCloneContents), (intptr_t) (0) },
-    { "insertNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionInsertNode), (intptr_t) (0) },
-    { "surroundContents", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSurroundContents), (intptr_t) (0) },
-    { "cloneRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCloneRange), (intptr_t) (0) },
-    { "toString", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionToString), (intptr_t) (0) },
-    { "detach", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionDetach), (intptr_t) (0) },
-    { "getClientRects", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionGetClientRects), (intptr_t) (0) },
-    { "getBoundingClientRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionGetBoundingClientRect), (intptr_t) (0) },
-    { "createContextualFragment", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCreateContextualFragment), (intptr_t) (0) },
-    { "intersectsNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionIntersectsNode), (intptr_t) (0) },
-    { "compareNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCompareNode), (intptr_t) (0) },
-    { "comparePoint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionComparePoint), (intptr_t) (0) },
-    { "isPointInRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionIsPointInRange), (intptr_t) (0) },
-    { "expand", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionExpand), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "startContainer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeStartContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "startOffset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeStartOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "endContainer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeEndContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "endOffset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeEndOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "collapsed", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeCollapsed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "commonAncestorContainer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsRangeCommonAncestorContainer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "START_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "START_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "END_TO_END", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "END_TO_START", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "NODE_BEFORE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "NODE_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "NODE_BEFORE_AND_AFTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "NODE_INSIDE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "setStart", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStart), (intptr_t) (1) } },
+    { "setEnd", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEnd), (intptr_t) (1) } },
+    { "setStartBefore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStartBefore), (intptr_t) (1) } },
+    { "setStartAfter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetStartAfter), (intptr_t) (1) } },
+    { "setEndBefore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEndBefore), (intptr_t) (1) } },
+    { "setEndAfter", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSetEndAfter), (intptr_t) (1) } },
+    { "collapse", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCollapse), (intptr_t) (0) } },
+    { "selectNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSelectNode), (intptr_t) (1) } },
+    { "selectNodeContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSelectNodeContents), (intptr_t) (1) } },
+    { "compareBoundaryPoints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCompareBoundaryPoints), (intptr_t) (0) } },
+    { "deleteContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionDeleteContents), (intptr_t) (0) } },
+    { "extractContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionExtractContents), (intptr_t) (0) } },
+    { "cloneContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCloneContents), (intptr_t) (0) } },
+    { "insertNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionInsertNode), (intptr_t) (1) } },
+    { "surroundContents", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionSurroundContents), (intptr_t) (1) } },
+    { "cloneRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCloneRange), (intptr_t) (0) } },
+    { "toString", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionToString), (intptr_t) (0) } },
+    { "detach", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionDetach), (intptr_t) (0) } },
+    { "getClientRects", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionGetClientRects), (intptr_t) (0) } },
+    { "getBoundingClientRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionGetBoundingClientRect), (intptr_t) (0) } },
+    { "createContextualFragment", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCreateContextualFragment), (intptr_t) (0) } },
+    { "compareNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionCompareNode), (intptr_t) (1) } },
+    { "comparePoint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionComparePoint), (intptr_t) (1) } },
+    { "intersectsNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionIntersectsNode), (intptr_t) (1) } },
+    { "isPointInRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionIsPointInRange), (intptr_t) (1) } },
+    { "expand", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsRangePrototypeFunctionExpand), (intptr_t) (0) } },
 };
 
 const ClassInfo JSRangePrototype::s_info = { "RangePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRangePrototype) };
@@ -246,9 +212,8 @@ void JSRangePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSRange::s_info = { "Range", &Base::s_info, 0, CREATE_METHOD_TABLE(JSRange) };
 
-JSRange::JSRange(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Range>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSRange::JSRange(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Range>&& impl)
+    : JSDOMWrapper<Range>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -268,574 +233,577 @@ void JSRange::destroy(JSC::JSCell* cell)
     thisObject->JSRange::~JSRange();
 }
 
-JSRange::~JSRange()
+EncodedJSValue jsRangeStartContainer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsRangeStartContainer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "startContainer");
-        return throwGetterTypeError(*exec, "Range", "startContainer");
+            return reportDeprecatedGetterError(*state, "Range", "startContainer");
+        return throwGetterTypeError(*state, "Range", "startContainer");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.startContainer(ec)));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.startContainer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeStartOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRangeStartOffset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "startOffset");
-        return throwGetterTypeError(*exec, "Range", "startOffset");
+            return reportDeprecatedGetterError(*state, "Range", "startOffset");
+        return throwGetterTypeError(*state, "Range", "startOffset");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.startOffset(ec));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsNumber(impl.startOffset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeEndContainer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRangeEndContainer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "endContainer");
-        return throwGetterTypeError(*exec, "Range", "endContainer");
+            return reportDeprecatedGetterError(*state, "Range", "endContainer");
+        return throwGetterTypeError(*state, "Range", "endContainer");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.endContainer(ec)));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.endContainer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeEndOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRangeEndOffset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "endOffset");
-        return throwGetterTypeError(*exec, "Range", "endOffset");
+            return reportDeprecatedGetterError(*state, "Range", "endOffset");
+        return throwGetterTypeError(*state, "Range", "endOffset");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsNumber(impl.endOffset(ec));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsNumber(impl.endOffset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeCollapsed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRangeCollapsed(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "collapsed");
-        return throwGetterTypeError(*exec, "Range", "collapsed");
+            return reportDeprecatedGetterError(*state, "Range", "collapsed");
+        return throwGetterTypeError(*state, "Range", "collapsed");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.collapsed(ec));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsBoolean(impl.collapsed());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeCommonAncestorContainer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsRangeCommonAncestorContainer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSRange* castedThis = jsDynamicCast<JSRange*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSRangePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Range", "commonAncestorContainer");
-        return throwGetterTypeError(*exec, "Range", "commonAncestorContainer");
+            return reportDeprecatedGetterError(*state, "Range", "commonAncestorContainer");
+        return throwGetterTypeError(*state, "Range", "commonAncestorContainer");
     }
-    ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.commonAncestorContainer(ec)));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.commonAncestorContainer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsRangeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsRangeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSRangePrototype* domObject = jsDynamicCast<JSRangePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSRange::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSRange::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSRange::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSRangeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSRangeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStart(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStart(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setStart");
+        return throwThisTypeError(*state, "Range", "setStart");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int offset = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int offset = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStart(refNode, offset, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEnd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEnd(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setEnd");
+        return throwThisTypeError(*state, "Range", "setEnd");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int offset = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int offset = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setEnd(refNode, offset, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStartBefore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStartBefore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setStartBefore");
+        return throwThisTypeError(*state, "Range", "setStartBefore");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStartBefore(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStartAfter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetStartAfter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setStartAfter");
+        return throwThisTypeError(*state, "Range", "setStartAfter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStartAfter(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEndBefore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEndBefore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setEndBefore");
+        return throwThisTypeError(*state, "Range", "setEndBefore");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setEndBefore(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEndAfter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSetEndAfter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "setEndAfter");
+        return throwThisTypeError(*state, "Range", "setEndAfter");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setEndAfter(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCollapse(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCollapse(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "collapse");
+        return throwThisTypeError(*state, "Range", "collapse");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    bool toStart = exec->argument(0).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool toStart = state->argument(0).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    impl.collapse(toStart, ec);
-    setDOMException(exec, ec);
+    impl.collapse(toStart);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSelectNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSelectNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "selectNode");
+        return throwThisTypeError(*state, "Range", "selectNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.selectNode(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSelectNodeContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSelectNodeContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "selectNodeContents");
+        return throwThisTypeError(*state, "Range", "selectNodeContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.selectNodeContents(refNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCompareBoundaryPoints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCompareBoundaryPoints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "compareBoundaryPoints");
+        return throwThisTypeError(*state, "Range", "compareBoundaryPoints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Range::CompareHow how = static_cast<Range::CompareHow>(exec->argument(0).toInt32(exec));
-    if (UNLIKELY(exec->hadException()))
+    uint16_t how = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Range* sourceRange = JSRange::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Range* sourceRange = JSRange::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.compareBoundaryPoints(how, sourceRange, ec));
+    JSValue result = jsNumber(impl.compareBoundaryPointsForBindings(how, sourceRange, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionDeleteContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionDeleteContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "deleteContents");
+        return throwThisTypeError(*state, "Range", "deleteContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.deleteContents(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionExtractContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionExtractContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "extractContents");
+        return throwThisTypeError(*state, "Range", "extractContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.extractContents(ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.extractContents(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCloneContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCloneContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "cloneContents");
+        return throwThisTypeError(*state, "Range", "cloneContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cloneContents(ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.cloneContents(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionInsertNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionInsertNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "insertNode");
+        return throwThisTypeError(*state, "Range", "insertNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* newNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* newNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.insertNode(newNode, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSurroundContents(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionSurroundContents(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "surroundContents");
+        return throwThisTypeError(*state, "Range", "surroundContents");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* newParent = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* newParent = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.surroundContents(newParent, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCloneRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCloneRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "cloneRange");
+        return throwThisTypeError(*state, "Range", "cloneRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.cloneRange(ec)));
-
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.cloneRange()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "toString");
+        return throwThisTypeError(*state, "Range", "toString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.toString(ec));
-
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.toString());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionDetach(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionDetach(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "detach");
+        return throwThisTypeError(*state, "Range", "detach");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.detach(ec);
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    impl.detach();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetClientRects(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetClientRects(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "getClientRects");
+        return throwThisTypeError(*state, "Range", "getClientRects");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getClientRects()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getClientRects()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetBoundingClientRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionGetBoundingClientRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "getBoundingClientRect");
+        return throwThisTypeError(*state, "Range", "getBoundingClientRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getBoundingClientRect()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getBoundingClientRect()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCreateContextualFragment(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCreateContextualFragment(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "createContextualFragment");
+        return throwThisTypeError(*state, "Range", "createContextualFragment");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String html = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String html = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createContextualFragment(html, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createContextualFragment(html, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIntersectsNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCompareNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "intersectsNode");
+        return throwThisTypeError(*state, "Range", "compareNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsBoolean(impl.intersectsNode(refNode, ec));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionCompareNode(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "compareNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.compareNode(refNode, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionComparePoint(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionComparePoint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "comparePoint");
+        return throwThisTypeError(*state, "Range", "comparePoint");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int offset = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int offset = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.comparePoint(refNode, offset, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIsPointInRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIntersectsNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "isPointInRange");
+        return throwThisTypeError(*state, "Range", "intersectsNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* refNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int offset = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    JSValue result = jsBoolean(impl.intersectsNode(refNode, ec));
+
+    setDOMException(state, ec);
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionIsPointInRange(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Range", "isPointInRange");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    Node* refNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    int offset = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPointInRange(refNode, offset, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionExpand(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsRangePrototypeFunctionExpand(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSRange* castedThis = jsDynamicCast<JSRange*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Range", "expand");
+        return throwThisTypeError(*state, "Range", "expand");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSRange::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String unit = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String unit = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.expand(unit, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
@@ -850,7 +818,14 @@ void JSRangeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsRange = jsCast<JSRange*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsRange->impl(), jsRange);
+    uncacheWrapper(world, &jsRange->wrapped(), jsRange);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Range* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSRange>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Range* impl)
@@ -872,7 +847,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Range* impl)
 Range* JSRange::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSRange*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

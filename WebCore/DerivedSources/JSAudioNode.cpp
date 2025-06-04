@@ -25,13 +25,13 @@
 #include "JSAudioNode.h"
 
 #include "AudioContext.h"
-#include "AudioNode.h"
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSAudioContext.h"
 #include "JSAudioNode.h"
 #include "JSAudioParam.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "URL.h"
@@ -89,59 +89,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSAudioNodeConstructor : public DOMConstructorObject {
-private:
-    JSAudioNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSAudioNode> JSAudioNodeConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSAudioNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSAudioNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSAudioNodeConstructor>(vm.heap)) JSAudioNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSAudioNodeConstructor::s_info = { "AudioNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioNodeConstructor) };
-
-JSAudioNodeConstructor::JSAudioNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSAudioNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSAudioNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSAudioNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSAudioNode::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("AudioNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSAudioNodeConstructor::s_info = { "AudioNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSAudioNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "context", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeContext), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "numberOfInputs", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeNumberOfInputs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "numberOfOutputs", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeNumberOfOutputs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "channelCount", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelCount) },
-    { "channelCountMode", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelCountMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelCountMode) },
-    { "channelInterpretation", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelInterpretation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelInterpretation) },
-    { "connect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionConnect), (intptr_t) (1) },
-    { "disconnect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionDisconnect), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "context", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeContext), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "numberOfInputs", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeNumberOfInputs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "numberOfOutputs", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeNumberOfOutputs), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "channelCount", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelCount) } },
+    { "channelCountMode", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelCountMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelCountMode) } },
+    { "channelInterpretation", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsAudioNodeChannelInterpretation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSAudioNodeChannelInterpretation) } },
+    { "connect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionConnect), (intptr_t) (1) } },
+    { "disconnect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionDisconnect), (intptr_t) (0) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsAudioNodePrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSAudioNodePrototype::s_info = { "AudioNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioNodePrototype) };
@@ -154,7 +128,7 @@ void JSAudioNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSAudioNode::s_info = { "AudioNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSAudioNode) };
 
-JSAudioNode::JSAudioNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioNode>&& impl)
+JSAudioNode::JSAudioNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<AudioNode>&& impl)
     : JSEventTarget(structure, globalObject, WTF::move(impl))
 {
 }
@@ -169,311 +143,311 @@ JSObject* JSAudioNode::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSAudioNode>(vm, globalObject);
 }
 
-EncodedJSValue jsAudioNodeContext(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeContext(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "context");
-        return throwGetterTypeError(*exec, "AudioNode", "context");
+            return reportDeprecatedGetterError(*state, "AudioNode", "context");
+        return throwGetterTypeError(*state, "AudioNode", "context");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.context()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.context()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeNumberOfInputs(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeNumberOfInputs(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "numberOfInputs");
-        return throwGetterTypeError(*exec, "AudioNode", "numberOfInputs");
+            return reportDeprecatedGetterError(*state, "AudioNode", "numberOfInputs");
+        return throwGetterTypeError(*state, "AudioNode", "numberOfInputs");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberOfInputs());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeNumberOfOutputs(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeNumberOfOutputs(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "numberOfOutputs");
-        return throwGetterTypeError(*exec, "AudioNode", "numberOfOutputs");
+            return reportDeprecatedGetterError(*state, "AudioNode", "numberOfOutputs");
+        return throwGetterTypeError(*state, "AudioNode", "numberOfOutputs");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberOfOutputs());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeChannelCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeChannelCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "channelCount");
-        return throwGetterTypeError(*exec, "AudioNode", "channelCount");
+            return reportDeprecatedGetterError(*state, "AudioNode", "channelCount");
+        return throwGetterTypeError(*state, "AudioNode", "channelCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.channelCount());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeChannelCountMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeChannelCountMode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "channelCountMode");
-        return throwGetterTypeError(*exec, "AudioNode", "channelCountMode");
+            return reportDeprecatedGetterError(*state, "AudioNode", "channelCountMode");
+        return throwGetterTypeError(*state, "AudioNode", "channelCountMode");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.channelCountMode());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.channelCountMode());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeChannelInterpretation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsAudioNodeChannelInterpretation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "AudioNode", "channelInterpretation");
-        return throwGetterTypeError(*exec, "AudioNode", "channelInterpretation");
+            return reportDeprecatedGetterError(*state, "AudioNode", "channelInterpretation");
+        return throwGetterTypeError(*state, "AudioNode", "channelInterpretation");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.channelInterpretation());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.channelInterpretation());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsAudioNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsAudioNodeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSAudioNodePrototype* domObject = jsDynamicCast<JSAudioNodePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSAudioNode::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSAudioNode::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSAudioNodeChannelCount(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSAudioNodeChannelCount(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioNode", "channelCount");
+            reportDeprecatedSetterError(*state, "AudioNode", "channelCount");
         else
-            throwSetterTypeError(*exec, "AudioNode", "channelCount");
+            throwSetterTypeError(*state, "AudioNode", "channelCount");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setChannelCount(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSAudioNodeChannelCountMode(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSAudioNodeChannelCountMode(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioNode", "channelCountMode");
+            reportDeprecatedSetterError(*state, "AudioNode", "channelCountMode");
         else
-            throwSetterTypeError(*exec, "AudioNode", "channelCountMode");
+            throwSetterTypeError(*state, "AudioNode", "channelCountMode");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setChannelCountMode(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSAudioNodeChannelInterpretation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSAudioNodeChannelInterpretation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSAudioNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "AudioNode", "channelInterpretation");
+            reportDeprecatedSetterError(*state, "AudioNode", "channelInterpretation");
         else
-            throwSetterTypeError(*exec, "AudioNode", "channelInterpretation");
+            throwSetterTypeError(*state, "AudioNode", "channelInterpretation");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setChannelInterpretation(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSAudioNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSAudioNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSAudioNodeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-static EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "connect");
+        return throwThisTypeError(*state, "AudioNode", "connect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    AudioNode* destination = JSAudioNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    AudioNode* destination = JSAudioNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned output = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned output = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned input = toUInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned input = toUInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.connect(destination, output, input, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "connect");
+        return throwThisTypeError(*state, "AudioNode", "connect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    AudioParam* destination = JSAudioParam::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    AudioParam* destination = JSAudioParam::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned output = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned output = toUInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.connect(destination, output, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionConnect(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(3, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSAudioNode::info())))) || (argsCount == 2 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSAudioNode::info())))) || (argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSAudioNode::info())))))
-        return jsAudioNodePrototypeFunctionConnect1(exec);
+        return jsAudioNodePrototypeFunctionConnect1(state);
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSAudioParam::info())))) || (argsCount == 2 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSAudioParam::info())))))
-        return jsAudioNodePrototypeFunctionConnect2(exec);
+        return jsAudioNodePrototypeFunctionConnect2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionDisconnect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionDisconnect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "disconnect");
+        return throwThisTypeError(*state, "AudioNode", "disconnect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned output = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned output = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.disconnect(output, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "addEventListener");
+        return throwThisTypeError(*state, "AudioNode", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "removeEventListener");
+        return throwThisTypeError(*state, "AudioNode", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsAudioNodePrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSAudioNode* castedThis = jsDynamicCast<JSAudioNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "AudioNode", "dispatchEvent");
+        return throwThisTypeError(*state, "AudioNode", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSAudioNode::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -482,15 +456,15 @@ void JSAudioNode::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSAudioNode*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSAudioNodeOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsAudioNode = jsCast<JSAudioNode*>(handle.slot()->asCell());
-    if (jsAudioNode->impl().isFiringEventListeners())
+    if (jsAudioNode->wrapped().isFiringEventListeners())
         return true;
-    AudioNode* root = &jsAudioNode->impl();
+    AudioNode* root = &jsAudioNode->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -498,7 +472,7 @@ void JSAudioNodeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsAudioNode = jsCast<JSAudioNode*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsAudioNode->impl(), jsAudioNode);
+    uncacheWrapper(world, &jsAudioNode->wrapped(), jsAudioNode);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -509,6 +483,14 @@ extern "C" { extern void (*const __identifier("??_7AudioNode@WebCore@@6B@")[])()
 extern "C" { extern void* _ZTVN7WebCore9AudioNodeE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioNode* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSAudioNode>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioNode* impl)
 {
     if (!impl)
@@ -540,7 +522,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, AudioNode* i
 AudioNode* JSAudioNode::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSAudioNode*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

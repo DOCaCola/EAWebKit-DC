@@ -1092,7 +1092,7 @@ void ClearMemoryCache(MemoryCacheClearFlags flags)
 		//WebCore::MemoryCache::singleton().pruneLiveResourcesToSize(0);
         
 		//Drain CSSValuePool
-		WebCore::cssValuePool().drain();
+		WebCore::CSSValuePool::singleton().drain();
         
 		//Discard StyleResolvers
         Vector<RefPtr<WebCore::Document>> documents; 

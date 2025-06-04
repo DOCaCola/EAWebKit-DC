@@ -22,9 +22,7 @@
 #include "JSXPathNSResolver.h"
 
 #include "ExceptionCode.h"
-#include "JSCustomXPathNSResolver.h"
 #include "JSDOMBinding.h"
-#include "JSXPathNSResolver.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -66,7 +64,7 @@ private:
 
 static const HashTableValue JSXPathNSResolverPrototypeTableValues[] =
 {
-    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathNSResolverPrototypeFunctionLookupNamespaceURI), (intptr_t) (0) },
+    { "lookupNamespaceURI", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathNSResolverPrototypeFunctionLookupNamespaceURI), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathNSResolverPrototype::s_info = { "XPathNSResolverPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathNSResolverPrototype) };
@@ -79,9 +77,8 @@ void JSXPathNSResolverPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathNSResolver::s_info = { "XPathNSResolver", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathNSResolver) };
 
-JSXPathNSResolver::JSXPathNSResolver(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathNSResolver>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathNSResolver::JSXPathNSResolver(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathNSResolver>&& impl)
+    : JSDOMWrapper<XPathNSResolver>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -101,23 +98,18 @@ void JSXPathNSResolver::destroy(JSC::JSCell* cell)
     thisObject->JSXPathNSResolver::~JSXPathNSResolver();
 }
 
-JSXPathNSResolver::~JSXPathNSResolver()
+EncodedJSValue JSC_HOST_CALL jsXPathNSResolverPrototypeFunctionLookupNamespaceURI(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsXPathNSResolverPrototypeFunctionLookupNamespaceURI(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathNSResolver* castedThis = jsDynamicCast<JSXPathNSResolver*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathNSResolver", "lookupNamespaceURI");
+        return throwThisTypeError(*state, "XPathNSResolver", "lookupNamespaceURI");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathNSResolver::info());
-    auto& impl = castedThis->impl();
-    String prefix = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String prefix = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringOrNull(exec, impl.lookupNamespaceURI(prefix));
+    JSValue result = jsStringOrNull(state, impl.lookupNamespaceURI(prefix));
     return JSValue::encode(result);
 }
 
@@ -132,7 +124,14 @@ void JSXPathNSResolverOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsXPathNSResolver = jsCast<JSXPathNSResolver*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathNSResolver->impl(), jsXPathNSResolver);
+    uncacheWrapper(world, &jsXPathNSResolver->wrapped(), jsXPathNSResolver);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathNSResolver* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXPathNSResolver>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathNSResolver* impl)
@@ -147,7 +146,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathNSResol
 XPathNSResolver* JSXPathNSResolver::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXPathNSResolver*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

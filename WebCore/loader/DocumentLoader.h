@@ -56,6 +56,10 @@
 #include "QuickLook.h"
 #endif
 
+#if PLATFORM(COCOA) && !USE(CFNETWORK)
+#include <wtf/SchedulePair.h>
+#endif
+
 namespace WebCore {
 
     class ApplicationCacheHost;
@@ -138,13 +142,13 @@ namespace WebCore {
 
         bool isClientRedirect() const { return m_isClientRedirect; }
         void setIsClientRedirect(bool isClientRedirect) { m_isClientRedirect = isClientRedirect; }
-        void handledOnloadEvents();
-        bool wasOnloadHandled() { return m_wasOnloadHandled; }
+        void dispatchOnloadEvents();
+        bool wasOnloadDispatched() { return m_wasOnloadDispatched; }
         WEBCORE_EXPORT bool isLoadingInAPISense() const;
         WEBCORE_EXPORT void setTitle(const StringWithDirection&);
         const String& overrideEncoding() const { return m_overrideEncoding; }
 
-#if PLATFORM(MAC)
+#if PLATFORM(COCOA) && !USE(CFNETWORK)
         void schedule(SchedulePair&);
         void unschedule(SchedulePair&);
 #endif
@@ -161,7 +165,7 @@ namespace WebCore {
         void scheduleSubstituteResourceLoad(ResourceLoader&, SubstituteResource&);
 
         // Return the ArchiveResource for the URL only when loading an Archive
-        ArchiveResource* archiveResourceForURL(const URL&) const;
+        WEBCORE_EXPORT ArchiveResource* archiveResourceForURL(const URL&) const;
 
         WEBCORE_EXPORT PassRefPtr<ArchiveResource> mainResource() const;
 
@@ -226,6 +230,9 @@ namespace WebCore {
 
         void stopLoadingPlugIns();
         void stopLoadingSubresources();
+
+        bool userContentExtensionsEnabled() const { return m_userContentExtensionsEnabled; }
+        void setUserContentExtensionsEnabled(bool enabled) { m_userContentExtensionsEnabled = enabled; }
 
         void addSubresourceLoader(ResourceLoader*);
         void removeSubresourceLoader(ResourceLoader*);
@@ -307,7 +314,6 @@ namespace WebCore {
         void finishedLoading(double finishTime);
         void mainReceivedError(const ResourceError&);
         WEBCORE_EXPORT virtual void redirectReceived(CachedResource*, ResourceRequest&, const ResourceResponse&) override;
-        WEBCORE_EXPORT virtual void syntheticRedirectReceived(CachedResource*, ResourceRequest&, const ResourceResponse&, bool& /* shouldContinue */) override;
         WEBCORE_EXPORT virtual void responseReceived(CachedResource*, const ResourceResponse&) override;
         WEBCORE_EXPORT virtual void dataReceived(CachedResource*, const char* data, int length) override;
         WEBCORE_EXPORT virtual void notifyFinished(CachedResource*) override;
@@ -318,7 +324,6 @@ namespace WebCore {
         bool isPostOrRedirectAfterPost(const ResourceRequest&, const ResourceResponse&);
 
         void continueAfterNavigationPolicy(const ResourceRequest&, bool shouldContinue);
-
         void continueAfterContentPolicy(PolicyAction);
 
         void stopLoadingForPolicyChange();
@@ -339,9 +344,10 @@ namespace WebCore {
         void clearMainResource();
 
         void cancelPolicyCheckIfNeeded();
+        void becomeMainResourceClient();
 
 #if ENABLE(CONTENT_FILTERING)
-        void becomeMainResourceClientIfFilterAllows();
+        friend class ContentFilter;
         void installContentFilterUnblockHandler(ContentFilter&);
         void contentFilterDidDecide();
 #endif
@@ -384,9 +390,9 @@ namespace WebCore {
         bool m_isClientRedirect;
         bool m_isLoadingMultipartContent;
 
-        // FIXME: Document::m_processingLoadEvent and DocumentLoader::m_wasOnloadHandled are roughly the same
+        // FIXME: Document::m_processingLoadEvent and DocumentLoader::m_wasOnloadDispatched are roughly the same
         // and should be merged.
-        bool m_wasOnloadHandled;
+        bool m_wasOnloadDispatched;
 
         StringWithDirection m_pageTitle;
 
@@ -452,6 +458,7 @@ namespace WebCore {
         HashMap<String, RefPtr<StyleSheetContents>> m_pendingNamedContentExtensionStyleSheets;
         HashMap<String, Vector<std::pair<String, uint32_t>>> m_pendingContentExtensionDisplayNoneSelectors;
 #endif
+        bool m_userContentExtensionsEnabled { true };
 
 #ifndef NDEBUG
         bool m_hasEverBeenAttached { false };

@@ -21,11 +21,11 @@
 #include "config.h"
 #include "JSCSSPrimitiveValue.h"
 
-#include "CSSPrimitiveValue.h"
 #include "Counter.h"
 #include "ExceptionCode.h"
 #include "JSCounter.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSRGBColor.h"
 #include "JSRect.h"
 #include "RGBColor.h"
@@ -79,61 +79,42 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSPrimitiveValueConstructor : public DOMConstructorObject {
-private:
-    JSCSSPrimitiveValueConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSPrimitiveValueConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSPrimitiveValueConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSPrimitiveValueConstructor>(vm.heap)) JSCSSPrimitiveValueConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSCSSPrimitiveValue> JSCSSPrimitiveValueConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSCSSPrimitiveValueConstructorTableValues[] =
 {
-    { "CSS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CSS_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CSS_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "CSS_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "CSS_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "CSS_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "CSS_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "CSS_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "CSS_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "CSS_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "CSS_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "CSS_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "CSS_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "CSS_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(13), (intptr_t) (0) },
-    { "CSS_MS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(14), (intptr_t) (0) },
-    { "CSS_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(15), (intptr_t) (0) },
-    { "CSS_HZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "CSS_KHZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(17), (intptr_t) (0) },
-    { "CSS_DIMENSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(18), (intptr_t) (0) },
-    { "CSS_STRING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(19), (intptr_t) (0) },
-    { "CSS_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(20), (intptr_t) (0) },
-    { "CSS_IDENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(21), (intptr_t) (0) },
-    { "CSS_ATTR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(22), (intptr_t) (0) },
-    { "CSS_COUNTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(23), (intptr_t) (0) },
-    { "CSS_RECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(24), (intptr_t) (0) },
-    { "CSS_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(25), (intptr_t) (0) },
-    { "CSS_VW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(26), (intptr_t) (0) },
-    { "CSS_VH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(27), (intptr_t) (0) },
-    { "CSS_VMIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(28), (intptr_t) (0) },
-    { "CSS_VMAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(29), (intptr_t) (0) },
+    { "CSS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CSS_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CSS_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "CSS_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "CSS_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "CSS_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "CSS_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "CSS_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "CSS_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "CSS_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "CSS_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "CSS_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "CSS_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "CSS_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(13) } },
+    { "CSS_MS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(14) } },
+    { "CSS_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(15) } },
+    { "CSS_HZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "CSS_KHZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(17) } },
+    { "CSS_DIMENSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(18) } },
+    { "CSS_STRING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(19) } },
+    { "CSS_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(20) } },
+    { "CSS_IDENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(21) } },
+    { "CSS_ATTR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(22) } },
+    { "CSS_COUNTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(23) } },
+    { "CSS_RECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(24) } },
+    { "CSS_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(25) } },
+    { "CSS_VW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(26) } },
+    { "CSS_VH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(27) } },
+    { "CSS_VMIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(28) } },
+    { "CSS_VMAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(29) } },
 };
 
 
@@ -168,66 +149,59 @@ COMPILE_ASSERT(27 == CSSPrimitiveValue::CSS_VH, CSSPrimitiveValueEnumCSS_VHIsWro
 COMPILE_ASSERT(28 == CSSPrimitiveValue::CSS_VMIN, CSSPrimitiveValueEnumCSS_VMINIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(29 == CSSPrimitiveValue::CSS_VMAX, CSSPrimitiveValueEnumCSS_VMAXIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSCSSPrimitiveValueConstructor::s_info = { "CSSPrimitiveValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPrimitiveValueConstructor) };
-
-JSCSSPrimitiveValueConstructor::JSCSSPrimitiveValueConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSPrimitiveValueConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSPrimitiveValueConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSPrimitiveValue::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSPrimitiveValue::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSPrimitiveValue"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSCSSPrimitiveValueConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSCSSPrimitiveValueConstructor::s_info = { "CSSPrimitiveValueConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPrimitiveValueConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSPrimitiveValuePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPrimitiveValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "primitiveType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPrimitiveValuePrimitiveType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "CSS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "CSS_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CSS_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "CSS_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "CSS_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "CSS_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "CSS_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "CSS_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "CSS_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "CSS_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "CSS_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "CSS_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(11), (intptr_t) (0) },
-    { "CSS_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(12), (intptr_t) (0) },
-    { "CSS_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(13), (intptr_t) (0) },
-    { "CSS_MS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(14), (intptr_t) (0) },
-    { "CSS_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(15), (intptr_t) (0) },
-    { "CSS_HZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(16), (intptr_t) (0) },
-    { "CSS_KHZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(17), (intptr_t) (0) },
-    { "CSS_DIMENSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(18), (intptr_t) (0) },
-    { "CSS_STRING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(19), (intptr_t) (0) },
-    { "CSS_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(20), (intptr_t) (0) },
-    { "CSS_IDENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(21), (intptr_t) (0) },
-    { "CSS_ATTR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(22), (intptr_t) (0) },
-    { "CSS_COUNTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(23), (intptr_t) (0) },
-    { "CSS_RECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(24), (intptr_t) (0) },
-    { "CSS_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(25), (intptr_t) (0) },
-    { "CSS_VW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(26), (intptr_t) (0) },
-    { "CSS_VH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(27), (intptr_t) (0) },
-    { "CSS_VMIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(28), (intptr_t) (0) },
-    { "CSS_VMAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(29), (intptr_t) (0) },
-    { "setFloatValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionSetFloatValue), (intptr_t) (0) },
-    { "getFloatValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetFloatValue), (intptr_t) (0) },
-    { "setStringValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionSetStringValue), (intptr_t) (0) },
-    { "getStringValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetStringValue), (intptr_t) (0) },
-    { "getCounterValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetCounterValue), (intptr_t) (0) },
-    { "getRectValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetRectValue), (intptr_t) (0) },
-    { "getRGBColorValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetRGBColorValue), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPrimitiveValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "primitiveType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSPrimitiveValuePrimitiveType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "CSS_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "CSS_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CSS_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "CSS_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "CSS_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "CSS_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "CSS_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "CSS_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "CSS_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "CSS_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "CSS_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "CSS_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(11) } },
+    { "CSS_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(12) } },
+    { "CSS_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(13) } },
+    { "CSS_MS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(14) } },
+    { "CSS_S", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(15) } },
+    { "CSS_HZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(16) } },
+    { "CSS_KHZ", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(17) } },
+    { "CSS_DIMENSION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(18) } },
+    { "CSS_STRING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(19) } },
+    { "CSS_URI", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(20) } },
+    { "CSS_IDENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(21) } },
+    { "CSS_ATTR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(22) } },
+    { "CSS_COUNTER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(23) } },
+    { "CSS_RECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(24) } },
+    { "CSS_RGBCOLOR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(25) } },
+    { "CSS_VW", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(26) } },
+    { "CSS_VH", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(27) } },
+    { "CSS_VMIN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(28) } },
+    { "CSS_VMAX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(29) } },
+    { "setFloatValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionSetFloatValue), (intptr_t) (0) } },
+    { "getFloatValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetFloatValue), (intptr_t) (0) } },
+    { "setStringValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionSetStringValue), (intptr_t) (0) } },
+    { "getStringValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetStringValue), (intptr_t) (0) } },
+    { "getCounterValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetCounterValue), (intptr_t) (0) } },
+    { "getRectValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetRectValue), (intptr_t) (0) } },
+    { "getRGBColorValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSPrimitiveValuePrototypeFunctionGetRGBColorValue), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSPrimitiveValuePrototype::s_info = { "CSSPrimitiveValuePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPrimitiveValuePrototype) };
@@ -240,7 +214,7 @@ void JSCSSPrimitiveValuePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSPrimitiveValue::s_info = { "CSSPrimitiveValue", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSPrimitiveValue) };
 
-JSCSSPrimitiveValue::JSCSSPrimitiveValue(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSPrimitiveValue>&& impl)
+JSCSSPrimitiveValue::JSCSSPrimitiveValue(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSPrimitiveValue>&& impl)
     : JSCSSValue(structure, globalObject, WTF::move(impl))
 {
 }
@@ -255,151 +229,151 @@ JSObject* JSCSSPrimitiveValue::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSCSSPrimitiveValue>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSPrimitiveValuePrimitiveType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSPrimitiveValuePrimitiveType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSPrimitiveValuePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSPrimitiveValue", "primitiveType");
-        return throwGetterTypeError(*exec, "CSSPrimitiveValue", "primitiveType");
+            return reportDeprecatedGetterError(*state, "CSSPrimitiveValue", "primitiveType");
+        return throwGetterTypeError(*state, "CSSPrimitiveValue", "primitiveType");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.primitiveType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSPrimitiveValueConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSPrimitiveValueConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSPrimitiveValuePrototype* domObject = jsDynamicCast<JSCSSPrimitiveValuePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSPrimitiveValue::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSPrimitiveValue::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSCSSPrimitiveValue::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSPrimitiveValueConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSPrimitiveValueConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionSetFloatValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionSetFloatValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "setFloatValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "setFloatValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    uint16_t unitType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t unitType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float floatValue = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float floatValue = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFloatValue(unitType, floatValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetFloatValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetFloatValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "getFloatValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "getFloatValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    uint16_t unitType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t unitType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.getFloatValue(unitType, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionSetStringValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionSetStringValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "setStringValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "setStringValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    uint16_t stringType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t stringType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String stringValue = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String stringValue = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStringValue(stringType, stringValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetStringValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetStringValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "getStringValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "getStringValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = jsStringWithCache(exec, impl.getStringValue(ec));
+    JSValue result = jsStringWithCache(state, impl.getStringValue(ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetCounterValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetCounterValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "getCounterValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "getCounterValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getCounterValue(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getCounterValue(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetRectValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetRectValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "getRectValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "getRectValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getRectValue(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getRectValue(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetRGBColorValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSPrimitiveValuePrototypeFunctionGetRGBColorValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSPrimitiveValue* castedThis = jsDynamicCast<JSCSSPrimitiveValue*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSPrimitiveValue", "getRGBColorValue");
+        return throwThisTypeError(*state, "CSSPrimitiveValue", "getRGBColorValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSPrimitiveValue::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getRGBColorValue(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getRGBColorValue(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 

@@ -53,6 +53,7 @@ public:
         case RealNumberUse:
         case BooleanUse:
         case CellUse:
+        case CellOrOtherUse:
         case ObjectUse:
         case FunctionUse:
         case FinalObjectUse:
@@ -74,6 +75,11 @@ public:
             if (m_state.forNode(edge).m_type & ~SpecInt32)
                 m_result = false;
             return;
+
+        case KnownBooleanUse:
+            if (m_state.forNode(edge).m_type & ~SpecBoolean)
+                m_result = false;
+            return;
             
         case KnownCellUse:
             if (m_state.forNode(edge).m_type & ~SpecCell)
@@ -82,6 +88,11 @@ public:
             
         case KnownStringUse:
             if (m_state.forNode(edge).m_type & ~SpecString)
+                m_result = false;
+            return;
+
+        case KnownPrimitiveUse:
+            if (m_state.forNode(edge).m_type & ~(SpecHeapTop & ~SpecObject))
                 m_result = false;
             return;
             
@@ -117,6 +128,9 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     if (!safeToExecuteEdge.result())
         return false;
 
+    // NOTE: This tends to lie when it comes to effectful nodes, because it knows that they aren't going to
+    // get hoisted anyway.
+
     switch (node->op()) {
     case JSConstant:
     case DoubleConstant:
@@ -126,6 +140,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case CreateThis:
     case GetCallee:
     case GetArgumentCount:
+    case GetRestLength:
     case GetLocal:
     case SetLocal:
     case PutStack:
@@ -133,6 +148,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case GetStack:
     case MovHint:
     case ZombieHint:
+    case ExitOK:
     case Phantom:
     case Upsilon:
     case Phi:
@@ -161,6 +177,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ArithMin:
     case ArithMax:
     case ArithPow:
+    case ArithRandom:
     case ArithSqrt:
     case ArithFRound:
     case ArithRound:
@@ -173,9 +190,15 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case PutById:
     case PutByIdFlush:
     case PutByIdDirect:
+    case PutGetterById:
+    case PutSetterById:
+    case PutGetterSetterById:
+    case PutGetterByVal:
+    case PutSetterByVal:
     case CheckStructure:
     case GetExecutable:
     case GetButterfly:
+    case GetButterflyReadOnly:
     case CheckArray:
     case Arrayify:
     case ArrayifyToStructure:
@@ -184,7 +207,8 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case GetClosureVar:
     case PutClosureVar:
     case GetGlobalVar:
-    case PutGlobalVar:
+    case GetGlobalLexicalVariable:
+    case PutGlobalVariable:
     case VarInjectionWatchpoint:
     case CheckCell:
     case CheckBadCell:
@@ -197,11 +221,13 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case CompareGreater:
     case CompareGreaterEq:
     case CompareEq:
-    case CompareEqConstant:
     case CompareStrictEq:
     case Call:
+    case TailCallInlinedCaller:
     case Construct:
     case CallVarargs:
+    case TailCallVarargsInlinedCaller:
+    case TailCallForwardVarargsInlinedCaller:
     case ConstructVarargs:
     case LoadVarargs:
     case CallForwardVarargs:
@@ -216,8 +242,10 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ProfileDidCall:
     case ProfileType:
     case ProfileControlFlow:
-    case CheckHasInstance:
+    case CheckTypeInfoFlags:
+    case OverridesHasInstance:
     case InstanceOf:
+    case InstanceOfCustom:
     case IsUndefined:
     case IsBoolean:
     case IsNumber:
@@ -229,6 +257,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case LogicalNot:
     case ToPrimitive:
     case ToString:
+    case StrCat:
     case CallStringConstructor:
     case NewStringObject:
     case MakeRope:
@@ -239,11 +268,16 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case CreateClonedArguments:
     case GetFromArguments:
     case PutToArguments:
+    case NewArrowFunction:
     case NewFunction:
+    case NewGeneratorFunction:
     case Jump:
     case Branch:
     case Switch:
     case Return:
+    case TailCall:
+    case TailCallVarargs:
+    case TailCallForwardVarargs:
     case Throw:
     case ThrowReferenceError:
     case CountExecution:
@@ -283,6 +317,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ToIndexString:
     case PhantomNewObject:
     case PhantomNewFunction:
+    case PhantomNewGeneratorFunction:
     case PhantomCreateActivation:
     case PutHint:
     case CheckStructureImmediate:
@@ -292,6 +327,7 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case PhantomClonedArguments:
     case GetMyArgumentByVal:
     case ForwardVarargs:
+    case CopyRest:
         return true;
 
     case BottomValue:

@@ -33,7 +33,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLDataListElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDataListElement>&& impl)
     {
-        JSHTMLDataListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElement>(globalObject->vm().heap)) JSHTMLDataListElement(structure, globalObject, WTF::move(impl));
+        JSHTMLDataListElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLDataListElement>(globalObject->vm().heap)) JSHTMLDataListElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLDataListElement& impl() const
+    HTMLDataListElement& wrapped() const
     {
-        return static_cast<HTMLDataListElement&>(Base::impl());
+        return static_cast<HTMLDataListElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLDataListElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDataListElement>&&);
+    JSHTMLDataListElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDataListElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLStyleElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLStyleElement>&& impl)
     {
-        JSHTMLStyleElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLStyleElement>(globalObject->vm().heap)) JSHTMLStyleElement(structure, globalObject, WTF::move(impl));
+        JSHTMLStyleElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLStyleElement>(globalObject->vm().heap)) JSHTMLStyleElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLStyleElement& impl() const
+    HTMLStyleElement& wrapped() const
     {
-        return static_cast<HTMLStyleElement&>(Base::impl());
+        return static_cast<HTMLStyleElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLStyleElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLStyleElement>&&);
+    JSHTMLStyleElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLStyleElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGMarkerElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMarkerElement>&& impl)
     {
-        JSSVGMarkerElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMarkerElement>(globalObject->vm().heap)) JSSVGMarkerElement(structure, globalObject, WTF::move(impl));
+        JSSVGMarkerElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMarkerElement>(globalObject->vm().heap)) JSSVGMarkerElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMarkerElement& impl() const
+    SVGMarkerElement& wrapped() const
     {
-        return static_cast<SVGMarkerElement&>(Base::impl());
+        return static_cast<SVGMarkerElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMarkerElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMarkerElement>&&);
+    JSSVGMarkerElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMarkerElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

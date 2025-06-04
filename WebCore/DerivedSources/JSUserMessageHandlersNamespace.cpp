@@ -25,7 +25,7 @@
 #include "JSUserMessageHandlersNamespace.h"
 
 #include "JSDOMBinding.h"
-#include "UserMessageHandlersNamespace.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -59,26 +59,7 @@ private:
     }
 };
 
-class JSUserMessageHandlersNamespaceConstructor : public DOMConstructorObject {
-private:
-    JSUserMessageHandlersNamespaceConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSUserMessageHandlersNamespaceConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSUserMessageHandlersNamespaceConstructor* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandlersNamespaceConstructor>(vm.heap)) JSUserMessageHandlersNamespaceConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSUserMessageHandlersNamespace> JSUserMessageHandlersNamespaceConstructor;
 
 /* Hash table */
 
@@ -90,34 +71,26 @@ static const struct CompactHashIndex JSUserMessageHandlersNamespaceTableIndex[2]
 
 static const HashTableValue JSUserMessageHandlersNamespaceTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUserMessageHandlersNamespaceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsUserMessageHandlersNamespaceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSUserMessageHandlersNamespaceTable = { 1, 1, true, JSUserMessageHandlersNamespaceTableValues, 0, JSUserMessageHandlersNamespaceTableIndex };
-const ClassInfo JSUserMessageHandlersNamespaceConstructor::s_info = { "UserMessageHandlersNamespaceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlersNamespaceConstructor) };
-
-JSUserMessageHandlersNamespaceConstructor::JSUserMessageHandlersNamespaceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSUserMessageHandlersNamespaceTable = { 1, 1, true, JSUserMessageHandlersNamespaceTableValues, JSUserMessageHandlersNamespaceTableIndex };
+template<> void JSUserMessageHandlersNamespaceConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSUserMessageHandlersNamespaceConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSUserMessageHandlersNamespace::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSUserMessageHandlersNamespace::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("UserMessageHandlersNamespace"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSUserMessageHandlersNamespaceConstructor::s_info = { "UserMessageHandlersNamespaceConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlersNamespaceConstructor) };
 
 /* Hash table for prototype */
 const ClassInfo JSUserMessageHandlersNamespacePrototype::s_info = { "UserMessageHandlersNamespacePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSUserMessageHandlersNamespacePrototype) };
 
 const ClassInfo JSUserMessageHandlersNamespace::s_info = { "UserMessageHandlersNamespace", &Base::s_info, &JSUserMessageHandlersNamespaceTable, CREATE_METHOD_TABLE(JSUserMessageHandlersNamespace) };
 
-JSUserMessageHandlersNamespace::JSUserMessageHandlersNamespace(Structure* structure, JSDOMGlobalObject* globalObject, Ref<UserMessageHandlersNamespace>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSUserMessageHandlersNamespace::JSUserMessageHandlersNamespace(Structure* structure, JSDOMGlobalObject& globalObject, Ref<UserMessageHandlersNamespace>&& impl)
+    : JSDOMWrapper<UserMessageHandlersNamespace>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,41 +110,38 @@ void JSUserMessageHandlersNamespace::destroy(JSC::JSCell* cell)
     thisObject->JSUserMessageHandlersNamespace::~JSUserMessageHandlersNamespace();
 }
 
-JSUserMessageHandlersNamespace::~JSUserMessageHandlersNamespace()
-{
-    releaseImpl();
-}
-
-bool JSUserMessageHandlersNamespace::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSUserMessageHandlersNamespace::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSUserMessageHandlersNamespace*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSUserMessageHandlersNamespace, Base>(exec, JSUserMessageHandlersNamespaceTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSUserMessageHandlersNamespace, Base>(state, JSUserMessageHandlersNamespaceTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSUserMessageHandlersNamespace::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSUserMessageHandlersNamespace::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSUserMessageHandlersNamespace*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsUserMessageHandlersNamespaceConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsUserMessageHandlersNamespaceConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSUserMessageHandlersNamespace* domObject = jsDynamicCast<JSUserMessageHandlersNamespace*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSUserMessageHandlersNamespace::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSUserMessageHandlersNamespace::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSUserMessageHandlersNamespace::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSUserMessageHandlersNamespaceConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSUserMessageHandlersNamespaceConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSUserMessageHandlersNamespaceOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -185,7 +155,7 @@ void JSUserMessageHandlersNamespaceOwner::finalize(JSC::Handle<JSC::Unknown> han
 {
     auto* jsUserMessageHandlersNamespace = jsCast<JSUserMessageHandlersNamespace*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsUserMessageHandlersNamespace->impl(), jsUserMessageHandlersNamespace);
+    uncacheWrapper(world, &jsUserMessageHandlersNamespace->wrapped(), jsUserMessageHandlersNamespace);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -196,6 +166,14 @@ extern "C" { extern void (*const __identifier("??_7UserMessageHandlersNamespace@
 extern "C" { extern void* _ZTVN7WebCore28UserMessageHandlersNamespaceE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageHandlersNamespace* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSUserMessageHandlersNamespace>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageHandlersNamespace* impl)
 {
     if (!impl)
@@ -227,7 +205,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, UserMessageH
 UserMessageHandlersNamespace* JSUserMessageHandlersNamespace::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSUserMessageHandlersNamespace*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

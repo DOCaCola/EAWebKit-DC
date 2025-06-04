@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSTextMetrics : public JSDOMWrapper {
+class JSTextMetrics : public JSDOMWrapper<TextMetrics> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TextMetrics> Base;
     static JSTextMetrics* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextMetrics>&& impl)
     {
-        JSTextMetrics* ptr = new (NotNull, JSC::allocateCell<JSTextMetrics>(globalObject->vm().heap)) JSTextMetrics(structure, globalObject, WTF::move(impl));
+        JSTextMetrics* ptr = new (NotNull, JSC::allocateCell<JSTextMetrics>(globalObject->vm().heap)) JSTextMetrics(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static TextMetrics* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSTextMetrics();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TextMetrics& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextMetrics* m_impl;
 protected:
-    JSTextMetrics(JSC::Structure*, JSDOMGlobalObject*, Ref<TextMetrics>&&);
+    JSTextMetrics(JSC::Structure*, JSDOMGlobalObject&, Ref<TextMetrics>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextMetrics*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextMetrics*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextMetrics& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextMetrics& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TextMetrics*);
 
 
 } // namespace WebCore

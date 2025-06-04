@@ -29,12 +29,12 @@ namespace WebCore {
 
 class JSDictionary;
 
-class JSEvent : public JSDOMWrapper {
+class JSEvent : public JSDOMWrapper<Event> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Event> Base;
     static JSEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Event>&& impl)
     {
-        JSEvent* ptr = new (NotNull, JSC::allocateCell<JSEvent>(globalObject->vm().heap)) JSEvent(structure, globalObject, WTF::move(impl));
+        JSEvent* ptr = new (NotNull, JSC::allocateCell<JSEvent>(globalObject->vm().heap)) JSEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static Event* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSEvent();
 
     DECLARE_INFO;
 
@@ -56,16 +55,11 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue clipboardData(JSC::ExecState*) const;
-    Event& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Event* m_impl;
+    JSC::JSValue clipboardData(JSC::ExecState&) const;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<Event>&&);
+    JSEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<Event>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -88,7 +82,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Event*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Event*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Event& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Event& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Event*);
 
 bool fillEventInit(EventInit&, JSDictionary&);
 

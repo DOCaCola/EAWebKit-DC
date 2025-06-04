@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEDropShadowElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDropShadowElement>&& impl)
     {
-        JSSVGFEDropShadowElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDropShadowElement>(globalObject->vm().heap)) JSSVGFEDropShadowElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDropShadowElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDropShadowElement>(globalObject->vm().heap)) JSSVGFEDropShadowElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDropShadowElement& impl() const
+    SVGFEDropShadowElement& wrapped() const
     {
-        return static_cast<SVGFEDropShadowElement&>(Base::impl());
+        return static_cast<SVGFEDropShadowElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDropShadowElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDropShadowElement>&&);
+    JSSVGFEDropShadowElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDropShadowElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

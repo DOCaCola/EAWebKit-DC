@@ -34,7 +34,7 @@ public:
     typedef JSEventTarget Base;
     static JSMediaSource* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaSource>&& impl)
     {
-        JSMediaSource* ptr = new (NotNull, JSC::allocateCell<JSMediaSource>(globalObject->vm().heap)) JSMediaSource(structure, globalObject, WTF::move(impl));
+        JSMediaSource* ptr = new (NotNull, JSC::allocateCell<JSMediaSource>(globalObject->vm().heap)) JSMediaSource(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -53,12 +53,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    MediaSource& impl() const
+    MediaSource& wrapped() const
     {
-        return static_cast<MediaSource&>(Base::impl());
+        return static_cast<MediaSource&>(Base::wrapped());
     }
 protected:
-    JSMediaSource(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaSource>&&);
+    JSMediaSource(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaSource>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaSource*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaSource*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaSource& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaSource& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaSource*);
 
 
 } // namespace WebCore

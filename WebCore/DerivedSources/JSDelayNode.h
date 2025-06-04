@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSDelayNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DelayNode>&& impl)
     {
-        JSDelayNode* ptr = new (NotNull, JSC::allocateCell<JSDelayNode>(globalObject->vm().heap)) JSDelayNode(structure, globalObject, WTF::move(impl));
+        JSDelayNode* ptr = new (NotNull, JSC::allocateCell<JSDelayNode>(globalObject->vm().heap)) JSDelayNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DelayNode& impl() const
+    DelayNode& wrapped() const
     {
-        return static_cast<DelayNode&>(Base::impl());
+        return static_cast<DelayNode&>(Base::wrapped());
     }
 protected:
-    JSDelayNode(JSC::Structure*, JSDOMGlobalObject*, Ref<DelayNode>&&);
+    JSDelayNode(JSC::Structure*, JSDOMGlobalObject&, Ref<DelayNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DelayNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DelayNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DelayNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DelayNode*);
 
 
 } // namespace WebCore

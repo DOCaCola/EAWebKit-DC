@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCPeerConnection : public JSDOMWrapper {
+class JSRTCPeerConnection : public JSDOMWrapper<RTCPeerConnection> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCPeerConnection> Base;
     static JSRTCPeerConnection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCPeerConnection>&& impl)
     {
-        JSRTCPeerConnection* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnection>(globalObject->vm().heap)) JSRTCPeerConnection(structure, globalObject, WTF::move(impl));
+        JSRTCPeerConnection* ptr = new (NotNull, JSC::allocateCell<JSRTCPeerConnection>(globalObject->vm().heap)) JSRTCPeerConnection(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCPeerConnection* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCPeerConnection();
 
     DECLARE_INFO;
 
@@ -55,13 +54,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    RTCPeerConnection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCPeerConnection* m_impl;
 protected:
-    JSRTCPeerConnection(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCPeerConnection>&&);
+    JSRTCPeerConnection(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCPeerConnection>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCPeerConnection*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCPeerConnection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCPeerConnection& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCPeerConnection& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCPeerConnection*);
 
 // Custom constructor
 JSC::EncodedJSValue JSC_HOST_CALL constructJSRTCPeerConnection(JSC::ExecState*);

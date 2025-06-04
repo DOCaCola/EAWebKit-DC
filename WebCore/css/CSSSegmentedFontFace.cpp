@@ -45,9 +45,8 @@ CSSSegmentedFontFace::CSSSegmentedFontFace(CSSFontSelector* fontSelector)
 CSSSegmentedFontFace::~CSSSegmentedFontFace()
 {
     pruneTable();
-    unsigned size = m_fontFaces.size();
-    for (unsigned i = 0; i < size; i++)
-        m_fontFaces[i]->removedFromSegmentedFontFace(this);
+    for (auto& face : m_fontFaces)
+        face->removedFromSegmentedFontFace(this);
 }
 
 void CSSSegmentedFontFace::pruneTable()
@@ -58,9 +57,8 @@ void CSSSegmentedFontFace::pruneTable()
 bool CSSSegmentedFontFace::isValid() const
 {
     // Valid if at least one font face is valid.
-    unsigned size = m_fontFaces.size();
-    for (unsigned i = 0; i < size; i++) {
-        if (m_fontFaces[i]->isValid())
+    for (auto& face : m_fontFaces) {
+        if (face->isValid())
             return true;
     }
     return false;
@@ -84,11 +82,11 @@ void CSSSegmentedFontFace::fontLoaded(CSSFontFace*)
 #endif
 }
 
-void CSSSegmentedFontFace::appendFontFace(PassRefPtr<CSSFontFace> fontFace)
+void CSSSegmentedFontFace::appendFontFace(Ref<CSSFontFace>&& fontFace)
 {
     pruneTable();
     fontFace->addedToSegmentedFontFace(this);
-    m_fontFaces.append(fontFace);
+    m_fontFaces.append(WTF::move(fontFace));
 }
 
 static void appendFontWithInvalidUnicodeRangeIfLoading(FontRanges& ranges, Ref<Font>&& font, const Vector<CSSFontFace::UnicodeRange>& unicodeRanges)
@@ -108,7 +106,9 @@ static void appendFontWithInvalidUnicodeRangeIfLoading(FontRanges& ranges, Ref<F
         ranges.appendRange(FontRanges::Range(unicodeRanges[j].from(), unicodeRanges[j].to(), font.copyRef()));
 }
 
-FontRanges CSSSegmentedFontFace::fontRanges(const FontDescription& fontDescription)
+//+EAWKDC Change - Replace FontDescription with FontCascadeDescription
+FontRanges CSSSegmentedFontFace::fontRanges(const FontCascadeDescription& fontDescription)
+//-EAWKDC Change
 {
     if (!isValid())
         return FontRanges();

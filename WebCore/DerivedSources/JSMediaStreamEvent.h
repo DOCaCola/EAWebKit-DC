@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSMediaStreamEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamEvent>&& impl)
     {
-        JSMediaStreamEvent* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamEvent>(globalObject->vm().heap)) JSMediaStreamEvent(structure, globalObject, WTF::move(impl));
+        JSMediaStreamEvent* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamEvent>(globalObject->vm().heap)) JSMediaStreamEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaStreamEvent& impl() const
+    MediaStreamEvent& wrapped() const
     {
-        return static_cast<MediaStreamEvent&>(Base::impl());
+        return static_cast<MediaStreamEvent&>(Base::wrapped());
     }
 protected:
-    JSMediaStreamEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStreamEvent>&&);
+    JSMediaStreamEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStreamEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

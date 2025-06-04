@@ -208,7 +208,7 @@ NonSharedCharacterBreakIterator::NonSharedCharacterBreakIterator(StringView stri
 	EAW_ASSERT_MSG(WTF::isMainThread(),"We don't support multiple threads for this function at the moment");
 
 	m_iterator = nonSharedCharacterBreakIterator;
-	bool createdIterator = m_iterator && WTF::weakCompareAndSwap(reinterpret_cast<void**>(&nonSharedCharacterBreakIterator), m_iterator, 0);
+	bool createdIterator = m_iterator && WTF::weakCompareAndSwap<TextBreakIterator*>(&nonSharedCharacterBreakIterator, m_iterator, 0);
 	if (!createdIterator)
 		m_iterator = new TextBreakIterator();
 
@@ -219,7 +219,7 @@ NonSharedCharacterBreakIterator::NonSharedCharacterBreakIterator(StringView stri
 NonSharedCharacterBreakIterator::~NonSharedCharacterBreakIterator()
 {
 	m_iterator->mBreakIteratorText.clear();
-	if (!WTF::weakCompareAndSwap(reinterpret_cast<void**>(&nonSharedCharacterBreakIterator), 0, m_iterator))
+	if (!WTF::weakCompareAndSwap<TextBreakIterator*>(&nonSharedCharacterBreakIterator, nullptr, m_iterator))
 		delete m_iterator;
 }
 

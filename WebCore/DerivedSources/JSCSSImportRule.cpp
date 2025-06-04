@@ -21,10 +21,10 @@
 #include "config.h"
 #include "JSCSSImportRule.h"
 
-#include "CSSImportRule.h"
 #include "CSSStyleSheet.h"
 #include "JSCSSStyleSheet.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSMediaList.h"
 #include "MediaList.h"
 #include "URL.h"
@@ -66,51 +66,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSImportRuleConstructor : public DOMConstructorObject {
-private:
-    JSCSSImportRuleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSCSSImportRule> JSCSSImportRuleConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSImportRuleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSImportRuleConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSImportRuleConstructor>(vm.heap)) JSCSSImportRuleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSCSSImportRuleConstructor::s_info = { "CSSImportRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSImportRuleConstructor) };
-
-JSCSSImportRuleConstructor::JSCSSImportRuleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCSSImportRuleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSImportRuleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSImportRule::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSImportRule::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSImportRule"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSImportRuleConstructor::s_info = { "CSSImportRuleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSImportRuleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSImportRulePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "media", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "styleSheet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleStyleSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "media", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "styleSheet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSImportRuleStyleSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSImportRulePrototype::s_info = { "CSSImportRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSImportRulePrototype) };
@@ -123,7 +97,7 @@ void JSCSSImportRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSImportRule::s_info = { "CSSImportRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSImportRule) };
 
-JSCSSImportRule::JSCSSImportRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSImportRule>&& impl)
+JSCSSImportRule::JSCSSImportRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSImportRule>&& impl)
     : JSCSSRule(structure, globalObject, WTF::move(impl))
 {
 }
@@ -138,68 +112,68 @@ JSObject* JSCSSImportRule::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSCSSImportRule>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSImportRuleHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSImportRuleHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSImportRule* castedThis = jsDynamicCast<JSCSSImportRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSImportRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSImportRule", "href");
-        return throwGetterTypeError(*exec, "CSSImportRule", "href");
+            return reportDeprecatedGetterError(*state, "CSSImportRule", "href");
+        return throwGetterTypeError(*state, "CSSImportRule", "href");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.href());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.href());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSImportRuleMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSImportRuleMedia(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSImportRule* castedThis = jsDynamicCast<JSCSSImportRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSImportRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSImportRule", "media");
-        return throwGetterTypeError(*exec, "CSSImportRule", "media");
+            return reportDeprecatedGetterError(*state, "CSSImportRule", "media");
+        return throwGetterTypeError(*state, "CSSImportRule", "media");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.media()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.media()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSImportRuleStyleSheet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSImportRuleStyleSheet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSImportRule* castedThis = jsDynamicCast<JSCSSImportRule*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSImportRulePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSImportRule", "styleSheet");
-        return throwGetterTypeError(*exec, "CSSImportRule", "styleSheet");
+            return reportDeprecatedGetterError(*state, "CSSImportRule", "styleSheet");
+        return throwGetterTypeError(*state, "CSSImportRule", "styleSheet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.styleSheet()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.styleSheet()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSImportRuleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCSSImportRuleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCSSImportRulePrototype* domObject = jsDynamicCast<JSCSSImportRulePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSImportRule::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSImportRule::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSCSSImportRule::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSImportRuleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSImportRuleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

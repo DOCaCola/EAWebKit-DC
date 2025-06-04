@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGPathSeg : public JSDOMWrapper {
+class JSSVGPathSeg : public JSDOMWrapper<SVGPathSeg> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPathSeg> Base;
     static JSSVGPathSeg* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSeg>&& impl)
     {
-        JSSVGPathSeg* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSeg>(globalObject->vm().heap)) JSSVGPathSeg(structure, globalObject, WTF::move(impl));
+        JSSVGPathSeg* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSeg>(globalObject->vm().heap)) JSSVGPathSeg(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGPathSeg* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPathSeg();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSeg& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPathSeg* m_impl;
 protected:
-    JSSVGPathSeg(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSeg>&&);
+    JSSVGPathSeg(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSeg>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPathSeg*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSeg*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPathSeg& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPathSeg& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSeg*);
 
 
 } // namespace WebCore

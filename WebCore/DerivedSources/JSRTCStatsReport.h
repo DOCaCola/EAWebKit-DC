@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCStatsReport : public JSDOMWrapper {
+class JSRTCStatsReport : public JSDOMWrapper<RTCStatsReport> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCStatsReport> Base;
     static JSRTCStatsReport* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCStatsReport>&& impl)
     {
-        JSRTCStatsReport* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsReport>(globalObject->vm().heap)) JSRTCStatsReport(structure, globalObject, WTF::move(impl));
+        JSRTCStatsReport* ptr = new (NotNull, JSC::allocateCell<JSRTCStatsReport>(globalObject->vm().heap)) JSRTCStatsReport(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCStatsReport* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCStatsReport();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCStatsReport& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCStatsReport* m_impl;
 protected:
-    JSRTCStatsReport(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCStatsReport>&&);
+    JSRTCStatsReport(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCStatsReport>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCStatsReport*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsReport*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCStatsReport& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCStatsReport& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCStatsReport*);
 
 
 } // namespace WebCore

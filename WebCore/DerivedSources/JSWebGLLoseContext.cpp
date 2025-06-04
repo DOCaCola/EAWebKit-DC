@@ -26,7 +26,6 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "WebGLLoseContext.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -68,8 +67,8 @@ private:
 
 static const HashTableValue JSWebGLLoseContextPrototypeTableValues[] =
 {
-    { "loseContext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionLoseContext), (intptr_t) (0) },
-    { "restoreContext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionRestoreContext), (intptr_t) (0) },
+    { "loseContext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionLoseContext), (intptr_t) (0) } },
+    { "restoreContext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWebGLLoseContextPrototypeFunctionRestoreContext), (intptr_t) (0) } },
 };
 
 const ClassInfo JSWebGLLoseContextPrototype::s_info = { "WebGLLoseContextPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLLoseContextPrototype) };
@@ -82,9 +81,8 @@ void JSWebGLLoseContextPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLLoseContext::s_info = { "WebGLLoseContext", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLLoseContext) };
 
-JSWebGLLoseContext::JSWebGLLoseContext(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLLoseContext>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLLoseContext::JSWebGLLoseContext(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLLoseContext>&& impl)
+    : JSDOMWrapper<WebGLLoseContext>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -104,31 +102,26 @@ void JSWebGLLoseContext::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLLoseContext::~JSWebGLLoseContext();
 }
 
-JSWebGLLoseContext::~JSWebGLLoseContext()
+EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionLoseContext(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionLoseContext(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLLoseContext* castedThis = jsDynamicCast<JSWebGLLoseContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLLoseContext", "loseContext");
+        return throwThisTypeError(*state, "WebGLLoseContext", "loseContext");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLLoseContext::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.loseContext();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSWebGLLoseContext* castedThis = jsDynamicCast<JSWebGLLoseContext*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "WebGLLoseContext", "restoreContext");
+        return throwThisTypeError(*state, "WebGLLoseContext", "restoreContext");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWebGLLoseContext::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.restoreContext();
     return JSValue::encode(jsUndefined());
 }
@@ -136,7 +129,7 @@ EncodedJSValue JSC_HOST_CALL jsWebGLLoseContextPrototypeFunctionRestoreContext(E
 bool JSWebGLLoseContextOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLLoseContext = jsCast<JSWebGLLoseContext*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLLoseContext->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLLoseContext->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -144,7 +137,7 @@ void JSWebGLLoseContextOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsWebGLLoseContext = jsCast<JSWebGLLoseContext*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLLoseContext->impl(), jsWebGLLoseContext);
+    uncacheWrapper(world, &jsWebGLLoseContext->wrapped(), jsWebGLLoseContext);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -155,6 +148,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLLoseContext@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16WebGLLoseContextE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseContext* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLLoseContext>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseContext* impl)
 {
     if (!impl)
@@ -186,7 +187,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLLoseCon
 WebGLLoseContext* JSWebGLLoseContext::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLLoseContext*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

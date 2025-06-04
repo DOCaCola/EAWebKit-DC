@@ -188,7 +188,7 @@ void ScriptExecutionContext::didLoadResourceSynchronously(const ResourceRequest&
 {
 }
 
-bool ScriptExecutionContext::canSuspendActiveDOMObjectsForPageCache(Vector<ActiveDOMObject*>* unsuspendableObjects)
+bool ScriptExecutionContext::canSuspendActiveDOMObjectsForDocumentSuspension(Vector<ActiveDOMObject*>* unsuspendableObjects)
 {
     checkConsistency();
 
@@ -205,7 +205,7 @@ bool ScriptExecutionContext::canSuspendActiveDOMObjectsForPageCache(Vector<Activ
     // canSuspend functions so it will not happen!
     NoEventDispatchAssertion assertNoEventDispatch;
     for (auto* activeDOMObject : m_activeDOMObjects) {
-        if (!activeDOMObject->canSuspendForPageCache()) {
+        if (!activeDOMObject->canSuspendForDocumentSuspension()) {
             canSuspend = false;
             if (unsuspendableObjects)
                 unsuspendableObjects->append(activeDOMObject);
@@ -226,12 +226,13 @@ void ScriptExecutionContext::suspendActiveDOMObjects(ActiveDOMObject::ReasonForS
 {
     checkConsistency();
 
-#if PLATFORM(IOS)
     if (m_activeDOMObjectsAreSuspended) {
-        ASSERT(m_reasonForSuspendingActiveDOMObjects == ActiveDOMObject::DocumentWillBePaused);
+        // A page may subsequently suspend DOM objects, say as part of entering the page cache, after the embedding
+        // client requested the page be suspended. We ignore such requests so long as the embedding client requested
+        // the suspension first. See <rdar://problem/13754896> for more details.
+        ASSERT(m_reasonForSuspendingActiveDOMObjects == ActiveDOMObject::PageWillBeSuspended);
         return;
     }
-#endif
 
     m_activeDOMObjectAdditionForbidden = true;
 #if !ASSERT_DISABLED || ENABLE(SECURITY_ASSERTIONS)
@@ -507,7 +508,7 @@ bool ScriptExecutionContext::dispatchErrorEvent(const String& errorMessage, int 
 
     ASSERT(!m_inDispatchErrorEvent);
     m_inDispatchErrorEvent = true;
-    RefPtr<ErrorEvent> errorEvent = ErrorEvent::create(message, sourceName, line, column);
+    Ref<ErrorEvent> errorEvent = ErrorEvent::create(message, sourceName, line, column);
     target->dispatchEvent(errorEvent);
     m_inDispatchErrorEvent = false;
     return errorEvent->defaultPrevented();

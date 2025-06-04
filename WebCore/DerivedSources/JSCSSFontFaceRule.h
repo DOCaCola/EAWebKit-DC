@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSFontFaceRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceRule>&& impl)
     {
-        JSCSSFontFaceRule* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceRule>(globalObject->vm().heap)) JSCSSFontFaceRule(structure, globalObject, WTF::move(impl));
+        JSCSSFontFaceRule* ptr = new (NotNull, JSC::allocateCell<JSCSSFontFaceRule>(globalObject->vm().heap)) JSCSSFontFaceRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CSSFontFaceRule& impl() const
+    CSSFontFaceRule& wrapped() const
     {
-        return static_cast<CSSFontFaceRule&>(Base::impl());
+        return static_cast<CSSFontFaceRule&>(Base::wrapped());
     }
 protected:
-    JSCSSFontFaceRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSFontFaceRule>&&);
+    JSCSSFontFaceRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSFontFaceRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -64,7 +64,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CSSFontFaceRule*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CSSFontFaceRule& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CSSFontFaceRule& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CSSFontFaceRule*);
 
 
 } // namespace WebCore

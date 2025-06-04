@@ -28,14 +28,11 @@
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
-#include "JSMediaSourceStates.h"
-#include "JSMediaStreamCapabilities.h"
 #include "JSMediaStreamTrack.h"
 #include "JSMediaTrackConstraints.h"
-#include "MediaSourceStates.h"
-#include "MediaStreamCapabilities.h"
 #include "MediaStreamTrack.h"
 #include "MediaTrackConstraints.h"
 #include "URL.h"
@@ -52,7 +49,7 @@ namespace WebCore {
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionClone(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionStop(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetConstraints(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionStates(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetSettings(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetCapabilities(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionApplyConstraints(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionAddEventListener(JSC::ExecState*);
@@ -105,69 +102,43 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMediaStreamTrackConstructor : public DOMConstructorObject {
-private:
-    JSMediaStreamTrackConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSMediaStreamTrack> JSMediaStreamTrackConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMediaStreamTrackConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMediaStreamTrackConstructor* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrackConstructor>(vm.heap)) JSMediaStreamTrackConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSMediaStreamTrackConstructor::s_info = { "MediaStreamTrackConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamTrackConstructor) };
-
-JSMediaStreamTrackConstructor::JSMediaStreamTrackConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMediaStreamTrackConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMediaStreamTrackConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMediaStreamTrack::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMediaStreamTrack::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MediaStreamTrack"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSMediaStreamTrackConstructor::s_info = { "MediaStreamTrackConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamTrackConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMediaStreamTrackPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kind", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "id", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "label", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "enabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackEnabled) },
-    { "muted", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackMuted), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onmute", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnmute), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnmute) },
-    { "onunmute", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnunmute), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnunmute) },
-    { "readonly", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackReadonly), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "remote", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackRemote), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onended", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnended) },
-    { "onoverconstrained", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnoverconstrained), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnoverconstrained) },
-    { "clone", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionClone), (intptr_t) (0) },
-    { "stop", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionStop), (intptr_t) (0) },
-    { "getConstraints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionGetConstraints), (intptr_t) (0) },
-    { "states", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionStates), (intptr_t) (0) },
-    { "getCapabilities", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionGetCapabilities), (intptr_t) (0) },
-    { "applyConstraints", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionApplyConstraints), (intptr_t) (1) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kind", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "id", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "label", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "enabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackEnabled) } },
+    { "muted", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackMuted), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onmute", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnmute), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnmute) } },
+    { "onunmute", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnunmute), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnunmute) } },
+    { "readonly", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackReadonly), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "remote", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackRemote), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onended", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnended) } },
+    { "onoverconstrained", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaStreamTrackOnoverconstrained), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSMediaStreamTrackOnoverconstrained) } },
+    { "clone", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionClone), (intptr_t) (0) } },
+    { "stop", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionStop), (intptr_t) (0) } },
+    { "getConstraints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionGetConstraints), (intptr_t) (0) } },
+    { "getSettings", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionGetSettings), (intptr_t) (0) } },
+    { "getCapabilities", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionGetCapabilities), (intptr_t) (0) } },
+    { "applyConstraints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionApplyConstraints), (intptr_t) (1) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaStreamTrackPrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSMediaStreamTrackPrototype::s_info = { "MediaStreamTrackPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamTrackPrototype) };
@@ -180,9 +151,8 @@ void JSMediaStreamTrackPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaStreamTrack::s_info = { "MediaStreamTrack", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaStreamTrack) };
 
-JSMediaStreamTrack::JSMediaStreamTrack(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamTrack>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaStreamTrack::JSMediaStreamTrack(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaStreamTrack>&& impl)
+    : JSDOMWrapper<MediaStreamTrack>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -202,432 +172,423 @@ void JSMediaStreamTrack::destroy(JSC::JSCell* cell)
     thisObject->JSMediaStreamTrack::~JSMediaStreamTrack();
 }
 
-JSMediaStreamTrack::~JSMediaStreamTrack()
+EncodedJSValue jsMediaStreamTrackKind(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMediaStreamTrackKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "kind");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "kind");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "kind");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "kind");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.kind());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "id");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "id");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "id");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "id");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.id());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.id());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackLabel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "label");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "label");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "label");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "label");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.label());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.label());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackEnabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "enabled");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "enabled");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "enabled");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "enabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.enabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackMuted(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackMuted(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "muted");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "muted");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "muted");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "muted");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.muted());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackOnmute(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackOnmute(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "onmute");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "onmute");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "onmute");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "onmute");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().muteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().muteEvent));
 }
 
 
-EncodedJSValue jsMediaStreamTrackOnunmute(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackOnunmute(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "onunmute");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "onunmute");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "onunmute");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "onunmute");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().unmuteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().unmuteEvent));
 }
 
 
-EncodedJSValue jsMediaStreamTrackReadonly(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackReadonly(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "readonly");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "readonly");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "readonly");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "readonly");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.readonly());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackRemote(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackRemote(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "remote");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "remote");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "remote");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "remote");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.remote());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackReadyState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "readyState");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "readyState");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "readyState");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "readyState");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.readyState());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.readyState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaStreamTrackOnended(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackOnended(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "onended");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "onended");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "onended");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "onended");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().endedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().endedEvent));
 }
 
 
-EncodedJSValue jsMediaStreamTrackOnoverconstrained(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackOnoverconstrained(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaStreamTrack", "onoverconstrained");
-        return throwGetterTypeError(*exec, "MediaStreamTrack", "onoverconstrained");
+            return reportDeprecatedGetterError(*state, "MediaStreamTrack", "onoverconstrained");
+        return throwGetterTypeError(*state, "MediaStreamTrack", "onoverconstrained");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().overconstrainedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().overconstrainedEvent));
 }
 
 
-EncodedJSValue jsMediaStreamTrackConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMediaStreamTrackConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMediaStreamTrackPrototype* domObject = jsDynamicCast<JSMediaStreamTrackPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMediaStreamTrack::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMediaStreamTrack::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSMediaStreamTrackEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaStreamTrackEnabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStreamTrack", "enabled");
+            reportDeprecatedSetterError(*state, "MediaStreamTrack", "enabled");
         else
-            throwSetterTypeError(*exec, "MediaStreamTrack", "enabled");
+            throwSetterTypeError(*state, "MediaStreamTrack", "enabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setEnabled(nativeValue);
 }
 
 
-void setJSMediaStreamTrackOnmute(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaStreamTrackOnmute(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStreamTrack", "onmute");
+            reportDeprecatedSetterError(*state, "MediaStreamTrack", "onmute");
         else
-            throwSetterTypeError(*exec, "MediaStreamTrack", "onmute");
+            throwSetterTypeError(*state, "MediaStreamTrack", "onmute");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().muteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().muteEvent, value);
 }
 
 
-void setJSMediaStreamTrackOnunmute(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaStreamTrackOnunmute(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStreamTrack", "onunmute");
+            reportDeprecatedSetterError(*state, "MediaStreamTrack", "onunmute");
         else
-            throwSetterTypeError(*exec, "MediaStreamTrack", "onunmute");
+            throwSetterTypeError(*state, "MediaStreamTrack", "onunmute");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().unmuteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().unmuteEvent, value);
 }
 
 
-void setJSMediaStreamTrackOnended(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaStreamTrackOnended(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStreamTrack", "onended");
+            reportDeprecatedSetterError(*state, "MediaStreamTrack", "onended");
         else
-            throwSetterTypeError(*exec, "MediaStreamTrack", "onended");
+            throwSetterTypeError(*state, "MediaStreamTrack", "onended");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().endedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().endedEvent, value);
 }
 
 
-void setJSMediaStreamTrackOnoverconstrained(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSMediaStreamTrackOnoverconstrained(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaStreamTrackPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "MediaStreamTrack", "onoverconstrained");
+            reportDeprecatedSetterError(*state, "MediaStreamTrack", "onoverconstrained");
         else
-            throwSetterTypeError(*exec, "MediaStreamTrack", "onoverconstrained");
+            throwSetterTypeError(*state, "MediaStreamTrack", "onoverconstrained");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().overconstrainedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().overconstrainedEvent, value);
 }
 
 
 JSValue JSMediaStreamTrack::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMediaStreamTrackConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMediaStreamTrackConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionClone(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionClone(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "clone");
+        return throwThisTypeError(*state, "MediaStreamTrack", "clone");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.clone()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.clone()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionStop(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionStop(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "stop");
+        return throwThisTypeError(*state, "MediaStreamTrack", "stop");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.stopProducingData();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetConstraints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetConstraints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "getConstraints");
+        return throwThisTypeError(*state, "MediaStreamTrack", "getConstraints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getConstraints()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getConstraints()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionStates(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetSettings(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "states");
+        return throwThisTypeError(*state, "MediaStreamTrack", "getSettings");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.states()));
-    return JSValue::encode(result);
+    return JSValue::encode(castedThis->getSettings(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetCapabilities(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionGetCapabilities(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "getCapabilities");
+        return throwThisTypeError(*state, "MediaStreamTrack", "getCapabilities");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getCapabilities()));
-    return JSValue::encode(result);
+    return JSValue::encode(castedThis->getCapabilities(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionApplyConstraints(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionApplyConstraints(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "applyConstraints");
+        return throwThisTypeError(*state, "MediaStreamTrack", "applyConstraints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Dictionary constraints = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Dictionary constraints = { state, state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.applyConstraints(constraints);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "addEventListener");
+        return throwThisTypeError(*state, "MediaStreamTrack", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "removeEventListener");
+        return throwThisTypeError(*state, "MediaStreamTrack", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMediaStreamTrackPrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaStreamTrack* castedThis = jsDynamicCast<JSMediaStreamTrack*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaStreamTrack", "dispatchEvent");
+        return throwThisTypeError(*state, "MediaStreamTrack", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaStreamTrack::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -636,15 +597,15 @@ void JSMediaStreamTrack::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSMediaStreamTrack*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSMediaStreamTrackOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsMediaStreamTrack = jsCast<JSMediaStreamTrack*>(handle.slot()->asCell());
-    if (jsMediaStreamTrack->impl().hasPendingActivity())
+    if (jsMediaStreamTrack->wrapped().hasPendingActivity())
         return true;
-    if (jsMediaStreamTrack->impl().isFiringEventListeners())
+    if (jsMediaStreamTrack->wrapped().isFiringEventListeners())
         return true;
     UNUSED_PARAM(visitor);
     return false;
@@ -654,7 +615,14 @@ void JSMediaStreamTrackOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsMediaStreamTrack = jsCast<JSMediaStreamTrack*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaStreamTrack->impl(), jsMediaStreamTrack);
+    uncacheWrapper(world, &jsMediaStreamTrack->wrapped(), jsMediaStreamTrack);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStreamTrack* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaStreamTrack>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStreamTrack* impl)
@@ -669,7 +637,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaStreamT
 MediaStreamTrack* JSMediaStreamTrack::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaStreamTrack*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSWorkerLocation : public JSDOMWrapper {
+class JSWorkerLocation : public JSDOMWrapper<WorkerLocation> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WorkerLocation> Base;
     static JSWorkerLocation* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WorkerLocation>&& impl)
     {
-        JSWorkerLocation* ptr = new (NotNull, JSC::allocateCell<JSWorkerLocation>(globalObject->vm().heap)) JSWorkerLocation(structure, globalObject, WTF::move(impl));
+        JSWorkerLocation* ptr = new (NotNull, JSC::allocateCell<JSWorkerLocation>(globalObject->vm().heap)) JSWorkerLocation(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WorkerLocation* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWorkerLocation();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WorkerLocation& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WorkerLocation* m_impl;
 protected:
-    JSWorkerLocation(JSC::Structure*, JSDOMGlobalObject*, Ref<WorkerLocation>&&);
+    JSWorkerLocation(JSC::Structure*, JSDOMGlobalObject&, Ref<WorkerLocation>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WorkerLocation*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WorkerLocation*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WorkerLocation& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WorkerLocation& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WorkerLocation*);
 
 
 } // namespace WebCore

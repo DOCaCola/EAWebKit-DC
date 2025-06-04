@@ -31,8 +31,9 @@
 #include "config.h"
 #include "InspectorBackendDispatchers.h"
 
-#include <inspector/InspectorFrontendChannel.h>
+#include <inspector/InspectorFrontendRouter.h>
 #include <inspector/InspectorValues.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/text/CString.h>
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
@@ -49,17 +50,18 @@ DOMDebuggerBackendDispatcherHandler::~DOMDebuggerBackendDispatcherHandler() { }
 DOMStorageBackendDispatcherHandler::~DOMStorageBackendDispatcherHandler() { }
 DatabaseBackendDispatcherHandler::~DatabaseBackendDispatcherHandler() { }
 DebuggerBackendDispatcherHandler::~DebuggerBackendDispatcherHandler() { }
+HeapBackendDispatcherHandler::~HeapBackendDispatcherHandler() { }
 InspectorBackendDispatcherHandler::~InspectorBackendDispatcherHandler() { }
 LayerTreeBackendDispatcherHandler::~LayerTreeBackendDispatcherHandler() { }
 NetworkBackendDispatcherHandler::~NetworkBackendDispatcherHandler() { }
 PageBackendDispatcherHandler::~PageBackendDispatcherHandler() { }
 RuntimeBackendDispatcherHandler::~RuntimeBackendDispatcherHandler() { }
+ScriptProfilerBackendDispatcherHandler::~ScriptProfilerBackendDispatcherHandler() { }
 TimelineBackendDispatcherHandler::~TimelineBackendDispatcherHandler() { }
-WorkerBackendDispatcherHandler::~WorkerBackendDispatcherHandler() { }
 
-Ref<ApplicationCacheBackendDispatcher> ApplicationCacheBackendDispatcher::create(BackendDispatcher* backendDispatcher, ApplicationCacheBackendDispatcherHandler* agent)
+Ref<ApplicationCacheBackendDispatcher> ApplicationCacheBackendDispatcher::create(BackendDispatcher& backendDispatcher, ApplicationCacheBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new ApplicationCacheBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new ApplicationCacheBackendDispatcher(backendDispatcher, agent));
 }
 
 ApplicationCacheBackendDispatcher::ApplicationCacheBackendDispatcher(BackendDispatcher& backendDispatcher, ApplicationCacheBackendDispatcherHandler* agent)
@@ -72,27 +74,30 @@ ApplicationCacheBackendDispatcher::ApplicationCacheBackendDispatcher(BackendDisp
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("ApplicationCache"), this);
 }
 
-void ApplicationCacheBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void ApplicationCacheBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<ApplicationCacheBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "getFramesWithManifests")
-        getFramesWithManifests(callId, message);
+        getFramesWithManifests(requestId, WTF::move(parameters));
     else if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "getManifestForFrame")
-        getManifestForFrame(callId, message);
+        getManifestForFrame(requestId, WTF::move(parameters));
     else if (method == "getApplicationCacheForFrame")
-        getApplicationCacheForFrame(callId, message);
+        getApplicationCacheForFrame(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "ApplicationCache", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "ApplicationCache", '.', method, "' was not found"));
 }
 
-void ApplicationCacheBackendDispatcher::getFramesWithManifests(long callId, const InspectorObject&)
+void ApplicationCacheBackendDispatcher::getFramesWithManifests(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getFramesWithManifests(callId);
+        m_alternateDispatcher->getFramesWithManifests(requestId);
         return;
     }
 #endif
@@ -105,14 +110,17 @@ void ApplicationCacheBackendDispatcher::getFramesWithManifests(long callId, cons
     if (!error.length())
         result->setArray(ASCIILiteral("frameIds"), out_frameIds);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ApplicationCacheBackendDispatcher::enable(long callId, const InspectorObject&)
+void ApplicationCacheBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -121,24 +129,23 @@ void ApplicationCacheBackendDispatcher::enable(long callId, const InspectorObjec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ApplicationCacheBackendDispatcher::getManifestForFrame(long callId, const InspectorObject& message)
+void ApplicationCacheBackendDispatcher::getManifestForFrame(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "ApplicationCache.getManifestForFrame");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "ApplicationCache.getManifestForFrame"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getManifestForFrame(callId, in_frameId);
+        m_alternateDispatcher->getManifestForFrame(requestId, in_frameId);
         return;
     }
 #endif
@@ -151,24 +158,23 @@ void ApplicationCacheBackendDispatcher::getManifestForFrame(long callId, const I
     if (!error.length())
         result->setString(ASCIILiteral("manifestURL"), out_manifestURL);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ApplicationCacheBackendDispatcher::getApplicationCacheForFrame(long callId, const InspectorObject& message)
+void ApplicationCacheBackendDispatcher::getApplicationCacheForFrame(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "ApplicationCache.getApplicationCacheForFrame");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "ApplicationCache.getApplicationCacheForFrame"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getApplicationCacheForFrame(callId, in_frameId);
+        m_alternateDispatcher->getApplicationCacheForFrame(requestId, in_frameId);
         return;
     }
 #endif
@@ -181,12 +187,15 @@ void ApplicationCacheBackendDispatcher::getApplicationCacheForFrame(long callId,
     if (!error.length())
         result->setObject(ASCIILiteral("applicationCache"), out_applicationCache);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<CSSBackendDispatcher> CSSBackendDispatcher::create(BackendDispatcher* backendDispatcher, CSSBackendDispatcherHandler* agent)
+Ref<CSSBackendDispatcher> CSSBackendDispatcher::create(BackendDispatcher& backendDispatcher, CSSBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new CSSBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new CSSBackendDispatcher(backendDispatcher, agent));
 }
 
 CSSBackendDispatcher::CSSBackendDispatcher(BackendDispatcher& backendDispatcher, CSSBackendDispatcherHandler* agent)
@@ -199,14 +208,17 @@ CSSBackendDispatcher::CSSBackendDispatcher(BackendDispatcher& backendDispatcher,
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("CSS"), this);
 }
 
-void CSSBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void CSSBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<CSSBackendDispatcher> protect(*this);
 
-    typedef void (CSSBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (CSSBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -222,6 +234,7 @@ void CSSBackendDispatcher::dispatch(long callId, const String& method, Ref<Inspe
             { "setStyleSheetText", &CSSBackendDispatcher::setStyleSheetText },
             { "setStyleText", &CSSBackendDispatcher::setStyleText },
             { "setRuleSelector", &CSSBackendDispatcher::setRuleSelector },
+            { "createStyleSheet", &CSSBackendDispatcher::createStyleSheet },
             { "addRule", &CSSBackendDispatcher::addRule },
             { "getSupportedCSSProperties", &CSSBackendDispatcher::getSupportedCSSProperties },
             { "getSupportedSystemFontFamilyNames", &CSSBackendDispatcher::getSupportedSystemFontFamilyNames },
@@ -230,23 +243,23 @@ void CSSBackendDispatcher::dispatch(long callId, const String& method, Ref<Inspe
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "CSS", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "CSS", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void CSSBackendDispatcher::enable(long callId, const InspectorObject&)
+void CSSBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -255,14 +268,17 @@ void CSSBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::disable(long callId, const InspectorObject&)
+void CSSBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -271,28 +287,27 @@ void CSSBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getMatchedStylesForNode(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getMatchedStylesForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
     bool opt_in_includePseudo_valueFound = false;
-    bool opt_in_includePseudo = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("includePseudo"), &opt_in_includePseudo_valueFound, protocolErrors.get());
+    bool opt_in_includePseudo = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("includePseudo"), &opt_in_includePseudo_valueFound);
     bool opt_in_includeInherited_valueFound = false;
-    bool opt_in_includeInherited = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("includeInherited"), &opt_in_includeInherited_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getMatchedStylesForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_includeInherited = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("includeInherited"), &opt_in_includeInherited_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getMatchedStylesForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getMatchedStylesForNode(callId, in_nodeId, opt_in_includePseudo_valueFound ? &opt_in_includePseudo : nullptr, opt_in_includeInherited_valueFound ? &opt_in_includeInherited : nullptr);
+        m_alternateDispatcher->getMatchedStylesForNode(requestId, in_nodeId, opt_in_includePseudo_valueFound ? &opt_in_includePseudo : nullptr, opt_in_includeInherited_valueFound ? &opt_in_includeInherited : nullptr);
         return;
     }
 #endif
@@ -312,24 +327,23 @@ void CSSBackendDispatcher::getMatchedStylesForNode(long callId, const InspectorO
         if (out_inherited)
             result->setArray(ASCIILiteral("inherited"), out_inherited);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getInlineStylesForNode(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getInlineStylesForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getInlineStylesForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getInlineStylesForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getInlineStylesForNode(callId, in_nodeId);
+        m_alternateDispatcher->getInlineStylesForNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -346,24 +360,23 @@ void CSSBackendDispatcher::getInlineStylesForNode(long callId, const InspectorOb
         if (out_attributesStyle)
             result->setObject(ASCIILiteral("attributesStyle"), out_attributesStyle);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getComputedStyleForNode(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getComputedStyleForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getComputedStyleForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getComputedStyleForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getComputedStyleForNode(callId, in_nodeId);
+        m_alternateDispatcher->getComputedStyleForNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -376,14 +389,17 @@ void CSSBackendDispatcher::getComputedStyleForNode(long callId, const InspectorO
     if (!error.length())
         result->setArray(ASCIILiteral("computedStyle"), out_computedStyle);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getAllStyleSheets(long callId, const InspectorObject&)
+void CSSBackendDispatcher::getAllStyleSheets(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getAllStyleSheets(callId);
+        m_alternateDispatcher->getAllStyleSheets(requestId);
         return;
     }
 #endif
@@ -396,24 +412,23 @@ void CSSBackendDispatcher::getAllStyleSheets(long callId, const InspectorObject&
     if (!error.length())
         result->setArray(ASCIILiteral("headers"), out_headers);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getStyleSheet(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getStyleSheet(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_styleSheetId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("styleSheetId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getStyleSheet");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_styleSheetId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("styleSheetId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getStyleSheet"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getStyleSheet(callId, in_styleSheetId);
+        m_alternateDispatcher->getStyleSheet(requestId, in_styleSheetId);
         return;
     }
 #endif
@@ -426,24 +441,23 @@ void CSSBackendDispatcher::getStyleSheet(long callId, const InspectorObject& mes
     if (!error.length())
         result->setObject(ASCIILiteral("styleSheet"), out_styleSheet);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getStyleSheetText(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getStyleSheetText(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_styleSheetId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("styleSheetId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getStyleSheetText");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_styleSheetId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("styleSheetId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getStyleSheetText"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getStyleSheetText(callId, in_styleSheetId);
+        m_alternateDispatcher->getStyleSheetText(requestId, in_styleSheetId);
         return;
     }
 #endif
@@ -456,25 +470,24 @@ void CSSBackendDispatcher::getStyleSheetText(long callId, const InspectorObject&
     if (!error.length())
         result->setString(ASCIILiteral("text"), out_text);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::setStyleSheetText(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::setStyleSheetText(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_styleSheetId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("styleSheetId"), nullptr, protocolErrors.get());
-    String in_text = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("text"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.setStyleSheetText");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_styleSheetId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("styleSheetId"), nullptr);
+    String in_text = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("text"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.setStyleSheetText"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setStyleSheetText(callId, in_styleSheetId, in_text);
+        m_alternateDispatcher->setStyleSheetText(requestId, in_styleSheetId, in_text);
         return;
     }
 #endif
@@ -483,25 +496,24 @@ void CSSBackendDispatcher::setStyleSheetText(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setStyleSheetText(error, in_styleSheetId, in_text);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::setStyleText(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::setStyleText(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_styleId = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("styleId"), nullptr, protocolErrors.get());
-    String in_text = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("text"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.setStyleText");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_styleId = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("styleId"), nullptr);
+    String in_text = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("text"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.setStyleText"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setStyleText(callId, *in_styleId, in_text);
+        m_alternateDispatcher->setStyleText(requestId, *in_styleId, in_text);
         return;
     }
 #endif
@@ -514,25 +526,24 @@ void CSSBackendDispatcher::setStyleText(long callId, const InspectorObject& mess
     if (!error.length())
         result->setObject(ASCIILiteral("style"), out_style);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::setRuleSelector(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::setRuleSelector(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_ruleId = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("ruleId"), nullptr, protocolErrors.get());
-    String in_selector = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("selector"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.setRuleSelector");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_ruleId = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("ruleId"), nullptr);
+    String in_selector = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("selector"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.setRuleSelector"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setRuleSelector(callId, *in_ruleId, in_selector);
+        m_alternateDispatcher->setRuleSelector(requestId, *in_ruleId, in_selector);
         return;
     }
 #endif
@@ -545,25 +556,53 @@ void CSSBackendDispatcher::setRuleSelector(long callId, const InspectorObject& m
     if (!error.length())
         result->setObject(ASCIILiteral("rule"), out_rule);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::addRule(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::createStyleSheet(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_contextNodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("contextNodeId"), nullptr, protocolErrors.get());
-    String in_selector = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("selector"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.addRule");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.createStyleSheet"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->addRule(callId, in_contextNodeId, in_selector);
+        m_alternateDispatcher->createStyleSheet(requestId, in_frameId);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    Inspector::Protocol::CSS::StyleSheetId out_styleSheetId;
+    m_agent->createStyleSheet(error, in_frameId, &out_styleSheetId);
+
+    if (!error.length())
+        result->setString(ASCIILiteral("styleSheetId"), out_styleSheetId);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+void CSSBackendDispatcher::addRule(long requestId, RefPtr<InspectorObject>&& parameters)
+{
+    String in_styleSheetId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("styleSheetId"), nullptr);
+    String in_selector = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("selector"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.addRule"));
+        return;
+    }
+
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->addRule(requestId, in_styleSheetId, in_selector);
         return;
     }
 #endif
@@ -571,19 +610,22 @@ void CSSBackendDispatcher::addRule(long callId, const InspectorObject& message)
     ErrorString error;
     Ref<InspectorObject> result = InspectorObject::create();
     RefPtr<Inspector::Protocol::CSS::CSSRule> out_rule;
-    m_agent->addRule(error, in_contextNodeId, in_selector, out_rule);
+    m_agent->addRule(error, in_styleSheetId, in_selector, out_rule);
 
     if (!error.length())
         result->setObject(ASCIILiteral("rule"), out_rule);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getSupportedCSSProperties(long callId, const InspectorObject&)
+void CSSBackendDispatcher::getSupportedCSSProperties(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getSupportedCSSProperties(callId);
+        m_alternateDispatcher->getSupportedCSSProperties(requestId);
         return;
     }
 #endif
@@ -596,14 +638,17 @@ void CSSBackendDispatcher::getSupportedCSSProperties(long callId, const Inspecto
     if (!error.length())
         result->setArray(ASCIILiteral("cssProperties"), out_cssProperties);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getSupportedSystemFontFamilyNames(long callId, const InspectorObject&)
+void CSSBackendDispatcher::getSupportedSystemFontFamilyNames(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getSupportedSystemFontFamilyNames(callId);
+        m_alternateDispatcher->getSupportedSystemFontFamilyNames(requestId);
         return;
     }
 #endif
@@ -616,25 +661,24 @@ void CSSBackendDispatcher::getSupportedSystemFontFamilyNames(long callId, const 
     if (!error.length())
         result->setArray(ASCIILiteral("fontFamilyNames"), out_fontFamilyNames);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::forcePseudoState(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::forcePseudoState(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    RefPtr<Inspector::InspectorArray> in_forcedPseudoClasses = BackendDispatcher::getArray(paramsContainer.get(), ASCIILiteral("forcedPseudoClasses"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.forcePseudoState");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    RefPtr<Inspector::InspectorArray> in_forcedPseudoClasses = m_backendDispatcher->getArray(parameters.get(), ASCIILiteral("forcedPseudoClasses"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.forcePseudoState"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->forcePseudoState(callId, in_nodeId, *in_forcedPseudoClasses);
+        m_alternateDispatcher->forcePseudoState(requestId, in_nodeId, *in_forcedPseudoClasses);
         return;
     }
 #endif
@@ -643,24 +687,23 @@ void CSSBackendDispatcher::forcePseudoState(long callId, const InspectorObject& 
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->forcePseudoState(error, in_nodeId, *in_forcedPseudoClasses);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void CSSBackendDispatcher::getNamedFlowCollection(long callId, const InspectorObject& message)
+void CSSBackendDispatcher::getNamedFlowCollection(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_documentNodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("documentNodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "CSS.getNamedFlowCollection");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_documentNodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("documentNodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "CSS.getNamedFlowCollection"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getNamedFlowCollection(callId, in_documentNodeId);
+        m_alternateDispatcher->getNamedFlowCollection(requestId, in_documentNodeId);
         return;
     }
 #endif
@@ -673,12 +716,15 @@ void CSSBackendDispatcher::getNamedFlowCollection(long callId, const InspectorOb
     if (!error.length())
         result->setArray(ASCIILiteral("namedFlows"), out_namedFlows);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<ConsoleBackendDispatcher> ConsoleBackendDispatcher::create(BackendDispatcher* backendDispatcher, ConsoleBackendDispatcherHandler* agent)
+Ref<ConsoleBackendDispatcher> ConsoleBackendDispatcher::create(BackendDispatcher& backendDispatcher, ConsoleBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new ConsoleBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new ConsoleBackendDispatcher(backendDispatcher, agent));
 }
 
 ConsoleBackendDispatcher::ConsoleBackendDispatcher(BackendDispatcher& backendDispatcher, ConsoleBackendDispatcherHandler* agent)
@@ -691,29 +737,32 @@ ConsoleBackendDispatcher::ConsoleBackendDispatcher(BackendDispatcher& backendDis
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Console"), this);
 }
 
-void ConsoleBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void ConsoleBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<ConsoleBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "disable")
-        disable(callId, message);
+        disable(requestId, WTF::move(parameters));
     else if (method == "clearMessages")
-        clearMessages(callId, message);
+        clearMessages(requestId, WTF::move(parameters));
     else if (method == "setMonitoringXHREnabled")
-        setMonitoringXHREnabled(callId, message);
+        setMonitoringXHREnabled(requestId, WTF::move(parameters));
     else if (method == "addInspectedNode")
-        addInspectedNode(callId, message);
+        addInspectedNode(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Console", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Console", '.', method, "' was not found"));
 }
 
-void ConsoleBackendDispatcher::enable(long callId, const InspectorObject&)
+void ConsoleBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -722,14 +771,17 @@ void ConsoleBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ConsoleBackendDispatcher::disable(long callId, const InspectorObject&)
+void ConsoleBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -738,14 +790,17 @@ void ConsoleBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ConsoleBackendDispatcher::clearMessages(long callId, const InspectorObject&)
+void ConsoleBackendDispatcher::clearMessages(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->clearMessages(callId);
+        m_alternateDispatcher->clearMessages(requestId);
         return;
     }
 #endif
@@ -754,24 +809,23 @@ void ConsoleBackendDispatcher::clearMessages(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->clearMessages(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ConsoleBackendDispatcher::setMonitoringXHREnabled(long callId, const InspectorObject& message)
+void ConsoleBackendDispatcher::setMonitoringXHREnabled(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_enabled = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("enabled"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Console.setMonitoringXHREnabled");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_enabled = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("enabled"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Console.setMonitoringXHREnabled"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setMonitoringXHREnabled(callId, in_enabled);
+        m_alternateDispatcher->setMonitoringXHREnabled(requestId, in_enabled);
         return;
     }
 #endif
@@ -780,24 +834,23 @@ void ConsoleBackendDispatcher::setMonitoringXHREnabled(long callId, const Inspec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setMonitoringXHREnabled(error, in_enabled);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void ConsoleBackendDispatcher::addInspectedNode(long callId, const InspectorObject& message)
+void ConsoleBackendDispatcher::addInspectedNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Console.addInspectedNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Console.addInspectedNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->addInspectedNode(callId, in_nodeId);
+        m_alternateDispatcher->addInspectedNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -806,12 +859,15 @@ void ConsoleBackendDispatcher::addInspectedNode(long callId, const InspectorObje
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->addInspectedNode(error, in_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<DOMBackendDispatcher> DOMBackendDispatcher::create(BackendDispatcher* backendDispatcher, DOMBackendDispatcherHandler* agent)
+Ref<DOMBackendDispatcher> DOMBackendDispatcher::create(BackendDispatcher& backendDispatcher, DOMBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new DOMBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new DOMBackendDispatcher(backendDispatcher, agent));
 }
 
 DOMBackendDispatcher::DOMBackendDispatcher(BackendDispatcher& backendDispatcher, DOMBackendDispatcherHandler* agent)
@@ -824,14 +880,17 @@ DOMBackendDispatcher::DOMBackendDispatcher(BackendDispatcher& backendDispatcher,
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("DOM"), this);
 }
 
-void DOMBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void DOMBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<DOMBackendDispatcher> protect(*this);
 
-    typedef void (DOMBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (DOMBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -874,23 +933,23 @@ void DOMBackendDispatcher::dispatch(long callId, const String& method, Ref<Inspe
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "DOM", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "DOM", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void DOMBackendDispatcher::getDocument(long callId, const InspectorObject&)
+void DOMBackendDispatcher::getDocument(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getDocument(callId);
+        m_alternateDispatcher->getDocument(requestId);
         return;
     }
 #endif
@@ -903,26 +962,25 @@ void DOMBackendDispatcher::getDocument(long callId, const InspectorObject&)
     if (!error.length())
         result->setObject(ASCIILiteral("root"), out_root);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::requestChildNodes(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::requestChildNodes(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
     bool opt_in_depth_valueFound = false;
-    int opt_in_depth = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("depth"), &opt_in_depth_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.requestChildNodes");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int opt_in_depth = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("depth"), &opt_in_depth_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.requestChildNodes"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->requestChildNodes(callId, in_nodeId, opt_in_depth_valueFound ? &opt_in_depth : nullptr);
+        m_alternateDispatcher->requestChildNodes(requestId, in_nodeId, opt_in_depth_valueFound ? &opt_in_depth : nullptr);
         return;
     }
 #endif
@@ -931,25 +989,24 @@ void DOMBackendDispatcher::requestChildNodes(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->requestChildNodes(error, in_nodeId, opt_in_depth_valueFound ? &opt_in_depth : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::querySelector(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::querySelector(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_selector = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("selector"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.querySelector");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_selector = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("selector"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.querySelector"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->querySelector(callId, in_nodeId, in_selector);
+        m_alternateDispatcher->querySelector(requestId, in_nodeId, in_selector);
         return;
     }
 #endif
@@ -962,25 +1019,24 @@ void DOMBackendDispatcher::querySelector(long callId, const InspectorObject& mes
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::querySelectorAll(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::querySelectorAll(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_selector = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("selector"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.querySelectorAll");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_selector = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("selector"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.querySelectorAll"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->querySelectorAll(callId, in_nodeId, in_selector);
+        m_alternateDispatcher->querySelectorAll(requestId, in_nodeId, in_selector);
         return;
     }
 #endif
@@ -993,25 +1049,24 @@ void DOMBackendDispatcher::querySelectorAll(long callId, const InspectorObject& 
     if (!error.length())
         result->setArray(ASCIILiteral("nodeIds"), out_nodeIds);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setNodeName(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setNodeName(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_name = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("name"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setNodeName");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_name = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("name"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setNodeName"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setNodeName(callId, in_nodeId, in_name);
+        m_alternateDispatcher->setNodeName(requestId, in_nodeId, in_name);
         return;
     }
 #endif
@@ -1024,25 +1079,24 @@ void DOMBackendDispatcher::setNodeName(long callId, const InspectorObject& messa
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setNodeValue(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setNodeValue(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_value = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setNodeValue");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_value = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("value"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setNodeValue"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setNodeValue(callId, in_nodeId, in_value);
+        m_alternateDispatcher->setNodeValue(requestId, in_nodeId, in_value);
         return;
     }
 #endif
@@ -1051,24 +1105,23 @@ void DOMBackendDispatcher::setNodeValue(long callId, const InspectorObject& mess
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setNodeValue(error, in_nodeId, in_value);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::removeNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::removeNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.removeNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.removeNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeNode(callId, in_nodeId);
+        m_alternateDispatcher->removeNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -1077,26 +1130,25 @@ void DOMBackendDispatcher::removeNode(long callId, const InspectorObject& messag
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeNode(error, in_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setAttributeValue(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setAttributeValue(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_name = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("name"), nullptr, protocolErrors.get());
-    String in_value = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setAttributeValue");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_name = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("name"), nullptr);
+    String in_value = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("value"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setAttributeValue"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setAttributeValue(callId, in_nodeId, in_name, in_value);
+        m_alternateDispatcher->setAttributeValue(requestId, in_nodeId, in_name, in_value);
         return;
     }
 #endif
@@ -1105,27 +1157,26 @@ void DOMBackendDispatcher::setAttributeValue(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setAttributeValue(error, in_nodeId, in_name, in_value);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setAttributesAsText(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setAttributesAsText(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_text = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("text"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_text = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("text"), nullptr);
     bool opt_in_name_valueFound = false;
-    String opt_in_name = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("name"), &opt_in_name_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setAttributesAsText");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_name = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("name"), &opt_in_name_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setAttributesAsText"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setAttributesAsText(callId, in_nodeId, in_text, opt_in_name_valueFound ? &opt_in_name : nullptr);
+        m_alternateDispatcher->setAttributesAsText(requestId, in_nodeId, in_text, opt_in_name_valueFound ? &opt_in_name : nullptr);
         return;
     }
 #endif
@@ -1134,25 +1185,24 @@ void DOMBackendDispatcher::setAttributesAsText(long callId, const InspectorObjec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setAttributesAsText(error, in_nodeId, in_text, opt_in_name_valueFound ? &opt_in_name : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::removeAttribute(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::removeAttribute(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_name = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("name"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.removeAttribute");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_name = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("name"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.removeAttribute"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeAttribute(callId, in_nodeId, in_name);
+        m_alternateDispatcher->removeAttribute(requestId, in_nodeId, in_name);
         return;
     }
 #endif
@@ -1161,26 +1211,25 @@ void DOMBackendDispatcher::removeAttribute(long callId, const InspectorObject& m
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeAttribute(error, in_nodeId, in_name);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::getEventListenersForNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::getEventListenersForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
     bool opt_in_objectGroup_valueFound = false;
-    String opt_in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.getEventListenersForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.getEventListenersForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getEventListenersForNode(callId, in_nodeId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr);
+        m_alternateDispatcher->getEventListenersForNode(requestId, in_nodeId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr);
         return;
     }
 #endif
@@ -1193,24 +1242,23 @@ void DOMBackendDispatcher::getEventListenersForNode(long callId, const Inspector
     if (!error.length())
         result->setArray(ASCIILiteral("listeners"), out_listeners);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::getAccessibilityPropertiesForNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::getAccessibilityPropertiesForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.getAccessibilityPropertiesForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.getAccessibilityPropertiesForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getAccessibilityPropertiesForNode(callId, in_nodeId);
+        m_alternateDispatcher->getAccessibilityPropertiesForNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -1223,24 +1271,23 @@ void DOMBackendDispatcher::getAccessibilityPropertiesForNode(long callId, const 
     if (!error.length())
         result->setObject(ASCIILiteral("properties"), out_properties);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::getOuterHTML(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::getOuterHTML(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.getOuterHTML");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.getOuterHTML"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getOuterHTML(callId, in_nodeId);
+        m_alternateDispatcher->getOuterHTML(requestId, in_nodeId);
         return;
     }
 #endif
@@ -1253,25 +1300,24 @@ void DOMBackendDispatcher::getOuterHTML(long callId, const InspectorObject& mess
     if (!error.length())
         result->setString(ASCIILiteral("outerHTML"), out_outerHTML);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setOuterHTML(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setOuterHTML(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_outerHTML = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("outerHTML"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setOuterHTML");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_outerHTML = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("outerHTML"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setOuterHTML"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setOuterHTML(callId, in_nodeId, in_outerHTML);
+        m_alternateDispatcher->setOuterHTML(requestId, in_nodeId, in_outerHTML);
         return;
     }
 #endif
@@ -1280,26 +1326,25 @@ void DOMBackendDispatcher::setOuterHTML(long callId, const InspectorObject& mess
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setOuterHTML(error, in_nodeId, in_outerHTML);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::performSearch(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::performSearch(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_query = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("query"), nullptr, protocolErrors.get());
+    String in_query = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("query"), nullptr);
     bool opt_in_nodeIds_valueFound = false;
-    RefPtr<Inspector::InspectorArray> opt_in_nodeIds = BackendDispatcher::getArray(paramsContainer.get(), ASCIILiteral("nodeIds"), &opt_in_nodeIds_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.performSearch");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorArray> opt_in_nodeIds = m_backendDispatcher->getArray(parameters.get(), ASCIILiteral("nodeIds"), &opt_in_nodeIds_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.performSearch"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->performSearch(callId, in_query, opt_in_nodeIds_valueFound ? opt_in_nodeIds.get() : nullptr);
+        m_alternateDispatcher->performSearch(requestId, in_query, opt_in_nodeIds_valueFound ? opt_in_nodeIds.get() : nullptr);
         return;
     }
 #endif
@@ -1314,26 +1359,25 @@ void DOMBackendDispatcher::performSearch(long callId, const InspectorObject& mes
         result->setString(ASCIILiteral("searchId"), out_searchId);
         result->setInteger(ASCIILiteral("resultCount"), out_resultCount);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::getSearchResults(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::getSearchResults(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_searchId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("searchId"), nullptr, protocolErrors.get());
-    int in_fromIndex = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("fromIndex"), nullptr, protocolErrors.get());
-    int in_toIndex = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("toIndex"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.getSearchResults");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_searchId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("searchId"), nullptr);
+    int in_fromIndex = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("fromIndex"), nullptr);
+    int in_toIndex = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("toIndex"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.getSearchResults"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getSearchResults(callId, in_searchId, in_fromIndex, in_toIndex);
+        m_alternateDispatcher->getSearchResults(requestId, in_searchId, in_fromIndex, in_toIndex);
         return;
     }
 #endif
@@ -1346,24 +1390,23 @@ void DOMBackendDispatcher::getSearchResults(long callId, const InspectorObject& 
     if (!error.length())
         result->setArray(ASCIILiteral("nodeIds"), out_nodeIds);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::discardSearchResults(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::discardSearchResults(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_searchId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("searchId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.discardSearchResults");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_searchId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("searchId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.discardSearchResults"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->discardSearchResults(callId, in_searchId);
+        m_alternateDispatcher->discardSearchResults(requestId, in_searchId);
         return;
     }
 #endif
@@ -1372,24 +1415,23 @@ void DOMBackendDispatcher::discardSearchResults(long callId, const InspectorObje
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->discardSearchResults(error, in_searchId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::requestNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::requestNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.requestNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.requestNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->requestNode(callId, in_objectId);
+        m_alternateDispatcher->requestNode(requestId, in_objectId);
         return;
     }
 #endif
@@ -1402,26 +1444,25 @@ void DOMBackendDispatcher::requestNode(long callId, const InspectorObject& messa
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::setInspectModeEnabled(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::setInspectModeEnabled(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_enabled = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("enabled"), nullptr, protocolErrors.get());
+    bool in_enabled = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("enabled"), nullptr);
     bool opt_in_highlightConfig_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_highlightConfig = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("highlightConfig"), &opt_in_highlightConfig_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.setInspectModeEnabled");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> opt_in_highlightConfig = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("highlightConfig"), &opt_in_highlightConfig_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.setInspectModeEnabled"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setInspectModeEnabled(callId, in_enabled, opt_in_highlightConfig_valueFound ? opt_in_highlightConfig.get() : nullptr);
+        m_alternateDispatcher->setInspectModeEnabled(requestId, in_enabled, opt_in_highlightConfig_valueFound ? opt_in_highlightConfig.get() : nullptr);
         return;
     }
 #endif
@@ -1430,33 +1471,32 @@ void DOMBackendDispatcher::setInspectModeEnabled(long callId, const InspectorObj
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setInspectModeEnabled(error, in_enabled, opt_in_highlightConfig_valueFound ? opt_in_highlightConfig.get() : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::highlightRect(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::highlightRect(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_x = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("x"), nullptr, protocolErrors.get());
-    int in_y = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("y"), nullptr, protocolErrors.get());
-    int in_width = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("width"), nullptr, protocolErrors.get());
-    int in_height = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("height"), nullptr, protocolErrors.get());
+    int in_x = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("x"), nullptr);
+    int in_y = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("y"), nullptr);
+    int in_width = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("width"), nullptr);
+    int in_height = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("height"), nullptr);
     bool opt_in_color_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_color = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("color"), &opt_in_color_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> opt_in_color = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("color"), &opt_in_color_valueFound);
     bool opt_in_outlineColor_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_outlineColor = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("outlineColor"), &opt_in_outlineColor_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> opt_in_outlineColor = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("outlineColor"), &opt_in_outlineColor_valueFound);
     bool opt_in_usePageCoordinates_valueFound = false;
-    bool opt_in_usePageCoordinates = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("usePageCoordinates"), &opt_in_usePageCoordinates_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.highlightRect");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_usePageCoordinates = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("usePageCoordinates"), &opt_in_usePageCoordinates_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.highlightRect"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->highlightRect(callId, in_x, in_y, in_width, in_height, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
+        m_alternateDispatcher->highlightRect(requestId, in_x, in_y, in_width, in_height, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
         return;
     }
 #endif
@@ -1465,30 +1505,29 @@ void DOMBackendDispatcher::highlightRect(long callId, const InspectorObject& mes
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->highlightRect(error, in_x, in_y, in_width, in_height, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::highlightQuad(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::highlightQuad(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorArray> in_quad = BackendDispatcher::getArray(paramsContainer.get(), ASCIILiteral("quad"), nullptr, protocolErrors.get());
+    RefPtr<Inspector::InspectorArray> in_quad = m_backendDispatcher->getArray(parameters.get(), ASCIILiteral("quad"), nullptr);
     bool opt_in_color_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_color = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("color"), &opt_in_color_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> opt_in_color = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("color"), &opt_in_color_valueFound);
     bool opt_in_outlineColor_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_outlineColor = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("outlineColor"), &opt_in_outlineColor_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> opt_in_outlineColor = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("outlineColor"), &opt_in_outlineColor_valueFound);
     bool opt_in_usePageCoordinates_valueFound = false;
-    bool opt_in_usePageCoordinates = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("usePageCoordinates"), &opt_in_usePageCoordinates_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.highlightQuad");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_usePageCoordinates = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("usePageCoordinates"), &opt_in_usePageCoordinates_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.highlightQuad"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->highlightQuad(callId, *in_quad, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
+        m_alternateDispatcher->highlightQuad(requestId, *in_quad, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
         return;
     }
 #endif
@@ -1497,27 +1536,26 @@ void DOMBackendDispatcher::highlightQuad(long callId, const InspectorObject& mes
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->highlightQuad(error, *in_quad, opt_in_color_valueFound ? opt_in_color.get() : nullptr, opt_in_outlineColor_valueFound ? opt_in_outlineColor.get() : nullptr, opt_in_usePageCoordinates_valueFound ? &opt_in_usePageCoordinates : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::highlightSelector(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::highlightSelector(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_highlightConfig = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("highlightConfig"), nullptr, protocolErrors.get());
-    String in_selectorString = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("selectorString"), nullptr, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> in_highlightConfig = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("highlightConfig"), nullptr);
+    String in_selectorString = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("selectorString"), nullptr);
     bool opt_in_frameId_valueFound = false;
-    String opt_in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), &opt_in_frameId_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.highlightSelector");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), &opt_in_frameId_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.highlightSelector"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->highlightSelector(callId, *in_highlightConfig, in_selectorString, opt_in_frameId_valueFound ? &opt_in_frameId : nullptr);
+        m_alternateDispatcher->highlightSelector(requestId, *in_highlightConfig, in_selectorString, opt_in_frameId_valueFound ? &opt_in_frameId : nullptr);
         return;
     }
 #endif
@@ -1526,28 +1564,27 @@ void DOMBackendDispatcher::highlightSelector(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->highlightSelector(error, *in_highlightConfig, in_selectorString, opt_in_frameId_valueFound ? &opt_in_frameId : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::highlightNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::highlightNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_highlightConfig = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("highlightConfig"), nullptr, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> in_highlightConfig = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("highlightConfig"), nullptr);
     bool opt_in_nodeId_valueFound = false;
-    int opt_in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), &opt_in_nodeId_valueFound, protocolErrors.get());
+    int opt_in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), &opt_in_nodeId_valueFound);
     bool opt_in_objectId_valueFound = false;
-    String opt_in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), &opt_in_objectId_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.highlightNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), &opt_in_objectId_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.highlightNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->highlightNode(callId, *in_highlightConfig, opt_in_nodeId_valueFound ? &opt_in_nodeId : nullptr, opt_in_objectId_valueFound ? &opt_in_objectId : nullptr);
+        m_alternateDispatcher->highlightNode(requestId, *in_highlightConfig, opt_in_nodeId_valueFound ? &opt_in_nodeId : nullptr, opt_in_objectId_valueFound ? &opt_in_objectId : nullptr);
         return;
     }
 #endif
@@ -1556,14 +1593,17 @@ void DOMBackendDispatcher::highlightNode(long callId, const InspectorObject& mes
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->highlightNode(error, *in_highlightConfig, opt_in_nodeId_valueFound ? &opt_in_nodeId : nullptr, opt_in_objectId_valueFound ? &opt_in_objectId : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::hideHighlight(long callId, const InspectorObject&)
+void DOMBackendDispatcher::hideHighlight(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->hideHighlight(callId);
+        m_alternateDispatcher->hideHighlight(requestId);
         return;
     }
 #endif
@@ -1572,28 +1612,27 @@ void DOMBackendDispatcher::hideHighlight(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->hideHighlight(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::highlightFrame(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::highlightFrame(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
     bool opt_in_contentColor_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_contentColor = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("contentColor"), &opt_in_contentColor_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> opt_in_contentColor = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("contentColor"), &opt_in_contentColor_valueFound);
     bool opt_in_contentOutlineColor_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_contentOutlineColor = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("contentOutlineColor"), &opt_in_contentOutlineColor_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.highlightFrame");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> opt_in_contentOutlineColor = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("contentOutlineColor"), &opt_in_contentOutlineColor_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.highlightFrame"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->highlightFrame(callId, in_frameId, opt_in_contentColor_valueFound ? opt_in_contentColor.get() : nullptr, opt_in_contentOutlineColor_valueFound ? opt_in_contentOutlineColor.get() : nullptr);
+        m_alternateDispatcher->highlightFrame(requestId, in_frameId, opt_in_contentColor_valueFound ? opt_in_contentColor.get() : nullptr, opt_in_contentOutlineColor_valueFound ? opt_in_contentOutlineColor.get() : nullptr);
         return;
     }
 #endif
@@ -1602,24 +1641,23 @@ void DOMBackendDispatcher::highlightFrame(long callId, const InspectorObject& me
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->highlightFrame(error, in_frameId, opt_in_contentColor_valueFound ? opt_in_contentColor.get() : nullptr, opt_in_contentOutlineColor_valueFound ? opt_in_contentOutlineColor.get() : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::pushNodeByPathToFrontend(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::pushNodeByPathToFrontend(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_path = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("path"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.pushNodeByPathToFrontend");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_path = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("path"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.pushNodeByPathToFrontend"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->pushNodeByPathToFrontend(callId, in_path);
+        m_alternateDispatcher->pushNodeByPathToFrontend(requestId, in_path);
         return;
     }
 #endif
@@ -1632,24 +1670,23 @@ void DOMBackendDispatcher::pushNodeByPathToFrontend(long callId, const Inspector
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::pushNodeByBackendIdToFrontend(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::pushNodeByBackendIdToFrontend(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_backendNodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("backendNodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.pushNodeByBackendIdToFrontend");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_backendNodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("backendNodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.pushNodeByBackendIdToFrontend"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->pushNodeByBackendIdToFrontend(callId, in_backendNodeId);
+        m_alternateDispatcher->pushNodeByBackendIdToFrontend(requestId, in_backendNodeId);
         return;
     }
 #endif
@@ -1662,24 +1699,23 @@ void DOMBackendDispatcher::pushNodeByBackendIdToFrontend(long callId, const Insp
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::releaseBackendNodeIds(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::releaseBackendNodeIds(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_nodeGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("nodeGroup"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.releaseBackendNodeIds");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_nodeGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("nodeGroup"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.releaseBackendNodeIds"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->releaseBackendNodeIds(callId, in_nodeGroup);
+        m_alternateDispatcher->releaseBackendNodeIds(requestId, in_nodeGroup);
         return;
     }
 #endif
@@ -1688,26 +1724,25 @@ void DOMBackendDispatcher::releaseBackendNodeIds(long callId, const InspectorObj
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->releaseBackendNodeIds(error, in_nodeGroup);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::resolveNode(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::resolveNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
     bool opt_in_objectGroup_valueFound = false;
-    String opt_in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.resolveNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.resolveNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->resolveNode(callId, in_nodeId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr);
+        m_alternateDispatcher->resolveNode(requestId, in_nodeId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr);
         return;
     }
 #endif
@@ -1720,24 +1755,23 @@ void DOMBackendDispatcher::resolveNode(long callId, const InspectorObject& messa
     if (!error.length())
         result->setObject(ASCIILiteral("object"), out_object);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::getAttributes(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::getAttributes(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.getAttributes");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.getAttributes"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getAttributes(callId, in_nodeId);
+        m_alternateDispatcher->getAttributes(requestId, in_nodeId);
         return;
     }
 #endif
@@ -1750,27 +1784,26 @@ void DOMBackendDispatcher::getAttributes(long callId, const InspectorObject& mes
     if (!error.length())
         result->setArray(ASCIILiteral("attributes"), out_attributes);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::moveTo(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::moveTo(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    int in_targetNodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("targetNodeId"), nullptr, protocolErrors.get());
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    int in_targetNodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("targetNodeId"), nullptr);
     bool opt_in_insertBeforeNodeId_valueFound = false;
-    int opt_in_insertBeforeNodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("insertBeforeNodeId"), &opt_in_insertBeforeNodeId_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.moveTo");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int opt_in_insertBeforeNodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("insertBeforeNodeId"), &opt_in_insertBeforeNodeId_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.moveTo"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->moveTo(callId, in_nodeId, in_targetNodeId, opt_in_insertBeforeNodeId_valueFound ? &opt_in_insertBeforeNodeId : nullptr);
+        m_alternateDispatcher->moveTo(requestId, in_nodeId, in_targetNodeId, opt_in_insertBeforeNodeId_valueFound ? &opt_in_insertBeforeNodeId : nullptr);
         return;
     }
 #endif
@@ -1783,14 +1816,17 @@ void DOMBackendDispatcher::moveTo(long callId, const InspectorObject& message)
     if (!error.length())
         result->setInteger(ASCIILiteral("nodeId"), out_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::undo(long callId, const InspectorObject&)
+void DOMBackendDispatcher::undo(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->undo(callId);
+        m_alternateDispatcher->undo(requestId);
         return;
     }
 #endif
@@ -1799,14 +1835,17 @@ void DOMBackendDispatcher::undo(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->undo(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::redo(long callId, const InspectorObject&)
+void DOMBackendDispatcher::redo(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->redo(callId);
+        m_alternateDispatcher->redo(requestId);
         return;
     }
 #endif
@@ -1815,14 +1854,17 @@ void DOMBackendDispatcher::redo(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->redo(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::markUndoableState(long callId, const InspectorObject&)
+void DOMBackendDispatcher::markUndoableState(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->markUndoableState(callId);
+        m_alternateDispatcher->markUndoableState(requestId);
         return;
     }
 #endif
@@ -1831,24 +1873,23 @@ void DOMBackendDispatcher::markUndoableState(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->markUndoableState(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMBackendDispatcher::focus(long callId, const InspectorObject& message)
+void DOMBackendDispatcher::focus(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOM.focus");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOM.focus"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->focus(callId, in_nodeId);
+        m_alternateDispatcher->focus(requestId, in_nodeId);
         return;
     }
 #endif
@@ -1857,12 +1898,15 @@ void DOMBackendDispatcher::focus(long callId, const InspectorObject& message)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->focus(error, in_nodeId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<DOMDebuggerBackendDispatcher> DOMDebuggerBackendDispatcher::create(BackendDispatcher* backendDispatcher, DOMDebuggerBackendDispatcherHandler* agent)
+Ref<DOMDebuggerBackendDispatcher> DOMDebuggerBackendDispatcher::create(BackendDispatcher& backendDispatcher, DOMDebuggerBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new DOMDebuggerBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new DOMDebuggerBackendDispatcher(backendDispatcher, agent));
 }
 
 DOMDebuggerBackendDispatcher::DOMDebuggerBackendDispatcher(BackendDispatcher& backendDispatcher, DOMDebuggerBackendDispatcherHandler* agent)
@@ -1875,14 +1919,17 @@ DOMDebuggerBackendDispatcher::DOMDebuggerBackendDispatcher(BackendDispatcher& ba
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("DOMDebugger"), this);
 }
 
-void DOMDebuggerBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void DOMDebuggerBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<DOMDebuggerBackendDispatcher> protect(*this);
 
-    typedef void (DOMDebuggerBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (DOMDebuggerBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -1898,34 +1945,30 @@ void DOMDebuggerBackendDispatcher::dispatch(long callId, const String& method, R
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "DOMDebugger", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "DOMDebugger", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void DOMDebuggerBackendDispatcher::setDOMBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::setDOMBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_type = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("type"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setDOMBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_type = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("type"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setDOMBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setDOMBreakpoint(callId, in_nodeId, in_type);
+        m_alternateDispatcher->setDOMBreakpoint(requestId, in_nodeId, in_type);
         return;
     }
 #endif
@@ -1934,25 +1977,24 @@ void DOMDebuggerBackendDispatcher::setDOMBreakpoint(long callId, const Inspector
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setDOMBreakpoint(error, in_nodeId, in_type);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::removeDOMBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::removeDOMBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    String in_type = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("type"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeDOMBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    String in_type = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("type"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeDOMBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeDOMBreakpoint(callId, in_nodeId, in_type);
+        m_alternateDispatcher->removeDOMBreakpoint(requestId, in_nodeId, in_type);
         return;
     }
 #endif
@@ -1961,24 +2003,23 @@ void DOMDebuggerBackendDispatcher::removeDOMBreakpoint(long callId, const Inspec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeDOMBreakpoint(error, in_nodeId, in_type);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::setEventListenerBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::setEventListenerBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_eventName = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("eventName"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setEventListenerBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_eventName = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("eventName"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setEventListenerBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setEventListenerBreakpoint(callId, in_eventName);
+        m_alternateDispatcher->setEventListenerBreakpoint(requestId, in_eventName);
         return;
     }
 #endif
@@ -1987,24 +2028,23 @@ void DOMDebuggerBackendDispatcher::setEventListenerBreakpoint(long callId, const
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setEventListenerBreakpoint(error, in_eventName);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::removeEventListenerBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::removeEventListenerBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_eventName = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("eventName"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeEventListenerBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_eventName = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("eventName"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeEventListenerBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeEventListenerBreakpoint(callId, in_eventName);
+        m_alternateDispatcher->removeEventListenerBreakpoint(requestId, in_eventName);
         return;
     }
 #endif
@@ -2013,24 +2053,23 @@ void DOMDebuggerBackendDispatcher::removeEventListenerBreakpoint(long callId, co
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeEventListenerBreakpoint(error, in_eventName);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::setInstrumentationBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::setInstrumentationBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_eventName = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("eventName"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setInstrumentationBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_eventName = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("eventName"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setInstrumentationBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setInstrumentationBreakpoint(callId, in_eventName);
+        m_alternateDispatcher->setInstrumentationBreakpoint(requestId, in_eventName);
         return;
     }
 #endif
@@ -2039,24 +2078,23 @@ void DOMDebuggerBackendDispatcher::setInstrumentationBreakpoint(long callId, con
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setInstrumentationBreakpoint(error, in_eventName);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::removeInstrumentationBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::removeInstrumentationBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_eventName = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("eventName"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeInstrumentationBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_eventName = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("eventName"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeInstrumentationBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeInstrumentationBreakpoint(callId, in_eventName);
+        m_alternateDispatcher->removeInstrumentationBreakpoint(requestId, in_eventName);
         return;
     }
 #endif
@@ -2065,24 +2103,23 @@ void DOMDebuggerBackendDispatcher::removeInstrumentationBreakpoint(long callId, 
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeInstrumentationBreakpoint(error, in_eventName);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::setXHRBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::setXHRBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setXHRBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.setXHRBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setXHRBreakpoint(callId, in_url);
+        m_alternateDispatcher->setXHRBreakpoint(requestId, in_url);
         return;
     }
 #endif
@@ -2091,24 +2128,23 @@ void DOMDebuggerBackendDispatcher::setXHRBreakpoint(long callId, const Inspector
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setXHRBreakpoint(error, in_url);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMDebuggerBackendDispatcher::removeXHRBreakpoint(long callId, const InspectorObject& message)
+void DOMDebuggerBackendDispatcher::removeXHRBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeXHRBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMDebugger.removeXHRBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeXHRBreakpoint(callId, in_url);
+        m_alternateDispatcher->removeXHRBreakpoint(requestId, in_url);
         return;
     }
 #endif
@@ -2117,12 +2153,15 @@ void DOMDebuggerBackendDispatcher::removeXHRBreakpoint(long callId, const Inspec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeXHRBreakpoint(error, in_url);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<DOMStorageBackendDispatcher> DOMStorageBackendDispatcher::create(BackendDispatcher* backendDispatcher, DOMStorageBackendDispatcherHandler* agent)
+Ref<DOMStorageBackendDispatcher> DOMStorageBackendDispatcher::create(BackendDispatcher& backendDispatcher, DOMStorageBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new DOMStorageBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new DOMStorageBackendDispatcher(backendDispatcher, agent));
 }
 
 DOMStorageBackendDispatcher::DOMStorageBackendDispatcher(BackendDispatcher& backendDispatcher, DOMStorageBackendDispatcherHandler* agent)
@@ -2135,29 +2174,32 @@ DOMStorageBackendDispatcher::DOMStorageBackendDispatcher(BackendDispatcher& back
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("DOMStorage"), this);
 }
 
-void DOMStorageBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void DOMStorageBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<DOMStorageBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "disable")
-        disable(callId, message);
+        disable(requestId, WTF::move(parameters));
     else if (method == "getDOMStorageItems")
-        getDOMStorageItems(callId, message);
+        getDOMStorageItems(requestId, WTF::move(parameters));
     else if (method == "setDOMStorageItem")
-        setDOMStorageItem(callId, message);
+        setDOMStorageItem(requestId, WTF::move(parameters));
     else if (method == "removeDOMStorageItem")
-        removeDOMStorageItem(callId, message);
+        removeDOMStorageItem(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "DOMStorage", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "DOMStorage", '.', method, "' was not found"));
 }
 
-void DOMStorageBackendDispatcher::enable(long callId, const InspectorObject&)
+void DOMStorageBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -2166,14 +2208,17 @@ void DOMStorageBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMStorageBackendDispatcher::disable(long callId, const InspectorObject&)
+void DOMStorageBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -2182,24 +2227,23 @@ void DOMStorageBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMStorageBackendDispatcher::getDOMStorageItems(long callId, const InspectorObject& message)
+void DOMStorageBackendDispatcher::getDOMStorageItems(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_storageId = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("storageId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMStorage.getDOMStorageItems");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_storageId = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("storageId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMStorage.getDOMStorageItems"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getDOMStorageItems(callId, *in_storageId);
+        m_alternateDispatcher->getDOMStorageItems(requestId, *in_storageId);
         return;
     }
 #endif
@@ -2212,26 +2256,25 @@ void DOMStorageBackendDispatcher::getDOMStorageItems(long callId, const Inspecto
     if (!error.length())
         result->setArray(ASCIILiteral("entries"), out_entries);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMStorageBackendDispatcher::setDOMStorageItem(long callId, const InspectorObject& message)
+void DOMStorageBackendDispatcher::setDOMStorageItem(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_storageId = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("storageId"), nullptr, protocolErrors.get());
-    String in_key = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("key"), nullptr, protocolErrors.get());
-    String in_value = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMStorage.setDOMStorageItem");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_storageId = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("storageId"), nullptr);
+    String in_key = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("key"), nullptr);
+    String in_value = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("value"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMStorage.setDOMStorageItem"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setDOMStorageItem(callId, *in_storageId, in_key, in_value);
+        m_alternateDispatcher->setDOMStorageItem(requestId, *in_storageId, in_key, in_value);
         return;
     }
 #endif
@@ -2240,25 +2283,24 @@ void DOMStorageBackendDispatcher::setDOMStorageItem(long callId, const Inspector
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setDOMStorageItem(error, *in_storageId, in_key, in_value);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DOMStorageBackendDispatcher::removeDOMStorageItem(long callId, const InspectorObject& message)
+void DOMStorageBackendDispatcher::removeDOMStorageItem(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_storageId = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("storageId"), nullptr, protocolErrors.get());
-    String in_key = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("key"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "DOMStorage.removeDOMStorageItem");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_storageId = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("storageId"), nullptr);
+    String in_key = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("key"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "DOMStorage.removeDOMStorageItem"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeDOMStorageItem(callId, *in_storageId, in_key);
+        m_alternateDispatcher->removeDOMStorageItem(requestId, *in_storageId, in_key);
         return;
     }
 #endif
@@ -2267,12 +2309,15 @@ void DOMStorageBackendDispatcher::removeDOMStorageItem(long callId, const Inspec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeDOMStorageItem(error, *in_storageId, in_key);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<DatabaseBackendDispatcher> DatabaseBackendDispatcher::create(BackendDispatcher* backendDispatcher, DatabaseBackendDispatcherHandler* agent)
+Ref<DatabaseBackendDispatcher> DatabaseBackendDispatcher::create(BackendDispatcher& backendDispatcher, DatabaseBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new DatabaseBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new DatabaseBackendDispatcher(backendDispatcher, agent));
 }
 
 DatabaseBackendDispatcher::DatabaseBackendDispatcher(BackendDispatcher& backendDispatcher, DatabaseBackendDispatcherHandler* agent)
@@ -2285,27 +2330,30 @@ DatabaseBackendDispatcher::DatabaseBackendDispatcher(BackendDispatcher& backendD
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Database"), this);
 }
 
-void DatabaseBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void DatabaseBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<DatabaseBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "disable")
-        disable(callId, message);
+        disable(requestId, WTF::move(parameters));
     else if (method == "getDatabaseTableNames")
-        getDatabaseTableNames(callId, message);
+        getDatabaseTableNames(requestId, WTF::move(parameters));
     else if (method == "executeSQL")
-        executeSQL(callId, message);
+        executeSQL(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Database", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Database", '.', method, "' was not found"));
 }
 
-void DatabaseBackendDispatcher::enable(long callId, const InspectorObject&)
+void DatabaseBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -2314,14 +2362,17 @@ void DatabaseBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DatabaseBackendDispatcher::disable(long callId, const InspectorObject&)
+void DatabaseBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -2330,24 +2381,23 @@ void DatabaseBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DatabaseBackendDispatcher::getDatabaseTableNames(long callId, const InspectorObject& message)
+void DatabaseBackendDispatcher::getDatabaseTableNames(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_databaseId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("databaseId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Database.getDatabaseTableNames");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_databaseId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("databaseId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Database.getDatabaseTableNames"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getDatabaseTableNames(callId, in_databaseId);
+        m_alternateDispatcher->getDatabaseTableNames(requestId, in_databaseId);
         return;
     }
 #endif
@@ -2360,7 +2410,10 @@ void DatabaseBackendDispatcher::getDatabaseTableNames(long callId, const Inspect
     if (!error.length())
         result->setArray(ASCIILiteral("tableNames"), out_tableNames);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
 DatabaseBackendDispatcherHandler::ExecuteSQLCallback::ExecuteSQLCallback(Ref<BackendDispatcher>&& backendDispatcher, int id) : BackendDispatcher::CallbackBase(WTF::move(backendDispatcher), id) { }
@@ -2374,44 +2427,40 @@ void DatabaseBackendDispatcherHandler::ExecuteSQLCallback::sendSuccess(RefPtr<In
         jsonMessage->setArray(ASCIILiteral("values"), values);
     if (sqlError)
         jsonMessage->setObject(ASCIILiteral("sqlError"), sqlError);
-    sendIfActive(WTF::move(jsonMessage), ErrorString());
+    CallbackBase::sendSuccess(WTF::move(jsonMessage));
 }
 
-void DatabaseBackendDispatcher::executeSQL(long callId, const InspectorObject& message)
+void DatabaseBackendDispatcher::executeSQL(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_databaseId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("databaseId"), nullptr, protocolErrors.get());
-    String in_query = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("query"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Database.executeSQL");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_databaseId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("databaseId"), nullptr);
+    String in_query = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("query"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Database.executeSQL"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->executeSQL(callId, in_databaseId, in_query);
+        m_alternateDispatcher->executeSQL(requestId, in_databaseId, in_query);
         return;
     }
 #endif
 
     ErrorString error;
     Ref<InspectorObject> result = InspectorObject::create();
-    Ref<DatabaseBackendDispatcherHandler::ExecuteSQLCallback> callback = adoptRef(*new DatabaseBackendDispatcherHandler::ExecuteSQLCallback(m_backendDispatcher.copyRef(), callId));
+    Ref<DatabaseBackendDispatcherHandler::ExecuteSQLCallback> callback = adoptRef(*new DatabaseBackendDispatcherHandler::ExecuteSQLCallback(m_backendDispatcher.copyRef(), requestId));
     m_agent->executeSQL(error, in_databaseId, in_query, callback.copyRef());
 
     if (error.length()) {
         callback->disable();
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::ServerError, error);
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, error);
         return;
     }
 }
 
-Ref<DebuggerBackendDispatcher> DebuggerBackendDispatcher::create(BackendDispatcher* backendDispatcher, DebuggerBackendDispatcherHandler* agent)
+Ref<DebuggerBackendDispatcher> DebuggerBackendDispatcher::create(BackendDispatcher& backendDispatcher, DebuggerBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new DebuggerBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new DebuggerBackendDispatcher(backendDispatcher, agent));
 }
 
 DebuggerBackendDispatcher::DebuggerBackendDispatcher(BackendDispatcher& backendDispatcher, DebuggerBackendDispatcherHandler* agent)
@@ -2424,14 +2473,17 @@ DebuggerBackendDispatcher::DebuggerBackendDispatcher(BackendDispatcher& backendD
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Debugger"), this);
 }
 
-void DebuggerBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void DebuggerBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<DebuggerBackendDispatcher> protect(*this);
 
-    typedef void (DebuggerBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (DebuggerBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -2457,23 +2509,23 @@ void DebuggerBackendDispatcher::dispatch(long callId, const String& method, Ref<
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Debugger", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Debugger", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void DebuggerBackendDispatcher::enable(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -2482,14 +2534,17 @@ void DebuggerBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::disable(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -2498,24 +2553,23 @@ void DebuggerBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::setBreakpointsActive(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::setBreakpointsActive(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_active = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("active"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpointsActive");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_active = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("active"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpointsActive"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setBreakpointsActive(callId, in_active);
+        m_alternateDispatcher->setBreakpointsActive(requestId, in_active);
         return;
     }
 #endif
@@ -2524,32 +2578,31 @@ void DebuggerBackendDispatcher::setBreakpointsActive(long callId, const Inspecto
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setBreakpointsActive(error, in_active);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::setBreakpointByUrl(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::setBreakpointByUrl(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_lineNumber = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("lineNumber"), nullptr, protocolErrors.get());
+    int in_lineNumber = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("lineNumber"), nullptr);
     bool opt_in_url_valueFound = false;
-    String opt_in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), &opt_in_url_valueFound, protocolErrors.get());
+    String opt_in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), &opt_in_url_valueFound);
     bool opt_in_urlRegex_valueFound = false;
-    String opt_in_urlRegex = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("urlRegex"), &opt_in_urlRegex_valueFound, protocolErrors.get());
+    String opt_in_urlRegex = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("urlRegex"), &opt_in_urlRegex_valueFound);
     bool opt_in_columnNumber_valueFound = false;
-    int opt_in_columnNumber = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("columnNumber"), &opt_in_columnNumber_valueFound, protocolErrors.get());
+    int opt_in_columnNumber = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("columnNumber"), &opt_in_columnNumber_valueFound);
     bool opt_in_options_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_options = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("options"), &opt_in_options_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpointByUrl");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> opt_in_options = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("options"), &opt_in_options_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpointByUrl"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setBreakpointByUrl(callId, in_lineNumber, opt_in_url_valueFound ? &opt_in_url : nullptr, opt_in_urlRegex_valueFound ? &opt_in_urlRegex : nullptr, opt_in_columnNumber_valueFound ? &opt_in_columnNumber : nullptr, opt_in_options_valueFound ? opt_in_options.get() : nullptr);
+        m_alternateDispatcher->setBreakpointByUrl(requestId, in_lineNumber, opt_in_url_valueFound ? &opt_in_url : nullptr, opt_in_urlRegex_valueFound ? &opt_in_urlRegex : nullptr, opt_in_columnNumber_valueFound ? &opt_in_columnNumber : nullptr, opt_in_options_valueFound ? opt_in_options.get() : nullptr);
         return;
     }
 #endif
@@ -2564,26 +2617,25 @@ void DebuggerBackendDispatcher::setBreakpointByUrl(long callId, const InspectorO
         result->setString(ASCIILiteral("breakpointId"), out_breakpointId);
         result->setArray(ASCIILiteral("locations"), out_locations);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::setBreakpoint(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::setBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_location = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("location"), nullptr, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> in_location = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("location"), nullptr);
     bool opt_in_options_valueFound = false;
-    RefPtr<Inspector::InspectorObject> opt_in_options = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("options"), &opt_in_options_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> opt_in_options = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("options"), &opt_in_options_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.setBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setBreakpoint(callId, *in_location, opt_in_options_valueFound ? opt_in_options.get() : nullptr);
+        m_alternateDispatcher->setBreakpoint(requestId, *in_location, opt_in_options_valueFound ? opt_in_options.get() : nullptr);
         return;
     }
 #endif
@@ -2598,24 +2650,23 @@ void DebuggerBackendDispatcher::setBreakpoint(long callId, const InspectorObject
         result->setString(ASCIILiteral("breakpointId"), out_breakpointId);
         result->setObject(ASCIILiteral("actualLocation"), out_actualLocation);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::removeBreakpoint(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::removeBreakpoint(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_breakpointId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("breakpointId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.removeBreakpoint");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_breakpointId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("breakpointId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.removeBreakpoint"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeBreakpoint(callId, in_breakpointId);
+        m_alternateDispatcher->removeBreakpoint(requestId, in_breakpointId);
         return;
     }
 #endif
@@ -2624,24 +2675,23 @@ void DebuggerBackendDispatcher::removeBreakpoint(long callId, const InspectorObj
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeBreakpoint(error, in_breakpointId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::continueToLocation(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::continueToLocation(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_location = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("location"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.continueToLocation");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_location = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("location"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.continueToLocation"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->continueToLocation(callId, *in_location);
+        m_alternateDispatcher->continueToLocation(requestId, *in_location);
         return;
     }
 #endif
@@ -2650,14 +2700,17 @@ void DebuggerBackendDispatcher::continueToLocation(long callId, const InspectorO
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->continueToLocation(error, *in_location);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::stepOver(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::stepOver(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->stepOver(callId);
+        m_alternateDispatcher->stepOver(requestId);
         return;
     }
 #endif
@@ -2666,14 +2719,17 @@ void DebuggerBackendDispatcher::stepOver(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->stepOver(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::stepInto(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::stepInto(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->stepInto(callId);
+        m_alternateDispatcher->stepInto(requestId);
         return;
     }
 #endif
@@ -2682,14 +2738,17 @@ void DebuggerBackendDispatcher::stepInto(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->stepInto(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::stepOut(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::stepOut(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->stepOut(callId);
+        m_alternateDispatcher->stepOut(requestId);
         return;
     }
 #endif
@@ -2698,14 +2757,17 @@ void DebuggerBackendDispatcher::stepOut(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->stepOut(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::pause(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::pause(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->pause(callId);
+        m_alternateDispatcher->pause(requestId);
         return;
     }
 #endif
@@ -2714,14 +2776,17 @@ void DebuggerBackendDispatcher::pause(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->pause(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::resume(long callId, const InspectorObject&)
+void DebuggerBackendDispatcher::resume(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->resume(callId);
+        m_alternateDispatcher->resume(requestId);
         return;
     }
 #endif
@@ -2730,29 +2795,28 @@ void DebuggerBackendDispatcher::resume(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->resume(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::searchInContent(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::searchInContent(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_scriptId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("scriptId"), nullptr, protocolErrors.get());
-    String in_query = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("query"), nullptr, protocolErrors.get());
+    String in_scriptId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("scriptId"), nullptr);
+    String in_query = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("query"), nullptr);
     bool opt_in_caseSensitive_valueFound = false;
-    bool opt_in_caseSensitive = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound, protocolErrors.get());
+    bool opt_in_caseSensitive = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound);
     bool opt_in_isRegex_valueFound = false;
-    bool opt_in_isRegex = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.searchInContent");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_isRegex = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.searchInContent"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->searchInContent(callId, in_scriptId, in_query, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
+        m_alternateDispatcher->searchInContent(requestId, in_scriptId, in_query, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
         return;
     }
 #endif
@@ -2765,24 +2829,23 @@ void DebuggerBackendDispatcher::searchInContent(long callId, const InspectorObje
     if (!error.length())
         result->setArray(ASCIILiteral("result"), out_result);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::getScriptSource(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::getScriptSource(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_scriptId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("scriptId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.getScriptSource");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_scriptId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("scriptId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.getScriptSource"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getScriptSource(callId, in_scriptId);
+        m_alternateDispatcher->getScriptSource(requestId, in_scriptId);
         return;
     }
 #endif
@@ -2795,24 +2858,23 @@ void DebuggerBackendDispatcher::getScriptSource(long callId, const InspectorObje
     if (!error.length())
         result->setString(ASCIILiteral("scriptSource"), out_scriptSource);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::getFunctionDetails(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::getFunctionDetails(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_functionId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("functionId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.getFunctionDetails");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_functionId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("functionId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.getFunctionDetails"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getFunctionDetails(callId, in_functionId);
+        m_alternateDispatcher->getFunctionDetails(requestId, in_functionId);
         return;
     }
 #endif
@@ -2825,24 +2887,23 @@ void DebuggerBackendDispatcher::getFunctionDetails(long callId, const InspectorO
     if (!error.length())
         result->setObject(ASCIILiteral("details"), out_details);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::setPauseOnExceptions(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::setPauseOnExceptions(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_state = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("state"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.setPauseOnExceptions");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_state = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("state"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.setPauseOnExceptions"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setPauseOnExceptions(callId, in_state);
+        m_alternateDispatcher->setPauseOnExceptions(requestId, in_state);
         return;
     }
 #endif
@@ -2851,37 +2912,36 @@ void DebuggerBackendDispatcher::setPauseOnExceptions(long callId, const Inspecto
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setPauseOnExceptions(error, in_state);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::evaluateOnCallFrame(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::evaluateOnCallFrame(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_callFrameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("callFrameId"), nullptr, protocolErrors.get());
-    String in_expression = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("expression"), nullptr, protocolErrors.get());
+    String in_callFrameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("callFrameId"), nullptr);
+    String in_expression = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("expression"), nullptr);
     bool opt_in_objectGroup_valueFound = false;
-    String opt_in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound, protocolErrors.get());
+    String opt_in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound);
     bool opt_in_includeCommandLineAPI_valueFound = false;
-    bool opt_in_includeCommandLineAPI = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("includeCommandLineAPI"), &opt_in_includeCommandLineAPI_valueFound, protocolErrors.get());
+    bool opt_in_includeCommandLineAPI = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("includeCommandLineAPI"), &opt_in_includeCommandLineAPI_valueFound);
     bool opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound = false;
-    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound, protocolErrors.get());
+    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound);
     bool opt_in_returnByValue_valueFound = false;
-    bool opt_in_returnByValue = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound, protocolErrors.get());
+    bool opt_in_returnByValue = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound);
     bool opt_in_generatePreview_valueFound = false;
-    bool opt_in_generatePreview = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound, protocolErrors.get());
+    bool opt_in_generatePreview = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound);
     bool opt_in_saveResult_valueFound = false;
-    bool opt_in_saveResult = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("saveResult"), &opt_in_saveResult_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.evaluateOnCallFrame");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_saveResult = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("saveResult"), &opt_in_saveResult_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.evaluateOnCallFrame"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->evaluateOnCallFrame(callId, in_callFrameId, in_expression, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_includeCommandLineAPI_valueFound ? &opt_in_includeCommandLineAPI : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr, opt_in_saveResult_valueFound ? &opt_in_saveResult : nullptr);
+        m_alternateDispatcher->evaluateOnCallFrame(requestId, in_callFrameId, in_expression, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_includeCommandLineAPI_valueFound ? &opt_in_includeCommandLineAPI : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr, opt_in_saveResult_valueFound ? &opt_in_saveResult : nullptr);
         return;
     }
 #endif
@@ -2900,25 +2960,24 @@ void DebuggerBackendDispatcher::evaluateOnCallFrame(long callId, const Inspector
         if (out_savedResultIndex.isAssigned())
             result->setInteger(ASCIILiteral("savedResultIndex"), out_savedResultIndex.getValue());
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void DebuggerBackendDispatcher::setOverlayMessage(long callId, const InspectorObject& message)
+void DebuggerBackendDispatcher::setOverlayMessage(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
     bool opt_in_message_valueFound = false;
-    String opt_in_message = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("message"), &opt_in_message_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Debugger.setOverlayMessage");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_message = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("message"), &opt_in_message_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Debugger.setOverlayMessage"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setOverlayMessage(callId, opt_in_message_valueFound ? &opt_in_message : nullptr);
+        m_alternateDispatcher->setOverlayMessage(requestId, opt_in_message_valueFound ? &opt_in_message : nullptr);
         return;
     }
 #endif
@@ -2927,12 +2986,104 @@ void DebuggerBackendDispatcher::setOverlayMessage(long callId, const InspectorOb
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setOverlayMessage(error, opt_in_message_valueFound ? &opt_in_message : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<InspectorBackendDispatcher> InspectorBackendDispatcher::create(BackendDispatcher* backendDispatcher, InspectorBackendDispatcherHandler* agent)
+Ref<HeapBackendDispatcher> HeapBackendDispatcher::create(BackendDispatcher& backendDispatcher, HeapBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new InspectorBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new HeapBackendDispatcher(backendDispatcher, agent));
+}
+
+HeapBackendDispatcher::HeapBackendDispatcher(BackendDispatcher& backendDispatcher, HeapBackendDispatcherHandler* agent)
+    : SupplementalBackendDispatcher(backendDispatcher)
+    , m_agent(agent)
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    , m_alternateDispatcher(nullptr)
+#endif
+{
+    m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Heap"), this);
+}
+
+void HeapBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
+{
+    Ref<HeapBackendDispatcher> protect(*this);
+
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    if (method == "enable")
+        enable(requestId, WTF::move(parameters));
+    else if (method == "disable")
+        disable(requestId, WTF::move(parameters));
+    else if (method == "gc")
+        gc(requestId, WTF::move(parameters));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Heap", '.', method, "' was not found"));
+}
+
+void HeapBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
+{
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->enable(requestId);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    m_agent->enable(error);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+void HeapBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
+{
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->disable(requestId);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    m_agent->disable(error);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+void HeapBackendDispatcher::gc(long requestId, RefPtr<InspectorObject>&&)
+{
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->gc(requestId);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    m_agent->gc(error);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+Ref<InspectorBackendDispatcher> InspectorBackendDispatcher::create(BackendDispatcher& backendDispatcher, InspectorBackendDispatcherHandler* agent)
+{
+    return adoptRef(*new InspectorBackendDispatcher(backendDispatcher, agent));
 }
 
 InspectorBackendDispatcher::InspectorBackendDispatcher(BackendDispatcher& backendDispatcher, InspectorBackendDispatcherHandler* agent)
@@ -2945,25 +3096,28 @@ InspectorBackendDispatcher::InspectorBackendDispatcher(BackendDispatcher& backen
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Inspector"), this);
 }
 
-void InspectorBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void InspectorBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<InspectorBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "disable")
-        disable(callId, message);
+        disable(requestId, WTF::move(parameters));
     else if (method == "initialized")
-        initialized(callId, message);
+        initialized(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Inspector", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Inspector", '.', method, "' was not found"));
 }
 
-void InspectorBackendDispatcher::enable(long callId, const InspectorObject&)
+void InspectorBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -2972,14 +3126,17 @@ void InspectorBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void InspectorBackendDispatcher::disable(long callId, const InspectorObject&)
+void InspectorBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -2988,14 +3145,17 @@ void InspectorBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void InspectorBackendDispatcher::initialized(long callId, const InspectorObject&)
+void InspectorBackendDispatcher::initialized(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->initialized(callId);
+        m_alternateDispatcher->initialized(requestId);
         return;
     }
 #endif
@@ -3004,12 +3164,15 @@ void InspectorBackendDispatcher::initialized(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->initialized(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<LayerTreeBackendDispatcher> LayerTreeBackendDispatcher::create(BackendDispatcher* backendDispatcher, LayerTreeBackendDispatcherHandler* agent)
+Ref<LayerTreeBackendDispatcher> LayerTreeBackendDispatcher::create(BackendDispatcher& backendDispatcher, LayerTreeBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new LayerTreeBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new LayerTreeBackendDispatcher(backendDispatcher, agent));
 }
 
 LayerTreeBackendDispatcher::LayerTreeBackendDispatcher(BackendDispatcher& backendDispatcher, LayerTreeBackendDispatcherHandler* agent)
@@ -3022,27 +3185,30 @@ LayerTreeBackendDispatcher::LayerTreeBackendDispatcher(BackendDispatcher& backen
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("LayerTree"), this);
 }
 
-void LayerTreeBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void LayerTreeBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<LayerTreeBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "enable")
-        enable(callId, message);
+        enable(requestId, WTF::move(parameters));
     else if (method == "disable")
-        disable(callId, message);
+        disable(requestId, WTF::move(parameters));
     else if (method == "layersForNode")
-        layersForNode(callId, message);
+        layersForNode(requestId, WTF::move(parameters));
     else if (method == "reasonsForCompositingLayer")
-        reasonsForCompositingLayer(callId, message);
+        reasonsForCompositingLayer(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "LayerTree", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "LayerTree", '.', method, "' was not found"));
 }
 
-void LayerTreeBackendDispatcher::enable(long callId, const InspectorObject&)
+void LayerTreeBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -3051,14 +3217,17 @@ void LayerTreeBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void LayerTreeBackendDispatcher::disable(long callId, const InspectorObject&)
+void LayerTreeBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -3067,24 +3236,23 @@ void LayerTreeBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void LayerTreeBackendDispatcher::layersForNode(long callId, const InspectorObject& message)
+void LayerTreeBackendDispatcher::layersForNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "LayerTree.layersForNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "LayerTree.layersForNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->layersForNode(callId, in_nodeId);
+        m_alternateDispatcher->layersForNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -3097,24 +3265,23 @@ void LayerTreeBackendDispatcher::layersForNode(long callId, const InspectorObjec
     if (!error.length())
         result->setArray(ASCIILiteral("layers"), out_layers);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void LayerTreeBackendDispatcher::reasonsForCompositingLayer(long callId, const InspectorObject& message)
+void LayerTreeBackendDispatcher::reasonsForCompositingLayer(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_layerId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("layerId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "LayerTree.reasonsForCompositingLayer");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_layerId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("layerId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "LayerTree.reasonsForCompositingLayer"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->reasonsForCompositingLayer(callId, in_layerId);
+        m_alternateDispatcher->reasonsForCompositingLayer(requestId, in_layerId);
         return;
     }
 #endif
@@ -3127,12 +3294,15 @@ void LayerTreeBackendDispatcher::reasonsForCompositingLayer(long callId, const I
     if (!error.length())
         result->setObject(ASCIILiteral("compositingReasons"), out_compositingReasons);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<NetworkBackendDispatcher> NetworkBackendDispatcher::create(BackendDispatcher* backendDispatcher, NetworkBackendDispatcherHandler* agent)
+Ref<NetworkBackendDispatcher> NetworkBackendDispatcher::create(BackendDispatcher& backendDispatcher, NetworkBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new NetworkBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new NetworkBackendDispatcher(backendDispatcher, agent));
 }
 
 NetworkBackendDispatcher::NetworkBackendDispatcher(BackendDispatcher& backendDispatcher, NetworkBackendDispatcherHandler* agent)
@@ -3145,14 +3315,17 @@ NetworkBackendDispatcher::NetworkBackendDispatcher(BackendDispatcher& backendDis
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Network"), this);
 }
 
-void NetworkBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void NetworkBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<NetworkBackendDispatcher> protect(*this);
 
-    typedef void (NetworkBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (NetworkBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -3161,32 +3334,28 @@ void NetworkBackendDispatcher::dispatch(long callId, const String& method, Ref<I
             { "disable", &NetworkBackendDispatcher::disable },
             { "setExtraHTTPHeaders", &NetworkBackendDispatcher::setExtraHTTPHeaders },
             { "getResponseBody", &NetworkBackendDispatcher::getResponseBody },
-            { "canClearBrowserCache", &NetworkBackendDispatcher::canClearBrowserCache },
-            { "clearBrowserCache", &NetworkBackendDispatcher::clearBrowserCache },
-            { "canClearBrowserCookies", &NetworkBackendDispatcher::canClearBrowserCookies },
-            { "clearBrowserCookies", &NetworkBackendDispatcher::clearBrowserCookies },
             { "setCacheDisabled", &NetworkBackendDispatcher::setCacheDisabled },
             { "loadResource", &NetworkBackendDispatcher::loadResource },
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Network", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Network", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void NetworkBackendDispatcher::enable(long callId, const InspectorObject&)
+void NetworkBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -3195,14 +3364,17 @@ void NetworkBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void NetworkBackendDispatcher::disable(long callId, const InspectorObject&)
+void NetworkBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -3211,24 +3383,23 @@ void NetworkBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void NetworkBackendDispatcher::setExtraHTTPHeaders(long callId, const InspectorObject& message)
+void NetworkBackendDispatcher::setExtraHTTPHeaders(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_headers = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("headers"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Network.setExtraHTTPHeaders");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorObject> in_headers = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("headers"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Network.setExtraHTTPHeaders"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setExtraHTTPHeaders(callId, *in_headers);
+        m_alternateDispatcher->setExtraHTTPHeaders(requestId, *in_headers);
         return;
     }
 #endif
@@ -3237,24 +3408,23 @@ void NetworkBackendDispatcher::setExtraHTTPHeaders(long callId, const InspectorO
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setExtraHTTPHeaders(error, *in_headers);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void NetworkBackendDispatcher::getResponseBody(long callId, const InspectorObject& message)
+void NetworkBackendDispatcher::getResponseBody(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_requestId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("requestId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Network.getResponseBody");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_requestId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("requestId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Network.getResponseBody"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getResponseBody(callId, in_requestId);
+        m_alternateDispatcher->getResponseBody(requestId, in_requestId);
         return;
     }
 #endif
@@ -3269,96 +3439,23 @@ void NetworkBackendDispatcher::getResponseBody(long callId, const InspectorObjec
         result->setString(ASCIILiteral("body"), out_body);
         result->setBoolean(ASCIILiteral("base64Encoded"), out_base64Encoded);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void NetworkBackendDispatcher::canClearBrowserCache(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->canClearBrowserCache(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    bool out_result;
-    m_agent->canClearBrowserCache(error, &out_result);
-
     if (!error.length())
-        result->setBoolean(ASCIILiteral("result"), out_result);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void NetworkBackendDispatcher::clearBrowserCache(long callId, const InspectorObject&)
+void NetworkBackendDispatcher::setCacheDisabled(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->clearBrowserCache(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->clearBrowserCache(error);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void NetworkBackendDispatcher::canClearBrowserCookies(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->canClearBrowserCookies(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    bool out_result;
-    m_agent->canClearBrowserCookies(error, &out_result);
-
-    if (!error.length())
-        result->setBoolean(ASCIILiteral("result"), out_result);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void NetworkBackendDispatcher::clearBrowserCookies(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->clearBrowserCookies(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->clearBrowserCookies(error);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void NetworkBackendDispatcher::setCacheDisabled(long callId, const InspectorObject& message)
-{
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_cacheDisabled = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("cacheDisabled"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Network.setCacheDisabled");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_cacheDisabled = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("cacheDisabled"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Network.setCacheDisabled"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setCacheDisabled(callId, in_cacheDisabled);
+        m_alternateDispatcher->setCacheDisabled(requestId, in_cacheDisabled);
         return;
     }
 #endif
@@ -3367,7 +3464,10 @@ void NetworkBackendDispatcher::setCacheDisabled(long callId, const InspectorObje
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setCacheDisabled(error, in_cacheDisabled);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
 NetworkBackendDispatcherHandler::LoadResourceCallback::LoadResourceCallback(Ref<BackendDispatcher>&& backendDispatcher, int id) : BackendDispatcher::CallbackBase(WTF::move(backendDispatcher), id) { }
@@ -3378,44 +3478,40 @@ void NetworkBackendDispatcherHandler::LoadResourceCallback::sendSuccess(const St
     jsonMessage->setString(ASCIILiteral("content"), content);
     jsonMessage->setString(ASCIILiteral("mimeType"), mimeType);
     jsonMessage->setDouble(ASCIILiteral("status"), status);
-    sendIfActive(WTF::move(jsonMessage), ErrorString());
+    CallbackBase::sendSuccess(WTF::move(jsonMessage));
 }
 
-void NetworkBackendDispatcher::loadResource(long callId, const InspectorObject& message)
+void NetworkBackendDispatcher::loadResource(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Network.loadResource");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Network.loadResource"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->loadResource(callId, in_frameId, in_url);
+        m_alternateDispatcher->loadResource(requestId, in_frameId, in_url);
         return;
     }
 #endif
 
     ErrorString error;
     Ref<InspectorObject> result = InspectorObject::create();
-    Ref<NetworkBackendDispatcherHandler::LoadResourceCallback> callback = adoptRef(*new NetworkBackendDispatcherHandler::LoadResourceCallback(m_backendDispatcher.copyRef(), callId));
+    Ref<NetworkBackendDispatcherHandler::LoadResourceCallback> callback = adoptRef(*new NetworkBackendDispatcherHandler::LoadResourceCallback(m_backendDispatcher.copyRef(), requestId));
     m_agent->loadResource(error, in_frameId, in_url, callback.copyRef());
 
     if (error.length()) {
         callback->disable();
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::ServerError, error);
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, error);
         return;
     }
 }
 
-Ref<PageBackendDispatcher> PageBackendDispatcher::create(BackendDispatcher* backendDispatcher, PageBackendDispatcherHandler* agent)
+Ref<PageBackendDispatcher> PageBackendDispatcher::create(BackendDispatcher& backendDispatcher, PageBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new PageBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new PageBackendDispatcher(backendDispatcher, agent));
 }
 
 PageBackendDispatcher::PageBackendDispatcher(BackendDispatcher& backendDispatcher, PageBackendDispatcherHandler* agent)
@@ -3428,14 +3524,17 @@ PageBackendDispatcher::PageBackendDispatcher(BackendDispatcher& backendDispatche
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Page"), this);
 }
 
-void PageBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void PageBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<PageBackendDispatcher> protect(*this);
 
-    typedef void (PageBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (PageBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -3467,23 +3566,23 @@ void PageBackendDispatcher::dispatch(long callId, const String& method, Ref<Insp
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Page", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Page", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void PageBackendDispatcher::enable(long callId, const InspectorObject&)
+void PageBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -3492,14 +3591,17 @@ void PageBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::disable(long callId, const InspectorObject&)
+void PageBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -3508,24 +3610,23 @@ void PageBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::addScriptToEvaluateOnLoad(long callId, const InspectorObject& message)
+void PageBackendDispatcher::addScriptToEvaluateOnLoad(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_scriptSource = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("scriptSource"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.addScriptToEvaluateOnLoad");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_scriptSource = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("scriptSource"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.addScriptToEvaluateOnLoad"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->addScriptToEvaluateOnLoad(callId, in_scriptSource);
+        m_alternateDispatcher->addScriptToEvaluateOnLoad(requestId, in_scriptSource);
         return;
     }
 #endif
@@ -3538,24 +3639,23 @@ void PageBackendDispatcher::addScriptToEvaluateOnLoad(long callId, const Inspect
     if (!error.length())
         result->setString(ASCIILiteral("identifier"), out_identifier);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::removeScriptToEvaluateOnLoad(long callId, const InspectorObject& message)
+void PageBackendDispatcher::removeScriptToEvaluateOnLoad(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_identifier = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("identifier"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.removeScriptToEvaluateOnLoad");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_identifier = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("identifier"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.removeScriptToEvaluateOnLoad"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->removeScriptToEvaluateOnLoad(callId, in_identifier);
+        m_alternateDispatcher->removeScriptToEvaluateOnLoad(requestId, in_identifier);
         return;
     }
 #endif
@@ -3564,27 +3664,26 @@ void PageBackendDispatcher::removeScriptToEvaluateOnLoad(long callId, const Insp
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->removeScriptToEvaluateOnLoad(error, in_identifier);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::reload(long callId, const InspectorObject& message)
+void PageBackendDispatcher::reload(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
     bool opt_in_ignoreCache_valueFound = false;
-    bool opt_in_ignoreCache = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("ignoreCache"), &opt_in_ignoreCache_valueFound, protocolErrors.get());
+    bool opt_in_ignoreCache = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("ignoreCache"), &opt_in_ignoreCache_valueFound);
     bool opt_in_scriptToEvaluateOnLoad_valueFound = false;
-    String opt_in_scriptToEvaluateOnLoad = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("scriptToEvaluateOnLoad"), &opt_in_scriptToEvaluateOnLoad_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.reload");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_scriptToEvaluateOnLoad = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("scriptToEvaluateOnLoad"), &opt_in_scriptToEvaluateOnLoad_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.reload"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->reload(callId, opt_in_ignoreCache_valueFound ? &opt_in_ignoreCache : nullptr, opt_in_scriptToEvaluateOnLoad_valueFound ? &opt_in_scriptToEvaluateOnLoad : nullptr);
+        m_alternateDispatcher->reload(requestId, opt_in_ignoreCache_valueFound ? &opt_in_ignoreCache : nullptr, opt_in_scriptToEvaluateOnLoad_valueFound ? &opt_in_scriptToEvaluateOnLoad : nullptr);
         return;
     }
 #endif
@@ -3593,24 +3692,23 @@ void PageBackendDispatcher::reload(long callId, const InspectorObject& message)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->reload(error, opt_in_ignoreCache_valueFound ? &opt_in_ignoreCache : nullptr, opt_in_scriptToEvaluateOnLoad_valueFound ? &opt_in_scriptToEvaluateOnLoad : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::navigate(long callId, const InspectorObject& message)
+void PageBackendDispatcher::navigate(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.navigate");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.navigate"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->navigate(callId, in_url);
+        m_alternateDispatcher->navigate(requestId, in_url);
         return;
     }
 #endif
@@ -3619,14 +3717,17 @@ void PageBackendDispatcher::navigate(long callId, const InspectorObject& message
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->navigate(error, in_url);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::getCookies(long callId, const InspectorObject&)
+void PageBackendDispatcher::getCookies(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getCookies(callId);
+        m_alternateDispatcher->getCookies(requestId);
         return;
     }
 #endif
@@ -3639,25 +3740,24 @@ void PageBackendDispatcher::getCookies(long callId, const InspectorObject&)
     if (!error.length())
         result->setArray(ASCIILiteral("cookies"), out_cookies);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::deleteCookie(long callId, const InspectorObject& message)
+void PageBackendDispatcher::deleteCookie(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_cookieName = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("cookieName"), nullptr, protocolErrors.get());
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.deleteCookie");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_cookieName = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("cookieName"), nullptr);
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.deleteCookie"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->deleteCookie(callId, in_cookieName, in_url);
+        m_alternateDispatcher->deleteCookie(requestId, in_cookieName, in_url);
         return;
     }
 #endif
@@ -3666,14 +3766,17 @@ void PageBackendDispatcher::deleteCookie(long callId, const InspectorObject& mes
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->deleteCookie(error, in_cookieName, in_url);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::getResourceTree(long callId, const InspectorObject&)
+void PageBackendDispatcher::getResourceTree(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getResourceTree(callId);
+        m_alternateDispatcher->getResourceTree(requestId);
         return;
     }
 #endif
@@ -3686,25 +3789,24 @@ void PageBackendDispatcher::getResourceTree(long callId, const InspectorObject&)
     if (!error.length())
         result->setObject(ASCIILiteral("frameTree"), out_frameTree);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::getResourceContent(long callId, const InspectorObject& message)
+void PageBackendDispatcher::getResourceContent(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.getResourceContent");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.getResourceContent"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getResourceContent(callId, in_frameId, in_url);
+        m_alternateDispatcher->getResourceContent(requestId, in_frameId, in_url);
         return;
     }
 #endif
@@ -3719,30 +3821,29 @@ void PageBackendDispatcher::getResourceContent(long callId, const InspectorObjec
         result->setString(ASCIILiteral("content"), out_content);
         result->setBoolean(ASCIILiteral("base64Encoded"), out_base64Encoded);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::searchInResource(long callId, const InspectorObject& message)
+void PageBackendDispatcher::searchInResource(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    String in_url = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("url"), nullptr, protocolErrors.get());
-    String in_query = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("query"), nullptr, protocolErrors.get());
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    String in_url = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("url"), nullptr);
+    String in_query = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("query"), nullptr);
     bool opt_in_caseSensitive_valueFound = false;
-    bool opt_in_caseSensitive = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound, protocolErrors.get());
+    bool opt_in_caseSensitive = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound);
     bool opt_in_isRegex_valueFound = false;
-    bool opt_in_isRegex = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.searchInResource");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_isRegex = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.searchInResource"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->searchInResource(callId, in_frameId, in_url, in_query, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
+        m_alternateDispatcher->searchInResource(requestId, in_frameId, in_url, in_query, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
         return;
     }
 #endif
@@ -3755,28 +3856,27 @@ void PageBackendDispatcher::searchInResource(long callId, const InspectorObject&
     if (!error.length())
         result->setArray(ASCIILiteral("result"), out_result);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::searchInResources(long callId, const InspectorObject& message)
+void PageBackendDispatcher::searchInResources(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_text = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("text"), nullptr, protocolErrors.get());
+    String in_text = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("text"), nullptr);
     bool opt_in_caseSensitive_valueFound = false;
-    bool opt_in_caseSensitive = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound, protocolErrors.get());
+    bool opt_in_caseSensitive = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("caseSensitive"), &opt_in_caseSensitive_valueFound);
     bool opt_in_isRegex_valueFound = false;
-    bool opt_in_isRegex = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.searchInResources");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_isRegex = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("isRegex"), &opt_in_isRegex_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.searchInResources"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->searchInResources(callId, in_text, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
+        m_alternateDispatcher->searchInResources(requestId, in_text, opt_in_caseSensitive_valueFound ? &opt_in_caseSensitive : nullptr, opt_in_isRegex_valueFound ? &opt_in_isRegex : nullptr);
         return;
     }
 #endif
@@ -3789,25 +3889,24 @@ void PageBackendDispatcher::searchInResources(long callId, const InspectorObject
     if (!error.length())
         result->setArray(ASCIILiteral("result"), out_result);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setDocumentContent(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setDocumentContent(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_frameId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("frameId"), nullptr, protocolErrors.get());
-    String in_html = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("html"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setDocumentContent");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_frameId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("frameId"), nullptr);
+    String in_html = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("html"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setDocumentContent"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setDocumentContent(callId, in_frameId, in_html);
+        m_alternateDispatcher->setDocumentContent(requestId, in_frameId, in_html);
         return;
     }
 #endif
@@ -3816,24 +3915,23 @@ void PageBackendDispatcher::setDocumentContent(long callId, const InspectorObjec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setDocumentContent(error, in_frameId, in_html);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setShowPaintRects(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setShowPaintRects(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_result = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("result"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setShowPaintRects");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_result = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("result"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setShowPaintRects"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setShowPaintRects(callId, in_result);
+        m_alternateDispatcher->setShowPaintRects(requestId, in_result);
         return;
     }
 #endif
@@ -3842,14 +3940,17 @@ void PageBackendDispatcher::setShowPaintRects(long callId, const InspectorObject
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setShowPaintRects(error, in_result);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::getScriptExecutionStatus(long callId, const InspectorObject&)
+void PageBackendDispatcher::getScriptExecutionStatus(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getScriptExecutionStatus(callId);
+        m_alternateDispatcher->getScriptExecutionStatus(requestId);
         return;
     }
 #endif
@@ -3862,24 +3963,23 @@ void PageBackendDispatcher::getScriptExecutionStatus(long callId, const Inspecto
     if (!error.length())
         result->setString(ASCIILiteral("result"), Inspector::Protocol::getEnumConstantValue(out_result));
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setScriptExecutionDisabled(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setScriptExecutionDisabled(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_value = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setScriptExecutionDisabled");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_value = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("value"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setScriptExecutionDisabled"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setScriptExecutionDisabled(callId, in_value);
+        m_alternateDispatcher->setScriptExecutionDisabled(requestId, in_value);
         return;
     }
 #endif
@@ -3888,24 +3988,23 @@ void PageBackendDispatcher::setScriptExecutionDisabled(long callId, const Inspec
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setScriptExecutionDisabled(error, in_value);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setTouchEmulationEnabled(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setTouchEmulationEnabled(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_enabled = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("enabled"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setTouchEmulationEnabled");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_enabled = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("enabled"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setTouchEmulationEnabled"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setTouchEmulationEnabled(callId, in_enabled);
+        m_alternateDispatcher->setTouchEmulationEnabled(requestId, in_enabled);
         return;
     }
 #endif
@@ -3914,24 +4013,23 @@ void PageBackendDispatcher::setTouchEmulationEnabled(long callId, const Inspecto
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setTouchEmulationEnabled(error, in_enabled);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setEmulatedMedia(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setEmulatedMedia(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_media = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("media"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setEmulatedMedia");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_media = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("media"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setEmulatedMedia"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setEmulatedMedia(callId, in_media);
+        m_alternateDispatcher->setEmulatedMedia(requestId, in_media);
         return;
     }
 #endif
@@ -3940,14 +4038,17 @@ void PageBackendDispatcher::setEmulatedMedia(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setEmulatedMedia(error, in_media);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::getCompositingBordersVisible(long callId, const InspectorObject&)
+void PageBackendDispatcher::getCompositingBordersVisible(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getCompositingBordersVisible(callId);
+        m_alternateDispatcher->getCompositingBordersVisible(requestId);
         return;
     }
 #endif
@@ -3960,24 +4061,23 @@ void PageBackendDispatcher::getCompositingBordersVisible(long callId, const Insp
     if (!error.length())
         result->setBoolean(ASCIILiteral("result"), out_result);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::setCompositingBordersVisible(long callId, const InspectorObject& message)
+void PageBackendDispatcher::setCompositingBordersVisible(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_visible = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("visible"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.setCompositingBordersVisible");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool in_visible = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("visible"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.setCompositingBordersVisible"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->setCompositingBordersVisible(callId, in_visible);
+        m_alternateDispatcher->setCompositingBordersVisible(requestId, in_visible);
         return;
     }
 #endif
@@ -3986,24 +4086,23 @@ void PageBackendDispatcher::setCompositingBordersVisible(long callId, const Insp
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->setCompositingBordersVisible(error, in_visible);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::snapshotNode(long callId, const InspectorObject& message)
+void PageBackendDispatcher::snapshotNode(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_nodeId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("nodeId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.snapshotNode");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_nodeId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("nodeId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.snapshotNode"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->snapshotNode(callId, in_nodeId);
+        m_alternateDispatcher->snapshotNode(requestId, in_nodeId);
         return;
     }
 #endif
@@ -4016,28 +4115,27 @@ void PageBackendDispatcher::snapshotNode(long callId, const InspectorObject& mes
     if (!error.length())
         result->setString(ASCIILiteral("dataURL"), out_dataURL);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::snapshotRect(long callId, const InspectorObject& message)
+void PageBackendDispatcher::snapshotRect(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_x = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("x"), nullptr, protocolErrors.get());
-    int in_y = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("y"), nullptr, protocolErrors.get());
-    int in_width = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("width"), nullptr, protocolErrors.get());
-    int in_height = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("height"), nullptr, protocolErrors.get());
-    String in_coordinateSystem = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("coordinateSystem"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.snapshotRect");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int in_x = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("x"), nullptr);
+    int in_y = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("y"), nullptr);
+    int in_width = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("width"), nullptr);
+    int in_height = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("height"), nullptr);
+    String in_coordinateSystem = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("coordinateSystem"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.snapshotRect"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->snapshotRect(callId, in_x, in_y, in_width, in_height, in_coordinateSystem);
+        m_alternateDispatcher->snapshotRect(requestId, in_x, in_y, in_width, in_height, in_coordinateSystem);
         return;
     }
 #endif
@@ -4050,26 +4148,25 @@ void PageBackendDispatcher::snapshotRect(long callId, const InspectorObject& mes
     if (!error.length())
         result->setString(ASCIILiteral("dataURL"), out_dataURL);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::handleJavaScriptDialog(long callId, const InspectorObject& message)
+void PageBackendDispatcher::handleJavaScriptDialog(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_accept = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("accept"), nullptr, protocolErrors.get());
+    bool in_accept = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("accept"), nullptr);
     bool opt_in_promptText_valueFound = false;
-    String opt_in_promptText = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("promptText"), &opt_in_promptText_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Page.handleJavaScriptDialog");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String opt_in_promptText = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("promptText"), &opt_in_promptText_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Page.handleJavaScriptDialog"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->handleJavaScriptDialog(callId, in_accept, opt_in_promptText_valueFound ? &opt_in_promptText : nullptr);
+        m_alternateDispatcher->handleJavaScriptDialog(requestId, in_accept, opt_in_promptText_valueFound ? &opt_in_promptText : nullptr);
         return;
     }
 #endif
@@ -4078,14 +4175,17 @@ void PageBackendDispatcher::handleJavaScriptDialog(long callId, const InspectorO
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->handleJavaScriptDialog(error, in_accept, opt_in_promptText_valueFound ? &opt_in_promptText : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void PageBackendDispatcher::archive(long callId, const InspectorObject&)
+void PageBackendDispatcher::archive(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->archive(callId);
+        m_alternateDispatcher->archive(requestId);
         return;
     }
 #endif
@@ -4098,12 +4198,15 @@ void PageBackendDispatcher::archive(long callId, const InspectorObject&)
     if (!error.length())
         result->setString(ASCIILiteral("data"), out_data);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<RuntimeBackendDispatcher> RuntimeBackendDispatcher::create(BackendDispatcher* backendDispatcher, RuntimeBackendDispatcherHandler* agent)
+Ref<RuntimeBackendDispatcher> RuntimeBackendDispatcher::create(BackendDispatcher& backendDispatcher, RuntimeBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new RuntimeBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new RuntimeBackendDispatcher(backendDispatcher, agent));
 }
 
 RuntimeBackendDispatcher::RuntimeBackendDispatcher(BackendDispatcher& backendDispatcher, RuntimeBackendDispatcherHandler* agent)
@@ -4116,14 +4219,17 @@ RuntimeBackendDispatcher::RuntimeBackendDispatcher(BackendDispatcher& backendDis
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Runtime"), this);
 }
 
-void RuntimeBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void RuntimeBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<RuntimeBackendDispatcher> protect(*this);
 
-    typedef void (RuntimeBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    typedef void (RuntimeBackendDispatcher::*CallHandler)(long requestId, RefPtr<InspectorObject>&& message);
     typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
+    static NeverDestroyed<DispatchMap> dispatchMap;
+    if (dispatchMap.get().isEmpty()) {
         static const struct MethodTable {
             const char* name;
             CallHandler handler;
@@ -4137,7 +4243,6 @@ void RuntimeBackendDispatcher::dispatch(long callId, const String& method, Ref<I
             { "saveResult", &RuntimeBackendDispatcher::saveResult },
             { "releaseObject", &RuntimeBackendDispatcher::releaseObject },
             { "releaseObjectGroup", &RuntimeBackendDispatcher::releaseObjectGroup },
-            { "run", &RuntimeBackendDispatcher::run },
             { "enable", &RuntimeBackendDispatcher::enable },
             { "disable", &RuntimeBackendDispatcher::disable },
             { "getRuntimeTypesForVariablesAtOffsets", &RuntimeBackendDispatcher::getRuntimeTypesForVariablesAtOffsets },
@@ -4147,33 +4252,29 @@ void RuntimeBackendDispatcher::dispatch(long callId, const String& method, Ref<I
         };
         size_t length = WTF_ARRAY_LENGTH(commands);
         for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
+            dispatchMap.get().add(commands[i].name, commands[i].handler);
     }
 
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Runtime", '.', method, "' was not found"));
+    auto findResult = dispatchMap.get().find(method);
+    if (findResult == dispatchMap.get().end()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Runtime", '.', method, "' was not found"));
         return;
     }
 
-    ((*this).*it->value)(callId, message.get());
+    ((*this).*findResult->value)(requestId, WTF::move(parameters));
 }
 
-void RuntimeBackendDispatcher::parse(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::parse(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_source = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("source"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.parse");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_source = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("source"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.parse"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->parse(callId, in_source);
+        m_alternateDispatcher->parse(requestId, in_source);
         return;
     }
 #endif
@@ -4192,38 +4293,37 @@ void RuntimeBackendDispatcher::parse(long callId, const InspectorObject& message
         if (out_range)
             result->setObject(ASCIILiteral("range"), out_range);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::evaluate(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::evaluate(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_expression = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("expression"), nullptr, protocolErrors.get());
+    String in_expression = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("expression"), nullptr);
     bool opt_in_objectGroup_valueFound = false;
-    String opt_in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound, protocolErrors.get());
+    String opt_in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound);
     bool opt_in_includeCommandLineAPI_valueFound = false;
-    bool opt_in_includeCommandLineAPI = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("includeCommandLineAPI"), &opt_in_includeCommandLineAPI_valueFound, protocolErrors.get());
+    bool opt_in_includeCommandLineAPI = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("includeCommandLineAPI"), &opt_in_includeCommandLineAPI_valueFound);
     bool opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound = false;
-    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound, protocolErrors.get());
+    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound);
     bool opt_in_contextId_valueFound = false;
-    int opt_in_contextId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("contextId"), &opt_in_contextId_valueFound, protocolErrors.get());
+    int opt_in_contextId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("contextId"), &opt_in_contextId_valueFound);
     bool opt_in_returnByValue_valueFound = false;
-    bool opt_in_returnByValue = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound, protocolErrors.get());
+    bool opt_in_returnByValue = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound);
     bool opt_in_generatePreview_valueFound = false;
-    bool opt_in_generatePreview = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound, protocolErrors.get());
+    bool opt_in_generatePreview = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound);
     bool opt_in_saveResult_valueFound = false;
-    bool opt_in_saveResult = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("saveResult"), &opt_in_saveResult_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.evaluate");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_saveResult = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("saveResult"), &opt_in_saveResult_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.evaluate"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->evaluate(callId, in_expression, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_includeCommandLineAPI_valueFound ? &opt_in_includeCommandLineAPI : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_contextId_valueFound ? &opt_in_contextId : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr, opt_in_saveResult_valueFound ? &opt_in_saveResult : nullptr);
+        m_alternateDispatcher->evaluate(requestId, in_expression, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_includeCommandLineAPI_valueFound ? &opt_in_includeCommandLineAPI : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_contextId_valueFound ? &opt_in_contextId : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr, opt_in_saveResult_valueFound ? &opt_in_saveResult : nullptr);
         return;
     }
 #endif
@@ -4242,33 +4342,32 @@ void RuntimeBackendDispatcher::evaluate(long callId, const InspectorObject& mess
         if (out_savedResultIndex.isAssigned())
             result->setInteger(ASCIILiteral("savedResultIndex"), out_savedResultIndex.getValue());
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::callFunctionOn(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::callFunctionOn(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
-    String in_functionDeclaration = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("functionDeclaration"), nullptr, protocolErrors.get());
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
+    String in_functionDeclaration = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("functionDeclaration"), nullptr);
     bool opt_in_arguments_valueFound = false;
-    RefPtr<Inspector::InspectorArray> opt_in_arguments = BackendDispatcher::getArray(paramsContainer.get(), ASCIILiteral("arguments"), &opt_in_arguments_valueFound, protocolErrors.get());
+    RefPtr<Inspector::InspectorArray> opt_in_arguments = m_backendDispatcher->getArray(parameters.get(), ASCIILiteral("arguments"), &opt_in_arguments_valueFound);
     bool opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound = false;
-    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound, protocolErrors.get());
+    bool opt_in_doNotPauseOnExceptionsAndMuteConsole = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("doNotPauseOnExceptionsAndMuteConsole"), &opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound);
     bool opt_in_returnByValue_valueFound = false;
-    bool opt_in_returnByValue = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound, protocolErrors.get());
+    bool opt_in_returnByValue = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("returnByValue"), &opt_in_returnByValue_valueFound);
     bool opt_in_generatePreview_valueFound = false;
-    bool opt_in_generatePreview = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.callFunctionOn");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_generatePreview = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.callFunctionOn"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->callFunctionOn(callId, in_objectId, in_functionDeclaration, opt_in_arguments_valueFound ? opt_in_arguments.get() : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
+        m_alternateDispatcher->callFunctionOn(requestId, in_objectId, in_functionDeclaration, opt_in_arguments_valueFound ? opt_in_arguments.get() : nullptr, opt_in_doNotPauseOnExceptionsAndMuteConsole_valueFound ? &opt_in_doNotPauseOnExceptionsAndMuteConsole : nullptr, opt_in_returnByValue_valueFound ? &opt_in_returnByValue : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
         return;
     }
 #endif
@@ -4284,28 +4383,27 @@ void RuntimeBackendDispatcher::callFunctionOn(long callId, const InspectorObject
         if (out_wasThrown.isAssigned())
             result->setBoolean(ASCIILiteral("wasThrown"), out_wasThrown.getValue());
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::getProperties(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::getProperties(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
     bool opt_in_ownProperties_valueFound = false;
-    bool opt_in_ownProperties = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("ownProperties"), &opt_in_ownProperties_valueFound, protocolErrors.get());
+    bool opt_in_ownProperties = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("ownProperties"), &opt_in_ownProperties_valueFound);
     bool opt_in_generatePreview_valueFound = false;
-    bool opt_in_generatePreview = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.getProperties");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_generatePreview = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.getProperties"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getProperties(callId, in_objectId, opt_in_ownProperties_valueFound ? &opt_in_ownProperties : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
+        m_alternateDispatcher->getProperties(requestId, in_objectId, opt_in_ownProperties_valueFound ? &opt_in_ownProperties : nullptr, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
         return;
     }
 #endif
@@ -4321,26 +4419,25 @@ void RuntimeBackendDispatcher::getProperties(long callId, const InspectorObject&
         if (out_internalProperties)
             result->setArray(ASCIILiteral("internalProperties"), out_internalProperties);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::getDisplayableProperties(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::getDisplayableProperties(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
     bool opt_in_generatePreview_valueFound = false;
-    bool opt_in_generatePreview = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.getDisplayableProperties");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    bool opt_in_generatePreview = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("generatePreview"), &opt_in_generatePreview_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.getDisplayableProperties"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getDisplayableProperties(callId, in_objectId, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
+        m_alternateDispatcher->getDisplayableProperties(requestId, in_objectId, opt_in_generatePreview_valueFound ? &opt_in_generatePreview : nullptr);
         return;
     }
 #endif
@@ -4356,30 +4453,29 @@ void RuntimeBackendDispatcher::getDisplayableProperties(long callId, const Inspe
         if (out_internalProperties)
             result->setArray(ASCIILiteral("internalProperties"), out_internalProperties);
     }
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::getCollectionEntries(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::getCollectionEntries(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
     bool opt_in_objectGroup_valueFound = false;
-    String opt_in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound, protocolErrors.get());
+    String opt_in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), &opt_in_objectGroup_valueFound);
     bool opt_in_startIndex_valueFound = false;
-    int opt_in_startIndex = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("startIndex"), &opt_in_startIndex_valueFound, protocolErrors.get());
+    int opt_in_startIndex = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("startIndex"), &opt_in_startIndex_valueFound);
     bool opt_in_numberToFetch_valueFound = false;
-    int opt_in_numberToFetch = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("numberToFetch"), &opt_in_numberToFetch_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.getCollectionEntries");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int opt_in_numberToFetch = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("numberToFetch"), &opt_in_numberToFetch_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.getCollectionEntries"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getCollectionEntries(callId, in_objectId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_startIndex_valueFound ? &opt_in_startIndex : nullptr, opt_in_numberToFetch_valueFound ? &opt_in_numberToFetch : nullptr);
+        m_alternateDispatcher->getCollectionEntries(requestId, in_objectId, opt_in_objectGroup_valueFound ? &opt_in_objectGroup : nullptr, opt_in_startIndex_valueFound ? &opt_in_startIndex : nullptr, opt_in_numberToFetch_valueFound ? &opt_in_numberToFetch : nullptr);
         return;
     }
 #endif
@@ -4392,26 +4488,25 @@ void RuntimeBackendDispatcher::getCollectionEntries(long callId, const Inspector
     if (!error.length())
         result->setArray(ASCIILiteral("entries"), out_entries);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::saveResult(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::saveResult(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorObject> in_value = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
+    RefPtr<Inspector::InspectorObject> in_value = m_backendDispatcher->getObject(parameters.get(), ASCIILiteral("value"), nullptr);
     bool opt_in_contextId_valueFound = false;
-    int opt_in_contextId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("contextId"), &opt_in_contextId_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.saveResult");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int opt_in_contextId = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("contextId"), &opt_in_contextId_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.saveResult"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->saveResult(callId, *in_value, opt_in_contextId_valueFound ? &opt_in_contextId : nullptr);
+        m_alternateDispatcher->saveResult(requestId, *in_value, opt_in_contextId_valueFound ? &opt_in_contextId : nullptr);
         return;
     }
 #endif
@@ -4425,24 +4520,23 @@ void RuntimeBackendDispatcher::saveResult(long callId, const InspectorObject& me
         if (out_savedResultIndex.isAssigned())
             result->setInteger(ASCIILiteral("savedResultIndex"), out_savedResultIndex.getValue());
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::releaseObject(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::releaseObject(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectId = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.releaseObject");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_objectId = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectId"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.releaseObject"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->releaseObject(callId, in_objectId);
+        m_alternateDispatcher->releaseObject(requestId, in_objectId);
         return;
     }
 #endif
@@ -4451,24 +4545,23 @@ void RuntimeBackendDispatcher::releaseObject(long callId, const InspectorObject&
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->releaseObject(error, in_objectId);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::releaseObjectGroup(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::releaseObjectGroup(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_objectGroup = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("objectGroup"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.releaseObjectGroup");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_objectGroup = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("objectGroup"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.releaseObjectGroup"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->releaseObjectGroup(callId, in_objectGroup);
+        m_alternateDispatcher->releaseObjectGroup(requestId, in_objectGroup);
         return;
     }
 #endif
@@ -4477,30 +4570,17 @@ void RuntimeBackendDispatcher::releaseObjectGroup(long callId, const InspectorOb
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->releaseObjectGroup(error, in_objectGroup);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::run(long callId, const InspectorObject&)
+void RuntimeBackendDispatcher::enable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->run(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->run(error);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void RuntimeBackendDispatcher::enable(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
+        m_alternateDispatcher->enable(requestId);
         return;
     }
 #endif
@@ -4509,14 +4589,17 @@ void RuntimeBackendDispatcher::enable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::disable(long callId, const InspectorObject&)
+void RuntimeBackendDispatcher::disable(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
+        m_alternateDispatcher->disable(requestId);
         return;
     }
 #endif
@@ -4525,24 +4608,23 @@ void RuntimeBackendDispatcher::disable(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disable(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::getRuntimeTypesForVariablesAtOffsets(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::getRuntimeTypesForVariablesAtOffsets(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    RefPtr<Inspector::InspectorArray> in_locations = BackendDispatcher::getArray(paramsContainer.get(), ASCIILiteral("locations"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.getRuntimeTypesForVariablesAtOffsets");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    RefPtr<Inspector::InspectorArray> in_locations = m_backendDispatcher->getArray(parameters.get(), ASCIILiteral("locations"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.getRuntimeTypesForVariablesAtOffsets"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getRuntimeTypesForVariablesAtOffsets(callId, *in_locations);
+        m_alternateDispatcher->getRuntimeTypesForVariablesAtOffsets(requestId, *in_locations);
         return;
     }
 #endif
@@ -4555,14 +4637,17 @@ void RuntimeBackendDispatcher::getRuntimeTypesForVariablesAtOffsets(long callId,
     if (!error.length())
         result->setArray(ASCIILiteral("types"), out_types);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::enableTypeProfiler(long callId, const InspectorObject&)
+void RuntimeBackendDispatcher::enableTypeProfiler(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->enableTypeProfiler(callId);
+        m_alternateDispatcher->enableTypeProfiler(requestId);
         return;
     }
 #endif
@@ -4571,14 +4656,17 @@ void RuntimeBackendDispatcher::enableTypeProfiler(long callId, const InspectorOb
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->enableTypeProfiler(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::disableTypeProfiler(long callId, const InspectorObject&)
+void RuntimeBackendDispatcher::disableTypeProfiler(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->disableTypeProfiler(callId);
+        m_alternateDispatcher->disableTypeProfiler(requestId);
         return;
     }
 #endif
@@ -4587,24 +4675,23 @@ void RuntimeBackendDispatcher::disableTypeProfiler(long callId, const InspectorO
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->disableTypeProfiler(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void RuntimeBackendDispatcher::getBasicBlocks(long callId, const InspectorObject& message)
+void RuntimeBackendDispatcher::getBasicBlocks(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    String in_sourceID = BackendDispatcher::getString(paramsContainer.get(), ASCIILiteral("sourceID"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Runtime.getBasicBlocks");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    String in_sourceID = m_backendDispatcher->getString(parameters.get(), ASCIILiteral("sourceID"), nullptr);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Runtime.getBasicBlocks"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->getBasicBlocks(callId, in_sourceID);
+        m_alternateDispatcher->getBasicBlocks(requestId, in_sourceID);
         return;
     }
 #endif
@@ -4617,12 +4704,90 @@ void RuntimeBackendDispatcher::getBasicBlocks(long callId, const InspectorObject
     if (!error.length())
         result->setArray(ASCIILiteral("basicBlocks"), out_basicBlocks);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-Ref<TimelineBackendDispatcher> TimelineBackendDispatcher::create(BackendDispatcher* backendDispatcher, TimelineBackendDispatcherHandler* agent)
+Ref<ScriptProfilerBackendDispatcher> ScriptProfilerBackendDispatcher::create(BackendDispatcher& backendDispatcher, ScriptProfilerBackendDispatcherHandler* agent)
 {
-    return adoptRef(*new TimelineBackendDispatcher(*backendDispatcher, agent));
+    return adoptRef(*new ScriptProfilerBackendDispatcher(backendDispatcher, agent));
+}
+
+ScriptProfilerBackendDispatcher::ScriptProfilerBackendDispatcher(BackendDispatcher& backendDispatcher, ScriptProfilerBackendDispatcherHandler* agent)
+    : SupplementalBackendDispatcher(backendDispatcher)
+    , m_agent(agent)
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    , m_alternateDispatcher(nullptr)
+#endif
+{
+    m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("ScriptProfiler"), this);
+}
+
+void ScriptProfilerBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
+{
+    Ref<ScriptProfilerBackendDispatcher> protect(*this);
+
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
+    if (method == "startTracking")
+        startTracking(requestId, WTF::move(parameters));
+    else if (method == "stopTracking")
+        stopTracking(requestId, WTF::move(parameters));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "ScriptProfiler", '.', method, "' was not found"));
+}
+
+void ScriptProfilerBackendDispatcher::startTracking(long requestId, RefPtr<InspectorObject>&& parameters)
+{
+    bool opt_in_profile_valueFound = false;
+    bool opt_in_profile = m_backendDispatcher->getBoolean(parameters.get(), ASCIILiteral("profile"), &opt_in_profile_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "ScriptProfiler.startTracking"));
+        return;
+    }
+
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->startTracking(requestId, opt_in_profile_valueFound ? &opt_in_profile : nullptr);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    m_agent->startTracking(error, opt_in_profile_valueFound ? &opt_in_profile : nullptr);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+void ScriptProfilerBackendDispatcher::stopTracking(long requestId, RefPtr<InspectorObject>&&)
+{
+#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
+    if (m_alternateDispatcher) {
+        m_alternateDispatcher->stopTracking(requestId);
+        return;
+    }
+#endif
+
+    ErrorString error;
+    Ref<InspectorObject> result = InspectorObject::create();
+    m_agent->stopTracking(error);
+
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
+}
+
+Ref<TimelineBackendDispatcher> TimelineBackendDispatcher::create(BackendDispatcher& backendDispatcher, TimelineBackendDispatcherHandler* agent)
+{
+    return adoptRef(*new TimelineBackendDispatcher(backendDispatcher, agent));
 }
 
 TimelineBackendDispatcher::TimelineBackendDispatcher(BackendDispatcher& backendDispatcher, TimelineBackendDispatcherHandler* agent)
@@ -4635,34 +4800,33 @@ TimelineBackendDispatcher::TimelineBackendDispatcher(BackendDispatcher& backendD
     m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Timeline"), this);
 }
 
-void TimelineBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
+void TimelineBackendDispatcher::dispatch(long requestId, const String& method, Ref<InspectorObject>&& message)
 {
     Ref<TimelineBackendDispatcher> protect(*this);
 
+    RefPtr<InspectorObject> parameters;
+    message->getObject(ASCIILiteral("params"), parameters);
+
     if (method == "start")
-        start(callId, message);
+        start(requestId, WTF::move(parameters));
     else if (method == "stop")
-        stop(callId, message);
+        stop(requestId, WTF::move(parameters));
     else
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Timeline", '.', method, "' was not found"));
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::MethodNotFound, makeString('\'', "Timeline", '.', method, "' was not found"));
 }
 
-void TimelineBackendDispatcher::start(long callId, const InspectorObject& message)
+void TimelineBackendDispatcher::start(long requestId, RefPtr<InspectorObject>&& parameters)
 {
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
     bool opt_in_maxCallStackDepth_valueFound = false;
-    int opt_in_maxCallStackDepth = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("maxCallStackDepth"), &opt_in_maxCallStackDepth_valueFound, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Timeline.start");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
+    int opt_in_maxCallStackDepth = m_backendDispatcher->getInteger(parameters.get(), ASCIILiteral("maxCallStackDepth"), &opt_in_maxCallStackDepth_valueFound);
+    if (m_backendDispatcher->hasProtocolErrors()) {
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::InvalidParams, String::format("Some arguments of method '%s' can't be processed", "Timeline.start"));
         return;
     }
 
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->start(callId, opt_in_maxCallStackDepth_valueFound ? &opt_in_maxCallStackDepth : nullptr);
+        m_alternateDispatcher->start(requestId, opt_in_maxCallStackDepth_valueFound ? &opt_in_maxCallStackDepth : nullptr);
         return;
     }
 #endif
@@ -4671,14 +4835,17 @@ void TimelineBackendDispatcher::start(long callId, const InspectorObject& messag
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->start(error, opt_in_maxCallStackDepth_valueFound ? &opt_in_maxCallStackDepth : nullptr);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+    if (!error.length())
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
-void TimelineBackendDispatcher::stop(long callId, const InspectorObject&)
+void TimelineBackendDispatcher::stop(long requestId, RefPtr<InspectorObject>&&)
 {
 #if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
     if (m_alternateDispatcher) {
-        m_alternateDispatcher->stop(callId);
+        m_alternateDispatcher->stop(requestId);
         return;
     }
 #endif
@@ -4687,213 +4854,10 @@ void TimelineBackendDispatcher::stop(long callId, const InspectorObject&)
     Ref<InspectorObject> result = InspectorObject::create();
     m_agent->stop(error);
 
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-Ref<WorkerBackendDispatcher> WorkerBackendDispatcher::create(BackendDispatcher* backendDispatcher, WorkerBackendDispatcherHandler* agent)
-{
-    return adoptRef(*new WorkerBackendDispatcher(*backendDispatcher, agent));
-}
-
-WorkerBackendDispatcher::WorkerBackendDispatcher(BackendDispatcher& backendDispatcher, WorkerBackendDispatcherHandler* agent)
-    : SupplementalBackendDispatcher(backendDispatcher)
-    , m_agent(agent)
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    , m_alternateDispatcher(nullptr)
-#endif
-{
-    m_backendDispatcher->registerDispatcherForDomain(ASCIILiteral("Worker"), this);
-}
-
-void WorkerBackendDispatcher::dispatch(long callId, const String& method, Ref<InspectorObject>&& message)
-{
-    Ref<WorkerBackendDispatcher> protect(*this);
-
-    typedef void (WorkerBackendDispatcher::*CallHandler)(long callId, const InspectorObject& message);
-    typedef HashMap<String, CallHandler> DispatchMap;
-    DEPRECATED_DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, ());
-    if (dispatchMap.isEmpty()) {
-        static const struct MethodTable {
-            const char* name;
-            CallHandler handler;
-        } commands[] = {
-            { "enable", &WorkerBackendDispatcher::enable },
-            { "disable", &WorkerBackendDispatcher::disable },
-            { "sendMessageToWorker", &WorkerBackendDispatcher::sendMessageToWorker },
-            { "canInspectWorkers", &WorkerBackendDispatcher::canInspectWorkers },
-            { "connectToWorker", &WorkerBackendDispatcher::connectToWorker },
-            { "disconnectFromWorker", &WorkerBackendDispatcher::disconnectFromWorker },
-            { "setAutoconnectToWorkers", &WorkerBackendDispatcher::setAutoconnectToWorkers },
-        };
-        size_t length = WTF_ARRAY_LENGTH(commands);
-        for (size_t i = 0; i < length; ++i)
-            dispatchMap.add(commands[i].name, commands[i].handler);
-    }
-
-    HashMap<String, CallHandler>::iterator it = dispatchMap.find(method);
-    if (it == dispatchMap.end()) {
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::MethodNotFound, makeString('\'', "Worker", '.', method, "' was not found"));
-        return;
-    }
-
-    ((*this).*it->value)(callId, message.get());
-}
-
-void WorkerBackendDispatcher::enable(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->enable(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->enable(error);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::disable(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->disable(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->disable(error);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::sendMessageToWorker(long callId, const InspectorObject& message)
-{
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_workerId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("workerId"), nullptr, protocolErrors.get());
-    RefPtr<Inspector::InspectorObject> in_message = BackendDispatcher::getObject(paramsContainer.get(), ASCIILiteral("message"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Worker.sendMessageToWorker");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
-        return;
-    }
-
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->sendMessageToWorker(callId, in_workerId, *in_message);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->sendMessageToWorker(error, in_workerId, *in_message);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::canInspectWorkers(long callId, const InspectorObject&)
-{
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->canInspectWorkers(callId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    bool out_result;
-    m_agent->canInspectWorkers(error, &out_result);
-
     if (!error.length())
-        result->setBoolean(ASCIILiteral("result"), out_result);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::connectToWorker(long callId, const InspectorObject& message)
-{
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_workerId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("workerId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Worker.connectToWorker");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
-        return;
-    }
-
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->connectToWorker(callId, in_workerId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->connectToWorker(error, in_workerId);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::disconnectFromWorker(long callId, const InspectorObject& message)
-{
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    int in_workerId = BackendDispatcher::getInteger(paramsContainer.get(), ASCIILiteral("workerId"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Worker.disconnectFromWorker");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
-        return;
-    }
-
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->disconnectFromWorker(callId, in_workerId);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->disconnectFromWorker(error, in_workerId);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
-}
-
-void WorkerBackendDispatcher::setAutoconnectToWorkers(long callId, const InspectorObject& message)
-{
-    auto protocolErrors = Inspector::Protocol::Array<String>::create();
-    RefPtr<InspectorObject> paramsContainer;
-    message.getObject(ASCIILiteral("params"), paramsContainer);
-    bool in_value = BackendDispatcher::getBoolean(paramsContainer.get(), ASCIILiteral("value"), nullptr, protocolErrors.get());
-    if (protocolErrors->length()) {
-        String errorMessage = String::format("Some arguments of method '%s' can't be processed", "Worker.setAutoconnectToWorkers");
-        m_backendDispatcher->reportProtocolError(&callId, BackendDispatcher::InvalidParams, errorMessage, WTF::move(protocolErrors));
-        return;
-    }
-
-#if ENABLE(INSPECTOR_ALTERNATE_DISPATCHERS)
-    if (m_alternateDispatcher) {
-        m_alternateDispatcher->setAutoconnectToWorkers(callId, in_value);
-        return;
-    }
-#endif
-
-    ErrorString error;
-    Ref<InspectorObject> result = InspectorObject::create();
-    m_agent->setAutoconnectToWorkers(error, in_value);
-
-    m_backendDispatcher->sendResponse(callId, WTF::move(result), error);
+        m_backendDispatcher->sendResponse(requestId, WTF::move(result));
+    else
+        m_backendDispatcher->reportProtocolError(BackendDispatcher::ServerError, WTF::move(error));
 }
 
 } // namespace Inspector

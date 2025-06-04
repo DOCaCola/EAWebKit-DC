@@ -54,6 +54,7 @@
 #include <memory>
 #include <wtf/MathExtras.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/PointerComparison.h>
 #include <wtf/RefCounted.h>
 
 namespace WebCore {
@@ -80,7 +81,7 @@ static inline Color blendFunc(const AnimationBase*, const Color& from, const Col
 
 static inline Length blendFunc(const AnimationBase*, const Length& from, const Length& to, double progress)
 {
-    return to.blend(from, narrowPrecisionToFloat(progress));
+    return to.blend(from, progress);
 }
 
 static inline LengthSize blendFunc(const AnimationBase* anim, const LengthSize& from, const LengthSize& to, double progress)
@@ -255,6 +256,7 @@ static inline SVGLength blendFunc(const AnimationBase*, const SVGLength& from, c
 {
     return to.blend(from, narrowPrecisionToFloat(progress));
 }
+
 static inline Vector<SVGLength> blendFunc(const AnimationBase*, const Vector<SVGLength>& from, const Vector<SVGLength>& to, double progress)
 {
     size_t fromLength = from.size();
@@ -400,9 +402,7 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
-        // If the style pointers are the same, don't bother doing the test.
-        // If either is null, return false. If both are null, return true.
-        if ((!a && !b) || a == b)
+        if (a == b)
             return true;
         if (!a || !b)
             return false;
@@ -477,6 +477,24 @@ public:
         : RefCountedPropertyWrapper<ClipPathOperation>(prop, getter, setter)
     {
     }
+
+    virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
+    {
+        // If the style pointers are the same, don't bother doing the test.
+        // If either is null, return false. If both are null, return true.
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
+        ClipPathOperation* clipPathA = (a->*m_getter)();
+        ClipPathOperation* clipPathB = (b->*m_getter)();
+        if (clipPathA == clipPathB)
+            return true;
+        if (!clipPathA || !clipPathB)
+            return false;
+        return *clipPathA == *clipPathB;
+    }
 };
 
 #if ENABLE(CSS_SHAPES)
@@ -486,6 +504,24 @@ public:
     PropertyWrapperShape(CSSPropertyID prop, ShapeValue* (RenderStyle::*getter)() const, void (RenderStyle::*setter)(PassRefPtr<ShapeValue>))
         : RefCountedPropertyWrapper<ShapeValue>(prop, getter, setter)
     {
+    }
+
+    virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
+    {
+        // If the style pointers are the same, don't bother doing the test.
+        // If either is null, return false. If both are null, return true.
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
+        ShapeValue* shapeA = (a->*m_getter)();
+        ShapeValue* shapeB = (b->*m_getter)();
+        if (shapeA == shapeB)
+            return true;
+        if (!shapeA || !shapeB)
+            return false;
+        return *shapeA == *shapeB;
     }
 };
 #endif
@@ -500,8 +536,6 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
-       // If the style pointers are the same, don't bother doing the test.
-       // If either is null, return false. If both are null, return true.
        if (a == b)
            return true;
        if (!a || !b)
@@ -509,7 +543,7 @@ public:
 
         StyleImage* imageA = (a->*m_getter)();
         StyleImage* imageB = (b->*m_getter)();
-        return StyleImage::imagesEquivalent(imageA, imageB);
+        return arePointingToEqualData(imageA, imageB);
     }
 };
 
@@ -571,7 +605,7 @@ class PropertyWrapperAcceleratedFilter : public PropertyWrapper<const FilterOper
     WTF_MAKE_FAST_ALLOCATED;
 public:
     PropertyWrapperAcceleratedFilter()
-        : PropertyWrapper<const FilterOperations&>(CSSPropertyWebkitFilter, &RenderStyle::filter, &RenderStyle::setFilter)
+        : PropertyWrapper<const FilterOperations&>(CSSPropertyFilter, &RenderStyle::filter, &RenderStyle::setFilter)
     {
     }
 
@@ -638,6 +672,11 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
         const ShadowData* shadowA = (a->*m_getter)();
         const ShadowData* shadowB = (b->*m_getter)();
 
@@ -754,6 +793,11 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
         Color fromColor = (a->*m_getter)();
         Color toColor = (b->*m_getter)();
 
@@ -848,11 +892,9 @@ public:
 
     virtual bool equals(const FillLayer* a, const FillLayer* b) const
     {
-       // If the style pointers are the same, don't bother doing the test.
-       // If either is null, return false. If both are null, return true.
-       if ((!a && !b) || a == b)
-           return true;
-       if (!a || !b)
+        if (a == b)
+            return true;
+        if (!a || !b)
             return false;
         return (a->*m_getter)() == (b->*m_getter)();
     }
@@ -909,8 +951,6 @@ public:
 
     virtual bool equals(const FillLayer* a, const FillLayer* b) const
     {
-       // If the style pointers are the same, don't bother doing the test.
-       // If either is null, return false. If both are null, return true.
        if (a == b)
            return true;
        if (!a || !b)
@@ -918,7 +958,7 @@ public:
 
         StyleImage* imageA = (a->*m_getter)();
         StyleImage* imageB = (b->*m_getter)();
-        return StyleImage::imagesEquivalent(imageA, imageB);
+        return arePointingToEqualData(imageA, imageB);
     }
 };
 
@@ -957,6 +997,11 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
         const FillLayer* fromLayer = (a->*m_layersGetter)();
         const FillLayer* toLayer = (b->*m_layersGetter)();
 
@@ -1005,6 +1050,11 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
         for (auto& wrapper : m_propertyWrappers) {
             if (!wrapper->equals(a, b))
                 return false;
@@ -1034,9 +1084,7 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
-        // If the style pointers are the same, don't bother doing the test.
-        // If either is null, return false. If both are null, return true.
-        if ((!a && !b) || a == b)
+        if (a == b)
             return true;
         if (!a || !b)
             return false;
@@ -1065,6 +1113,11 @@ public:
 
     virtual bool equals(const RenderStyle* a, const RenderStyle* b) const
     {
+        if (a == b)
+            return true;
+        if (!a || !b)
+            return false;
+
         if ((a->*m_paintTypeGetter)() != (b->*m_paintTypeGetter)())
             return false;
 
@@ -1239,8 +1292,8 @@ CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap()
         new PropertyWrapper<short>(CSSPropertyOrphans, &RenderStyle::orphans, &RenderStyle::setOrphans),
         new PropertyWrapper<short>(CSSPropertyWidows, &RenderStyle::widows, &RenderStyle::setWidows),
         new LengthPropertyWrapper<Length>(CSSPropertyLineHeight, &RenderStyle::specifiedLineHeight, &RenderStyle::setLineHeight),
-        new PropertyWrapper<int>(CSSPropertyOutlineOffset, &RenderStyle::outlineOffset, &RenderStyle::setOutlineOffset),
-        new PropertyWrapper<unsigned short>(CSSPropertyOutlineWidth, &RenderStyle::outlineWidth, &RenderStyle::setOutlineWidth),
+        new PropertyWrapper<float>(CSSPropertyOutlineOffset, &RenderStyle::outlineOffset, &RenderStyle::setOutlineOffset),
+        new PropertyWrapper<float>(CSSPropertyOutlineWidth, &RenderStyle::outlineWidth, &RenderStyle::setOutlineWidth),
         new PropertyWrapper<float>(CSSPropertyLetterSpacing, &RenderStyle::letterSpacing, &RenderStyle::setLetterSpacing),
         new LengthPropertyWrapper<Length>(CSSPropertyWordSpacing, &RenderStyle::wordSpacing, &RenderStyle::setWordSpacing),
         new LengthPropertyWrapper<Length>(CSSPropertyTextIndent, &RenderStyle::textIndent, &RenderStyle::setTextIndent),
@@ -1417,7 +1470,6 @@ bool CSSPropertyAnimation::blendProperties(const AnimationBase* anim, CSSPropert
         wrapper->blend(anim, dst, a, b, progress);
         return !wrapper->animationIsAccelerated() || !anim->isAccelerated();
     }
-
     return false;
 }
 

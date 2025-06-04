@@ -64,16 +64,16 @@ public:
         return adoptRef(*new WheelEvent(type, initializer));
     }
 
-    static Ref<WheelEvent> create(const PlatformWheelEvent& event, PassRefPtr<AbstractView> view)
+    static Ref<WheelEvent> create(const PlatformWheelEvent& event, AbstractView* view)
     {
         return adoptRef(*new WheelEvent(event, view));
     }
 
-    void initWheelEvent(int rawDeltaX, int rawDeltaY, PassRefPtr<AbstractView>,
+    void initWheelEvent(int rawDeltaX, int rawDeltaY, AbstractView*,
         int screenX, int screenY, int pageX, int pageY,
         bool ctrlKey, bool altKey, bool shiftKey, bool metaKey);
 
-    void initWebKitWheelEvent(int rawDeltaX, int rawDeltaY, PassRefPtr<AbstractView>,
+    void initWebKitWheelEvent(int rawDeltaX, int rawDeltaY, AbstractView*,
         int screenX, int screenY, int pageX, int pageY,
         bool ctrlKey, bool altKey, bool shiftKey, bool metaKey);
 
@@ -91,7 +91,6 @@ public:
     bool isHorizontal() const { return m_wheelDelta.x(); }
 
     virtual EventInterface eventInterface() const override;
-    virtual bool isMouseEvent() const override;
 
 #if PLATFORM(MAC)
     PlatformWheelEventPhase phase() const { return m_wheelEvent.phase(); }
@@ -101,7 +100,7 @@ public:
 private:
     WheelEvent();
     WheelEvent(const AtomicString&, const WheelEventInit&);
-    WheelEvent(const PlatformWheelEvent&, PassRefPtr<AbstractView>);
+    WheelEvent(const PlatformWheelEvent&, AbstractView*);
 
     virtual bool isWheelEvent() const override;
 

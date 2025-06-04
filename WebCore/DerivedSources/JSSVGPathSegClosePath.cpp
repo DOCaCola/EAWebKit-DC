@@ -22,7 +22,7 @@
 #include "JSSVGPathSegClosePath.h"
 
 #include "JSDOMBinding.h"
-#include "SVGPathSegClosePath.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPathSegClosePathConstructor : public DOMConstructorObject {
-private:
-    JSSVGPathSegClosePathConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPathSegClosePath> JSSVGPathSegClosePathConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPathSegClosePathConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPathSegClosePathConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegClosePathConstructor>(vm.heap)) JSSVGPathSegClosePathConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPathSegClosePathConstructor::s_info = { "SVGPathSegClosePathConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegClosePathConstructor) };
-
-JSSVGPathSegClosePathConstructor::JSSVGPathSegClosePathConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPathSegClosePathConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPathSegClosePathConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegClosePath::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPathSegClosePath::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPathSegClosePath"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPathSegClosePathConstructor::s_info = { "SVGPathSegClosePathConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegClosePathConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPathSegClosePathPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegClosePathConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPathSegClosePathConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGPathSegClosePathPrototype::s_info = { "SVGPathSegClosePathPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegClosePathPrototype) };
@@ -112,7 +86,7 @@ void JSSVGPathSegClosePathPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPathSegClosePath::s_info = { "SVGPathSegClosePath", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPathSegClosePath) };
 
-JSSVGPathSegClosePath::JSSVGPathSegClosePath(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegClosePath>&& impl)
+JSSVGPathSegClosePath::JSSVGPathSegClosePath(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPathSegClosePath>&& impl)
     : JSSVGPathSeg(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,17 @@ JSObject* JSSVGPathSegClosePath::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSSVGPathSegClosePath>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPathSegClosePathConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPathSegClosePathConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPathSegClosePathPrototype* domObject = jsDynamicCast<JSSVGPathSegClosePathPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPathSegClosePath::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPathSegClosePath::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGPathSegClosePath::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPathSegClosePathConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPathSegClosePathConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

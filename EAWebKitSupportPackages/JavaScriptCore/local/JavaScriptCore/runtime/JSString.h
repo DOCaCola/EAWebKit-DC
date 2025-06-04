@@ -108,7 +108,6 @@ private:
         Base::finishCreation(vm);
         m_length = length;
         setIs8Bit(m_value.impl()->is8Bit());
-        vm.m_newStringsSinceLastHashCons++;
     }
 
     void finishCreation(VM& vm, size_t length, size_t cost)
@@ -118,7 +117,6 @@ private:
         m_length = length;
         setIs8Bit(m_value.impl()->is8Bit());
         Heap::heap(this)->reportExtraMemoryAllocated(cost);
-        vm.m_newStringsSinceLastHashCons++;
     }
 
 protected:
@@ -127,7 +125,6 @@ protected:
         Base::finishCreation(vm);
         m_length = 0;
         setIs8Bit(true);
-        vm.m_newStringsSinceLastHashCons++;
     }
 
 public:
@@ -176,10 +173,7 @@ public:
     bool canGetIndex(unsigned i) { return i < m_length; }
     JSString* getIndex(ExecState*, unsigned);
 
-    static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue proto)
-    {
-        return Structure::create(vm, globalObject, proto, TypeInfo(StringType, StructureFlags), info());
-    }
+    static Structure* createStructure(VM&, JSGlobalObject*, JSValue);
 
     static size_t offsetOfLength() { return OBJECT_OFFSETOF(JSString, m_length); }
     static size_t offsetOfFlags() { return OBJECT_OFFSETOF(JSString, m_flags); }
@@ -191,8 +185,6 @@ public:
     static void visitChildren(JSCell*, SlotVisitor&);
 
     enum {
-        HashConsLock = 1u << 2,
-        IsHashConsSingleton = 1u << 1,
         Is8Bit = 1u
     };
 
@@ -209,12 +201,6 @@ protected:
         else
             m_flags &= ~Is8Bit;
     }
-    bool shouldTryHashCons();
-    bool isHashConsSingleton() const { return m_flags & IsHashConsSingleton; }
-    void clearHashConsSingleton() { m_flags &= ~IsHashConsSingleton; }
-    void setHashConsSingleton() { m_flags |= IsHashConsSingleton; }
-    bool tryHashConsLock();
-    void releaseHashConsLock();
 
     mutable unsigned m_flags;
 
@@ -446,19 +432,23 @@ private:
 
 class JSString::SafeView {
 public:
-    SafeView();
     explicit SafeView(ExecState&, const JSString&);
-    operator StringView() const;
     StringView get() const;
 
+    bool is8Bit() const { return m_string->is8Bit(); }
+    unsigned length() const { return m_string->length(); }
+    const LChar* characters8() const { return get().characters8(); }
+    const UChar* characters16() const { return get().characters16(); }
+    UChar operator[](unsigned index) const { return get()[index]; }
+
 private:
-    ExecState* m_state { nullptr };
+    ExecState& m_state;
 
     // The following pointer is marked "volatile" to make the compiler leave it on the stack
     // or in a register as long as this object is alive, even after the last use of the pointer.
     // That's needed to prevent garbage collecting the string and possibly deleting the block
     // with the characters in it, and then using the StringView after that.
-    const JSString* volatile m_string { nullptr };
+    const JSString* volatile m_string;
 };
 
 JS_EXPORT_PRIVATE JSString* jsStringWithCacheSlowCase(VM&, StringImpl&);
@@ -721,24 +711,15 @@ inline bool JSString::isSubstring() const
     return isRope() && static_cast<const JSRopeString*>(this)->isSubstring();
 }
 
-inline JSString::SafeView::SafeView()
-{
-}
-
 inline JSString::SafeView::SafeView(ExecState& state, const JSString& string)
-    : m_state(&state)
+    : m_state(state)
     , m_string(&string)
 {
 }
 
-inline JSString::SafeView::operator StringView() const
-{
-    return m_string->unsafeView(*m_state);
-}
-
 inline StringView JSString::SafeView::get() const
 {
-    return *this;
+    return m_string->unsafeView(m_state);
 }
 
 ALWAYS_INLINE JSString::SafeView JSString::view(ExecState* exec) const

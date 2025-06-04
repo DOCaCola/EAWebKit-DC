@@ -7,6 +7,7 @@ namespace WebCore {
 
 class StylePropertyShorthand;
 
+StylePropertyShorthand allShorthand();
 StylePropertyShorthand animationShorthand();
 StylePropertyShorthand backgroundShorthand();
 StylePropertyShorthand backgroundPositionShorthand();
@@ -23,6 +24,7 @@ StylePropertyShorthand borderStyleShorthand();
 StylePropertyShorthand borderTopShorthand();
 StylePropertyShorthand borderWidthShorthand();
 StylePropertyShorthand fontShorthand();
+StylePropertyShorthand fontVariantShorthand();
 StylePropertyShorthand listStyleShorthand();
 StylePropertyShorthand marginShorthand();
 StylePropertyShorthand markerShorthand();
@@ -44,6 +46,7 @@ StylePropertyShorthand webkitGridShorthand();
 StylePropertyShorthand webkitGridAreaShorthand();
 StylePropertyShorthand webkitGridTemplateShorthand();
 StylePropertyShorthand webkitGridColumnShorthand();
+StylePropertyShorthand webkitGridGapShorthand();
 StylePropertyShorthand webkitGridRowShorthand();
 StylePropertyShorthand webkitMarginCollapseShorthand();
 StylePropertyShorthand webkitMarqueeShorthand();

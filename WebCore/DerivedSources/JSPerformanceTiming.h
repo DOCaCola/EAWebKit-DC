@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSPerformanceTiming : public JSDOMWrapper {
+class JSPerformanceTiming : public JSDOMWrapper<PerformanceTiming> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<PerformanceTiming> Base;
     static JSPerformanceTiming* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PerformanceTiming>&& impl)
     {
-        JSPerformanceTiming* ptr = new (NotNull, JSC::allocateCell<JSPerformanceTiming>(globalObject->vm().heap)) JSPerformanceTiming(structure, globalObject, WTF::move(impl));
+        JSPerformanceTiming* ptr = new (NotNull, JSC::allocateCell<JSPerformanceTiming>(globalObject->vm().heap)) JSPerformanceTiming(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static PerformanceTiming* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPerformanceTiming();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PerformanceTiming& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PerformanceTiming* m_impl;
 protected:
-    JSPerformanceTiming(JSC::Structure*, JSDOMGlobalObject*, Ref<PerformanceTiming>&&);
+    JSPerformanceTiming(JSC::Structure*, JSDOMGlobalObject&, Ref<PerformanceTiming>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PerformanceTiming*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PerformanceTiming*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PerformanceTiming& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PerformanceTiming& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, PerformanceTiming*);
 
 
 } // namespace WebCore

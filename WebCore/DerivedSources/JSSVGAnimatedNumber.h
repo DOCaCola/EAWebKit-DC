@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedNumber : public JSDOMWrapper {
+class JSSVGAnimatedNumber : public JSDOMWrapper<SVGAnimatedNumber> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedNumber> Base;
     static JSSVGAnimatedNumber* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedNumber>&& impl)
     {
-        JSSVGAnimatedNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedNumber>(globalObject->vm().heap)) JSSVGAnimatedNumber(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedNumber* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedNumber>(globalObject->vm().heap)) JSSVGAnimatedNumber(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedNumber* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedNumber();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedNumber& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedNumber* m_impl;
 protected:
-    JSSVGAnimatedNumber(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedNumber>&&);
+    JSSVGAnimatedNumber(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedNumber>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedNumber*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedNumber*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedNumber& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedNumber& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedNumber*);
 
 
 } // namespace WebCore

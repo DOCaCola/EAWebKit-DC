@@ -213,6 +213,7 @@ public:
 
     virtual bool shouldAggressivelyRetainTiles(const GraphicsLayer*) const override;
     virtual bool shouldTemporarilyRetainTileCohorts(const GraphicsLayer*) const override;
+    virtual IntSize tileSize() const override;
     virtual bool needsPixelAligment() const override { return !m_isMainFrameRenderViewLayer; }
 
 #if PLATFORM(IOS)
@@ -243,7 +244,7 @@ public:
     LayoutSize devicePixelFractionFromRenderer() const { return m_devicePixelFractionFromRenderer; }
 
 private:
-    FloatRect backgroundBoxForPainting() const;
+    FloatRect backgroundBoxForSimpleContainerPainting() const;
 
     void createPrimaryGraphicsLayer();
     void destroyGraphicsLayers();
@@ -301,7 +302,7 @@ private:
     
     bool isMainFrameRenderViewLayer() const;
     
-    bool paintsBoxDecorations() const;
+    bool paintsNonDirectCompositedBoxDecoration() const;
     bool paintsChildren() const;
 
     // Returns true if this compositing layer has no visible content.
@@ -326,7 +327,7 @@ private:
     bool hasTiledBackingFlatteningLayer() const { return (m_childContainmentLayer && m_usingTiledCacheLayer); }
     GraphicsLayer* tileCacheFlatteningLayer() const { return m_usingTiledCacheLayer ? m_childContainmentLayer.get() : nullptr; }
 
-    void paintIntoLayer(const GraphicsLayer*, GraphicsContext*, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase);
+    void paintIntoLayer(const GraphicsLayer*, GraphicsContext&, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase);
 
     // Helper function for updateGeometry.
     void adjustAncestorCompositingBoundsForFlowThread(LayoutRect& ancestorCompositingBounds, const RenderLayer* compositingAncestor) const;

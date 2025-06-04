@@ -23,7 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "SVGRect.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -68,52 +68,26 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGRectConstructor : public DOMConstructorObject {
-private:
-    JSSVGRectConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGRect> JSSVGRectConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGRectConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGRectConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGRectConstructor>(vm.heap)) JSSVGRectConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGRectConstructor::s_info = { "SVGRectConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRectConstructor) };
-
-JSSVGRectConstructor::JSSVGRectConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGRectConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGRectConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGRect::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGRect::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGRect"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGRectConstructor::s_info = { "SVGRectConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRectConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGRectPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectX) },
-    { "y", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectY) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectWidth) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectHeight) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectX) } },
+    { "y", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectY) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectWidth) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRectHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGRectHeight) } },
 };
 
 const ClassInfo JSSVGRectPrototype::s_info = { "SVGRectPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRectPrototype) };
@@ -126,9 +100,8 @@ void JSSVGRectPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGRect::s_info = { "SVGRect", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRect) };
 
-JSSVGRect::JSSVGRect(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<FloatRect>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGRect::JSSVGRect(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPropertyTearOff<FloatRect>>&& impl)
+    : JSDOMWrapper<SVGPropertyTearOff<FloatRect>>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -148,105 +121,100 @@ void JSSVGRect::destroy(JSC::JSCell* cell)
     thisObject->JSSVGRect::~JSSVGRect();
 }
 
-JSSVGRect::~JSSVGRect()
+EncodedJSValue jsSVGRectX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGRectX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGRect", "x");
-        return throwGetterTypeError(*exec, "SVGRect", "x");
+            return reportDeprecatedGetterError(*state, "SVGRect", "x");
+        return throwGetterTypeError(*state, "SVGRect", "x");
     }
-    FloatRect& impl = castedThis->impl().propertyReference();
+    FloatRect& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGRectY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGRectY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGRect", "y");
-        return throwGetterTypeError(*exec, "SVGRect", "y");
+            return reportDeprecatedGetterError(*state, "SVGRect", "y");
+        return throwGetterTypeError(*state, "SVGRect", "y");
     }
-    FloatRect& impl = castedThis->impl().propertyReference();
+    FloatRect& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGRectWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGRectWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGRect", "width");
-        return throwGetterTypeError(*exec, "SVGRect", "width");
+            return reportDeprecatedGetterError(*state, "SVGRect", "width");
+        return throwGetterTypeError(*state, "SVGRect", "width");
     }
-    FloatRect& impl = castedThis->impl().propertyReference();
+    FloatRect& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.width());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGRectHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGRectHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGRect", "height");
-        return throwGetterTypeError(*exec, "SVGRect", "height");
+            return reportDeprecatedGetterError(*state, "SVGRect", "height");
+        return throwGetterTypeError(*state, "SVGRect", "height");
     }
-    FloatRect& impl = castedThis->impl().propertyReference();
+    FloatRect& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.height());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGRectConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGRectConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGRectPrototype* domObject = jsDynamicCast<JSSVGRectPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGRect::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGRect::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGRectX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGRectX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGRect", "x");
+            reportDeprecatedSetterError(*state, "SVGRect", "x");
         else
-            throwSetterTypeError(*exec, "SVGRect", "x");
+            throwSetterTypeError(*state, "SVGRect", "x");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     FloatRect& podImpl = impl.propertyReference();
@@ -255,24 +223,24 @@ void setJSSVGRectX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisVal
 }
 
 
-void setJSSVGRectY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGRectY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGRect", "y");
+            reportDeprecatedSetterError(*state, "SVGRect", "y");
         else
-            throwSetterTypeError(*exec, "SVGRect", "y");
+            throwSetterTypeError(*state, "SVGRect", "y");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     FloatRect& podImpl = impl.propertyReference();
@@ -281,24 +249,24 @@ void setJSSVGRectY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisVal
 }
 
 
-void setJSSVGRectWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGRectWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGRect", "width");
+            reportDeprecatedSetterError(*state, "SVGRect", "width");
         else
-            throwSetterTypeError(*exec, "SVGRect", "width");
+            throwSetterTypeError(*state, "SVGRect", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     FloatRect& podImpl = impl.propertyReference();
@@ -307,24 +275,24 @@ void setJSSVGRectWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thi
 }
 
 
-void setJSSVGRectHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGRectHeight(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGRect* castedThis = jsDynamicCast<JSSVGRect*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGRectPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGRect", "height");
+            reportDeprecatedSetterError(*state, "SVGRect", "height");
         else
-            throwSetterTypeError(*exec, "SVGRect", "height");
+            throwSetterTypeError(*state, "SVGRect", "height");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     FloatRect& podImpl = impl.propertyReference();
@@ -335,7 +303,7 @@ void setJSSVGRectHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue th
 
 JSValue JSSVGRect::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGRectConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGRectConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGRectOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -349,7 +317,14 @@ void JSSVGRectOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsSVGRect = jsCast<JSSVGRect*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGRect->impl(), jsSVGRect);
+    uncacheWrapper(world, &jsSVGRect->wrapped(), jsSVGRect);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<FloatRect>* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGRect, SVGPropertyTearOff<FloatRect>>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<FloatRect>* impl)
@@ -364,7 +339,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyT
 SVGPropertyTearOff<FloatRect>* JSSVGRect::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGRect*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

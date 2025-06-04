@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGCursorElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGCursorElement>&& impl)
     {
-        JSSVGCursorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElement>(globalObject->vm().heap)) JSSVGCursorElement(structure, globalObject, WTF::move(impl));
+        JSSVGCursorElement* ptr = new (NotNull, JSC::allocateCell<JSSVGCursorElement>(globalObject->vm().heap)) JSSVGCursorElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGCursorElement& impl() const
+    SVGCursorElement& wrapped() const
     {
-        return static_cast<SVGCursorElement&>(Base::impl());
+        return static_cast<SVGCursorElement&>(Base::wrapped());
     }
 protected:
-    JSSVGCursorElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGCursorElement>&&);
+    JSSVGCursorElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGCursorElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

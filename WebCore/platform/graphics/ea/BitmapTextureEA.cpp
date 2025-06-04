@@ -71,7 +71,7 @@ void BitmapTextureEA::updateContents(const void* data, const IntRect& targetRect
 #endif
 }
 
-void BitmapTextureEA::updateContents(TextureMapper*, GraphicsLayer* sourceLayer, const IntRect& targetRect, const IntPoint& sourceOffset, UpdateContentsFlag)
+void BitmapTextureEA::updateContents(TextureMapper&, GraphicsLayer* sourceLayer, const IntRect& targetRect, const IntPoint& sourceOffset, UpdateContentsFlag, float scale)
 {
 	//This is being called internally and it renders the actual contents in the graphics context
 	EA::WebKit::ISurface::SurfaceDescriptor descriptor = {0};
@@ -110,7 +110,7 @@ void BitmapTextureEA::updateContents(Image* image, const IntRect& targetRect, co
 
 	mContext = std::make_unique<GraphicsContext>(mCairoContext.get());
 	
-	mContext->drawImage(image, ColorSpaceDeviceRGB, targetRect, IntRect(offset, targetRect.size()), ImagePaintingOptions(CompositeCopy));
+	mContext->drawImage(*image, targetRect, IntRect(offset, targetRect.size()), ImagePaintingOptions(CompositeCopy));
 
 	mSurface->Unlock();
 }
@@ -164,11 +164,6 @@ bool BitmapTextureEA::isValid(void) const
 	return mSurface && m_contentSize.width() != 0 && m_contentSize.height() != 0; 
 }
 
-bool BitmapTextureEA::canReuseWith(const IntSize& contentsSize, Flags /* = 0 */)
-{
-	// We ignore flags as all our surfaces have alpha channel.
-	return contentsSize == m_contentSize;
-}
 void BitmapTextureEA::didReset()
 {
 	m_shouldClear = true;
@@ -251,7 +246,7 @@ static void setupFilterInfo(const FilterOperation& source, EA::WebKit::FilterInf
 	target->location = location;
 }
 
-PassRefPtr<BitmapTexture> BitmapTextureEA::applyFilters(TextureMapper* textureMapper, const FilterOperations& filters)
+PassRefPtr<BitmapTexture> BitmapTextureEA::applyFilters(TextureMapper& textureMapper, const FilterOperations& filters)
 {   
     // early out if filters aren't being done in hardware OR if there are no filters
     if (!EA::WebKit::GetParameters().mDoCssFiltersInHardware || (filters.size() == 0))

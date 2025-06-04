@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGUnitTypes : public JSDOMWrapper {
+class JSSVGUnitTypes : public JSDOMWrapper<SVGUnitTypes> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGUnitTypes> Base;
     static JSSVGUnitTypes* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGUnitTypes>&& impl)
     {
-        JSSVGUnitTypes* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypes>(globalObject->vm().heap)) JSSVGUnitTypes(structure, globalObject, WTF::move(impl));
+        JSSVGUnitTypes* ptr = new (NotNull, JSC::allocateCell<JSSVGUnitTypes>(globalObject->vm().heap)) JSSVGUnitTypes(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGUnitTypes* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGUnitTypes();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGUnitTypes& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGUnitTypes* m_impl;
 protected:
-    JSSVGUnitTypes(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGUnitTypes>&&);
+    JSSVGUnitTypes(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGUnitTypes>&&);
 
     void finishCreation(JSC::VM& vm)
     {

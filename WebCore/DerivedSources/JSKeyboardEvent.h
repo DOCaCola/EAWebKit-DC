@@ -33,7 +33,7 @@ public:
     typedef JSUIEvent Base;
     static JSKeyboardEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<KeyboardEvent>&& impl)
     {
-        JSKeyboardEvent* ptr = new (NotNull, JSC::allocateCell<JSKeyboardEvent>(globalObject->vm().heap)) JSKeyboardEvent(structure, globalObject, WTF::move(impl));
+        JSKeyboardEvent* ptr = new (NotNull, JSC::allocateCell<JSKeyboardEvent>(globalObject->vm().heap)) JSKeyboardEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    KeyboardEvent& impl() const
+    KeyboardEvent& wrapped() const
     {
-        return static_cast<KeyboardEvent&>(Base::impl());
+        return static_cast<KeyboardEvent&>(Base::wrapped());
     }
 protected:
-    JSKeyboardEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<KeyboardEvent>&&);
+    JSKeyboardEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<KeyboardEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

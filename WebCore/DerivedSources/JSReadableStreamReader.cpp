@@ -24,12 +24,9 @@
 
 #include "JSReadableStreamReader.h"
 
-#include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "JSDOMPromise.h"
-#include "ReadableStreamReader.h"
-#include <bindings/ScriptValue.h>
-#include <runtime/Error.h>
+#include "JSDOMConstructor.h"
+#include "ReadableStreamReaderBuiltins.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -38,13 +35,9 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionRead(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionCancel(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionReleaseLock(JSC::ExecState*);
 
 // Attributes
 
-JSC::EncodedJSValue jsReadableStreamReaderClosed(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsReadableStreamReaderConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSReadableStreamReaderPrototype : public JSC::JSNonFinalObject {
@@ -72,72 +65,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSReadableStreamReaderConstructor : public DOMConstructorObject {
-private:
-    JSReadableStreamReaderConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSReadableStreamReader> JSReadableStreamReaderConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSReadableStreamReaderConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSReadableStreamReaderConstructor* ptr = new (NotNull, JSC::allocateCell<JSReadableStreamReaderConstructor>(vm.heap)) JSReadableStreamReaderConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-/* Hash table */
-
-static const struct CompactHashIndex JSReadableStreamReaderTableIndex[2] = {
-    { -1, -1 },
-    { 0, -1 },
-};
-
-
-static const HashTableValue JSReadableStreamReaderTableValues[] =
+template<> JSC::EncodedJSValue JSC_HOST_CALL JSReadableStreamReaderConstructor::construct(JSC::ExecState* state)
 {
-    { "closed", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamReaderClosed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-};
-
-static const HashTable JSReadableStreamReaderTable = { 1, 1, true, JSReadableStreamReaderTableValues, 0, JSReadableStreamReaderTableIndex };
-const ClassInfo JSReadableStreamReaderConstructor::s_info = { "ReadableStreamReaderConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamReaderConstructor) };
-
-JSReadableStreamReaderConstructor::JSReadableStreamReaderConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
-{
+    return constructJSReadableStreamReader(state);
 }
 
-void JSReadableStreamReaderConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
+template<> void JSReadableStreamReaderConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSReadableStreamReader::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSReadableStreamReader::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ReadableStreamReader"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSReadableStreamReaderConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSReadableStreamReader;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSReadableStreamReaderConstructor::s_info = { "ReadableStreamReaderConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamReaderConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSReadableStreamReaderPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamReaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "read", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamReaderPrototypeFunctionRead), (intptr_t) (0) },
-    { "cancel", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamReaderPrototypeFunctionCancel), (intptr_t) (0) },
-    { "releaseLock", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsReadableStreamReaderPrototypeFunctionReleaseLock), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsReadableStreamReaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "closed", ReadOnly | Accessor | Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamReaderClosedCodeGenerator), (intptr_t) (0) } },
+    { "read", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamReaderReadCodeGenerator), (intptr_t) (0) } },
+    { "cancel", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamReaderCancelCodeGenerator), (intptr_t) (0) } },
+    { "releaseLock", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(readableStreamReaderReleaseLockCodeGenerator), (intptr_t) (0) } },
 };
 
 const ClassInfo JSReadableStreamReaderPrototype::s_info = { "ReadableStreamReaderPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamReaderPrototype) };
@@ -148,13 +100,10 @@ void JSReadableStreamReaderPrototype::finishCreation(VM& vm)
     reifyStaticProperties(vm, JSReadableStreamReaderPrototypeTableValues, *this);
 }
 
-const ClassInfo JSReadableStreamReader::s_info = { "ReadableStreamReader", &Base::s_info, &JSReadableStreamReaderTable, CREATE_METHOD_TABLE(JSReadableStreamReader) };
+const ClassInfo JSReadableStreamReader::s_info = { "ReadableStreamReader", &Base::s_info, 0, CREATE_METHOD_TABLE(JSReadableStreamReader) };
 
-JSReadableStreamReader::JSReadableStreamReader(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ReadableStreamReader>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
+JSReadableStreamReader::JSReadableStreamReader(Structure* structure, JSDOMGlobalObject& globalObject)
+    : JSDOMObject(structure, globalObject) { }
 
 JSObject* JSReadableStreamReader::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
@@ -172,129 +121,17 @@ void JSReadableStreamReader::destroy(JSC::JSCell* cell)
     thisObject->JSReadableStreamReader::~JSReadableStreamReader();
 }
 
-JSReadableStreamReader::~JSReadableStreamReader()
-{
-    releaseImpl();
-}
-
-bool JSReadableStreamReader::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
-{
-    auto* thisObject = jsCast<JSReadableStreamReader*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSReadableStreamReader, Base>(exec, JSReadableStreamReaderTable, thisObject, propertyName, slot);
-}
-
-EncodedJSValue jsReadableStreamReaderClosed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSReadableStreamReader*>(slotBase);
-    return JSValue::encode(castedThis->closed(exec));
-}
-
-
-EncodedJSValue jsReadableStreamReaderConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsReadableStreamReaderConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSReadableStreamReaderPrototype* domObject = jsDynamicCast<JSReadableStreamReaderPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    JSValue constructor = JSReadableStreamReaderConstructor::create(exec->vm(), JSReadableStreamReaderConstructor::createStructure(exec->vm(), domObject->globalObject(), domObject->globalObject()->objectPrototype()), jsCast<JSDOMGlobalObject*>(domObject->globalObject()));
+        return throwVMTypeError(state);
+    JSValue constructor = JSReadableStreamReaderConstructor::create(state->vm(), JSReadableStreamReaderConstructor::createStructure(state->vm(), *domObject->globalObject(), domObject->globalObject()->objectPrototype()), *jsCast<JSDOMGlobalObject*>(domObject->globalObject()));
     // Shadowing constructor property to ensure reusing the same constructor object
-    domObject->putDirect(exec->vm(), exec->propertyNames().constructor, constructor, DontEnum | ReadOnly);
+    domObject->putDirect(state->vm(), state->propertyNames().constructor, constructor, DontEnum | ReadOnly);
     return JSValue::encode(constructor);
 }
 
-static inline EncodedJSValue jsReadableStreamReaderPrototypeFunctionReadPromise(ExecState*, JSPromiseDeferred*);
-EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionRead(ExecState* exec)
-{
-    return JSValue::encode(callPromiseFunction(*exec, jsReadableStreamReaderPrototypeFunctionReadPromise));
-}
-
-static inline EncodedJSValue jsReadableStreamReaderPrototypeFunctionReadPromise(ExecState* exec, JSPromiseDeferred* promiseDeferred)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamReader* castedThis = jsDynamicCast<JSReadableStreamReader*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamReader", "read");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamReader::info());
-    auto& impl = castedThis->impl();
-    impl.read(DeferredWrapper(exec, castedThis->globalObject(), promiseDeferred));
-    return JSValue::encode(jsUndefined());
-}
-
-static inline EncodedJSValue jsReadableStreamReaderPrototypeFunctionCancelPromise(ExecState*, JSPromiseDeferred*);
-EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionCancel(ExecState* exec)
-{
-    return JSValue::encode(callPromiseFunction(*exec, jsReadableStreamReaderPrototypeFunctionCancelPromise));
-}
-
-static inline EncodedJSValue jsReadableStreamReaderPrototypeFunctionCancelPromise(ExecState* exec, JSPromiseDeferred* promiseDeferred)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamReader* castedThis = jsDynamicCast<JSReadableStreamReader*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamReader", "cancel");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamReader::info());
-    auto& impl = castedThis->impl();
-    Deprecated::ScriptValue reason = { exec->vm(), exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    impl.cancel(reason, DeferredWrapper(exec, castedThis->globalObject(), promiseDeferred));
-    return JSValue::encode(jsUndefined());
-}
-
-EncodedJSValue JSC_HOST_CALL jsReadableStreamReaderPrototypeFunctionReleaseLock(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSReadableStreamReader* castedThis = jsDynamicCast<JSReadableStreamReader*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ReadableStreamReader", "releaseLock");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSReadableStreamReader::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    impl.releaseLock(ec);
-    setDOMException(exec, ec);
-    return JSValue::encode(jsUndefined());
-}
-
-void JSReadableStreamReader::visitChildren(JSCell* cell, SlotVisitor& visitor)
-{
-    auto* thisObject = jsCast<JSReadableStreamReader*>(cell);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Base::visitChildren(thisObject, visitor);
-    visitor.append(&thisObject->m_closed);
-}
-
-bool JSReadableStreamReaderOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
-{
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSReadableStreamReaderOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsReadableStreamReader = jsCast<JSReadableStreamReader*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsReadableStreamReader->impl(), jsReadableStreamReader);
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ReadableStreamReader* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSReadableStreamReader>(globalObject, impl))
-        return result;
-    return createNewWrapper<JSReadableStreamReader>(globalObject, impl);
-}
-
-ReadableStreamReader* JSReadableStreamReader::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSReadableStreamReader*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
 
 }
 

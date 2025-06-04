@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/DateConstructor.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/DateConstructor.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -18,25 +16,13 @@ static const struct CompactHashIndex dateConstructorTableIndex[9] = {
     { 2, -1 },
 };
 
-
 static const struct HashTableValue dateConstructorTableValues[3] = {
- #if JSC_BUILTIN_EXISTS(DATECONSTRUCTORPARSE)
-   { "parse", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(dateConstructorParseCodeGenerator), (intptr_t)1 },
- #else
-   { "parse", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(dateParse), (intptr_t)(1) },
- #endif
- #if JSC_BUILTIN_EXISTS(DATECONSTRUCTORUTC)
-   { "UTC", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(dateConstructorUTCCodeGenerator), (intptr_t)7 },
- #else
-   { "UTC", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(dateUTC), (intptr_t)(7) },
- #endif
- #if JSC_BUILTIN_EXISTS(DATECONSTRUCTORNOW)
-   { "now", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(dateConstructorNowCodeGenerator), (intptr_t)0 },
- #else
-   { "now", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(dateNow), (intptr_t)(0) },
- #endif
+   { "parse", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(dateParse), (intptr_t)(1) } },
+   { "UTC", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(dateUTC), (intptr_t)(7) } },
+   { "now", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(dateNow), (intptr_t)(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable dateConstructorTable =
-    { 3, 7, false, dateConstructorTableValues, 0, dateConstructorTableIndex };
-} // namespace
+static const struct HashTable dateConstructorTable =
+    { 3, 7, false, dateConstructorTableValues, dateConstructorTableIndex };
+
+} // namespace JSC

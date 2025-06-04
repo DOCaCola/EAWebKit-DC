@@ -22,7 +22,7 @@
 #include "JSSQLException.h"
 
 #include "JSDOMBinding.h"
-#include "SQLException.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -62,26 +62,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSQLExceptionConstructor : public DOMConstructorObject {
-private:
-    JSSQLExceptionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSQLExceptionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSQLExceptionConstructor* ptr = new (NotNull, JSC::allocateCell<JSSQLExceptionConstructor>(vm.heap)) JSSQLExceptionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSQLException> JSSQLExceptionConstructor;
 
 /* Hash table */
 
@@ -95,55 +76,48 @@ static const struct CompactHashIndex JSSQLExceptionTableIndex[4] = {
 
 static const HashTableValue JSSQLExceptionTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSSQLExceptionTable = { 2, 3, true, JSSQLExceptionTableValues, 0, JSSQLExceptionTableIndex };
+static const HashTable JSSQLExceptionTable = { 2, 3, true, JSSQLExceptionTableValues, JSSQLExceptionTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSSQLExceptionConstructorTableValues[] =
 {
-    { "UNKNOWN_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "DATABASE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "VERSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TOO_LARGE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "QUOTA_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "CONSTRAINT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "TIMEOUT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
+    { "UNKNOWN_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "DATABASE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "VERSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TOO_LARGE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "QUOTA_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "CONSTRAINT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "TIMEOUT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
 };
 
-const ClassInfo JSSQLExceptionConstructor::s_info = { "SQLExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLExceptionConstructor) };
-
-JSSQLExceptionConstructor::JSSQLExceptionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSQLExceptionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSQLExceptionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSQLException::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSQLException::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SQLException"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSQLExceptionConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSQLExceptionConstructor::s_info = { "SQLExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLExceptionConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSQLExceptionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "UNKNOWN_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "DATABASE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "VERSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TOO_LARGE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "QUOTA_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "CONSTRAINT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "TIMEOUT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "UNKNOWN_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "DATABASE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "VERSION_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TOO_LARGE_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "QUOTA_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SYNTAX_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "CONSTRAINT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "TIMEOUT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
 };
 
 const ClassInfo JSSQLExceptionPrototype::s_info = { "SQLExceptionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLExceptionPrototype) };
@@ -156,9 +130,8 @@ void JSSQLExceptionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSQLException::s_info = { "SQLException", &Base::s_info, &JSSQLExceptionTable, CREATE_METHOD_TABLE(JSSQLException) };
 
-JSSQLException::JSSQLException(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLException>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSQLException::JSSQLException(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SQLException>&& impl)
+    : JSDOMWrapper<SQLException>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -178,53 +151,50 @@ void JSSQLException::destroy(JSC::JSCell* cell)
     thisObject->JSSQLException::~JSSQLException();
 }
 
-JSSQLException::~JSSQLException()
-{
-    releaseImpl();
-}
-
-bool JSSQLException::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSSQLException::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSQLException*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSQLException, Base>(exec, JSSQLExceptionTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSSQLException, Base>(state, JSSQLExceptionTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsSQLExceptionCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSQLExceptionCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSQLException*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.code());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSQLExceptionMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSQLExceptionMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSQLException*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.message());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSQLExceptionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSQLExceptionConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSQLExceptionPrototype* domObject = jsDynamicCast<JSSQLExceptionPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSQLException::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSQLException::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSQLException::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSQLExceptionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSQLExceptionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSQLExceptionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -238,7 +208,14 @@ void JSSQLExceptionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsSQLException = jsCast<JSSQLException*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSQLException->impl(), jsSQLException);
+    uncacheWrapper(world, &jsSQLException->wrapped(), jsSQLException);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLException* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSQLException>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLException* impl)
@@ -260,7 +237,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLException
 SQLException* JSSQLException::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSQLException*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

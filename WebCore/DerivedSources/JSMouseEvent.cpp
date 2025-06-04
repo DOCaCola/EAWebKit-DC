@@ -25,12 +25,12 @@
 #include "EventTarget.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMWindow.h"
 #include "JSDataTransfer.h"
 #include "JSDictionary.h"
 #include "JSEventTarget.h"
 #include "JSNode.h"
-#include "MouseEvent.h"
 #include "Node.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -98,69 +98,47 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMouseEventConstructor : public DOMConstructorObject {
-private:
-    JSMouseEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSMouseEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMouseEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSMouseEventConstructor>(vm.heap)) JSMouseEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMouseEvent(JSC::ExecState*);
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-};
+typedef JSDOMConstructor<JSMouseEvent> JSMouseEventConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSMouseEventConstructorTableValues[] =
 {
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "WEBKIT_FORCE_AT_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
+    { "WEBKIT_FORCE_AT_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
-EncodedJSValue JSC_HOST_CALL JSMouseEventConstructor::constructJSMouseEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMouseEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSMouseEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSMouseEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     MouseEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillMouseEventInit(eventInit, dictionary))
@@ -168,7 +146,7 @@ EncodedJSValue JSC_HOST_CALL JSMouseEventConstructor::constructJSMouseEvent(Exec
     }
 
     RefPtr<MouseEvent> event = MouseEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillMouseEventInit(MouseEventInit& eventInit, JSDictionary& dictionary)
@@ -199,79 +177,75 @@ bool fillMouseEventInit(MouseEventInit& eventInit, JSDictionary& dictionary)
     return true;
 }
 
-const ClassInfo JSMouseEventConstructor::s_info = { "MouseEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMouseEventConstructor) };
-
-JSMouseEventConstructor::JSMouseEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMouseEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMouseEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMouseEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMouseEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MouseEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSMouseEventConstructorTableValues, *this);
 }
 
-#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
-ConstructType JSMouseEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
+template<> ConstructType JSMouseEventConstructor::getConstructData(JSCell* cell, ConstructData& constructData)
 {
-    constructData.native.function = constructJSMouseEvent;
+#if ENABLE(DOM4_EVENTS_CONSTRUCTOR)
+    UNUSED_PARAM(cell);
+    constructData.native.function = construct;
     return ConstructTypeHost;
+#else
+    return Base::getConstructData(cell, constructData);
+#endif
 }
-#endif // ENABLE(DOM4_EVENTS_CONSTRUCTOR)
+
+template<> const ClassInfo JSMouseEventConstructor::s_info = { "MouseEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMouseEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMouseEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventScreenX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "screenY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventScreenY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clientX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventClientX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "clientY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventClientY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ctrlKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventCtrlKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "shiftKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventShiftKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "altKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventAltKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "metaKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMetaKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "button", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventButton), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "relatedTarget", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventRelatedTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventScreenX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "screenY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventScreenY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clientX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventClientX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "clientY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventClientY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ctrlKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventCtrlKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "shiftKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventShiftKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "altKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventAltKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "metaKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMetaKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "button", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventButton), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "relatedTarget", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventRelatedTarget), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(POINTER_LOCK)
-    { "movementX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMovementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "movementX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMovementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(POINTER_LOCK)
-    { "movementY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMovementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "movementY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventMovementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "webkitForce", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventWebkitForce), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "webkitForce", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventWebkitForce), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "offsetX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventOffsetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "offsetY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventOffsetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "fromElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventFromElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "toElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventToElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "dataTransfer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventDataTransfer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "offsetX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventOffsetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "offsetY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventOffsetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "fromElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventFromElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "toElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventToElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "dataTransfer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMouseEventDataTransfer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "WEBKIT_FORCE_AT_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
+    { "WEBKIT_FORCE_AT_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
+    { "WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "initMouseEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMouseEventPrototypeFunctionInitMouseEvent), (intptr_t) (0) },
+    { "initMouseEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMouseEventPrototypeFunctionInitMouseEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMouseEventPrototype::s_info = { "MouseEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMouseEventPrototype) };
@@ -284,7 +258,7 @@ void JSMouseEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMouseEvent::s_info = { "MouseEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMouseEvent) };
 
-JSMouseEvent::JSMouseEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MouseEvent>&& impl)
+JSMouseEvent::JSMouseEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MouseEvent>&& impl)
     : JSUIEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -299,189 +273,189 @@ JSObject* JSMouseEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSMouseEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsMouseEventScreenX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventScreenX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "screenX");
-        return throwGetterTypeError(*exec, "MouseEvent", "screenX");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "screenX");
+        return throwGetterTypeError(*state, "MouseEvent", "screenX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.screenX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventScreenY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventScreenY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "screenY");
-        return throwGetterTypeError(*exec, "MouseEvent", "screenY");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "screenY");
+        return throwGetterTypeError(*state, "MouseEvent", "screenY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.screenY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventClientX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventClientX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "clientX");
-        return throwGetterTypeError(*exec, "MouseEvent", "clientX");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "clientX");
+        return throwGetterTypeError(*state, "MouseEvent", "clientX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.clientX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventClientY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventClientY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "clientY");
-        return throwGetterTypeError(*exec, "MouseEvent", "clientY");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "clientY");
+        return throwGetterTypeError(*state, "MouseEvent", "clientY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.clientY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventCtrlKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventCtrlKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "ctrlKey");
-        return throwGetterTypeError(*exec, "MouseEvent", "ctrlKey");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "ctrlKey");
+        return throwGetterTypeError(*state, "MouseEvent", "ctrlKey");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.ctrlKey());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventShiftKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventShiftKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "shiftKey");
-        return throwGetterTypeError(*exec, "MouseEvent", "shiftKey");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "shiftKey");
+        return throwGetterTypeError(*state, "MouseEvent", "shiftKey");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.shiftKey());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventAltKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventAltKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "altKey");
-        return throwGetterTypeError(*exec, "MouseEvent", "altKey");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "altKey");
+        return throwGetterTypeError(*state, "MouseEvent", "altKey");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.altKey());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventMetaKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventMetaKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "metaKey");
-        return throwGetterTypeError(*exec, "MouseEvent", "metaKey");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "metaKey");
+        return throwGetterTypeError(*state, "MouseEvent", "metaKey");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.metaKey());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventButton(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventButton(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "button");
-        return throwGetterTypeError(*exec, "MouseEvent", "button");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "button");
+        return throwGetterTypeError(*state, "MouseEvent", "button");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.button());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventRelatedTarget(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventRelatedTarget(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "relatedTarget");
-        return throwGetterTypeError(*exec, "MouseEvent", "relatedTarget");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "relatedTarget");
+        return throwGetterTypeError(*state, "MouseEvent", "relatedTarget");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.relatedTarget()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.relatedTarget()));
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue jsMouseEventMovementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventMovementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "movementX");
-        return throwGetterTypeError(*exec, "MouseEvent", "movementX");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "movementX");
+        return throwGetterTypeError(*state, "MouseEvent", "movementX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.movementX());
     return JSValue::encode(result);
 }
@@ -489,18 +463,18 @@ EncodedJSValue jsMouseEventMovementX(ExecState* exec, JSObject* slotBase, Encode
 #endif
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue jsMouseEventMovementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventMovementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "movementY");
-        return throwGetterTypeError(*exec, "MouseEvent", "movementY");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "movementY");
+        return throwGetterTypeError(*state, "MouseEvent", "movementY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.movementY());
     return JSValue::encode(result);
 }
@@ -508,208 +482,208 @@ EncodedJSValue jsMouseEventMovementY(ExecState* exec, JSObject* slotBase, Encode
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-EncodedJSValue jsMouseEventWebkitForce(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventWebkitForce(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "webkitForce");
-        return throwGetterTypeError(*exec, "MouseEvent", "webkitForce");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "webkitForce");
+        return throwGetterTypeError(*state, "MouseEvent", "webkitForce");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.force());
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue jsMouseEventOffsetX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventOffsetX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "offsetX");
-        return throwGetterTypeError(*exec, "MouseEvent", "offsetX");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "offsetX");
+        return throwGetterTypeError(*state, "MouseEvent", "offsetX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.offsetX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventOffsetY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventOffsetY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "offsetY");
-        return throwGetterTypeError(*exec, "MouseEvent", "offsetY");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "offsetY");
+        return throwGetterTypeError(*state, "MouseEvent", "offsetY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.offsetY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "x");
-        return throwGetterTypeError(*exec, "MouseEvent", "x");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "x");
+        return throwGetterTypeError(*state, "MouseEvent", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.x());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "y");
-        return throwGetterTypeError(*exec, "MouseEvent", "y");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "y");
+        return throwGetterTypeError(*state, "MouseEvent", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.y());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventFromElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventFromElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "fromElement");
-        return throwGetterTypeError(*exec, "MouseEvent", "fromElement");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "fromElement");
+        return throwGetterTypeError(*state, "MouseEvent", "fromElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.fromElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.fromElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventToElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventToElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "toElement");
-        return throwGetterTypeError(*exec, "MouseEvent", "toElement");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "toElement");
+        return throwGetterTypeError(*state, "MouseEvent", "toElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.toElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.toElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventDataTransfer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMouseEventDataTransfer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMouseEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MouseEvent", "dataTransfer");
-        return throwGetterTypeError(*exec, "MouseEvent", "dataTransfer");
+            return reportDeprecatedGetterError(*state, "MouseEvent", "dataTransfer");
+        return throwGetterTypeError(*state, "MouseEvent", "dataTransfer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.dataTransfer()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.dataTransfer()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMouseEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMouseEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMouseEventPrototype* domObject = jsDynamicCast<JSMouseEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMouseEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMouseEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSMouseEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMouseEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMouseEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMouseEventPrototypeFunctionInitMouseEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMouseEventPrototypeFunctionInitMouseEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMouseEvent* castedThis = jsDynamicCast<JSMouseEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MouseEvent", "initMouseEvent");
+        return throwThisTypeError(*state, "MouseEvent", "initMouseEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMouseEvent::info());
-    auto& impl = castedThis->impl();
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String type = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool canBubble = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool canBubble = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool cancelable = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool cancelable = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    DOMWindow* view = JSDOMWindow::toWrapped(exec->argument(3));
-    if (UNLIKELY(exec->hadException()))
+    DOMWindow* view = JSDOMWindow::toWrapped(state->argument(3));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int detail = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int detail = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int screenX = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int screenX = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int screenY = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int screenY = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int clientX = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int clientX = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int clientY = toInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int clientY = toInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool ctrlKey = exec->argument(9).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool ctrlKey = state->argument(9).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool altKey = exec->argument(10).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool altKey = state->argument(10).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool shiftKey = exec->argument(11).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool shiftKey = state->argument(11).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool metaKey = exec->argument(12).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool metaKey = state->argument(12).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    uint16_t button = toUInt16(exec, exec->argument(13), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t button = toUInt16(state, state->argument(13), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    EventTarget* relatedTarget = JSEventTarget::toWrapped(exec->argument(14));
-    if (UNLIKELY(exec->hadException()))
+    EventTarget* relatedTarget = JSEventTarget::toWrapped(state->argument(14));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.initMouseEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget);
     return JSValue::encode(jsUndefined());

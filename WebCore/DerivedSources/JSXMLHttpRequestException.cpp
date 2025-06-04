@@ -23,8 +23,8 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
-#include "XMLHttpRequestException.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXMLHttpRequestExceptionConstructor : public DOMConstructorObject {
-private:
-    JSXMLHttpRequestExceptionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSXMLHttpRequestExceptionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXMLHttpRequestExceptionConstructor* ptr = new (NotNull, JSC::allocateCell<JSXMLHttpRequestExceptionConstructor>(vm.heap)) JSXMLHttpRequestExceptionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSXMLHttpRequestException> JSXMLHttpRequestExceptionConstructor;
 
 /* Hash table */
 
@@ -107,45 +88,38 @@ static const struct CompactHashIndex JSXMLHttpRequestExceptionTableIndex[9] = {
 
 static const HashTableValue JSXMLHttpRequestExceptionTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSXMLHttpRequestExceptionTable = { 3, 7, true, JSXMLHttpRequestExceptionTableValues, 0, JSXMLHttpRequestExceptionTableIndex };
+static const HashTable JSXMLHttpRequestExceptionTable = { 3, 7, true, JSXMLHttpRequestExceptionTableValues, JSXMLHttpRequestExceptionTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSXMLHttpRequestExceptionConstructorTableValues[] =
 {
-    { "NETWORK_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(101), (intptr_t) (0) },
-    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(102), (intptr_t) (0) },
+    { "NETWORK_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(101) } },
+    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(102) } },
 };
 
-const ClassInfo JSXMLHttpRequestExceptionConstructor::s_info = { "XMLHttpRequestExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestExceptionConstructor) };
-
-JSXMLHttpRequestExceptionConstructor::JSXMLHttpRequestExceptionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXMLHttpRequestExceptionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXMLHttpRequestExceptionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequestException::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXMLHttpRequestException::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XMLHttpRequestException"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSXMLHttpRequestExceptionConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSXMLHttpRequestExceptionConstructor::s_info = { "XMLHttpRequestExceptionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestExceptionConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSXMLHttpRequestExceptionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "NETWORK_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(101), (intptr_t) (0) },
-    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(102), (intptr_t) (0) },
-    { "toString", DontEnum | JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestExceptionPrototypeFunctionToString), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXMLHttpRequestExceptionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "NETWORK_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(101) } },
+    { "ABORT_ERR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(102) } },
+    { "toString", DontEnum | JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXMLHttpRequestExceptionPrototypeFunctionToString), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXMLHttpRequestExceptionPrototype::s_info = { "XMLHttpRequestExceptionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXMLHttpRequestExceptionPrototype) };
@@ -158,9 +132,8 @@ void JSXMLHttpRequestExceptionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXMLHttpRequestException::s_info = { "XMLHttpRequestException", &Base::s_info, &JSXMLHttpRequestExceptionTable, CREATE_METHOD_TABLE(JSXMLHttpRequestException) };
 
-JSXMLHttpRequestException::JSXMLHttpRequestException(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XMLHttpRequestException>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXMLHttpRequestException::JSXMLHttpRequestException(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XMLHttpRequestException>&& impl)
+    : JSDOMWrapper<XMLHttpRequestException>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -180,85 +153,73 @@ void JSXMLHttpRequestException::destroy(JSC::JSCell* cell)
     thisObject->JSXMLHttpRequestException::~JSXMLHttpRequestException();
 }
 
-JSXMLHttpRequestException::~JSXMLHttpRequestException()
-{
-    releaseImpl();
-}
-
-bool JSXMLHttpRequestException::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSXMLHttpRequestException::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSXMLHttpRequestException*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSXMLHttpRequestException, Base>(exec, JSXMLHttpRequestExceptionTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSXMLHttpRequestException, Base>(state, JSXMLHttpRequestExceptionTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsXMLHttpRequestExceptionCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestExceptionCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSXMLHttpRequestException*>(slotBase);
-    JSXMLHttpRequestException* castedThisObject = jsDynamicCast<JSXMLHttpRequestException*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestException", "code");
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.code());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestExceptionName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestExceptionName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSXMLHttpRequestException*>(slotBase);
-    JSXMLHttpRequestException* castedThisObject = jsDynamicCast<JSXMLHttpRequestException*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestException", "name");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.name());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestExceptionMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestExceptionMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSXMLHttpRequestException*>(slotBase);
-    JSXMLHttpRequestException* castedThisObject = jsDynamicCast<JSXMLHttpRequestException*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "XMLHttpRequestException", "message");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.message());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXMLHttpRequestExceptionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXMLHttpRequestExceptionConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXMLHttpRequestExceptionPrototype* domObject = jsDynamicCast<JSXMLHttpRequestExceptionPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXMLHttpRequestException::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXMLHttpRequestException::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSXMLHttpRequestException::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXMLHttpRequestExceptionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXMLHttpRequestExceptionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestExceptionPrototypeFunctionToString(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXMLHttpRequestExceptionPrototypeFunctionToString(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXMLHttpRequestException* castedThis = jsDynamicCast<JSXMLHttpRequestException*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XMLHttpRequestException", "toString");
+        return throwThisTypeError(*state, "XMLHttpRequestException", "toString");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXMLHttpRequestException::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.toString());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.toString());
     return JSValue::encode(result);
 }
 
@@ -273,7 +234,14 @@ void JSXMLHttpRequestExceptionOwner::finalize(JSC::Handle<JSC::Unknown> handle, 
 {
     auto* jsXMLHttpRequestException = jsCast<JSXMLHttpRequestException*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXMLHttpRequestException->impl(), jsXMLHttpRequestException);
+    uncacheWrapper(world, &jsXMLHttpRequestException->wrapped(), jsXMLHttpRequestException);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequestException* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXMLHttpRequestException>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpRequestException* impl)
@@ -295,7 +263,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XMLHttpReque
 XMLHttpRequestException* JSXMLHttpRequestException::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXMLHttpRequestException*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

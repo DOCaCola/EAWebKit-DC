@@ -22,6 +22,7 @@
 #include "JSSVGAnimatedAngle.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAngle.h"
 #include "SVGAngle.h"
 #include <wtf/GetPtr.h>
@@ -61,50 +62,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAnimatedAngleConstructor : public DOMConstructorObject {
-private:
-    JSSVGAnimatedAngleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGAnimatedAngle> JSSVGAnimatedAngleConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAnimatedAngleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAnimatedAngleConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedAngleConstructor>(vm.heap)) JSSVGAnimatedAngleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGAnimatedAngleConstructor::s_info = { "SVGAnimatedAngleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedAngleConstructor) };
-
-JSSVGAnimatedAngleConstructor::JSSVGAnimatedAngleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGAnimatedAngleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGAnimatedAngleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimatedAngle::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAnimatedAngle::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAnimatedAngle"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGAnimatedAngleConstructor::s_info = { "SVGAnimatedAngleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedAngleConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnimatedAnglePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "baseVal", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleBaseVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "animVal", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleAnimVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "baseVal", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleBaseVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "animVal", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAnimatedAngleAnimVal), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGAnimatedAnglePrototype::s_info = { "SVGAnimatedAnglePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedAnglePrototype) };
@@ -117,9 +92,8 @@ void JSSVGAnimatedAnglePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAnimatedAngle::s_info = { "SVGAnimatedAngle", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnimatedAngle) };
 
-JSSVGAnimatedAngle::JSSVGAnimatedAngle(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedAngle>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGAnimatedAngle::JSSVGAnimatedAngle(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGAnimatedAngle>&& impl)
+    : JSDOMWrapper<SVGAnimatedAngle>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -139,56 +113,51 @@ void JSSVGAnimatedAngle::destroy(JSC::JSCell* cell)
     thisObject->JSSVGAnimatedAngle::~JSSVGAnimatedAngle();
 }
 
-JSSVGAnimatedAngle::~JSSVGAnimatedAngle()
+EncodedJSValue jsSVGAnimatedAngleBaseVal(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGAnimatedAngleBaseVal(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAnimatedAngle* castedThis = jsDynamicCast<JSSVGAnimatedAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnimatedAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAnimatedAngle", "baseVal");
-        return throwGetterTypeError(*exec, "SVGAnimatedAngle", "baseVal");
+            return reportDeprecatedGetterError(*state, "SVGAnimatedAngle", "baseVal");
+        return throwGetterTypeError(*state, "SVGAnimatedAngle", "baseVal");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPropertyTearOff<SVGAngle>*>(impl.baseVal())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPropertyTearOff<SVGAngle>*>(impl.baseVal())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAnimatedAngleAnimVal(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAnimatedAngleAnimVal(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAnimatedAngle* castedThis = jsDynamicCast<JSSVGAnimatedAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnimatedAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAnimatedAngle", "animVal");
-        return throwGetterTypeError(*exec, "SVGAnimatedAngle", "animVal");
+            return reportDeprecatedGetterError(*state, "SVGAnimatedAngle", "animVal");
+        return throwGetterTypeError(*state, "SVGAnimatedAngle", "animVal");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPropertyTearOff<SVGAngle>*>(impl.animVal())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(static_cast<SVGPropertyTearOff<SVGAngle>*>(impl.animVal())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAnimatedAngleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAnimatedAngleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGAnimatedAnglePrototype* domObject = jsDynamicCast<JSSVGAnimatedAnglePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAnimatedAngle::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGAnimatedAngle::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGAnimatedAngle::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGAnimatedAngleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGAnimatedAngleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGAnimatedAngleOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -202,7 +171,14 @@ void JSSVGAnimatedAngleOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsSVGAnimatedAngle = jsCast<JSSVGAnimatedAngle*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGAnimatedAngle->impl(), jsSVGAnimatedAngle);
+    uncacheWrapper(world, &jsSVGAnimatedAngle->wrapped(), jsSVGAnimatedAngle);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGAnimatedAngle* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGAnimatedAngle>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGAnimatedAngle* impl)
@@ -217,7 +193,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGAnimatedA
 SVGAnimatedAngle* JSSVGAnimatedAngle::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGAnimatedAngle*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

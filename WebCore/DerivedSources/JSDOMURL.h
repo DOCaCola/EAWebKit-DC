@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMURL : public JSDOMWrapper {
+class WEBCORE_EXPORT JSDOMURL : public JSDOMWrapper<DOMURL> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMURL> Base;
     static JSDOMURL* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMURL>&& impl)
     {
-        JSDOMURL* ptr = new (NotNull, JSC::allocateCell<JSDOMURL>(globalObject->vm().heap)) JSDOMURL(structure, globalObject, WTF::move(impl));
+        JSDOMURL* ptr = new (NotNull, JSC::allocateCell<JSDOMURL>(globalObject->vm().heap)) JSDOMURL(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMURL* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMURL();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMURL& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMURL* m_impl;
 protected:
-    JSDOMURL(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMURL>&&);
+    JSDOMURL(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMURL>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,8 +73,9 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMURL*)
     return &owner.get();
 }
 
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMURL*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMURL& impl) { return toJS(exec, globalObject, &impl); }
+WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMURL*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMURL& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMURL*);
 
 
 } // namespace WebCore

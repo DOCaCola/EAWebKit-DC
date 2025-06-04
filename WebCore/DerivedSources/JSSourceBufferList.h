@@ -34,7 +34,7 @@ public:
     typedef JSEventTarget Base;
     static JSSourceBufferList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBufferList>&& impl)
     {
-        JSSourceBufferList* ptr = new (NotNull, JSC::allocateCell<JSSourceBufferList>(globalObject->vm().heap)) JSSourceBufferList(structure, globalObject, WTF::move(impl));
+        JSSourceBufferList* ptr = new (NotNull, JSC::allocateCell<JSSourceBufferList>(globalObject->vm().heap)) JSSourceBufferList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -55,14 +55,14 @@ public:
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    SourceBufferList& impl() const
+    SourceBufferList& wrapped() const
     {
-        return static_cast<SourceBufferList&>(Base::impl());
+        return static_cast<SourceBufferList&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSSourceBufferList(JSC::Structure*, JSDOMGlobalObject*, Ref<SourceBufferList>&&);
+    JSSourceBufferList(JSC::Structure*, JSDOMGlobalObject&, Ref<SourceBufferList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +85,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SourceBufferList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBufferList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SourceBufferList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceBufferList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SourceBufferList*);
 
 
 } // namespace WebCore

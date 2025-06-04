@@ -26,8 +26,8 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSMessagePort.h"
-#include "MessageChannel.h"
 #include "MessagePort.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -67,69 +67,34 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMessageChannelConstructor : public DOMConstructorObject {
-private:
-    JSMessageChannelConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSMessageChannel> JSMessageChannelConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSMessageChannelConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMessageChannelConstructor* ptr = new (NotNull, JSC::allocateCell<JSMessageChannelConstructor>(vm.heap)) JSMessageChannelConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSMessageChannel(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSMessageChannelConstructor::constructJSMessageChannel(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSMessageChannelConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSMessageChannelConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSMessageChannelConstructor*>(state->callee());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "MessageChannel");
+        return throwConstructorDocumentUnavailableError(*state, "MessageChannel");
     RefPtr<MessageChannel> object = MessageChannel::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSMessageChannelConstructor::s_info = { "MessageChannelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageChannelConstructor) };
-
-JSMessageChannelConstructor::JSMessageChannelConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMessageChannelConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMessageChannelConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMessageChannel::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMessageChannel::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MessageChannel"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSMessageChannelConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSMessageChannel;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSMessageChannelConstructor::s_info = { "MessageChannelConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageChannelConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSMessageChannelPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "port1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelPort1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "port2", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelPort2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "port1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelPort1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "port2", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMessageChannelPort2), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSMessageChannelPrototype::s_info = { "MessageChannelPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageChannelPrototype) };
@@ -142,9 +107,8 @@ void JSMessageChannelPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMessageChannel::s_info = { "MessageChannel", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMessageChannel) };
 
-JSMessageChannel::JSMessageChannel(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MessageChannel>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMessageChannel::JSMessageChannel(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MessageChannel>&& impl)
+    : JSDOMWrapper<MessageChannel>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -164,56 +128,51 @@ void JSMessageChannel::destroy(JSC::JSCell* cell)
     thisObject->JSMessageChannel::~JSMessageChannel();
 }
 
-JSMessageChannel::~JSMessageChannel()
+EncodedJSValue jsMessageChannelPort1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMessageChannelPort1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageChannel* castedThis = jsDynamicCast<JSMessageChannel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageChannelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageChannel", "port1");
-        return throwGetterTypeError(*exec, "MessageChannel", "port1");
+            return reportDeprecatedGetterError(*state, "MessageChannel", "port1");
+        return throwGetterTypeError(*state, "MessageChannel", "port1");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.port1()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.port1()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageChannelPort2(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMessageChannelPort2(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMessageChannel* castedThis = jsDynamicCast<JSMessageChannel*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMessageChannelPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MessageChannel", "port2");
-        return throwGetterTypeError(*exec, "MessageChannel", "port2");
+            return reportDeprecatedGetterError(*state, "MessageChannel", "port2");
+        return throwGetterTypeError(*state, "MessageChannel", "port2");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.port2()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.port2()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMessageChannelConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMessageChannelConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMessageChannelPrototype* domObject = jsDynamicCast<JSMessageChannelPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMessageChannel::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMessageChannel::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSMessageChannel::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMessageChannelConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMessageChannelConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 void JSMessageChannel::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -235,7 +194,14 @@ void JSMessageChannelOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsMessageChannel = jsCast<JSMessageChannel*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMessageChannel->impl(), jsMessageChannel);
+    uncacheWrapper(world, &jsMessageChannel->wrapped(), jsMessageChannel);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MessageChannel* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMessageChannel>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MessageChannel* impl)
@@ -257,7 +223,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MessageChann
 MessageChannel* JSMessageChannel::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMessageChannel*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

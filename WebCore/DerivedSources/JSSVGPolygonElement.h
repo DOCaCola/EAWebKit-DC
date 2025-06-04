@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGPolygonElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPolygonElement>&& impl)
     {
-        JSSVGPolygonElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolygonElement>(globalObject->vm().heap)) JSSVGPolygonElement(structure, globalObject, WTF::move(impl));
+        JSSVGPolygonElement* ptr = new (NotNull, JSC::allocateCell<JSSVGPolygonElement>(globalObject->vm().heap)) JSSVGPolygonElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPolygonElement& impl() const
+    SVGPolygonElement& wrapped() const
     {
-        return static_cast<SVGPolygonElement&>(Base::impl());
+        return static_cast<SVGPolygonElement&>(Base::wrapped());
     }
 protected:
-    JSSVGPolygonElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPolygonElement>&&);
+    JSSVGPolygonElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPolygonElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

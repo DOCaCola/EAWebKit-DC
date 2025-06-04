@@ -7,6 +7,11 @@ set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEB
 
 project(EAWebKit)
 
+# MSVC C2338 Error
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1915)
+    add_compile_definitions(_ENABLE_EXTENDED_ALIGNED_STORAGE)
+endif()
+
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "In-source builds are not supported. Please choose a different binary directory.")
 	return()
@@ -364,7 +369,6 @@ file(GLOB EAWEBKIT_SOURCES
 
 
 list(APPEND EAWEBKIT_SOURCES
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/bindings/js/JSBindingsAllInOne.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/dom/default/PlatformMessagePortChannel.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/dom/DOMAllInOne.cpp
@@ -404,16 +408,10 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSGrammar.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSPropertyNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/CSSValueKeywords.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/EventFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/ExceptionCodeDescription.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/HTTPHeaderNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSNotificationPermissionCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageErrorCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageInfo.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageQuota.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageQuotaCallback.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSStorageUsageCallback.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/JSSVGElementWrapperFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/MathMLElementFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/MathMLNames.cpp
@@ -469,6 +467,7 @@ list(REMOVE_ITEM EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/DisplayRefreshMonitorClient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/DisplayRefreshMonitorManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/opentype/OpenTypeUtilities.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/graphics/opentype/OpenTypeCG.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/PlatformSpeechSynthesisUtterance.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/PlatformSpeechSynthesisVoice.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/platform/PlatformSpeechSynthesizer.cpp
@@ -528,10 +527,13 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore"
 	"WebCore/crypto"
 	"WebCore/crypto/keys"
+	"WebCore/Modules/battery"
 	"WebCore/Modules/encryptedmedia"
 	"WebCore/Modules/gamepad"
 	"WebCore/Modules/geolocation"
 	"WebCore/Modules/indexeddb"
+	"WebCore/Modules/indexeddb/legacy"
+	"WebCore/Modules/indexeddb/shared"
 	"WebCore/Modules/mediacontrols"
 	"WebCore/Modules/mediasession"
 	"WebCore/Modules/mediasource"

@@ -23,6 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
@@ -31,7 +32,6 @@
 #include "JSSVGAnimatedString.h"
 #include "JSSVGAnimatedTransformList.h"
 #include "JSSVGStringList.h"
-#include "SVGPatternElement.h"
 #include "SVGStringList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -87,63 +87,37 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGPatternElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGPatternElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGPatternElement> JSSVGPatternElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGPatternElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGPatternElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGPatternElementConstructor>(vm.heap)) JSSVGPatternElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGPatternElementConstructor::s_info = { "SVGPatternElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPatternElementConstructor) };
-
-JSSVGPatternElementConstructor::JSSVGPatternElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGPatternElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGPatternElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGPatternElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGPatternElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGPatternElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGPatternElementConstructor::s_info = { "SVGPatternElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPatternElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGPatternElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "patternUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "patternContentUnits", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternContentUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "patternTransform", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternTransform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "viewBox", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preserveAspectRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredFeatures", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "requiredExtensions", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "systemLanguage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "href", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "hasExtension", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGPatternElementPrototypeFunctionHasExtension), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "patternUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "patternContentUnits", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternContentUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "patternTransform", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPatternTransform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "viewBox", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementViewBox), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preserveAspectRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementPreserveAspectRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredFeatures", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementRequiredFeatures), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "requiredExtensions", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementRequiredExtensions), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "systemLanguage", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementSystemLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "href", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGPatternElementHref), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "hasExtension", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGPatternElementPrototypeFunctionHasExtension), (intptr_t) (0) } },
 };
 
 const ClassInfo JSSVGPatternElementPrototype::s_info = { "SVGPatternElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPatternElementPrototype) };
@@ -156,7 +130,7 @@ void JSSVGPatternElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGPatternElement::s_info = { "SVGPatternElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGPatternElement) };
 
-JSSVGPatternElement::JSSVGPatternElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPatternElement>&& impl)
+JSSVGPatternElement::JSSVGPatternElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPatternElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -171,278 +145,278 @@ JSObject* JSSVGPatternElement::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSSVGPatternElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGPatternElementPatternUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementPatternUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "patternUnits");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "patternUnits");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "patternUnits");
+        return throwGetterTypeError(*state, "SVGPatternElement", "patternUnits");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.patternUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementPatternContentUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementPatternContentUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "patternContentUnits");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "patternContentUnits");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "patternContentUnits");
+        return throwGetterTypeError(*state, "SVGPatternElement", "patternContentUnits");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedEnumeration> obj = impl.patternContentUnitsAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementPatternTransform(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementPatternTransform(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "patternTransform");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "patternTransform");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "patternTransform");
+        return throwGetterTypeError(*state, "SVGPatternElement", "patternTransform");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedTransformList> obj = impl.patternTransformAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "x");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "x");
+        return throwGetterTypeError(*state, "SVGPatternElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "y");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "y");
+        return throwGetterTypeError(*state, "SVGPatternElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "width");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "width");
+        return throwGetterTypeError(*state, "SVGPatternElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "height");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "height");
+        return throwGetterTypeError(*state, "SVGPatternElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGPatternElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementViewBox(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementViewBox(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "viewBox");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "viewBox");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "viewBox");
+        return throwGetterTypeError(*state, "SVGPatternElement", "viewBox");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedRect> obj = impl.viewBoxAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementPreserveAspectRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementPreserveAspectRatio(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "preserveAspectRatio");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "preserveAspectRatio");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "preserveAspectRatio");
+        return throwGetterTypeError(*state, "SVGPatternElement", "preserveAspectRatio");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedPreserveAspectRatio> obj = impl.preserveAspectRatioAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementRequiredFeatures(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementRequiredFeatures(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "requiredFeatures");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "requiredFeatures");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "requiredFeatures");
+        return throwGetterTypeError(*state, "SVGPatternElement", "requiredFeatures");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredFeatures())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredFeatures())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementRequiredExtensions(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementRequiredExtensions(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "requiredExtensions");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "requiredExtensions");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "requiredExtensions");
+        return throwGetterTypeError(*state, "SVGPatternElement", "requiredExtensions");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredExtensions())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.requiredExtensions())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementSystemLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementSystemLanguage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "systemLanguage");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "systemLanguage");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "systemLanguage");
+        return throwGetterTypeError(*state, "SVGPatternElement", "systemLanguage");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.systemLanguage())));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGStaticListPropertyTearOff<SVGStringList>::create(impl, impl.systemLanguage())));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementHref(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGPatternElementHref(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGPatternElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGPatternElement", "href");
-        return throwGetterTypeError(*exec, "SVGPatternElement", "href");
+            return reportDeprecatedGetterError(*state, "SVGPatternElement", "href");
+        return throwGetterTypeError(*state, "SVGPatternElement", "href");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.hrefAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGPatternElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGPatternElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGPatternElementPrototype* domObject = jsDynamicCast<JSSVGPatternElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGPatternElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGPatternElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGPatternElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGPatternElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGPatternElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGPatternElementPrototypeFunctionHasExtension(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGPatternElementPrototypeFunctionHasExtension(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGPatternElement* castedThis = jsDynamicCast<JSSVGPatternElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGPatternElement", "hasExtension");
+        return throwThisTypeError(*state, "SVGPatternElement", "hasExtension");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGPatternElement::info());
-    auto& impl = castedThis->impl();
-    String extension = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String extension = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.hasExtension(extension));
     return JSValue::encode(result);

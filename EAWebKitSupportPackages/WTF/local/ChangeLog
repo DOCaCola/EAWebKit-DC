@@ -1,3 +1,2176 @@
+2015-12-31  David Kilzer  <ddkilzer@apple.com>
+
+        Stop using USE(CFNETWORK) path on iOS
+        <https://webkit.org/b/142540>
+
+        Step 1/2: Do everything but turn off USE(CFNETWORK) internally.
+
+        Original patch by Antti Koivisto <antti@apple.com> on 2015-03-10
+        Reviewed by Daniel Bates.
+
+        * wtf/SchedulePair.h: Update macros to match WebCore.
+
+2015-12-31  Andy Estes  <aestes@apple.com>
+
+        Rename WTF_MOVE to WTFMove
+        https://bugs.webkit.org/show_bug.cgi?id=152601
+
+        Reviewed by Daniel Bates.
+
+        Our coding style guidelines say that macros that expand to function calls should be named like functions,
+        so WTFMove() is a more appropriate name.
+
+        * wtf/StdLibExtras.h:
+
+2015-12-30  Andy Estes  <aestes@apple.com>
+
+        Use of WTF::move prevents clang's move diagnostics from warning about several classes of mistakes
+        https://bugs.webkit.org/show_bug.cgi?id=152601
+
+        Reviewed by Brady Eidson.
+
+        Clang has recently added warnings to catch certain classes of mistakes with the use of std::move():
+        -Wpessimizing-move (warns if moving prevents copy elision), -Wredundant-move (warns if a move is redundant),
+        and -Wself-move (warns if moving to self). Enabling these warnings manually (by renaming WTF::move to std::move)
+        have caught numerous mistakes in our codebase (see http://trac.webkit.org/changeset/194428).
+
+        It would be nice to be able to take advantage of these warnings, but doing so requires that we use std::move,
+        not WTF::move. But since WTF::move does provide useful checks for which clang does not yet have warnings,
+        we should write a best-of-both-worlds move function.
+
+        This patch adds a function that satisfies clang's criteria for a move function (in namespace std, named "move",
+        and takes a single argument) but also retains WTF::move's compile-time checks. It also adds a convenience macro
+        called WTF_MOVE for use by callers.
+
+        * wtf/StdLibExtras.h:
+        (std::move):
+
+2015-12-25  Andy Estes  <aestes@apple.com>
+
+        Stop moving local objects in return statements
+        https://bugs.webkit.org/show_bug.cgi?id=152557
+
+        Reviewed by Brady Eidson.
+
+        * wtf/StdLibExtras.h: Added a FIXME about how using WTF::move() prevents several Clang diagnostics from emitting useful warnings.
+
+2015-12-22  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL B3 should be able to run richards
+        https://bugs.webkit.org/show_bug.cgi?id=152514
+
+        Reviewed by Michael Saboff.
+
+        Change the list dumping helpers to work with a broader set of list kinds.
+
+        * wtf/ListDump.h:
+        (WTF::ListDump::dump):
+        (WTF::MapDump::dump):
+        (WTF::sortedMapDump):
+        (WTF::ListDumpInContext::dump):
+
+2015-12-22  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL B3 does not logicalNot correctly
+        https://bugs.webkit.org/show_bug.cgi?id=152512
+
+        Reviewed by Saam Barati.
+
+        This change introduces yet another use of SharedTask in JSC. While doing this, I noticed that
+        SharedTask::run() always demands that whatever arguments the callback takes, they must be
+        passed as rvalue references. This was a clear misuse of perfect forwarding. This change makes
+        SharedTask's approach to forwarding match what we were already doing in ScopedLambda.
+
+        * wtf/SharedTask.h:
+
+2015-12-20  Michael Catanzaro  <mcatanzaro@igalia.com>
+
+        [SOUP] Performs DNS prefetch when a proxy is configured (information leak)
+        https://bugs.webkit.org/show_bug.cgi?id=145542
+
+        Reviewed by Darin Adler.
+
+        Specialize GUniquePtr<char*>, using g_strfreev.
+
+        * wtf/glib/GUniquePtr.h:
+
+2015-12-19  Dan Bernstein  <mitz@apple.com>
+
+        [Mac] WebKit contains dead source code for OS X Mavericks and earlier
+        https://bugs.webkit.org/show_bug.cgi?id=152462
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/DebugRelease.xcconfig: Removed definition of MACOSX_DEPLOYMENT_TARGET for
+          OS X 10.9.
+
+        - Simplified expressions involving __MAC_OS_X_VERSION_MIN_REQUIRED and removed code that was
+          never getting compiled:
+
+        * wtf/FeatureDefines.h:
+        * wtf/MainThread.h:
+        * wtf/OSObjectPtr.h:
+        * wtf/Platform.h:
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+        * wtf/spi/darwin/XPCSPI.h:
+
+2015-12-17  Sukolsak Sakshuwong  <sukolsak@gmail.com>
+
+        [INTL] Implement Collator Compare Functions
+        https://bugs.webkit.org/show_bug.cgi?id=147604
+
+        Reviewed by Darin Adler.
+
+        * wtf/unicode/Collator.h:
+
+2015-12-16  Andreas Kling  <akling@apple.com>
+
+        Give kernel VM some hints about non-live memory-cached resources.
+        <https://webkit.org/b/152362>
+
+        Reviewed by Geoffrey Garen.
+
+        Add an API to OSAllocator for hinting to the OS that a range of memory
+        is not expected to be used anytime soon.
+
+        * wtf/OSAllocator.h:
+        * wtf/OSAllocatorPosix.cpp:
+        (WTF::OSAllocator::hintMemoryNotNeededSoon):
+        * wtf/OSAllocatorWin.cpp:
+        (WTF::OSAllocator::hintMemoryNotNeededSoon):
+        * wtf/Platform.h:
+
+2015-12-16  Alex Christensen  <achristensen@webkit.org>
+
+        Fix internal Windows build
+        https://bugs.webkit.org/show_bug.cgi?id=152364
+        rdar://problem/23928759
+
+        Reviewed by Tim Horton.
+
+        * WTF.vcxproj/WTF.proj:
+
+2015-12-16  Youenn Fablet  <youenn.fablet@crf.canon.fr>
+
+        [Fetch API] Add fetch API compile time flag
+        https://bugs.webkit.org/show_bug.cgi?id=152254
+
+        Reviewed by Darin Adler.
+
+        * wtf/FeatureDefines.h:
+
+2015-12-14  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        Math.random should have an intrinsic thunk and it should be later handled as a DFG Node
+        https://bugs.webkit.org/show_bug.cgi?id=152133
+
+        Reviewed by Geoffrey Garen.
+
+        Change 64bit random to double logic to convert efficiently.
+
+        * wtf/WeakRandom.h:
+        (WTF::WeakRandom::get):
+        (WTF::WeakRandom::lowOffset):
+        (WTF::WeakRandom::highOffset):
+
+2015-12-14  Sukolsak Sakshuwong  <sukolsak@gmail.com>
+
+        Make UCharIterator createIterator(StringView) visible to other classes
+        https://bugs.webkit.org/show_bug.cgi?id=151917
+
+        Reviewed by Darin Adler.
+
+        Make UCharIterator createIterator(StringView) in CollatorICU.cpp visible
+        to other classes so that future patches that will ucol_strcollIter
+        (including Bug 147604) can use it.
+
+        * wtf/unicode/Collator.h:
+        * wtf/unicode/icu/CollatorICU.cpp:
+        (WTF::createIterator):
+
+2015-12-14  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r162777): Remove Boost Software License from WTF
+        <http://webkit.org/b/152243>
+
+        Reviewed by Darin Adler.
+
+        The source code that the Boost Software License was referring to
+        was removed in r162777 by switching to std::atomic.
+
+        * wtf/Atomics.cpp:
+        * wtf/Atomics.h:
+        * wtf/ThreadSafeRefCounted.h:
+        - Remove Boost Software License.
+        - Update Apple Inc. copyright as needed.
+        - Refresh Apple Inc. license text.
+
+2015-12-10  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Remote Inspector: Verify the identity of the other side of XPC connections
+        https://bugs.webkit.org/show_bug.cgi?id=152153
+
+        Reviewed by Brian Burg.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/spi/cocoa/SecuritySPI.h: Renamed from Source/WebCore/platform/spi/cocoa/SecuritySPI.h.
+        Push this down into WTF from WebCore and add a new method.
+
+2015-12-08  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL B3 should have basic GetById support
+        https://bugs.webkit.org/show_bug.cgi?id=152035
+
+        Reviewed by Saam Barati.
+
+        When dealing with shared task lambdas, you often want to force a value to be allocated so that it
+        has reference semantics, but you still want the lambda to execute OK when we pop stack. In PL we
+        usually call this a "box". This is easy to do if the value that happened to be stack-allocated
+        is also RefCounted, but that's rare, since stack-allocated values often have copy semantics. So,
+        I've added a Box type to WTF. Behind the scenes, it allocates your object with fast malloc inside
+        a ThreadSAfeRefCounted. When you pass Box<T>, you're passing the reference. This makes it a lot
+        easier to work with by-reference capture.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/Box.h: Added.
+        (WTF::Box::Box):
+        (WTF::Box::create):
+        (WTF::Box::get):
+        (WTF::Box::operator*):
+        (WTF::Box::operator->):
+        (WTF::Box::operator bool):
+        (WTF::Box::Data::Data):
+
+2015-12-09  Andreas Kling  <akling@apple.com>
+
+        [iOS] ResourceUsageOverlay should work on iOS.
+        <https://webkit.org/b/152021>
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/Platform.h: Enable RESOURCE_USAGE_OVERLAY for all COCOA platforms.
+
+2015-12-08  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Create a Sandbox SPI header
+        https://bugs.webkit.org/show_bug.cgi?id=151981
+
+        Reviewed by Andy Estes.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/spi/darwin/SandboxSPI.h: Added.
+
+2015-12-07  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL B3 should be able to flag the tag constants as being super important so that B3 can hoist them and Air can force them into registers
+        https://bugs.webkit.org/show_bug.cgi?id=151955
+
+        Reviewed by Geoffrey Garen.
+
+        Remove some remaining DFG-specific snippets from Dominators. This used to be a non-template
+        DFG class, and some time ago I hoisted it into WTF and made it generic. But since the only
+        user of the class was the DFG, this class still had a handful of DFG-specific snippets that
+        didn't compile when I started using it from B3.
+
+        Also renamed immediateDominatorOf() to idom(). This is the sort of abbreviation that we
+        wouldn't ordinarily want to have in WebKit. But WebKit does allow for abbreviations that are
+        "more canonical". The term "idom" is definitely more canonical than "immediateDominatorOf".
+
+        * wtf/Dominators.h:
+        (WTF::Dominators::dominates):
+        (WTF::Dominators::idom):
+        (WTF::Dominators::forAllStrictDominatorsOf):
+        (WTF::Dominators::NaiveDominators::dominates):
+        (WTF::Dominators::NaiveDominators::dump):
+        (WTF::Dominators::ValidationContext::handleErrors):
+
+2015-12-03  Anders Carlsson  <andersca@apple.com>
+
+        Remove Objective-C GC support
+        https://bugs.webkit.org/show_bug.cgi?id=151819
+        rdar://problem/23746991
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::initializeCurrentThreadInternal): Deleted.
+        * wtf/text/cf/StringImplCF.cpp:
+        (WTF::StringImpl::createCFString):
+        (garbageCollectionEnabled): Deleted.
+        (WTF::StringWrapperCFAllocator::create): Deleted.
+
+2015-12-02  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL B3 should support OSR exit
+        https://bugs.webkit.org/show_bug.cgi?id=151710
+
+        Reviewed by Saam Barati.
+
+        Make sure that this has perfect forwarding.
+
+        * wtf/SegmentedVector.h:
+        (WTF::SegmentedVector::append):
+        (WTF::SegmentedVector::alloc):
+
+2015-12-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement LLInt/Baseline Support for ES6 Generators and enable this feature
+        https://bugs.webkit.org/show_bug.cgi?id=150792
+
+        Reviewed by Saam Barati.
+
+        * wtf/FastBitVector.h:
+        (WTF::FastBitVector::forEachSetBit):
+        * wtf/FeatureDefines.h:
+
+2015-12-01  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r192914.
+        https://bugs.webkit.org/show_bug.cgi?id=151734
+
+        JSC tests for this change are failing on 32 and 64-bit bots
+        (Requested by ryanhaddad on #webkit).
+
+        Reverted changeset:
+
+        "[ES6] Implement LLInt/Baseline Support for ES6 Generators and
+        enable this feature"
+        https://bugs.webkit.org/show_bug.cgi?id=150792
+        http://trac.webkit.org/changeset/192914
+
+2015-12-01  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Give String and AtomicString an existingHash() function
+        https://bugs.webkit.org/show_bug.cgi?id=151717
+
+        Reviewed by Andreas Kling.
+
+        Test: WTF.AtomicStringExistingHash
+              WTF.StringExistingHash
+
+        * wtf/text/AtomicString.h:
+        (WTF::AtomicString::existingHash):
+        * wtf/text/WTFString.h:
+        (WTF::String::existingHash):
+
+2015-12-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Implement LLInt/Baseline Support for ES6 Generators and enable this feature
+        https://bugs.webkit.org/show_bug.cgi?id=150792
+
+        Reviewed by Saam Barati.
+
+        * wtf/FastBitVector.h:
+        (WTF::FastBitVector::forEachSetBit):
+        * wtf/FeatureDefines.h:
+
+2015-11-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Use a better RNG for Math.random()
+        https://bugs.webkit.org/show_bug.cgi?id=151641
+
+        Reviewed by Anders Carlsson.
+
+        Use 64 bits in the random number generator instead of 32 bit. (In
+        the end, JavaScript, which uses doubles, will only see 52 bits.) This
+        prevents programs that multiply a random number by a large constant from
+        seeing non-random "banding" caused by zeroes in the low 20 bits.
+
+        I also took the opportunity to upgrade from GameRandom to Xorshift+,
+        since Xorshift+ passes more benchmarks for randomness, and is not any
+        slower or more complicated.
+
+        Now let us all remember the fateful words of Steve Weibe, who would be
+        King of Kong: "The randomness went the opposite way that it usually goes."
+
+        * wtf/WeakRandom.h:
+        (WTF::WeakRandom::WeakRandom):
+        (WTF::WeakRandom::setSeed): Use standard naming.
+
+        (WTF::WeakRandom::seed): This function is safe now. "Unsafe" in function
+        names makes me itch.
+
+        (WTF::WeakRandom::get):
+        (WTF::WeakRandom::getUint32): Update to 64bit.
+
+        (WTF::WeakRandom::advance): The Xorshift+ algorithm.
+
+        (WTF::WeakRandom::initializeSeed): Deleted.
+        (WTF::WeakRandom::seedUnsafe): Deleted.
+
+2015-11-30  Benjamin Poulain  <bpoulain@apple.com>
+
+        [JSC] Speed up Air Liveness Analysis on Tmps
+        https://bugs.webkit.org/show_bug.cgi?id=151556
+
+        Reviewed by Filip Pizlo.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/IndexSparseSet.h: Added.
+        (WTF::IndexSparseSet<OverflowHandler>::IndexSparseSet):
+        (WTF::IndexSparseSet<OverflowHandler>::add):
+        (WTF::IndexSparseSet<OverflowHandler>::remove):
+        (WTF::IndexSparseSet<OverflowHandler>::clear):
+        (WTF::IndexSparseSet<OverflowHandler>::size):
+        (WTF::IndexSparseSet<OverflowHandler>::isEmpty):
+        (WTF::IndexSparseSet<OverflowHandler>::contains):
+
+2015-11-30  Tim Horton  <timothy_horton@apple.com>
+
+        Get rid of the !USE(ASYNC_NSTEXTINPUTCLIENT) codepath
+        https://bugs.webkit.org/show_bug.cgi?id=151673
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h:
+
+2015-11-30  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GLIB] Remove GMainLoopSource and GThreadSafeMainLoopSource
+        https://bugs.webkit.org/show_bug.cgi?id=151633
+
+        Reviewed by Csaba Osztrogonác.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * wtf/PlatformEfl.cmake:
+        * wtf/PlatformGTK.cmake:
+        * wtf/glib/GMainLoopSource.cpp: Removed.
+        * wtf/glib/GMainLoopSource.h: Removed.
+        * wtf/glib/GThreadSafeMainLoopSource.cpp: Removed.
+        * wtf/glib/GThreadSafeMainLoopSource.h: Removed.
+
+2015-11-27  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix build warning in bignum.cc
+        https://bugs.webkit.org/show_bug.cgi?id=150797
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/dtoa/bignum.cc:
+
+2015-11-18  Daniel Bates  <dabates@apple.com>
+
+        [iOS] ASSERTION FAILED: temporaryFilePath.last() == '/' in WebCore::openTemporaryFile()
+        https://bugs.webkit.org/show_bug.cgi?id=151392
+        <rdar://problem/23595341>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Workaround <rdar://problem/23579077> where confstr(_CS_DARWIN_USER_TEMP_DIR, ..., ...) retrieves
+        the path to the user temporary directory without a trailing slash in the iOS simulator.
+
+        * wtf/DataLog.cpp:
+        (WTF::initializeLogFileOnce):
+
+2015-11-17  Filip Pizlo  <fpizlo@apple.com>
+
+        CheckAdd/Mul should have commutativity optimizations in B3->Air lowering
+        https://bugs.webkit.org/show_bug.cgi?id=151214
+
+        Reviewed by Geoffrey Garen.
+
+        Disable my failed attempts at perfect forwarding, since they were incorrect, and caused compile
+        errors if you tried to pass an argument that bound to lvalue. This shouldn't affect performance of
+        anything we care about, and performance tests seem to confirm that it's all good.
+
+        * wtf/ScopedLambda.h:
+
+2015-11-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Air should lay out code optimally
+        https://bugs.webkit.org/show_bug.cgi?id=150478
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/GraphNodeWorklist.h:
+        (WTF::GraphNodeWorklist::push):
+        (WTF::GraphNodeWorklist::isEmpty):
+        (WTF::GraphNodeWorklist::notEmpty):
+        (WTF::GraphNodeWorklist::pop):
+
+2015-11-11  Anders Carlsson  <andersca@apple.com>
+
+        Enable cross-platform context menus by default
+        https://bugs.webkit.org/show_bug.cgi?id=151173
+
+        Reviewed by Tim Horton.
+
+        * wtf/Platform.h:
+
+2015-11-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove ENABLE(SATURATED_LAYOUT_ARITHMETIC) guards
+        https://bugs.webkit.org/show_bug.cgi?id=150972
+
+        Reviewed by Darin Adler.
+
+        * wtf/FeatureDefines.h:
+
+2015-11-11  Filip Pizlo  <fpizlo@apple.com>
+
+        B3 should be able to compile and canonicalize Mul
+        https://bugs.webkit.org/show_bug.cgi?id=151124
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/MathExtras.h:
+        (WTF::fastLog2):
+
+2015-11-10  Filip Pizlo  <fpizlo@apple.com>
+
+        B3 should be able to compile a program with ChillDiv
+        https://bugs.webkit.org/show_bug.cgi?id=151114
+
+        Reviewed by Benjamin Poulain.
+
+        Needed to beef up some compiler algorithms. All of the hardening was about making them
+        work with objects that have move semantics but not copy semantics. This arises in B3
+        basic block insertion sets.
+
+        * wtf/BubbleSort.h:
+        (WTF::bubbleSort):
+        * wtf/Insertion.h:
+        (WTF::Insertion::Insertion):
+        (WTF::Insertion::index):
+        (WTF::Insertion::element):
+        (WTF::Insertion::operator<):
+        (WTF::executeInsertions):
+
+2015-11-10  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Use CROSS_PLATFORM_CONTEXT_MENUS
+        https://bugs.webkit.org/show_bug.cgi?id=150642
+
+        Reviewed by Martin Robinson.
+
+        Enable CROSS_PLATFORM_CONTEXT_MENUS for GTK+ port.
+
+        * wtf/Platform.h:
+
+2015-11-09  Anders Carlsson  <andersca@apple.com>
+
+        Introspect reply block types as well
+        https://bugs.webkit.org/show_bug.cgi?id=151048
+
+        Reviewed by Tim Horton.
+
+        Fix operator-> implementation.
+
+        * wtf/Optional.h:
+        (WTF::Optional::operator->):
+
+2015-11-05  Nikos Andronikos  <nikos.andronikos-webkit@cisra.canon.com.au>
+
+        Add runtime and compile time flags for enabling Web Animations API and model.
+        https://bugs.webkit.org/show_bug.cgi?id=150914
+
+        Reviewed by Benjamin Poulain.
+
+        Add ENABLE_WEB_ANIMATIONS compile time flag, runtime flag webAnimationsEnabled and Expose WK2 preference for runtime flag.
+
+        * wtf/FeatureDefines.h:
+
+2015-11-05  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GLib] Avoid gint64, std::chrono::microseconds overflows in RunLoop::TimerBase
+        https://bugs.webkit.org/show_bug.cgi?id=150930
+
+        Reviewed by Carlos Garcia Campos.
+
+        In RunLoop::TimerBase::start(), avoid overflowing the std::chrono::microseconds
+        value in case the passed-in fire interval (in seconds) is too large (e.g. when
+        std::chrono::microseconds::max() is used as the desired interval). This is
+        achieved by using the passed-in fire interval, converted in microseconds, only
+        if the value of this interval is smaller than std::chrono::microseconds::max().
+
+        In RunLoop::TimerBase::updateReadyTime(), the zero-delay is still considered a
+        short cut, but we use G_MAXINT64 in case the sum of the current time and the
+        desired fire interval (now in microseconds) would overflow.
+
+        * wtf/glib/RunLoopGLib.cpp:
+        (WTF::RunLoop::TimerBase::updateReadyTime):
+        (WTF::RunLoop::TimerBase::start):
+
+2015-11-02  Filip Pizlo  <fpizlo@apple.com>
+
+        B3/Air should use bubble sort for their insertion sets, because it's faster than std::stable_sort
+        https://bugs.webkit.org/show_bug.cgi?id=150828
+
+        Reviewed by Geoffrey Garen.
+
+        Add a pretty good bubble sort implementation to WTF. This implementation has three
+        common tricks:
+
+        - Forward and backward scans. This reduces the severity of certain kinds of bubble sort
+          pathologies.
+
+        - Return if a scan finds the list to be sorted. This gives the algorithm one of its most
+          attractive properties: it's super fast when the list is already sorted.
+
+        - Each scan eliminates one element from future scans. This makes the algorithm no worse
+          than insertion sort.
+
+        Why do we want this? Because bubble sort is a really great stable sort for small lists,
+        or large lists in which only a handful of elements are out of order. Compiler insertion
+        sets tend to be one of those or somewhere in between: usually they are very small, and
+        usually they are sorted. It's rare that an element will be out of order, and when it is,
+        it's usually very close to where it's supposed to be.
+
+        This is a significant speed-up for B3 compile times.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/BubbleSort.h: Added.
+        (WTF::bubbleSort):
+        * wtf/CMakeLists.txt:
+
+2015-11-02  Andy Estes  <aestes@apple.com>
+
+        [Cocoa] Add tvOS and watchOS to SUPPORTED_PLATFORMS
+        https://bugs.webkit.org/show_bug.cgi?id=150819
+
+        Reviewed by Dan Bernstein.
+
+        This tells Xcode to include these platforms in its Devices dropdown, making it possible to build in the IDE.
+
+        * Configurations/Base.xcconfig:
+
+2015-11-02  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GLIB] Remove support for GSocket main loop sources from GMainLoopSource
+        https://bugs.webkit.org/show_bug.cgi?id=150772
+
+        Reviewed by Žan Doberšek.
+
+        It complicated the code just to make generic what is only used in
+        one place.
+
+        * wtf/glib/GMainLoopSource.cpp:
+        (WTF::GMainLoopSource::cancel): Deleted.
+        (WTF::GMainLoopSource::schedule): Deleted.
+        (WTF::GMainLoopSource::scheduleTimeoutSource): Deleted.
+        (WTF::GMainLoopSource::scheduleAfterDelay): Deleted.
+        (WTF::GMainLoopSource::finishVoidCallback): Deleted.
+        (WTF::GMainLoopSource::voidCallback): Deleted.
+        (WTF::GMainLoopSource::prepareBoolCallback): Deleted.
+        * wtf/glib/GMainLoopSource.h:
+        (WTF::GMainLoopSource::Context::operator=): Deleted.
+
+2015-11-02  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GLIB] Remove delete on destroy GMainLoopSources
+        https://bugs.webkit.org/show_bug.cgi?id=150771
+
+        Reviewed by Žan Doberšek.
+
+        Delete on destroy sources made the GMainLoopSource implementation
+        more complex and they are currently unused.
+
+        * wtf/glib/GMainLoopSource.cpp:
+        (WTF::GMainLoopSource::boolCallback):
+        (WTF::GMainLoopSource::create): Deleted.
+        (WTF::GMainLoopSource::GMainLoopSource): Deleted.
+        (WTF::GMainLoopSource::cancel): Deleted.
+        (WTF::GMainLoopSource::scheduleAndDeleteOnDestroy): Deleted.
+        (WTF::GMainLoopSource::scheduleAfterDelayAndDeleteOnDestroy): Deleted.
+        (WTF::GMainLoopSource::voidCallback): Deleted.
+        * wtf/glib/GMainLoopSource.h:
+
+2015-11-01  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Use RunLoop in WorkQueue implementation
+        https://bugs.webkit.org/show_bug.cgi?id=150770
+
+        Reviewed by Darin Adler.
+
+        Instead of using GMainLoop directly. RunLoop already abstracts the
+        GMainLoop details and uses persistent sources making it more efficient.
+        For the dispatchAfter implementation we use a helper context class
+        and a GSource directly, since we are going to get rid of delete on
+        destroy GMainLoop soon and this is the only place where we still
+        use them.
+
+        * wtf/RunLoop.h:
+        (WTF::RunLoop::mainContext): Return the GMainContext.
+        * wtf/WorkQueue.h:
+        * wtf/glib/WorkQueueGLib.cpp:
+        (WTF::WorkQueue::platformInitialize): The RunLoop needs to be
+        created in the worker thread now, so we now use a mutex to wait
+        until the thread has started and the RunLoop has been created.
+        (WTF::WorkQueue::platformInvalidate): Stop the RunLoop and wait
+        until the thread finishes.
+        (WTF::WorkQueue::dispatch): Use RunLoop::dispatch().
+        (WTF::DispatchAfterContext::DispatchAfterContext):
+        (WTF::DispatchAfterContext::~DispatchAfterContext):
+        (WTF::DispatchAfterContext::dispatch):
+        (WTF::WorkQueue::dispatchAfter):
+
+2015-11-01  Yusuke Suzuki  <utatane.tea@gmail.com>
+
+        [ES6] Support Generator Syntax
+        https://bugs.webkit.org/show_bug.cgi?id=150769
+
+        Reviewed by Geoffrey Garen.
+
+        Added ENABLE_ES6_GENERATORS flag.
+
+        * wtf/FeatureDefines.h:
+
+2015-11-01  Darin Adler  <darin@apple.com>
+
+        ASCIICType refinements
+        https://bugs.webkit.org/show_bug.cgi?id=150787
+
+        Reviewed by Geoffrey Garen.
+
+        Refined ASCIICType.h by using narrower types. The most valuable part of this
+        is the part where the result of toASCIIHexValue is uint8_t instead of int;
+        that's slightly better for RGB values that the compiler needs to know fit
+        into a byte (coming in some Color work I plan to do soon).
+
+        * wtf/ASCIICType.h: Used CharacterType instead of CharType throughout, and
+        also sorted the using declarations at the bottom of the header.
+        (WTF::isASCII): Use the name "character" instead of "c".
+        (WTF::isASCIIAlpha): Ditto. Also use isASCIILower and toASCIILowerUnchecked
+        instead of writing it out.
+        (WTF::isASCIIDigit): Ditto.
+        (WTF::isASCIIAlphanumeric): Ditto.
+        (WTF::isASCIIHexDigit): Ditto. Also use toASCIILowerUnchecked instead of
+        writing it out.
+        (WTF::isASCIILower): Ditto.
+        (WTF::isASCIIBinaryDigit): Ditto. Also removed unneeded parentheses to match
+        the style of the rest of the file.
+        (WTF::isASCIIOctalDigit): Ditto.
+        (WTF::isASCIIPrintable): Ditto.
+        (WTF::isASCIISpace): Ditto.
+        (WTF::isASCIIUpper): Ditto.
+        (WTF::toASCIILower): Ditto. Also use isASCIIUpper instead of writing it out.
+        (WTF::toASCIILowerUnchecked): Tweaked comment.
+        (WTF::toASCIIUpper): Ditto. Also use isASCIILower instead of writing it out.
+        (WTF::toASCIIHexValue): Ditto. Also change return type from int to uint8_t.
+        Also broke a single assertion with && into two separate assertions and got
+        rid of unnnecessary masking with 0xF0 after shifting left. Also renamed
+        arguments for the two argument value so they are more sensible.
+        (WTF::lowerNibbleToASCIIHexDigit): Changed argument type to uint8_t, since
+        this function does not take a character. Also called it "value" instead of "c".
+        Also slightly tweaked how the expression is written.
+        (WTF::upperNibbleToASCIIHexDigit): Ditto. Using the more specific type also
+        got rid of the need to explicitly mask in this function.
+        (WTF::isASCIIAlphaCaselessEqual): Renamed the arguments for greater clarity.
+        With the new clearer argument names, the comment was superfluous.
+
+2015-11-01  Filip Pizlo  <fpizlo@apple.com>
+
+        Dominators should be factored out of the DFG
+        https://bugs.webkit.org/show_bug.cgi?id=150764
+
+        Reviewed by Geoffrey Garen.
+
+        This takes what used to be DFGDominators.h/DFGDominators.cpp and turns it into a generic
+        algorithm that can take any abstract graph. The idea is that you create Dominators<CFG> and
+        pass it a CFG object, which defines the types of graph nodes and methods for getting
+        successors, predecessors, etc. The DFG now defines a class called CFG, which is a wrapper for
+        DFG::Graph that conforms to the thing that wtf/Dominators.h expects.
+
+        When doing things to graphs, it's common to refer to the things in the graph as "nodes".
+        Because I intend to reuse the CFG abstraction with many graph algorithms, that abstraction uses
+        the term "node" to refer to a DFG basic block. But in Dominators, the method and variable names
+        still use "block". This is because although Dominators are applicable to any kind of directed
+        graph, it's super unlikely that we will ever use them for anything but compilers. Indeed, the
+        only reason why I'm factoring them out of the DFG is so that I can use them with B3 and Air.
+
+        This has the nice side effect that a user of WTF::Dominators<JSC::DFG::CFG> will see familiar
+        terminology like "blocksStrictlyDominatedBy(...)" instead of "nodesStrictlyDominatedBy(...)",
+        which would be super confusing.
+
+        Overall, wtf/Dominators.h is a combination of what used to be in DFGDominators.h,
+        DFGDominators.cpp, DFGNaiveDominators.h, and DFGNaiveDominators.cpp. I only changed code when I
+        had to in order to make it generic.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/Dominators.h: Added.
+        (WTF::Dominators::Dominators):
+        (WTF::Dominators::compute):
+        (WTF::Dominators::strictlyDominates):
+        (WTF::Dominators::dominates):
+        (WTF::Dominators::immediateDominatorOf):
+        (WTF::Dominators::forAllStrictDominatorsOf):
+        (WTF::Dominators::forAllDominatorsOf):
+        (WTF::Dominators::forAllBlocksStrictlyDominatedBy):
+        (WTF::Dominators::forAllBlocksDominatedBy):
+        (WTF::Dominators::strictDominatorsOf):
+        (WTF::Dominators::dominatorsOf):
+        (WTF::Dominators::blocksStrictlyDominatedBy):
+        (WTF::Dominators::blocksDominatedBy):
+        (WTF::Dominators::forAllBlocksInDominanceFrontierOf):
+        (WTF::Dominators::dominanceFrontierOf):
+        (WTF::Dominators::forAllBlocksInIteratedDominanceFrontierOf):
+        (WTF::Dominators::forAllBlocksInPrunedIteratedDominanceFrontierOf):
+        (WTF::Dominators::iteratedDominanceFrontierOf):
+        (WTF::Dominators::dump):
+        (WTF::Dominators::LengauerTarjan::LengauerTarjan):
+        (WTF::Dominators::LengauerTarjan::compute):
+        (WTF::Dominators::LengauerTarjan::immediateDominator):
+        (WTF::Dominators::LengauerTarjan::computeDepthFirstPreNumbering):
+        (WTF::Dominators::LengauerTarjan::computeSemiDominatorsAndImplicitImmediateDominators):
+        (WTF::Dominators::LengauerTarjan::computeExplicitImmediateDominators):
+        (WTF::Dominators::LengauerTarjan::link):
+        (WTF::Dominators::LengauerTarjan::eval):
+        (WTF::Dominators::LengauerTarjan::compress):
+        (WTF::Dominators::LengauerTarjan::BlockData::BlockData):
+        (WTF::Dominators::NaiveDominators::NaiveDominators):
+        (WTF::Dominators::NaiveDominators::dominates):
+        (WTF::Dominators::NaiveDominators::dump):
+        (WTF::Dominators::NaiveDominators::pruneDominators):
+        (WTF::Dominators::ValidationContext::ValidationContext):
+        (WTF::Dominators::ValidationContext::reportError):
+        (WTF::Dominators::ValidationContext::handleErrors):
+        (WTF::Dominators::naiveDominates):
+        (WTF::Dominators::forAllBlocksInDominanceFrontierOfImpl):
+        (WTF::Dominators::forAllBlocksInIteratedDominanceFrontierOfImpl):
+        (WTF::Dominators::BlockData::BlockData):
+
+2015-11-01  Darin Adler  <darin@apple.com>
+
+        Remove some dead and unneeded code (ScrollbarThemeSafari, RenderThemeSafari, OPENCL, a little color space logic)
+        https://bugs.webkit.org/show_bug.cgi?id=150783
+
+        Reviewed by Tim Horton.
+
+        * wtf/FeatureDefines.h: Removed the OPENCL feature, no longer supported.
+
+2015-10-31  Filip Pizlo  <fpizlo@apple.com>
+
+        B3::reduceStrength's DCE should be more agro and less wrong
+        https://bugs.webkit.org/show_bug.cgi?id=150748
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/GraphNodeWorklist.h:
+        (WTF::GraphNodeWorklist::saw): This method is super useful.
+
+2015-11-01  Philip Chimento  <philip.chimento@gmail.com>
+
+        [GTK] Fix combinations of PLATFORM(GTK) and OS(DARWIN)
+        https://bugs.webkit.org/show_bug.cgi?id=144560
+
+        Reviewed by Darin Adler.
+
+        * wtf/Platform.h: Don't USE(ACCELERATE) on PLATFORM(GTK).
+        * wtf/WorkQueue.h: Change order of OS(DARWIN) and PLATFORM(GTK)
+        checks so that GTK facilities are used even when building the
+        GTK platform on Darwin.
+
+2015-11-01  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Use RunLoop::Timer in main thread shared timer GTK+ implementation
+        https://bugs.webkit.org/show_bug.cgi?id=150754
+
+        Reviewed by Darin Adler.
+
+        Add API to set the priority of a RunLoop::Timer for GLib.
+
+        * wtf/RunLoop.h:
+        * wtf/glib/RunLoopGLib.cpp:
+        (WTF::RunLoop::TimerBase::setPriority):
+
+2015-10-31  Andreas Kling  <akling@apple.com>
+
+        Add a debug overlay with information about web process resource usage.
+        <https://webkit.org/b/150599>
+
+        Reviewed by Darin Adler.
+
+        Add ENABLE(RESOURCE_USAGE_OVERLAY) flag, enabled on Mac by default.
+
+        * wtf/Platform.h:
+
+2015-10-30  Chris Dumez  <cdumez@apple.com>
+
+        Regression(r191673): Crash in RunLoopTimer::schedule()
+        https://bugs.webkit.org/show_bug.cgi?id=150723
+
+        Reviewed by Anders Carlsson.
+
+        We were crashing in RunLoopTimer::schedule() when iterating over the
+        SchedulePairHashSet. The reason is that we were passing this
+        SchedulePairHashSet from the main thread to a background thread, which
+        was not safe because the SchedulePair objects inside the HashSet were
+        not ThreadSafeRefCounted. This patch makes them ThreadSafeRefCounted.
+
+        * wtf/SchedulePair.h:
+
+2015-10-30  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Move the socket polling off the WorkQueue
+        https://bugs.webkit.org/show_bug.cgi?id=150593
+
+        Reviewed by Anders Carlsson.
+
+        It doesn't really belong to the WorkQueue, it's only used by the
+        WebKit2 connection, so it can be moved there.
+
+        * wtf/WorkQueue.h:
+        * wtf/glib/WorkQueueGLib.cpp:
+        (WTF::WorkQueue::registerSocketEventHandler): Deleted.
+        (WTF::WorkQueue::unregisterSocketEventHandler): Deleted.
+
+2015-10-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Use a persistent main loop source in RunLoop glib implementation
+        https://bugs.webkit.org/show_bug.cgi?id=150590
+
+        Reviewed by Žan Doberšek.
+
+        It's more efficient than creating and destroying a new source for
+        every dispatch and it simplifies the code.
+
+        * wtf/RunLoop.h:
+        * wtf/glib/MainThreadGLib.cpp:
+        (WTF::scheduleDispatchFunctionsOnMainThread): Use
+        RunLoop::dispatch() instead of GMainLoopSource::scheduleAndDeleteOnDestroy().
+        * wtf/glib/RunLoopGLib.cpp:
+        (WTF::RunLoop::RunLoop): Create and setup the persistent source.
+        (WTF::RunLoop::~RunLoop): Destroy the persistent source.
+        (WTF::RunLoop::stop): Stop the persistent source before stopping
+        the main loop.
+        (WTF::RunLoop::wakeUp): Make the persistent source active. We
+        no longer need to explicitly wakeup the context.
+        (WTF::RunLoop::TimerBase::TimerBase): Create and setup the
+        persistent source.
+        (WTF::RunLoop::TimerBase::~TimerBase): Destroy the persistent source.
+        (WTF::RunLoop::TimerBase::updateReadyTime): Set the ready time
+        according to the fire interval.
+        (WTF::RunLoop::TimerBase::start): Make the persistent source active.
+        (WTF::RunLoop::TimerBase::stop): Stop the persistent source.
+        (WTF::RunLoop::TimerBase::isActive): Return whether the
+        persistent source is active.
+
+2015-10-30  Philippe Normand  <pnormand@igalia.com>
+
+        [GTK][Mac] fix WTF build
+        https://bugs.webkit.org/show_bug.cgi?id=150502
+
+        Reviewed by Alex Christensen.
+
+        * wtf/CMakeLists.txt: Add CommonCryptoSPI.h in the headers.
+
+2015-10-29  Alex Christensen  <achristensen@webkit.org>
+
+        Fix Mac CMake build
+        https://bugs.webkit.org/show_bug.cgi?id=150686
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/CMakeLists.txt:
+        * wtf/Platform.h:
+        * wtf/PlatformMac.cmake:
+
+2015-10-29  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r191728.
+        https://bugs.webkit.org/show_bug.cgi?id=150668
+
+        Caused a lot of timeouts in layout tests (Requested by KaL on
+        #webkit).
+
+        Reverted changeset:
+
+        "[GTK] Use a persistent main loop source in RunLoop glib
+        implementation"
+        https://bugs.webkit.org/show_bug.cgi?id=150590
+        http://trac.webkit.org/changeset/191728
+
+2015-10-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Use a persistent main loop source in RunLoop glib implementation
+        https://bugs.webkit.org/show_bug.cgi?id=150590
+
+        Reviewed by Žan Doberšek.
+
+        It's more efficient than creating and destroying a new source for
+        every dispatch and it simplifies the code.
+
+        * wtf/RunLoop.h:
+        * wtf/glib/MainThreadGLib.cpp:
+        (WTF::scheduleDispatchFunctionsOnMainThread): Use
+        RunLoop::dispatch() instead of GMainLoopSource::scheduleAndDeleteOnDestroy().
+        * wtf/glib/RunLoopGLib.cpp:
+        (WTF::RunLoop::RunLoop): Create and setup the persistent source.
+        (WTF::RunLoop::~RunLoop): Destroy the persistent source.
+        (WTF::RunLoop::stop): Stop the persistent source before stopping
+        the main loop.
+        (WTF::RunLoop::wakeUp): Make the persistent source active. We
+        no longer need to explicitly wakeup the context.
+        (WTF::RunLoop::TimerBase::TimerBase): Create and setup the
+        persistent source.
+        (WTF::RunLoop::TimerBase::~TimerBase): Destroy the persistent source.
+        (WTF::RunLoop::TimerBase::updateReadyTime): Set the ready time
+        according to the fire interval.
+        (WTF::RunLoop::TimerBase::start): Make the persistent source active.
+        (WTF::RunLoop::TimerBase::stop): Stop the persistent source.
+        (WTF::RunLoop::TimerBase::isActive): Return whether the
+        persistent source is active.
+
+2015-10-28  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, make sure B3 is disabled on iOS for now.
+
+        * wtf/Platform.h:
+
+2015-10-28  Filip Pizlo  <fpizlo@apple.com>
+
+        Create a super rough prototype of B3
+        https://bugs.webkit.org/show_bug.cgi?id=150280
+
+        Reviewed by Benjamin Poulain.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/HashSet.h:
+        (WTF::copyToVector):
+        (WTF::=):
+        * wtf/ListDump.h:
+        (WTF::PointerListDump::PointerListDump):
+        (WTF::PointerListDump::dump):
+        (WTF::MapDump::MapDump):
+        (WTF::listDump):
+        (WTF::pointerListDump):
+        (WTF::sortedListDump):
+        * wtf/MathExtras.h:
+        (WTF::leftShiftWithSaturation):
+        (WTF::rangesOverlap):
+        * wtf/Platform.h:
+        * wtf/ScopedLambda.h: Added.
+        (WTF::scopedLambda):
+        * wtf/SharedTask.h:
+        (WTF::createSharedTask):
+
+2015-10-28  Alberto Garcia  <berto@igalia.com>
+
+        [SOUP] Cannot build the network process in glibc-based BSD systems
+        https://bugs.webkit.org/show_bug.cgi?id=150618
+
+        Reviewed by Carlos Garcia Campos.
+
+        * wtf/Platform.h: Don't enable HAVE_STAT_BIRTHTIME if the system
+        is using glibc.
+
+2015-10-21  Filip Pizlo  <fpizlo@apple.com>
+
+        Factor out the graph node worklists from DFG into WTF
+        https://bugs.webkit.org/show_bug.cgi?id=150411
+
+        Reviewed by Geoffrey Garen.
+
+        The new GraphNodeWorklist.h file is basically just the functionality from the old
+        DFGBlockWorklist.h, but templatized to work for any graph node type and any kind of graph
+        node set.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/GraphNodeWorklist.h: Added.
+        (WTF::GraphNodeWorklist::push):
+        (WTF::GraphNodeWorklist::notEmpty):
+        (WTF::GraphNodeWorklist::pop):
+        (WTF::GraphNodeWith::GraphNodeWith):
+        (WTF::GraphNodeWith::operator bool):
+        (WTF::ExtendedGraphNodeWorklist::ExtendedGraphNodeWorklist):
+        (WTF::ExtendedGraphNodeWorklist::forcePush):
+        (WTF::ExtendedGraphNodeWorklist::push):
+        (WTF::ExtendedGraphNodeWorklist::notEmpty):
+        (WTF::ExtendedGraphNodeWorklist::pop):
+        (WTF::GraphNodeWithOrder::GraphNodeWithOrder):
+        (WTF::GraphNodeWithOrder::operator bool):
+        (WTF::PostOrderGraphNodeWorklist::PostOrderGraphNodeWorklist):
+        (WTF::PostOrderGraphNodeWorklist::~PostOrderGraphNodeWorklist):
+        (WTF::PostOrderGraphNodeWorklist::pushPre):
+        (WTF::PostOrderGraphNodeWorklist::pushPost):
+        (WTF::PostOrderGraphNodeWorklist::push):
+        (WTF::PostOrderGraphNodeWorklist::notEmpty):
+        (WTF::PostOrderGraphNodeWorklist::pop):
+        * wtf/HashTable.h:
+        (WTF::HashTableAddResult::HashTableAddResult):
+        (WTF::HashTableAddResult::operator bool):
+
+2015-10-20  Tim Horton  <timothy_horton@apple.com>
+
+        Try to fix the build by disabling MAC_GESTURE_EVENTS on 10.9 and 10.10
+
+        * wtf/FeatureDefines.h:
+
+2015-10-20  Yoav Weiss  <yoav@yoav.ws>
+
+        Rename the PICTURE_SIZES flag to CURRENTSRC
+        https://bugs.webkit.org/show_bug.cgi?id=150275
+
+        Reviewed by Dean Jackson.
+
+        * wtf/FeatureDefines.h:
+
+2015-10-19  Beth Dakin  <bdakin@apple.com>
+
+        Build fix.
+
+        * wtf/FeatureDefines.h:
+
+2015-10-19  Tim Horton  <timothy_horton@apple.com>
+
+        Add magnify and rotate gesture event support for Mac
+        https://bugs.webkit.org/show_bug.cgi?id=150179
+        <rdar://problem/8036240>
+
+        Reviewed by Darin Adler.
+
+        * wtf/FeatureDefines.h:
+        New feature flag.
+
+2015-10-17  Mark Lam  <mark.lam@apple.com>
+
+        Add CPU(X86) to the supported MASM_PROBE CPUs. This was accidentally left out in r191197.
+
+        Not reviewed.
+
+        * wtf/Platform.h:
+
+2015-10-16  Mark Lam  <mark.lam@apple.com>
+
+        Always enable MASM_PROBE for debug builds.
+        https://bugs.webkit.org/show_bug.cgi?id=150190
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/Platform.h:
+
+2015-10-14  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r190882): Concatenating a character array and an empty string is broken.
+        <https://webkit.org/b/150135>
+
+        Reviewed by Geoffrey Garen.
+
+        StringAdapter templates for raw character arrays were always using 1 as the array length
+        in toString().
+
+        * wtf/text/StringConcatenate.h:
+
+2015-10-14  Per Arne Vollan  <peavo@outlook.com>
+
+        [Win64] Enable concurrent JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=150098
+
+        Reviewed by Csaba Osztrogonác.
+
+        * wtf/Platform.h:
+
+2015-10-13  Simon Fraser  <simon.fraser@apple.com>
+
+        Add helper funtion for checking pointer equivalency and use it
+        https://bugs.webkit.org/show_bug.cgi?id=150022
+
+        Reviewed by Darin Adler.
+        
+        Add PointerComparison.h which contains the templated pointer comparison
+        function.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/PointerComparison.h: Added.
+        (WTF::arePointingToEqualData):
+
+2015-10-12  Andreas Kling  <akling@apple.com>
+
+        "A + B" with strings shouldn't copy if A or B is empty.
+        <https://webkit.org/b/150034>
+
+        Reviewed by Anders Carlsson.
+
+        Add a fast path to WTF's operator+ magic for concatenation of two strings where
+        one of them is empty. In that case, try to avoid allocation altogether by returning
+        the non-empty string.
+
+        Spotted this while analyzing memory peaks during page load; it turns out we were
+        duplicating whole text resources (JS, CSS) at the end of decoding, below
+        TextResourceDecoder::decodeAndFlush(). That function effectively does:
+
+            return decode() + flush();
+
+        Very often, flush() returns an empty string, so due to the naive operator+,
+        we'd allocate a new StringImpl of length (decode().length() + flush().length())
+        and copy the return value from decode() into it. So silly!
+
+        Had to make the tryMakeString() machinery use String as a return type instead of
+        RefPtr<StringImpl> to make all the right overloads gel. StringTypeAdapter templates
+        are now required to provide a toString() function.
+
+        * wtf/text/StringConcatenate.h:
+        (WTF::StringTypeAdapter<char>::toString):
+        (WTF::StringTypeAdapter<UChar>::toString):
+        (WTF::StringTypeAdapter<Vector<char>>::toString):
+        (WTF::StringTypeAdapter<String>::toString):
+        (WTF::tryMakeString):
+        (WTF::makeString):
+        * wtf/text/StringOperators.h:
+        (WTF::StringAppend::operator String):
+        * wtf/text/StringView.h:
+        (WTF::StringTypeAdapter<StringView>::toString):
+
+2015-10-12  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix style in the hopes that it fixes Windows.
+
+        * wtf/ParallelHelperPool.cpp:
+        (WTF::ParallelHelperClient::~ParallelHelperClient):
+        (WTF::ParallelHelperClient::setTask):
+        (WTF::ParallelHelperClient::doSomeHelping):
+        (WTF::ParallelHelperClient::runTaskInParallel):
+        (WTF::ParallelHelperClient::finish):
+        (WTF::ParallelHelperClient::claimTask):
+        (WTF::ParallelHelperClient::runTask):
+        (WTF::ParallelHelperPool::doSomeHelping):
+        (WTF::ParallelHelperPool::helperThreadBody):
+        * wtf/ParallelHelperPool.h:
+        (WTF::ParallelHelperClient::setFunction):
+        (WTF::ParallelHelperClient::runFunctionInParallel):
+        (WTF::ParallelHelperClient::pool):
+
+2015-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should generate code to call slow paths lazily
+        https://bugs.webkit.org/show_bug.cgi?id=149936
+
+        Reviewed by Saam Barati.
+
+        Enables SharedTask to handle any function type, not just void().
+
+        It's probably better to use SharedTask instead of std::function in performance-sensitive
+        code. std::function uses the system malloc and has copy semantics. SharedTask uses FastMalloc
+        and has aliasing semantics. So, you can just trust that it will have sensible performance
+        characteristics.
+
+        * wtf/ParallelHelperPool.cpp:
+        (WTF::ParallelHelperClient::~ParallelHelperClient):
+        (WTF::ParallelHelperClient::setTask):
+        (WTF::ParallelHelperClient::doSomeHelping):
+        (WTF::ParallelHelperClient::runTaskInParallel):
+        (WTF::ParallelHelperClient::finish):
+        (WTF::ParallelHelperClient::claimTask):
+        (WTF::ParallelHelperClient::runTask):
+        (WTF::ParallelHelperPool::doSomeHelping):
+        (WTF::ParallelHelperPool::helperThreadBody):
+        * wtf/ParallelHelperPool.h:
+        (WTF::ParallelHelperClient::setFunction):
+        (WTF::ParallelHelperClient::runFunctionInParallel):
+        (WTF::ParallelHelperClient::pool):
+        * wtf/SharedTask.h:
+        (WTF::createSharedTask):
+        (WTF::SharedTask::SharedTask): Deleted.
+        (WTF::SharedTask::~SharedTask): Deleted.
+        (WTF::SharedTaskFunctor::SharedTaskFunctor): Deleted.
+
+2015-10-10  Dan Bernstein  <mitz@apple.com>
+
+        [iOS] Remove unnecessary iOS version checks
+        https://bugs.webkit.org/show_bug.cgi?id=150002
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/Platform.h:
+
+2015-10-10  Dan Bernstein  <mitz@apple.com>
+
+        [iOS] Remove project support for iOS 8
+        https://bugs.webkit.org/show_bug.cgi?id=149993
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/WTF.xcconfig:
+        * Configurations/mbmalloc.xcconfig:
+
+2015-10-08  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Clean up Marked classes
+        https://bugs.webkit.org/show_bug.cgi?id=149853
+
+        Reviewed by Darin Adler.
+
+        * wtf/PageBlock.h:
+        Remove duplicate using statement.
+
+2015-10-08  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Remove PageReservation.h clang fixme that has been fixed for a while
+        https://bugs.webkit.org/show_bug.cgi?id=149908
+
+        Reviewed by Csaba Osztrogonác.
+
+        * wtf/PageReservation.h:
+        (WTF::PageReservation::operator bool): Deleted.
+
+2015-10-06  Daniel Bates  <dbates@webkit.org>
+
+        Enable XSLT when building WebKit for iOS using the public iOS SDK
+        https://bugs.webkit.org/show_bug.cgi?id=149827
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/FeatureDefines.h:
+
+2015-10-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Inline cache repatching should be throttled if it happens a lot
+        https://bugs.webkit.org/show_bug.cgi?id=149796
+        rdar://problem/22674436
+
+        Reviewed by Saam Barati.
+
+        Add some helpers for saturated math.
+
+        * wtf/MathExtras.h:
+        (WTF::incrementWithSaturation):
+        (WTF::leftShiftWithSaturation):
+
+2015-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed CMake build fixes.
+
+        * wtf/CMakeLists.txt: Correct build flags to match
+        the original project files.
+
+2015-09-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r190324.
+        https://bugs.webkit.org/show_bug.cgi?id=149671
+
+        Caused flaky crashes, rdar://problem/22916304 (Requested by ap
+        on #webkit).
+
+        Reverted changeset:
+
+        "ParallelHelperPool::runFunctionInParallel() shouldn't
+        allocate, and ParallelHelperPool.h shouldn't be included
+        everywhere"
+        https://bugs.webkit.org/show_bug.cgi?id=149635
+        http://trac.webkit.org/changeset/190324
+
+2015-09-29  Filip Pizlo  <fpizlo@apple.com>
+
+        ParallelHelperPool::runFunctionInParallel() shouldn't allocate, and ParallelHelperPool.h shouldn't be included everywhere
+        https://bugs.webkit.org/show_bug.cgi?id=149635
+
+        Reviewed by Saam Barati.
+
+        * wtf/ParallelHelperPool.h:
+        (WTF::ParallelHelperClient::runFunctionInParallel): Stack-allocate the task instead of heap-allocating it.
+
+2015-09-29  Filip Pizlo  <fpizlo@apple.com>
+
+        GC copy phase spans too many files
+        https://bugs.webkit.org/show_bug.cgi?id=149586
+
+        Reviewed by Andreas Kling.
+
+        Extract the load balancing algorithm used by the GC's copy phase into a reusable template.
+        The GC copy phase now uses this.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/ParallelVectorIterator.h: Added.
+        (WTF::ParallelVectorIterator::ParallelVectorIterator):
+        (WTF::ParallelVectorIterator::iterate):
+
+2015-09-26  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows build by adding WTF_EXPORT_PRIVATE in various places.
+
+        * wtf/ParallelHelperPool.h:
+        (WTF::ParallelHelperClient::setFunction):
+        (WTF::ParallelHelperPool::numberOfThreads):
+
+2015-09-24  Filip Pizlo  <fpizlo@apple.com>
+
+        VMs should share GC threads
+        https://bugs.webkit.org/show_bug.cgi?id=149433
+        rdar://problem/12859344
+
+        Reviewed by Geoffrey Garen.
+
+        This adds two major things to WTF: WeakRandom and ParallelHelperPool. WeakRandom was
+        already in JSC; we're just hoisting it into WTF. It's just a weak random number generator
+        that's suitable for places where you need just a tiny bit of randomness.
+
+        ParallelHelperPool is a new API that simplifies data-parallel algorithms like the JSC GC.
+        In a data-parallel algorithm, we want to run one task on as many cores as possible and let
+        the task worry about which subset of the input data to work on. In some cases, the
+        algorithm will not need to do any load balancing - and if load balancing is required, it's
+        up to the user. This is appropriate in contexts where the load balancing needs to be
+        custom-tuned for performance, like the GC's marking phase.
+
+        This new API has three concepts: task, client, and pool. A task is a reference counted
+        object with a run() method, which may be run in parallel. It is usually used to wrap a
+        functor. A pool is a pool of threads that can run things. A client is a placeholder for a
+        task. A client can have zero or one tasks. A client must be registered with a pool. When a
+        client has a task, the pool's threads may choose to run it. If a thread starts running a
+        task, it will run it to completion. When the task returns on any thread, the client takes
+        it to mean that the task should be removed. That means that any currently running instances
+        of the task will finish but no new threads will attempt to run the task. You can easily ask
+        a client to wait until a task finishes. You can also easily ask a client to run a task on
+        the current thread in addition to possibly some helper threads from the pool.
+
+        For some data-parallel algorithms, programming with ParallelHelperPool is as easy as:
+
+        client.runFunctionInParallel(
+            [=] () {
+                do things;
+            });
+
+        Note that you cannot tell ahead of time how many threads will join to help the task.
+        Threads may become available after the task has already started running. Those threads may
+        join after the other threads have already started. It's not advisable to make algorithmic
+        decisions based on client.numberOfActiveThreads(), since that number may change. Usually
+        the best way to use ParallelHelperPool is with an algorithm that has its own custom
+        worklist. An example of a very simple custom worklist is the one in the JSC GC's copying
+        phase - it's just a Vector and an index that indicates the next set of elements to process.
+
+        This new API was initially designed to simplify how GCThread works, by replacing Phase with
+        a callback that contains the phase's workload. I then realized that with a few tweaks, I
+        could make this somewhat general enough that it might become interesting outside GC. I also
+        realized that I could use this to enable thread sharing. So, although the API is kinda
+        quirky, it's grounded in the reality of how the JSC GC does parallelism.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/ParallelHelperPool.cpp: Added.
+        (WTF::ParallelHelperClient::ParallelHelperClient):
+        (WTF::ParallelHelperClient::~ParallelHelperClient):
+        (WTF::ParallelHelperClient::setTask):
+        (WTF::ParallelHelperClient::finish):
+        (WTF::ParallelHelperClient::doSomeHelping):
+        (WTF::ParallelHelperClient::runTaskInParallel):
+        (WTF::ParallelHelperClient::claimTask):
+        (WTF::ParallelHelperClient::runTask):
+        (WTF::ParallelHelperPool::ParallelHelperPool):
+        (WTF::ParallelHelperPool::~ParallelHelperPool):
+        (WTF::ParallelHelperPool::addThreads):
+        (WTF::ParallelHelperPool::ensureThreads):
+        (WTF::ParallelHelperPool::doSomeHelping):
+        (WTF::ParallelHelperPool::didMakeWorkAvailable):
+        (WTF::ParallelHelperPool::helperThreadBody):
+        (WTF::ParallelHelperPool::hasClientWithTask):
+        (WTF::ParallelHelperPool::getClientWithTask):
+        (WTF::ParallelHelperPool::waitForClientWithTask):
+        * wtf/ParallelHelperPool.h: Added.
+        (WTF::ParallelHelperClient::setFunction):
+        (WTF::ParallelHelperClient::runFunctionInParallel):
+        (WTF::ParallelHelperClient::pool):
+        (WTF::ParallelHelperClient::numberOfActiveThreads):
+        (WTF::ParallelHelperPool::numberOfThreads):
+        * wtf/SharedTask.h: Added.
+        (WTF::SharedTask::SharedTask):
+        (WTF::SharedTask::~SharedTask):
+        (WTF::SharedTaskFunctor::SharedTaskFunctor):
+        (WTF::createSharedTask):
+        * wtf/WeakRandom.h: Copied from Source/JavaScriptCore/runtime/WeakRandom.h.
+        (WTF::WeakRandom::WeakRandom):
+        (WTF::WeakRandom::initializeSeed):
+        (WTF::WeakRandom::seedUnsafe):
+        (WTF::WeakRandom::getUint32):
+        (WTF::WeakRandom::advance):
+        (JSC::WeakRandom::WeakRandom): Deleted.
+        (JSC::WeakRandom::seedUnsafe): Deleted.
+        (JSC::WeakRandom::getUint32): Deleted.
+        (JSC::WeakRandom::advance): Deleted.
+        (JSC::WeakRandom::initializeSeed): Deleted.
+
+2015-09-25  Alex Christensen  <achristensen@webkit.org>
+
+        Clean up CMake build on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=149573
+
+        Reviewed by Chris Dumez.
+
+        * wtf/PlatformMac.cmake:
+
+2015-09-25  Alex Christensen  <achristensen@webkit.org>
+
+        [Win] Switch to CMake
+        https://bugs.webkit.org/show_bug.cgi?id=148111
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTF.proj:
+
+2015-09-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Simplify Stopwatch::elapsedTime
+        https://bugs.webkit.org/show_bug.cgi?id=149538
+
+        Reviewed by Darin Adler.
+
+        * wtf/Stopwatch.h:
+        (WTF::Stopwatch::elapsedTime):
+        Simplify by not starting/stopping but just computing without updating members.
+
+2015-09-25  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build fix.
+
+        * wtf/FeatureDefines.h: Don't turn STREAMS_API on by default
+        on Windows.
+
+2015-09-24  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Ran sort-Xcode-project-file.
+
+        * WTF.xcodeproj/project.pbxproj:
+
+2015-09-23  Andy Estes  <aestes@apple.com>
+
+        Disable QuickLook on watchOS
+        https://bugs.webkit.org/show_bug.cgi?id=149508
+        <rdar://problem/22517968>
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/Platform.h:
+
+2015-09-22  Andy Estes  <aestes@apple.com>
+
+        Disable QuickLook on tvOS
+        https://bugs.webkit.org/show_bug.cgi?id=149492
+        <rdar://problem/22741586>
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/Platform.h: Stopped enabling QuickLook on tvOS.
+
+2015-09-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of ENABLE(PARALLEL_GC)
+        https://bugs.webkit.org/show_bug.cgi?id=149436
+
+        Reviewed by Mark Lam.
+
+        We always enable parallel GC everywhere but Windows, and it doesn't look like it was disabled
+        there for any good reason. So, get rid of the flag.
+
+        * wtf/MainThread.cpp:
+        (WTF::canAccessThreadLocalDataForThread):
+        (WTF::initializeGCThreads):
+        (WTF::registerGCThread):
+        (WTF::isMainThreadOrGCThread):
+        * wtf/Platform.h:
+
+2015-09-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of ENABLE(GGC)
+        https://bugs.webkit.org/show_bug.cgi?id=149472
+
+        Reviewed by Mark Hahnenberg and Mark Lam.
+
+        * wtf/Platform.h:
+
+2015-09-21  Filip Pizlo  <fpizlo@apple.com>
+
+        Always use the compiler's CAS implementation and get rid of ENABLE(COMPARE_AND_SWAP)
+        https://bugs.webkit.org/show_bug.cgi?id=149438
+
+        Reviewed by Mark Lam.
+
+        * wtf/Atomics.h: Make weakCompareAndSwap() just forward to the system CAS via WTF::Atomic.
+        (WTF::weakCompareAndSwap):
+        (WTF::weakCompareAndSwapUIntPtr): Deleted.
+        (WTF::weakCompareAndSwapSize): Deleted.
+        * wtf/Bitmap.h: Small changes to use the new API.
+        (WTF::WordType>::concurrentTestAndSet):
+        * wtf/Platform.h: Remove ENABLE(COMPARE_AND_SWAP)
+
+2015-09-21  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove old GCC cruft from wtf/StdLibExtras.h
+        https://bugs.webkit.org/show_bug.cgi?id=149401
+
+        Reviewed by Alex Christensen.
+
+        * wtf/StdLibExtras.h:
+
+2015-09-21  Andy Estes  <aestes@apple.com>
+
+        Disable Parental Controls on the Apple TV platform
+        https://bugs.webkit.org/show_bug.cgi?id=149421
+
+        Reviewed by Darin Adler.
+
+        * wtf/Platform.h:
+
+2015-09-21  Filip Pizlo  <fpizlo@apple.com>
+
+        JSC should infer property types
+        https://bugs.webkit.org/show_bug.cgi?id=148610
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/HashTable.h:
+        (WTF::HashTableAddResult::HashTableAddResult): Make it possible to say "HashMap::AddResult result" without assigning anything to it yet.
+        * wtf/PrintStream.h:
+        (WTF::printInternal): Beef up printing of some common WTF types, in particular RefPtr<UniquedStringImpl>.
+
+2015-09-20  Youenn Fablet  <youenn.fablet@crf.canon.fr>
+
+        Remove XHR_TIMEOUT compilation guard
+        https://bugs.webkit.org/show_bug.cgi?id=149260
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/FeatureDefines.h:
+
+2015-09-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, revert unintended change.
+
+        * benchmarks/LockSpeedTest.cpp:
+        (main):
+
+2015-09-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add ShadowRoot interface and Element.prototype.attachShadow
+        https://bugs.webkit.org/show_bug.cgi?id=149187
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/FeatureDefines.h:
+
+
+2015-09-11  Keith Miller  <keith_miller@apple.com>
+
+        cryptographicallyRandomValuesFromOS should use CCRandomCopyBytes when available.
+        https://bugs.webkit.org/show_bug.cgi?id=148439
+
+        Reviewed by Alexey Proskuryakov.
+
+        Recently, we switched to using arc4random_buf on Darwin but further research indicates that
+        arc4random_buf has the same behavior we had before and thus we were just pushing the problem
+        further down the stack. CCRandomCopyBytes, however, appears to be more advanced and has much
+        better error handling than we had before.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/OSRandomSource.cpp:
+        (WTF::cryptographicallyRandomValuesFromOS):
+        * wtf/spi/darwin/CommonCryptoSPI.h: Added.
+
+2015-09-08  Filip Pizlo  <fpizlo@apple.com>
+
+        There should be one stub hanging off an inline cache that contains code for all of the cases, rather than forming a linked list consisting of one stub per case
+        https://bugs.webkit.org/show_bug.cgi?id=148717
+
+        Reviewed by Michael Saboff.
+
+        Beef up dumping a bit.
+
+        * wtf/PrintStream.h:
+        (WTF::pointerDump):
+        (WTF::printInternal):
+
+2015-09-08  Mark Lam  <mark.lam@apple.com>
+
+        GC stack scan should include ABI red zone.
+        https://bugs.webkit.org/show_bug.cgi?id=148976
+
+        Reviewed by Geoffrey Garen and Benjamin Poulain.
+
+        * wtf/StackBounds.h:
+        (WTF::StackBounds::origin):
+        (WTF::StackBounds::end):
+        (WTF::StackBounds::size):
+
+2015-09-04  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Enable reference qualified functions for GCC
+        https://bugs.webkit.org/show_bug.cgi?id=148526
+
+        Reviewed by Darin Adler.
+
+        * wtf/Compiler.h:
+
+2015-09-04  Csaba Osztrogonác  <ossy@webkit.org>
+
+        webkit-unassigned@lists.webkit.org
+        https://bugs.webkit.org/show_bug.cgi?id=148525
+
+        Reviewed by Darin Adler.
+
+        * wtf/Compiler.h:
+
+2015-08-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WTF] Improve a ParkingLot::parkConditionally() comment for a libstdc++ workaround
+        https://bugs.webkit.org/show_bug.cgi?id=148571
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/ParkingLot.cpp:
+        (WTF::ParkingLot::parkConditionally): Adjust the comment about the workaround for
+        the libstdc++ std::condition_variable implementation, linking to the WebKit bug
+        that dissected the problem and the GCC bug that originally reported the problem.
+
+2015-08-28  Anders Carlsson  <andersca@apple.com>
+
+        Remove the #if PLATFORM(MAC) in DeprecatedSymbolsUsedBySafari.mm so we'll actually build it on iOS.
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+
+2015-08-27  Anders Carlsson  <andersca@apple.com>
+
+        Define legacy main thread calling functions for iOS as well
+        https://bugs.webkit.org/show_bug.cgi?id=148530
+
+        Reviewed by Tim Horton.
+
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+
+2015-08-26  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+
+        * wtf/WorkQueue.cpp:
+
+2015-08-26  Anders Carlsson  <andersca@apple.com>
+
+        Add and implement WorkQueue::concurrentApply
+        https://bugs.webkit.org/show_bug.cgi?id=148488
+
+        Reviewed by Geoffrey Garen.
+
+        WorkQueue::concurrentApply is modeled after dispatch_apply, and on Cocoa it uses dispatch_apply directly.
+        For other ports there's a generic concurrentApply implemented using our threading primitives.
+        
+        * wtf/NeverDestroyed.h:
+        (WTF::LazyNeverDestroyed::operator->):
+        * wtf/WorkQueue.cpp:
+        (WTF::WorkQueue::concurrentApply):
+        * wtf/WorkQueue.h:
+        * wtf/cocoa/WorkQueueCocoa.cpp:
+        (WTF::WorkQueue::concurrentApply):
+
+2015-08-25  Filip Pizlo  <fpizlo@apple.com>
+
+        Node::origin should be able to tell you if it's OK to exit
+        https://bugs.webkit.org/show_bug.cgi?id=145204
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/Insertion.h:
+        (WTF::executeInsertions): Add a useful assertion. This come into play because JSC will use UINT_MAX as "invalid index", and that ought to trigger this assertion.
+
+2015-08-25  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Require GCC version at least 4.9
+        https://bugs.webkit.org/show_bug.cgi?id=148430
+
+        Reviewed by Darin Adler.
+
+        * wtf/Compiler.h:
+
+2015-08-22  Anders Carlsson  <andersca@apple.com>
+
+        std::once_flag needs to be static.
+
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+        (WTF::MainThreadFunctionTracker::singleton):
+
+2015-08-21  Anders Carlsson  <andersca@apple.com>
+
+        Build fix.
+
+        * wtf/MainThread.h:
+
+2015-08-21  Anders Carlsson  <andersca@apple.com>
+
+        Address review feedback from Darin.
+
+        * wtf/MainThread.h:
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+        (WTF::callOnMainThread):
+        (WTF::cancelCallOnMainThread):
+
+2015-08-21  Anders Carlsson  <andersca@apple.com>
+
+        Deprecate the old school callOnMainThread/cancelCallOnMainThread functions
+        https://bugs.webkit.org/show_bug.cgi?id=148327
+
+        Reviewed by Sam Weinig.
+
+        * wtf/MainThread.cpp:
+        (WTF::functionQueue):
+        (WTF::dispatchFunctionsFromMainThread):
+        (WTF::callOnMainThread):
+        Change the function queue to be a queue of std::function<void ()> and get rid of dead code.
+
+        * wtf/MainThread.h:
+        Conditionalize callOnMainThread and cancelCallOnMainThread because Safari on Mavericks still expects to them to be
+        declared in MainThread.h under 10.9.
+
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+        Add a MainThreadFunctionTracker singleton that keeps track of scheduled functions so we can ensure that they're not
+        called if they're cancelled.
+
+        (WTF::MainThreadFunctionTracker::singleton):
+        Return the singleton.
+
+        (WTF::MainThreadFunctionTracker::callOnMainThread):
+        Add the function/context pair to our map and schedule the function to be run on the main thread.
+        If the function has been removed, don't call it.
+
+        (WTF::MainThreadFunctionTracker::cancelCallOnMainThread):
+        Remove all entries with the given function/context pair.
+
+        (WTF::MainThreadFunctionTracker::addFunction):
+        Add the function/context pair to the map and return the unique identifier.
+
+        (WTF::MainThreadFunctionTracker::removeIdentifier):
+        Look up the identifier and remove it if it still exists. If it exists we know that it hasn't been canceled and that we can call it.
+
+        (WTF::MainThreadFunctionTracker::removeFunctions):
+        Remove all function identifiers matched by the function/context pair.
+
+        (WTF::callOnMainThread):
+        Implement using MainThreadFunctionTracker.
+
+        (WTF::cancelCallOnMainThread):
+        Implement using MainThreadFunctionTracker.
+
+2015-08-21  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of uses of the old callOnMainThread function that takes a function ptr + context
+        https://bugs.webkit.org/show_bug.cgi?id=148324
+
+        Reviewed by Tim Horton.
+
+        * wtf/text/cf/StringImplCF.cpp:
+        (WTF::StringWrapperCFAllocator::deallocate):
+        (WTF::StringWrapperCFAllocator::deallocateOnMainThread): Deleted.
+
+2015-08-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r188717 and r188719.
+        https://bugs.webkit.org/show_bug.cgi?id=148272
+
+        Broke the Mavericks build (Requested by andersca on #webkit).
+
+        Reverted changesets:
+
+        "Merge Lock and LockBase"
+        https://bugs.webkit.org/show_bug.cgi?id=148266
+        http://trac.webkit.org/changeset/188717
+
+        "Merge ConditionBase and Condition"
+        https://bugs.webkit.org/show_bug.cgi?id=148270
+        http://trac.webkit.org/changeset/188719
+
+2015-08-20  Anders Carlsson  <andersca@apple.com>
+
+        Merge ConditionBase and Condition
+        https://bugs.webkit.org/show_bug.cgi?id=148270
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/Condition.h:
+        Direct initialize m_hasWaiters so Condition gets a constexpr constructor.
+
+        * wtf/Lock.h:
+        Remove a now outdated comment.
+
+2015-08-20  Anders Carlsson  <andersca@apple.com>
+
+        Merge Lock and LockBase
+        https://bugs.webkit.org/show_bug.cgi?id=148266
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/Atomics.h:
+        (WTF::Atomic::Atomic):
+        Add a default constructor as well as a constexpr constructor that takes a value.
+
+        * wtf/Lock.cpp:
+        (WTF::Lock::lockSlow):
+        (WTF::Lock::unlockSlow):
+        Rename LockBase to Lock.
+
+        * wtf/Lock.h:
+        Rename LockBase to Lock and direct-initialize Atomic to 0. Since the Atomic constructor is constexpr,
+        Lock also gets a constexpr constructor. Change the LockBase -> StaticLock typedef and add a fixme.
+
+        * wtf/WordLock.h:
+        Direct initialize m_word to 0.
+
+2015-08-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Remove WTF::SpinLock
+        https://bugs.webkit.org/show_bug.cgi?id=148208
+
+        Reviewed by Geoffrey Garen.
+
+        Remove the SpinLock.h file and remove references to the SpinLock class. Put the old SpinLock
+        algorithm in LockSpeedTest.cpp - which isn't compiled as part of a WTF or WebKit build - just
+        so we can still benchmark our locking algorithms against a spinlock baseline.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.xcodeproj/project.pbxproj:
+        * benchmarks/LockSpeedTest.cpp:
+        * wtf/CMakeLists.txt:
+        * wtf/Lock.h:
+        * wtf/SpinLock.h: Removed.
+        * wtf/WordLock.h:
+
+2015-08-19  Alex Christensen  <achristensen@webkit.org>
+
+        CMake Windows build should not include files directly from other Source directories
+        https://bugs.webkit.org/show_bug.cgi?id=148198
+
+        Reviewed by Brent Fulgham.
+
+        * wtf/CMakeLists.txt:
+        * wtf/PlatformWin.cmake:
+
+2015-08-18  Filip Pizlo  <fpizlo@apple.com>
+
+        Replace all uses of std::mutex/std::condition_variable with WTF::Lock/WTF::Condition
+        https://bugs.webkit.org/show_bug.cgi?id=148140
+
+        Reviewed by Geoffrey Garen.
+
+        Also beef up Condition by giving it a StaticCondition variant.
+
+        * wtf/Condition.h:
+        (WTF::ConditionBase::notifyAll):
+        (WTF::ConditionBase::waitForSecondsImpl):
+        (WTF::ConditionBase::absoluteFromRelative):
+        (WTF::Condition::Condition):
+        (WTF::Condition::notifyAll): Deleted.
+        (WTF::Condition::waitForSecondsImpl): Deleted.
+        (WTF::Condition::absoluteFromRelative): Deleted.
+        * wtf/CryptographicallyRandomNumber.cpp:
+        * wtf/HashTable.cpp:
+        (WTF::HashTableStats::recordCollisionAtCount):
+        (WTF::HashTableStats::dumpStats):
+        (WTF::hashTableStatsMutex): Deleted.
+        * wtf/HashTable.h:
+        (WTF::KeyTraits>::HashTable):
+        (WTF::KeyTraits>::invalidateIterators):
+        (WTF::addIterator):
+        (WTF::removeIterator):
+        * wtf/Lock.h:
+        * wtf/MainThread.cpp:
+        (WTF::functionQueue):
+        (WTF::dispatchFunctionsFromMainThread):
+        (WTF::callOnMainThread):
+        (WTF::cancelCallOnMainThread):
+        (WTF::mainThreadFunctionQueueMutex): Deleted.
+        * wtf/StackStats.cpp:
+        (WTF::StackStats::PerThreadStats::PerThreadStats):
+        (WTF::StackStats::CheckPoint::CheckPoint):
+        (WTF::StackStats::CheckPoint::~CheckPoint):
+        (WTF::StackStats::probe):
+        (WTF::StackStats::LayoutCheckPoint::LayoutCheckPoint):
+        (WTF::StackStats::LayoutCheckPoint::~LayoutCheckPoint):
+        (WTF::StackStats::initialize): Deleted.
+        * wtf/StackStats.h:
+        (WTF::StackStats::LayoutCheckPoint::LayoutCheckPoint):
+        (WTF::StackStats::probe):
+        (WTF::StackStats::initialize): Deleted.
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::initializeThreading):
+        * wtf/mac/DeprecatedSymbolsUsedBySafari.mm:
+        (WTF::callOnMainThread):
+        (WTF::lockAtomicallyInitializedStaticMutex):
+        (WTF::unlockAtomicallyInitializedStaticMutex):
+        (WTF::atomicallyInitializedStaticMutex): Deleted.
+        * wtf/text/StringView.cpp:
+        (WTF::StringView::UnderlyingString::UnderlyingString):
+        (WTF::underlyingStrings):
+        (WTF::StringView::invalidate):
+        (WTF::StringView::adoptUnderlyingString):
+        (WTF::StringView::setUnderlyingString):
+        (WTF::underlyingStringsMutex): Deleted.
+        * wtf/unicode/icu/CollatorICU.cpp:
+        (WTF::Collator::Collator):
+        (WTF::Collator::~Collator):
+        (WTF::cachedCollatorMutex): Deleted.
+
+2015-08-18  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GLib] GMainLoopSource should receive the std::function<> objects through rvalue references
+        https://bugs.webkit.org/show_bug.cgi?id=147981
+
+        Reviewed by Carlos Garcia Campos.
+
+        Scheduling methods on GMainLoopSource and GThreadSafeMainLoopSource should
+        have the std::function<> objects passed through rvalue references, and should
+        move the passed-in objects forward when required.
+
+        * wtf/glib/GMainLoopSource.cpp:
+        (WTF::GMainLoopSource::schedule):
+        (WTF::GMainLoopSource::scheduleAfterDelay):
+        (WTF::GMainLoopSource::scheduleAndDeleteOnDestroy):
+        (WTF::GMainLoopSource::scheduleAfterDelayAndDeleteOnDestroy):
+        * wtf/glib/GMainLoopSource.h:
+        * wtf/glib/GThreadSafeMainLoopSource.cpp:
+        (WTF::GThreadSafeMainLoopSource::schedule):
+        (WTF::GThreadSafeMainLoopSource::scheduleAfterDelay):
+        * wtf/glib/GThreadSafeMainLoopSource.h:
+
+2015-08-18  Eric Carlson  <eric.carlson@apple.com>
+
+        Remove "platform text track menu"
+        https://bugs.webkit.org/show_bug.cgi?id=148139
+
+        Reviewed by Jer Noble.
+
+        * wtf/Platform.h: Remove PLATFORM_TEXT_TRACK_MENU.
+
+2015-08-18  Filip Pizlo  <fpizlo@apple.com>
+
+        WTF::Condition should have a fast path for notifyOne/notifyAll that avoids calling unparkOne/unparkAll
+        https://bugs.webkit.org/show_bug.cgi?id=148090
+
+        Reviewed by Geoffrey Garen.
+
+        This change makes notifyOne()/notifyAll() blazing fast when nobody is waiting, by using the
+        various hooks that ParkingLot gives us to maintain a m_hasWaiters variable. When it's false, it
+        means that any unpark operation would simply return immediately.
+
+        This is a 45% speed-up for the 1-producer/1-consumer scenario with a 100-element queue when you
+        use the notifyOne()-per-enqueue style. What's cool about this change is that you can now safely
+        call notifyOne() (or notifyAll()) out of paranoia, just in case someone might be waiting. It's
+        free to do so if nobody is waiting!
+
+        * wtf/Condition.h:
+        (WTF::Condition::Condition):
+        (WTF::Condition::waitUntil):
+        (WTF::Condition::notifyOne):
+        (WTF::Condition::notifyAll):
+
+2015-08-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Replace all remaining uses of WTF::Mutex with WTF::Lock
+        https://bugs.webkit.org/show_bug.cgi?id=148089
+
+        Reviewed by Geoffrey Garen.
+
+        This also beefs up and rationalizes the Condition API, so that it can deal with units of time
+        other than just steady_clock. This makes it easier to port ThreadCondition and
+        std::condition_variable code over to Condition. This patch does not take a position on what
+        kind of time is best; from reading a lot of the uses in WebCore, it seems like our use of
+        double to measure seconds is often nicer than the many different classes in std::chrono.
+
+        Also added a Condition speed test, to make sure that all of this is a good idea. And indeed it
+        is. The 1-producer/1-consumer scenario with a 100-element queue runs 36x faster using
+        Lock/Condition than Mutex/ThreadCondition when you use the notifyOne()-per-enqueue style. It
+        runs 58x faster with Lock/Condition when you use the notifyAll()-at-boundary style. Note that
+        I have a bug open for making the notifyOne()-per-enqueue style even faster:
+        https://bugs.webkit.org/show_bug.cgi?id=148090. Also, the 10-consumer/10-producer scenario with
+        a 100-element queue runs 20x faster with Lock/Condition for notifyOne()-per-enqueue and 30x
+        faster with notifyAll()-at-boundary. The only way to tweak the test to get
+        Mutex/ThreadCondition to win is to have one producer, one consumer, a 1-element queue, and use
+        the notifyOne()-per-enqueue style. In that case, one of the two threads is going to be waiting
+        most of the time and the test basically measures wake-up latency and nothing else. Because
+        Condition::wait() does a little bit more work than ThreadCondition::wait(),
+        Mutex/ThreadCondition end up running 3% faster in this test case. But if you vary any of the
+        parameters of the test, Mutex/ThreadCondition ends up losing - all it takes is more threads or
+        a queue size of 5 or more. To my knowledge, we never do producer/consumer with a queue bounded
+        to one element precisely because that approach is the least efficient regardless of locking
+        algorithm. For example, neither WTF::MessageQueue nor DFG::Worklist have any bounds on their
+        queue size. So, it seems that replacing all uses of system mutexes and condition variables with
+        our own thing is a great idea.
+
+        * benchmarks/LockSpeedTest.cpp:
+        * benchmarks/ConditionSpeedTest.cpp: Added.
+        * wtf/Condition.h:
+        (WTF::Condition::Condition):
+        (WTF::Condition::waitUntil):
+        (WTF::Condition::waitFor):
+        (WTF::Condition::wait):
+        (WTF::Condition::waitUntilWallClockSeconds):
+        (WTF::Condition::waitUntilMonotonicClockSeconds):
+        (WTF::Condition::notifyOne):
+        (WTF::Condition::notifyAll):
+        (WTF::Condition::waitForSecondsImpl):
+        (WTF::Condition::waitForImpl):
+        (WTF::Condition::absoluteFromRelative):
+        * wtf/MessageQueue.h:
+        (WTF::MessageQueue::infiniteTime):
+        (WTF::MessageQueue<DataType>::append):
+        (WTF::MessageQueue<DataType>::appendAndKill):
+        (WTF::MessageQueue<DataType>::appendAndCheckEmpty):
+        (WTF::MessageQueue<DataType>::prepend):
+        (WTF::MessageQueue<DataType>::removeIf):
+        (WTF::MessageQueue<DataType>::isEmpty):
+        (WTF::MessageQueue<DataType>::kill):
+        (WTF::MessageQueue<DataType>::killed):
+        * wtf/ParallelJobsGeneric.cpp:
+        (WTF::ParallelEnvironment::ThreadPrivate::execute):
+        (WTF::ParallelEnvironment::ThreadPrivate::waitForFinish):
+        (WTF::ParallelEnvironment::ThreadPrivate::workerThread):
+        * wtf/ParallelJobsGeneric.h:
+        * wtf/ParkingLot.cpp:
+        (WTF::ParkingLot::parkConditionally):
+        * wtf/ParkingLot.h:
+        (WTF::ParkingLot::compareAndPark):
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::initializeThreading):
+        * wtf/ThreadingWin.cpp:
+        (WTF::initializeThreading):
+        * wtf/dtoa.cpp:
+        (WTF::pow5mult):
+        * wtf/dtoa.h:
+
+2015-08-17  Alex Christensen  <achristensen@webkit.org>
+
+        Build Debug Suffix on Windows with CMake
+        https://bugs.webkit.org/show_bug.cgi?id=148083
+
+        Reviewed by Brent Fulgham.
+
+        * wtf/PlatformWin.cmake:
+        Add DEBUG_SUFFIX
+
+2015-08-17  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Implement IntegerHasher
+        https://bugs.webkit.org/show_bug.cgi?id=147866
+
+        Reviewed by Darin Adler and Anders Carlsson.
+
+        Rename StringHasher.h to Hasher.h, and include an IntegerHasher class.
+
+        * WTF.vcxproj/WTF.vcxproj: Update to target new file.
+        * WTF.vcxproj/WTF.vcxproj.filters: Ditto.
+        * WTF.xcodeproj/project.pbxproj: Ditto.
+        * wtf/CMakeLists.txt: Ditto.
+        * wtf/Hasher.h: Renamed from Source/WTF/wtf/StringHasher.h.
+        * wtf/text/CString.cpp: Use new #include
+        * wtf/text/StringHash.h: Ditto.
+        * wtf/text/StringImpl.h: Ditto.
+        * wtf/unicode/UTF8.cpp: Ditto.
+
+2015-08-17  Alex Christensen  <achristensen@webkit.org>
+
+        Move some commands from ./CMakeLists.txt to Source/cmake
+        https://bugs.webkit.org/show_bug.cgi?id=148003
+
+        Reviewed by Brent Fulgham.
+
+        * CMakeLists.txt:
+        Added commands needed to build WTF by itself.
+
 2015-08-14  Filip Pizlo  <fpizlo@apple.com>
 
         Use WTF::Lock and WTF::Condition instead of WTF::Mutex, WTF::ThreadCondition, std::mutex, and std::condition_variable

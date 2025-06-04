@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSWebKitAnimationEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitAnimationEvent>&& impl)
     {
-        JSWebKitAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitAnimationEvent>(globalObject->vm().heap)) JSWebKitAnimationEvent(structure, globalObject, WTF::move(impl));
+        JSWebKitAnimationEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitAnimationEvent>(globalObject->vm().heap)) JSWebKitAnimationEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitAnimationEvent& impl() const
+    WebKitAnimationEvent& wrapped() const
     {
-        return static_cast<WebKitAnimationEvent&>(Base::impl());
+        return static_cast<WebKitAnimationEvent&>(Base::wrapped());
     }
 protected:
-    JSWebKitAnimationEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitAnimationEvent>&&);
+    JSWebKitAnimationEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitAnimationEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

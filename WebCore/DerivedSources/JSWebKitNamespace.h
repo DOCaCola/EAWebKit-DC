@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebKitNamespace : public JSDOMWrapper {
+class JSWebKitNamespace : public JSDOMWrapper<WebKitNamespace> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebKitNamespace> Base;
     static JSWebKitNamespace* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitNamespace>&& impl)
     {
-        JSWebKitNamespace* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamespace>(globalObject->vm().heap)) JSWebKitNamespace(structure, globalObject, WTF::move(impl));
+        JSWebKitNamespace* ptr = new (NotNull, JSC::allocateCell<JSWebKitNamespace>(globalObject->vm().heap)) JSWebKitNamespace(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebKitNamespace* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebKitNamespace();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitNamespace& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebKitNamespace* m_impl;
 protected:
-    JSWebKitNamespace(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitNamespace>&&);
+    JSWebKitNamespace(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitNamespace>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebKitNamespace*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamespace*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebKitNamespace& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebKitNamespace& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebKitNamespace*);
 
 
 } // namespace WebCore

@@ -23,12 +23,12 @@
 
 #include "CanvasGradient.h"
 #include "CanvasPattern.h"
-#include "CanvasRenderingContext2D.h"
 #include "ExceptionCode.h"
 #include "ImageData.h"
 #include "JSCanvasGradient.h"
 #include "JSCanvasPattern.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMPath.h"
 #include "JSElement.h"
 #include "JSHTMLCanvasElement.h"
@@ -51,6 +51,7 @@ namespace WebCore {
 
 JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSave(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRestore(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCommit(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionScale(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRotate(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionTranslate(JSC::ExecState*);
@@ -146,6 +147,8 @@ JSC::EncodedJSValue jsCanvasRenderingContext2DImageSmoothingEnabled(JSC::ExecSta
 void setJSCanvasRenderingContext2DImageSmoothingEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsCanvasRenderingContext2DWebkitImageSmoothingEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSCanvasRenderingContext2DWebkitImageSmoothingEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsCanvasRenderingContext2DImageSmoothingQuality(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSCanvasRenderingContext2DImageSmoothingQuality(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsCanvasRenderingContext2DConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
 class JSCanvasRenderingContext2DPrototype : public JSC::JSNonFinalObject {
@@ -173,26 +176,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCanvasRenderingContext2DConstructor : public DOMConstructorObject {
-private:
-    JSCanvasRenderingContext2DConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSCanvasRenderingContext2DConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCanvasRenderingContext2DConstructor* ptr = new (NotNull, JSC::allocateCell<JSCanvasRenderingContext2DConstructor>(vm.heap)) JSCanvasRenderingContext2DConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSCanvasRenderingContext2D> JSCanvasRenderingContext2DConstructor;
 
 /* Hash table */
 
@@ -211,103 +195,98 @@ static const struct CompactHashIndex JSCanvasRenderingContext2DTableIndex[9] = {
 
 static const HashTableValue JSCanvasRenderingContext2DTableValues[] =
 {
-    { "webkitLineDash", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitLineDash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitLineDash) },
-    { "strokeStyle", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DStrokeStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DStrokeStyle) },
-    { "fillStyle", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DFillStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DFillStyle) },
+    { "webkitLineDash", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitLineDash), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitLineDash) } },
+    { "strokeStyle", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DStrokeStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DStrokeStyle) } },
+    { "fillStyle", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DFillStyle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DFillStyle) } },
 };
 
-static const HashTable JSCanvasRenderingContext2DTable = { 3, 7, true, JSCanvasRenderingContext2DTableValues, 0, JSCanvasRenderingContext2DTableIndex };
-const ClassInfo JSCanvasRenderingContext2DConstructor::s_info = { "CanvasRenderingContext2DConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasRenderingContext2DConstructor) };
-
-JSCanvasRenderingContext2DConstructor::JSCanvasRenderingContext2DConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSCanvasRenderingContext2DTable = { 3, 7, true, JSCanvasRenderingContext2DTableValues, JSCanvasRenderingContext2DTableIndex };
+template<> void JSCanvasRenderingContext2DConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCanvasRenderingContext2DConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCanvasRenderingContext2D::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCanvasRenderingContext2D::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CanvasRenderingContext2D"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCanvasRenderingContext2DConstructor::s_info = { "CanvasRenderingContext2DConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasRenderingContext2DConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCanvasRenderingContext2DPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "globalAlpha", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DGlobalAlpha), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DGlobalAlpha) },
-    { "globalCompositeOperation", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DGlobalCompositeOperation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DGlobalCompositeOperation) },
-    { "lineWidth", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineWidth) },
-    { "lineCap", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineCap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineCap) },
-    { "lineJoin", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineJoin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineJoin) },
-    { "miterLimit", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DMiterLimit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DMiterLimit) },
-    { "shadowOffsetX", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowOffsetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowOffsetX) },
-    { "shadowOffsetY", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowOffsetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowOffsetY) },
-    { "shadowBlur", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowBlur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowBlur) },
-    { "shadowColor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowColor) },
-    { "lineDashOffset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineDashOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineDashOffset) },
-    { "webkitLineDashOffset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitLineDashOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitLineDashOffset) },
-    { "font", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DFont), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DFont) },
-    { "textAlign", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DTextAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DTextAlign) },
-    { "textBaseline", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DTextBaseline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DTextBaseline) },
-    { "direction", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DDirection) },
-    { "webkitBackingStorePixelRatio", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitBackingStorePixelRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "imageSmoothingEnabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DImageSmoothingEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DImageSmoothingEnabled) },
-    { "webkitImageSmoothingEnabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitImageSmoothingEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitImageSmoothingEnabled) },
-    { "save", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSave), (intptr_t) (0) },
-    { "restore", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRestore), (intptr_t) (0) },
-    { "scale", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionScale), (intptr_t) (2) },
-    { "rotate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRotate), (intptr_t) (1) },
-    { "translate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionTranslate), (intptr_t) (2) },
-    { "transform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionTransform), (intptr_t) (6) },
-    { "setTransform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetTransform), (intptr_t) (6) },
-    { "createLinearGradient", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateLinearGradient), (intptr_t) (4) },
-    { "createRadialGradient", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateRadialGradient), (intptr_t) (6) },
-    { "setLineDash", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineDash), (intptr_t) (1) },
-    { "getLineDash", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionGetLineDash), (intptr_t) (0) },
-    { "clearRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClearRect), (intptr_t) (4) },
-    { "fillRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFillRect), (intptr_t) (4) },
-    { "beginPath", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionBeginPath), (intptr_t) (0) },
-    { "closePath", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClosePath), (intptr_t) (0) },
-    { "moveTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionMoveTo), (intptr_t) (2) },
-    { "lineTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionLineTo), (intptr_t) (2) },
-    { "quadraticCurveTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionQuadraticCurveTo), (intptr_t) (4) },
-    { "bezierCurveTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionBezierCurveTo), (intptr_t) (6) },
-    { "arcTo", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionArcTo), (intptr_t) (5) },
-    { "rect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRect), (intptr_t) (4) },
-    { "arc", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionArc), (intptr_t) (5) },
-    { "ellipse", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionEllipse), (intptr_t) (7) },
-    { "fill", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFill), (intptr_t) (1) },
-    { "stroke", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStroke), (intptr_t) (1) },
-    { "clip", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClip), (intptr_t) (1) },
-    { "isPointInPath", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath), (intptr_t) (3) },
-    { "isPointInStroke", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke), (intptr_t) (3) },
-    { "measureText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionMeasureText), (intptr_t) (1) },
-    { "setAlpha", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetAlpha), (intptr_t) (0) },
-    { "setCompositeOperation", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetCompositeOperation), (intptr_t) (0) },
-    { "setLineWidth", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineWidth), (intptr_t) (0) },
-    { "setLineCap", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineCap), (intptr_t) (0) },
-    { "setLineJoin", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineJoin), (intptr_t) (0) },
-    { "setMiterLimit", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetMiterLimit), (intptr_t) (0) },
-    { "clearShadow", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClearShadow), (intptr_t) (0) },
-    { "fillText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFillText), (intptr_t) (3) },
-    { "strokeText", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStrokeText), (intptr_t) (3) },
-    { "setStrokeColor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor), (intptr_t) (1) },
-    { "setFillColor", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetFillColor), (intptr_t) (1) },
-    { "strokeRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStrokeRect), (intptr_t) (4) },
-    { "drawImage", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawImage), (intptr_t) (3) },
-    { "drawImageFromRect", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawImageFromRect), (intptr_t) (1) },
-    { "setShadow", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetShadow), (intptr_t) (3) },
-    { "putImageData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionPutImageData), (intptr_t) (3) },
-    { "webkitPutImageDataHD", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD), (intptr_t) (3) },
-    { "createPattern", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreatePattern), (intptr_t) (2) },
-    { "createImageData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateImageData), (intptr_t) (1) },
-    { "getImageData", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionGetImageData), (intptr_t) (4) },
-    { "webkitGetImageDataHD", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionWebkitGetImageDataHD), (intptr_t) (4) },
-    { "drawFocusIfNeeded", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "globalAlpha", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DGlobalAlpha), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DGlobalAlpha) } },
+    { "globalCompositeOperation", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DGlobalCompositeOperation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DGlobalCompositeOperation) } },
+    { "lineWidth", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineWidth) } },
+    { "lineCap", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineCap), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineCap) } },
+    { "lineJoin", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineJoin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineJoin) } },
+    { "miterLimit", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DMiterLimit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DMiterLimit) } },
+    { "shadowOffsetX", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowOffsetX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowOffsetX) } },
+    { "shadowOffsetY", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowOffsetY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowOffsetY) } },
+    { "shadowBlur", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowBlur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowBlur) } },
+    { "shadowColor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DShadowColor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DShadowColor) } },
+    { "lineDashOffset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DLineDashOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DLineDashOffset) } },
+    { "webkitLineDashOffset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitLineDashOffset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitLineDashOffset) } },
+    { "font", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DFont), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DFont) } },
+    { "textAlign", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DTextAlign), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DTextAlign) } },
+    { "textBaseline", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DTextBaseline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DTextBaseline) } },
+    { "direction", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DDirection), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DDirection) } },
+    { "webkitBackingStorePixelRatio", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitBackingStorePixelRatio), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "imageSmoothingEnabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DImageSmoothingEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DImageSmoothingEnabled) } },
+    { "webkitImageSmoothingEnabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DWebkitImageSmoothingEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DWebkitImageSmoothingEnabled) } },
+    { "imageSmoothingQuality", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCanvasRenderingContext2DImageSmoothingQuality), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSCanvasRenderingContext2DImageSmoothingQuality) } },
+    { "save", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSave), (intptr_t) (0) } },
+    { "restore", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRestore), (intptr_t) (0) } },
+    { "commit", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCommit), (intptr_t) (0) } },
+    { "scale", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionScale), (intptr_t) (2) } },
+    { "rotate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRotate), (intptr_t) (1) } },
+    { "translate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionTranslate), (intptr_t) (2) } },
+    { "transform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionTransform), (intptr_t) (6) } },
+    { "setTransform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetTransform), (intptr_t) (6) } },
+    { "createLinearGradient", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateLinearGradient), (intptr_t) (4) } },
+    { "createRadialGradient", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateRadialGradient), (intptr_t) (6) } },
+    { "setLineDash", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineDash), (intptr_t) (1) } },
+    { "getLineDash", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionGetLineDash), (intptr_t) (0) } },
+    { "clearRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClearRect), (intptr_t) (4) } },
+    { "fillRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFillRect), (intptr_t) (4) } },
+    { "beginPath", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionBeginPath), (intptr_t) (0) } },
+    { "closePath", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClosePath), (intptr_t) (0) } },
+    { "moveTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionMoveTo), (intptr_t) (2) } },
+    { "lineTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionLineTo), (intptr_t) (2) } },
+    { "quadraticCurveTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionQuadraticCurveTo), (intptr_t) (4) } },
+    { "bezierCurveTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionBezierCurveTo), (intptr_t) (6) } },
+    { "arcTo", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionArcTo), (intptr_t) (5) } },
+    { "rect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionRect), (intptr_t) (4) } },
+    { "arc", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionArc), (intptr_t) (5) } },
+    { "ellipse", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionEllipse), (intptr_t) (7) } },
+    { "fill", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFill), (intptr_t) (1) } },
+    { "stroke", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStroke), (intptr_t) (1) } },
+    { "clip", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClip), (intptr_t) (1) } },
+    { "isPointInPath", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath), (intptr_t) (3) } },
+    { "isPointInStroke", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke), (intptr_t) (3) } },
+    { "measureText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionMeasureText), (intptr_t) (1) } },
+    { "setAlpha", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetAlpha), (intptr_t) (0) } },
+    { "setCompositeOperation", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetCompositeOperation), (intptr_t) (0) } },
+    { "setLineWidth", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineWidth), (intptr_t) (0) } },
+    { "setLineCap", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineCap), (intptr_t) (0) } },
+    { "setLineJoin", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetLineJoin), (intptr_t) (0) } },
+    { "setMiterLimit", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetMiterLimit), (intptr_t) (0) } },
+    { "clearShadow", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionClearShadow), (intptr_t) (0) } },
+    { "fillText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionFillText), (intptr_t) (3) } },
+    { "strokeText", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStrokeText), (intptr_t) (3) } },
+    { "setStrokeColor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor), (intptr_t) (1) } },
+    { "setFillColor", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetFillColor), (intptr_t) (1) } },
+    { "strokeRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionStrokeRect), (intptr_t) (4) } },
+    { "drawImage", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawImage), (intptr_t) (3) } },
+    { "drawImageFromRect", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawImageFromRect), (intptr_t) (1) } },
+    { "setShadow", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionSetShadow), (intptr_t) (3) } },
+    { "putImageData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionPutImageData), (intptr_t) (3) } },
+    { "webkitPutImageDataHD", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD), (intptr_t) (3) } },
+    { "createPattern", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreatePattern), (intptr_t) (2) } },
+    { "createImageData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionCreateImageData), (intptr_t) (1) } },
+    { "getImageData", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionGetImageData), (intptr_t) (4) } },
+    { "webkitGetImageDataHD", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionWebkitGetImageDataHD), (intptr_t) (4) } },
+    { "drawFocusIfNeeded", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded), (intptr_t) (1) } },
 };
 
 const ClassInfo JSCanvasRenderingContext2DPrototype::s_info = { "CanvasRenderingContext2DPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCanvasRenderingContext2DPrototype) };
@@ -320,7 +299,7 @@ void JSCanvasRenderingContext2DPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCanvasRenderingContext2D::s_info = { "CanvasRenderingContext2D", &Base::s_info, &JSCanvasRenderingContext2DTable, CREATE_METHOD_TABLE(JSCanvasRenderingContext2D) };
 
-JSCanvasRenderingContext2D::JSCanvasRenderingContext2D(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasRenderingContext2D>&& impl)
+JSCanvasRenderingContext2D::JSCanvasRenderingContext2D(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CanvasRenderingContext2D>&& impl)
     : JSCanvasRenderingContext(structure, globalObject, WTF::move(impl))
 {
 }
@@ -335,3203 +314,3272 @@ JSObject* JSCanvasRenderingContext2D::getPrototype(VM& vm, JSGlobalObject* globa
     return getDOMPrototype<JSCanvasRenderingContext2D>(vm, globalObject);
 }
 
-bool JSCanvasRenderingContext2D::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSCanvasRenderingContext2D::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCanvasRenderingContext2D*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSCanvasRenderingContext2D, Base>(exec, JSCanvasRenderingContext2DTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSCanvasRenderingContext2D, Base>(state, JSCanvasRenderingContext2DTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsCanvasRenderingContext2DGlobalAlpha(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DGlobalAlpha(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "globalAlpha");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "globalAlpha");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "globalAlpha");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "globalAlpha");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.globalAlpha());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DGlobalCompositeOperation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DGlobalCompositeOperation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "globalCompositeOperation");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "globalCompositeOperation");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "globalCompositeOperation");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "globalCompositeOperation");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.globalCompositeOperation());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.globalCompositeOperation());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DLineWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DLineWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "lineWidth");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "lineWidth");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "lineWidth");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "lineWidth");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.lineWidth());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DLineCap(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DLineCap(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "lineCap");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "lineCap");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "lineCap");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "lineCap");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.lineCap());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.lineCap());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DLineJoin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DLineJoin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "lineJoin");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "lineJoin");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "lineJoin");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "lineJoin");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.lineJoin());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.lineJoin());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DMiterLimit(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DMiterLimit(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "miterLimit");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "miterLimit");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "miterLimit");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "miterLimit");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.miterLimit());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DShadowOffsetX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DShadowOffsetX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "shadowOffsetX");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "shadowOffsetX");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "shadowOffsetX");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "shadowOffsetX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.shadowOffsetX());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DShadowOffsetY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DShadowOffsetY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "shadowOffsetY");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "shadowOffsetY");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "shadowOffsetY");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "shadowOffsetY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.shadowOffsetY());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DShadowBlur(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DShadowBlur(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "shadowBlur");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "shadowBlur");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "shadowBlur");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "shadowBlur");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.shadowBlur());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DShadowColor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DShadowColor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "shadowColor");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "shadowColor");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "shadowColor");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "shadowColor");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.shadowColor());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.shadowColor());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DLineDashOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DLineDashOffset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "lineDashOffset");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "lineDashOffset");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "lineDashOffset");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "lineDashOffset");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.lineDashOffset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DWebkitLineDash(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DWebkitLineDash(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(slotBase);
-    return JSValue::encode(castedThis->webkitLineDash(exec));
+    return JSValue::encode(castedThis->webkitLineDash(*state));
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DWebkitLineDashOffset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DWebkitLineDashOffset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "webkitLineDashOffset");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "webkitLineDashOffset");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "webkitLineDashOffset");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "webkitLineDashOffset");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitLineDashOffset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DFont(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DFont(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "font");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "font");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "font");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "font");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.font());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.font());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DTextAlign(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DTextAlign(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "textAlign");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "textAlign");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "textAlign");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "textAlign");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.textAlign());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.textAlign());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DTextBaseline(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DTextBaseline(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "textBaseline");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "textBaseline");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "textBaseline");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "textBaseline");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.textBaseline());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.textBaseline());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DDirection(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DDirection(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "direction");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "direction");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "direction");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "direction");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.direction());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.direction());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DStrokeStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DStrokeStyle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(slotBase);
-    return JSValue::encode(castedThis->strokeStyle(exec));
+    return JSValue::encode(castedThis->strokeStyle(*state));
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DFillStyle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DFillStyle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(slotBase);
-    return JSValue::encode(castedThis->fillStyle(exec));
+    return JSValue::encode(castedThis->fillStyle(*state));
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DWebkitBackingStorePixelRatio(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DWebkitBackingStorePixelRatio(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "webkitBackingStorePixelRatio");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "webkitBackingStorePixelRatio");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "webkitBackingStorePixelRatio");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "webkitBackingStorePixelRatio");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitBackingStorePixelRatio());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DImageSmoothingEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DImageSmoothingEnabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "imageSmoothingEnabled");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "imageSmoothingEnabled");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "imageSmoothingEnabled");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "imageSmoothingEnabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.imageSmoothingEnabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DWebkitImageSmoothingEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DWebkitImageSmoothingEnabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
-        return throwGetterTypeError(*exec, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.imageSmoothingEnabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCanvasRenderingContext2DConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCanvasRenderingContext2DImageSmoothingQuality(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "CanvasRenderingContext2D", "imageSmoothingQuality");
+        return throwGetterTypeError(*state, "CanvasRenderingContext2D", "imageSmoothingQuality");
+    }
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.imageSmoothingQuality());
+    return JSValue::encode(result);
+}
+
+
+EncodedJSValue jsCanvasRenderingContext2DConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCanvasRenderingContext2DPrototype* domObject = jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCanvasRenderingContext2D::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCanvasRenderingContext2D::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSCanvasRenderingContext2DGlobalAlpha(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DGlobalAlpha(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "globalAlpha");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "globalAlpha");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "globalAlpha");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "globalAlpha");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setGlobalAlpha(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DGlobalCompositeOperation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DGlobalCompositeOperation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "globalCompositeOperation");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "globalCompositeOperation");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "globalCompositeOperation");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "globalCompositeOperation");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setGlobalCompositeOperation(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DLineWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DLineWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "lineWidth");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "lineWidth");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "lineWidth");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "lineWidth");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLineWidth(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DLineCap(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DLineCap(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "lineCap");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "lineCap");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "lineCap");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "lineCap");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLineCap(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DLineJoin(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DLineJoin(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "lineJoin");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "lineJoin");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "lineJoin");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "lineJoin");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLineJoin(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DMiterLimit(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DMiterLimit(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "miterLimit");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "miterLimit");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "miterLimit");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "miterLimit");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setMiterLimit(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DShadowOffsetX(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DShadowOffsetX(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "shadowOffsetX");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "shadowOffsetX");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "shadowOffsetX");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "shadowOffsetX");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setShadowOffsetX(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DShadowOffsetY(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DShadowOffsetY(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "shadowOffsetY");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "shadowOffsetY");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "shadowOffsetY");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "shadowOffsetY");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setShadowOffsetY(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DShadowBlur(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DShadowBlur(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "shadowBlur");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "shadowBlur");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "shadowBlur");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "shadowBlur");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setShadowBlur(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DShadowColor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DShadowColor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "shadowColor");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "shadowColor");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "shadowColor");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "shadowColor");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setShadowColor(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DLineDashOffset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DLineDashOffset(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "lineDashOffset");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "lineDashOffset");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "lineDashOffset");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "lineDashOffset");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLineDashOffset(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DWebkitLineDash(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DWebkitLineDash(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setWebkitLineDash(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setWebkitLineDash(*state, value);
 }
 
 
-void setJSCanvasRenderingContext2DWebkitLineDashOffset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DWebkitLineDashOffset(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "webkitLineDashOffset");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "webkitLineDashOffset");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "webkitLineDashOffset");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "webkitLineDashOffset");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setWebkitLineDashOffset(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DFont(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DFont(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "font");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "font");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "font");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "font");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setFont(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DTextAlign(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DTextAlign(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "textAlign");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "textAlign");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "textAlign");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "textAlign");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setTextAlign(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DTextBaseline(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DTextBaseline(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "textBaseline");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "textBaseline");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "textBaseline");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "textBaseline");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setTextBaseline(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DDirection(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DDirection(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "direction");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "direction");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "direction");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "direction");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setDirection(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DStrokeStyle(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DStrokeStyle(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setStrokeStyle(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setStrokeStyle(*state, value);
 }
 
 
-void setJSCanvasRenderingContext2DFillStyle(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DFillStyle(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCanvasRenderingContext2D*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setFillStyle(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setFillStyle(*state, value);
 }
 
 
-void setJSCanvasRenderingContext2DImageSmoothingEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DImageSmoothingEnabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "imageSmoothingEnabled");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "imageSmoothingEnabled");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "imageSmoothingEnabled");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "imageSmoothingEnabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setImageSmoothingEnabled(nativeValue);
 }
 
 
-void setJSCanvasRenderingContext2DWebkitImageSmoothingEnabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSCanvasRenderingContext2DWebkitImageSmoothingEnabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
         else
-            throwSetterTypeError(*exec, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "webkitImageSmoothingEnabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setImageSmoothingEnabled(nativeValue);
+}
+
+
+void setJSCanvasRenderingContext2DImageSmoothingQuality(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSCanvasRenderingContext2DPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "CanvasRenderingContext2D", "imageSmoothingQuality");
+        else
+            throwSetterTypeError(*state, "CanvasRenderingContext2D", "imageSmoothingQuality");
+        return;
+    }
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    if (nativeValue != "low" && nativeValue != "medium" && nativeValue != "high")
+        return;
+    impl.setImageSmoothingQuality(nativeValue);
 }
 
 
 JSValue JSCanvasRenderingContext2D::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCanvasRenderingContext2DConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCanvasRenderingContext2DConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSave(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSave(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "save");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "save");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.save();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRestore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRestore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "restore");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "restore");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.restore();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionScale(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCommit(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "scale");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "commit");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float sx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    return JSValue::encode(castedThis->commit(*state));
+}
+
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionScale(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "scale");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float sx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sy = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.scale(sx, sy);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRotate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRotate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "rotate");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "rotate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.rotate(angle);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionTranslate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionTranslate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "translate");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "translate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float tx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float tx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float ty = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float ty = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.translate(tx, ty);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionTransform(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionTransform(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "transform");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "transform");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float m11 = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float m11 = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m12 = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m12 = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m21 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m21 = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m22 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m22 = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dy = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.transform(m11, m12, m21, m22, dx, dy);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetTransform(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetTransform(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setTransform");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setTransform");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float m11 = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float m11 = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m12 = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m12 = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m21 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m21 = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m22 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m22 = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dy = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setTransform(m11, m12, m21, m22, dx, dy);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateLinearGradient(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateLinearGradient(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createLinearGradient");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createLinearGradient");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x0 = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x0 = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(x0)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float y0 = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y0 = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(y0)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float x1 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x1 = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(x1)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float y1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y1 = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(y1)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createLinearGradient(x0, y0, x1, y1, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createLinearGradient(x0, y0, x1, y1, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateRadialGradient(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateRadialGradient(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createRadialGradient");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createRadialGradient");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x0 = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x0 = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(x0)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float y0 = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y0 = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(y0)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float r0 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float r0 = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(r0)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float x1 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x1 = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(x1)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float y1 = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y1 = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(y1)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float r1 = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float r1 = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(r1)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createRadialGradient(x0, y0, r0, x1, y1, r1, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createRadialGradient(x0, y0, r0, x1, y1, r1, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineDash(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineDash(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setLineDash");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setLineDash");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Vector<float> dash = toNativeArray<float>(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Vector<float> dash = toNativeArray<float>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setLineDash(dash);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionGetLineDash(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionGetLineDash(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "getLineDash");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "getLineDash");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.getLineDash());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.getLineDash());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClearRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClearRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "clearRect");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "clearRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearRect(x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFillRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFillRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "fillRect");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "fillRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.fillRect(x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionBeginPath(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionBeginPath(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "beginPath");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "beginPath");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.beginPath();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClosePath(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClosePath(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "closePath");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "closePath");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.closePath();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionMoveTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionMoveTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "moveTo");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "moveTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.moveTo(x, y);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionLineTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionLineTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "lineTo");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "lineTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.lineTo(x, y);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionQuadraticCurveTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionQuadraticCurveTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "quadraticCurveTo");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "quadraticCurveTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float cpx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float cpx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cpy = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cpy = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.quadraticCurveTo(cpx, cpy, x, y);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionBezierCurveTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionBezierCurveTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "bezierCurveTo");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "bezierCurveTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 6))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float cp1x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 6))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float cp1x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cp1y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cp1y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cp2x = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cp2x = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float cp2y = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float cp2y = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionArcTo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionArcTo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "arcTo");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "arcTo");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x1 = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x1 = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y1 = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y1 = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x2 = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x2 = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y2 = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y2 = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float radius = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float radius = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.arcTo(x1, y1, x2, y2, radius, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "rect");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "rect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.rect(x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionArc(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionArc(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "arc");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "arc");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float radius = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float radius = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float startAngle = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float startAngle = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float endAngle = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float endAngle = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool anticlockwise = exec->argument(5).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool anticlockwise = state->argument(5).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.arc(x, y, radius, startAngle, endAngle, anticlockwise, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionEllipse(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionEllipse(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "ellipse");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "ellipse");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float radiusX = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float radiusX = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float radiusY = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float radiusY = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float rotation = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float rotation = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float startAngle = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float startAngle = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float endAngle = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float endAngle = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool anticlockwise = exec->argument(7).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool anticlockwise = state->argument(7).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "fill");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "fill");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.fill(path);
         return JSValue::encode(jsUndefined());
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(1).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 1, "winding", "CanvasRenderingContext2D", "fill", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(1).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(1).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 1, "winding", "CanvasRenderingContext2D", "fill", "\"nonzero\", \"evenodd\"");
+    }
     impl.fill(path, winding);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "stroke");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "stroke");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.stroke(path);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "clip");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "clip");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.clip(path);
         return JSValue::encode(jsUndefined());
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(1).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 1, "winding", "CanvasRenderingContext2D", "clip", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(1).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(1).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 1, "winding", "CanvasRenderingContext2D", "clip", "\"nonzero\", \"evenodd\"");
+    }
     impl.clip(path, winding);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "fill");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "fill");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
         impl.fill();
         return JSValue::encode(jsUndefined());
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 0, "winding", "CanvasRenderingContext2D", "fill", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(0).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(0).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 0, "winding", "CanvasRenderingContext2D", "fill", "\"nonzero\", \"evenodd\"");
+    }
     impl.fill(winding);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFill(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionFill1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionFill1(state);
     if (argsCount == 0 || argsCount == 1)
-        return jsCanvasRenderingContext2DPrototypeFunctionFill2(exec);
-    return throwVMTypeError(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionFill2(state);
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "stroke");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "stroke");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.stroke();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStroke(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(1, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionStroke1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionStroke1(state);
     if (argsCount == 0)
-        return jsCanvasRenderingContext2DPrototypeFunctionStroke2(exec);
-    return throwVMTypeError(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionStroke2(state);
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "clip");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "clip");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 0) {
         impl.clip();
         return JSValue::encode(jsUndefined());
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 0, "winding", "CanvasRenderingContext2D", "clip", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(0).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(0).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 0, "winding", "CanvasRenderingContext2D", "clip", "\"nonzero\", \"evenodd\"");
+    }
     impl.clip(winding);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClip(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))) || (argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionClip1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionClip1(state);
     if (argsCount == 0 || argsCount == 1)
-        return jsCanvasRenderingContext2DPrototypeFunctionClip2(exec);
-    return throwVMTypeError(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionClip2(state);
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "isPointInPath");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "isPointInPath");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 3) {
         JSValue result = jsBoolean(impl.isPointInPath(path, x, y));
         return JSValue::encode(result);
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(3).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 3, "winding", "CanvasRenderingContext2D", "isPointInPath", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(3).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(3).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 3, "winding", "CanvasRenderingContext2D", "isPointInPath", "\"nonzero\", \"evenodd\"");
+    }
     JSValue result = jsBoolean(impl.isPointInPath(path, x, y, winding));
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "isPointInStroke");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "isPointInStroke");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPointInStroke(path, x, y));
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "isPointInPath");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "isPointInPath");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 2) {
         JSValue result = jsBoolean(impl.isPointInPath(x, y));
         return JSValue::encode(result);
     }
 
-    // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* windingString = exec->argument(2).toString(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    auto& winding = windingString->value(exec);
-    if (winding != "nonzero" && winding != "evenodd")
-        return throwArgumentMustBeEnumError(*exec, 2, "winding", "CanvasRenderingContext2D", "isPointInPath", "\"nonzero\", \"evenodd\"");
+    String winding;
+    if (state->argument(2).isUndefined())
+        winding = ASCIILiteral("nonzero");
+    else {
+        winding = state->uncheckedArgument(2).toString(state)->value(state);
+        if (UNLIKELY(state->hadException()))
+            return JSValue::encode(jsUndefined());
+        if (winding != "nonzero" && winding != "evenodd")
+            return throwArgumentMustBeEnumError(*state, 2, "winding", "CanvasRenderingContext2D", "isPointInPath", "\"nonzero\", \"evenodd\"");
+    }
     JSValue result = jsBoolean(impl.isPointInPath(x, y, winding));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(4, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(4, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 3 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))) || (argsCount == 4 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath1(state);
     if (argsCount == 2 || argsCount == 3)
-        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath2(state);
     if (argsCount < 2)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "isPointInStroke");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "isPointInStroke");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.isPointInStroke(x, y));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(3, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(3, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 3 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke1(state);
     if (argsCount == 2)
-        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionIsPointInStroke2(state);
     if (argsCount < 2)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionMeasureText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionMeasureText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "measureText");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "measureText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String text = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String text = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.measureText(text)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.measureText(text)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetAlpha(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetAlpha(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setAlpha");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setAlpha");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    float alpha = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float alpha = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setAlpha(alpha);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetCompositeOperation(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetCompositeOperation(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setCompositeOperation");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setCompositeOperation");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    String compositeOperation = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String compositeOperation = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setCompositeOperation(compositeOperation);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineWidth(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineWidth(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setLineWidth");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setLineWidth");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setLineWidth(width);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineCap(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineCap(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setLineCap");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setLineCap");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    String cap = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String cap = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setLineCap(cap);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineJoin(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetLineJoin(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setLineJoin");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setLineJoin");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    String join = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String join = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setLineJoin(join);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetMiterLimit(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetMiterLimit(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setMiterLimit");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setMiterLimit");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    float limit = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float limit = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setMiterLimit(limit);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClearShadow(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionClearShadow(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "clearShadow");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "clearShadow");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.clearShadow();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFillText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionFillText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "fillText");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "fillText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String text = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String text = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 3) {
         impl.fillText(text, x, y);
         return JSValue::encode(jsUndefined());
     }
 
-    float maxWidth = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float maxWidth = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.fillText(text, x, y, maxWidth);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStrokeText(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStrokeText(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "strokeText");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "strokeText");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String text = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String text = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 3) {
         impl.strokeText(text, x, y);
         return JSValue::encode(jsUndefined());
     }
 
-    float maxWidth = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float maxWidth = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.strokeText(text, x, y, maxWidth);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setStrokeColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setStrokeColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String color = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String color = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.setStrokeColor(color);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStrokeColor(color, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setStrokeColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setStrokeColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float grayLevel = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float grayLevel = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.setStrokeColor(grayLevel);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(alpha)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
     impl.setStrokeColor(grayLevel, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setStrokeColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setStrokeColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float r = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float r = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float g = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float g = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float b = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float b = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStrokeColor(r, g, b, a);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setStrokeColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setStrokeColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float c = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float c = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float k = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float k = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setStrokeColor(c, m, y, k, a);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(5, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(5, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isUndefinedOrNull() || arg0.isString() || arg0.isObject())) || (argsCount == 2 && (arg0.isUndefinedOrNull() || arg0.isString() || arg0.isObject())))
-        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor1(state);
     if (argsCount == 1 || argsCount == 2)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor2(state);
     if (argsCount == 4)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor3(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor3(state);
     if (argsCount == 5)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor4(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor4(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setFillColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setFillColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String color = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String color = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.setFillColor(color);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFillColor(color, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setFillColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setFillColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float grayLevel = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float grayLevel = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.setFillColor(grayLevel);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFillColor(grayLevel, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setFillColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setFillColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float r = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float r = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float g = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float g = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float b = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float b = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFillColor(r, g, b, a);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setFillColor");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setFillColor");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float c = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float c = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float k = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float k = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setFillColor(c, m, y, k, a);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetFillColor(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(5, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(5, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isUndefinedOrNull() || arg0.isString() || arg0.isObject())) || (argsCount == 2 && (arg0.isUndefinedOrNull() || arg0.isString() || arg0.isObject())))
-        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor1(state);
     if (argsCount == 1 || argsCount == 2)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor2(state);
     if (argsCount == 4)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor3(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor3(state);
     if (argsCount == 5)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor4(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetFillColor4(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStrokeRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionStrokeRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "strokeRect");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "strokeRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.strokeRect(x, y, width, height);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(image, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(image, x, y, width, height, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sw = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sh = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dy = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dw = exec->argument(7).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dw = state->argument(7).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dh = exec->argument(8).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dh = state->argument(8).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(canvas, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage5(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage5(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(canvas, x, y, width, height, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage6(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage6(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sw = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sh = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dy = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dw = exec->argument(7).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dw = state->argument(7).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dh = exec->argument(8).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dh = state->argument(8).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage7(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage7(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(video, x, y, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage8(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage8(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 5))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 5))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float x = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float width = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float width = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(video, x, y, width, height, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage9(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage9(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImage");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImage");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 9))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 9))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLVideoElement* video = JSHTMLVideoElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sw = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float sh = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dy = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dw = exec->argument(7).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dw = state->argument(7).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dh = exec->argument(8).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dh = state->argument(8).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImage(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(9, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(9, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLImageElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage1(state);
     if ((argsCount == 5 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLImageElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage2(state);
     if ((argsCount == 9 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLImageElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage3(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage3(state);
     if ((argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLCanvasElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage4(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage4(state);
     if ((argsCount == 5 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLCanvasElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage5(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage5(state);
     if ((argsCount == 9 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLCanvasElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage6(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage6(state);
     if ((argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLVideoElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage7(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage7(state);
     if ((argsCount == 5 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLVideoElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage8(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage8(state);
     if ((argsCount == 9 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLVideoElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage9(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawImage9(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImageFromRect(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawImageFromRect(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawImageFromRect");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawImageFromRect");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
         impl.drawImageFromRect(image);
         return JSValue::encode(jsUndefined());
     }
 
-    float sx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 2) {
         impl.drawImageFromRect(image, sx);
         return JSValue::encode(jsUndefined());
     }
 
-    float sy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 3) {
         impl.drawImageFromRect(image, sx, sy);
         return JSValue::encode(jsUndefined());
     }
 
-    float sw = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 4) {
         impl.drawImageFromRect(image, sx, sy, sw);
         return JSValue::encode(jsUndefined());
     }
 
-    float sh = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 5) {
         impl.drawImageFromRect(image, sx, sy, sw, sh);
         return JSValue::encode(jsUndefined());
     }
 
-    float dx = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 6) {
         impl.drawImageFromRect(image, sx, sy, sw, sh, dx);
         return JSValue::encode(jsUndefined());
     }
 
-    float dy = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 7) {
         impl.drawImageFromRect(image, sx, sy, sw, sh, dx, dy);
         return JSValue::encode(jsUndefined());
     }
 
-    float dw = exec->argument(7).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dw = state->argument(7).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 8) {
         impl.drawImageFromRect(image, sx, sy, sw, sh, dx, dy, dw);
         return JSValue::encode(jsUndefined());
     }
 
-    float dh = exec->argument(8).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dh = state->argument(8).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 9) {
         impl.drawImageFromRect(image, sx, sy, sw, sh, dx, dy, dw, dh);
         return JSValue::encode(jsUndefined());
     }
 
-    String compositeOperation = exec->argument(9).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String compositeOperation = state->argument(9).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawImageFromRect(image, sx, sy, sw, sh, dx, dy, dw, dh, compositeOperation);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setShadow");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setShadow");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blur = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blur = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 3) {
         impl.setShadow(width, height, blur);
         return JSValue::encode(jsUndefined());
     }
 
-    String color = exec->argument(3).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String color = state->argument(3).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (argsCount <= 4) {
         impl.setShadow(width, height, blur, color);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShadow(width, height, blur, color, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setShadow");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setShadow");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blur = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blur = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float grayLevel = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float grayLevel = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 4) {
         impl.setShadow(width, height, blur, grayLevel);
         return JSValue::encode(jsUndefined());
     }
 
-    float alpha = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float alpha = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShadow(width, height, blur, grayLevel, alpha);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow3(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow3(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setShadow");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setShadow");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float height = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blur = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blur = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float r = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float r = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float g = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float g = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float b = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float b = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShadow(width, height, blur, r, g, b, a);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow4(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow4(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "setShadow");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "setShadow");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 8))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float width = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 8))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float width = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(width)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float height = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float height = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float blur = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float blur = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float c = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float c = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float m = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float m = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float k = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float k = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float a = exec->argument(7).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float a = state->argument(7).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.setShadow(width, height, blur, c, m, y, k, a);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionSetShadow(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(8, exec->argumentCount());
-    JSValue arg3(exec->argument(3));
+    size_t argsCount = std::min<size_t>(8, state->argumentCount());
+    JSValue arg3(state->argument(3));
     if (argsCount == 3 || (argsCount == 4 && (arg3.isUndefinedOrNull() || arg3.isString() || arg3.isObject())) || (argsCount == 5 && (arg3.isUndefinedOrNull() || arg3.isString() || arg3.isObject())))
-        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow1(state);
     if (argsCount == 4 || argsCount == 5)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow2(state);
     if (argsCount == 7)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow3(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow3(state);
     if (argsCount == 8)
-        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow4(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionSetShadow4(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "putImageData");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "putImageData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    ImageData* imagedata = JSImageData::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    ImageData* imagedata = JSImageData::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
     impl.putImageData(imagedata, dx, dy, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "putImageData");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "putImageData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    ImageData* imagedata = JSImageData::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    ImageData* imagedata = JSImageData::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyX = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyX = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyX)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyY = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyY = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyY)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyWidth = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyWidth = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyWidth)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyHeight = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyHeight = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyHeight)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
     impl.putImageData(imagedata, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionPutImageData(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(7, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(7, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSImageData::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionPutImageData1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionPutImageData1(state);
     if ((argsCount == 7 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSImageData::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionPutImageData2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionPutImageData2(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "webkitPutImageDataHD");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "webkitPutImageDataHD");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 3))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    ImageData* imagedata = JSImageData::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    ImageData* imagedata = JSImageData::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
     impl.webkitPutImageDataHD(imagedata, dx, dy, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "webkitPutImageDataHD");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "webkitPutImageDataHD");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 7))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 7))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    ImageData* imagedata = JSImageData::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    ImageData* imagedata = JSImageData::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float dx = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dx = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dy = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dy = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyX = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyX = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyX)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyY = exec->argument(4).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyY = state->argument(4).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyY)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyWidth = exec->argument(5).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyWidth = state->argument(5).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyWidth)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float dirtyHeight = exec->argument(6).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float dirtyHeight = state->argument(6).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(dirtyHeight)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
     impl.webkitPutImageDataHD(imagedata, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(7, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(7, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 3 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSImageData::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD1(state);
     if ((argsCount == 7 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSImageData::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionWebkitPutImageDataHD2(state);
     if (argsCount < 3)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createPattern");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createPattern");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLCanvasElement* canvas = JSHTMLCanvasElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String repetitionType = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    String repetitionType = valueToStringWithNullCheck(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createPattern(canvas, repetitionType, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createPattern(canvas, repetitionType, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createPattern");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createPattern");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    HTMLImageElement* image = JSHTMLImageElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    HTMLImageElement* image = JSHTMLImageElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String repetitionType = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    String repetitionType = valueToStringWithNullCheck(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createPattern(image, repetitionType, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createPattern(image, repetitionType, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreatePattern(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 2 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLCanvasElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionCreatePattern1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionCreatePattern1(state);
     if ((argsCount == 2 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSHTMLImageElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionCreatePattern2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionCreatePattern2(state);
     if (argsCount < 2)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createImageData");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createImageData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    ImageData* imagedata = JSImageData::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    ImageData* imagedata = JSImageData::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createImageData(imagedata, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createImageData(imagedata, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "createImageData");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "createImageData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float sw = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sw)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sh = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sh)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createImageData(sw, sh, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createImageData(sw, sh, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionCreateImageData(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && (arg0.isNull() || (arg0.isObject() && asObject(arg0)->inherits(JSImageData::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionCreateImageData1(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionCreateImageData1(state);
     if (argsCount == 2)
-        return jsCanvasRenderingContext2DPrototypeFunctionCreateImageData2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionCreateImageData2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionGetImageData(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionGetImageData(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "getImageData");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "getImageData");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float sx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sy = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sw = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sw)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sh = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sh)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getImageData(sx, sy, sw, sh, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getImageData(sx, sy, sw, sh, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitGetImageDataHD(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionWebkitGetImageDataHD(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "webkitGetImageDataHD");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "webkitGetImageDataHD");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float sx = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sx = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sx)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sy = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sy = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sy)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sw = exec->argument(2).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sw = state->argument(2).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sw)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    float sh = exec->argument(3).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float sh = state->argument(3).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!std::isfinite(sh)) {
-        setDOMException(exec, TypeError);
+        setDOMException(state, TypeError);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.webkitGetImageDataHD(sx, sy, sw, sh, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.webkitGetImageDataHD(sx, sy, sw, sh, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded1(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded1(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawFocusIfNeeded");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawFocusIfNeeded");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawFocusIfNeeded(element);
     return JSValue::encode(jsUndefined());
 }
 
-static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded2(ExecState* exec)
+static EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded2(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCanvasRenderingContext2D* castedThis = jsDynamicCast<JSCanvasRenderingContext2D*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CanvasRenderingContext2D", "drawFocusIfNeeded");
+        return throwThisTypeError(*state, "CanvasRenderingContext2D", "drawFocusIfNeeded");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCanvasRenderingContext2D::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    DOMPath* path = JSDOMPath::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    DOMPath* path = JSDOMPath::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Element* element = JSElement::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Element* element = JSElement::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.drawFocusIfNeeded(path, element);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded(ExecState* state)
 {
-    size_t argsCount = std::min<size_t>(2, exec->argumentCount());
-    JSValue arg0(exec->argument(0));
+    size_t argsCount = std::min<size_t>(2, state->argumentCount());
+    JSValue arg0(state->argument(0));
     if ((argsCount == 1 && ((arg0.isObject() && asObject(arg0)->inherits(JSElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded1(exec);
-    JSValue arg1(exec->argument(1));
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded1(state);
+    JSValue arg1(state->argument(1));
     if ((argsCount == 2 && ((arg0.isObject() && asObject(arg0)->inherits(JSDOMPath::info()))) && ((arg1.isObject() && asObject(arg1)->inherits(JSElement::info())))))
-        return jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded2(exec);
+        return jsCanvasRenderingContext2DPrototypeFunctionDrawFocusIfNeeded2(state);
     if (argsCount < 1)
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    return throwVMTypeError(exec);
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
 }
 
 

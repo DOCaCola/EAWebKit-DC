@@ -25,7 +25,6 @@
 
 #include "config.h"
 #include "CommonSlowPaths.h"
-#include "ArityCheckFailReturnThunks.h"
 #include "ArrayConstructor.h"
 #include "CallFrame.h"
 #include "ClonedArguments.h"
@@ -35,11 +34,11 @@
 #include "Error.h"
 #include "ErrorHandlingScope.h"
 #include "ExceptionFuzz.h"
+#include "GeneratorFrame.h"
 #include "GetterSetter.h"
 #include "HostCallReturnValue.h"
 #include "Interpreter.h"
 #include "JIT.h"
-#include "JITStubs.h"
 #include "JSCInlines.h"
 #include "JSCJSValue.h"
 #include "JSGlobalObjectFunctions.h"
@@ -117,24 +116,32 @@ namespace JSC {
         END_IMPL();                                         \
     } while (false)
 
-#define RETURN(value) do {                \
-        JSValue rReturnValue = (value);      \
-        CHECK_EXCEPTION();                \
-        OP(1) = rReturnValue;          \
-        END_IMPL();                       \
+#define RETURN_WITH_PROFILING(value__, profilingAction__) do { \
+        JSValue returnValue__ = (value__);  \
+        CHECK_EXCEPTION();                  \
+        OP(1) = returnValue__;              \
+        profilingAction__;                  \
+        END_IMPL();                         \
     } while (false)
 
-#define RETURN_PROFILED(opcode, value) do {                  \
-        JSValue rpPeturnValue = (value);                     \
-        CHECK_EXCEPTION();                                   \
-        OP(1) = rpPeturnValue;                               \
-        PROFILE_VALUE(opcode, rpPeturnValue);                \
-        END_IMPL();                                          \
-    } while (false)
+#define RETURN(value) \
+    RETURN_WITH_PROFILING(value, { })
+
+#define RETURN_PROFILED(opcode__, value__) \
+    RETURN_WITH_PROFILING(value__, PROFILE_VALUE(opcode__, returnValue__))
 
 #define PROFILE_VALUE(opcode, value) do { \
         pc[OPCODE_LENGTH(opcode) - 1].u.profile->m_buckets[0] = \
         JSValue::encode(value);                  \
+    } while (false)
+
+#define RETURN_WITH_RESULT_PROFILING(value__) \
+    RETURN_WITH_PROFILING(value__, PROFILE_RESULT(returnValue__))
+    
+#define PROFILE_RESULT(value__) do { \
+        CodeBlock* codeBlock = exec->codeBlock();                                   \
+        unsigned bytecodeOffset = codeBlock->bytecodeOffset(pc);                    \
+        codeBlock->updateResultProfileForBytecodeOffset(bytecodeOffset, value__);   \
     } while (false)
 
 #define CALL_END_IMPL(exec, callTarget) RETURN_TWO((callTarget), (exec))
@@ -166,15 +173,11 @@ static CommonSlowPaths::ArityCheckData* setupArityCheckData(VM& vm, int slotsToA
     CommonSlowPaths::ArityCheckData* result = vm.arityCheckData.get();
     result->paddedStackSpace = slotsToAdd;
 #if ENABLE(JIT)
-    if (vm.canUseJIT()) {
+    if (vm.canUseJIT())
         result->thunkToCall = vm.getCTIStub(arityFixupGenerator).code().executableAddress();
-        result->returnPC = vm.arityCheckFailReturnThunks->returnPCFor(vm, slotsToAdd * stackAlignmentRegisters()).executableAddress();
-    } else
+    else
 #endif
-    {
         result->thunkToCall = 0;
-        result->returnPC = 0;
-    }
     return result;
 }
 
@@ -228,15 +231,10 @@ SLOW_PATH_DECL(slow_path_create_this)
 {
     BEGIN();
     JSFunction* constructor = jsCast<JSFunction*>(OP(2).jsValue().asCell());
-    
-#if !ASSERT_DISABLED
-    ConstructData constructData;
-    ASSERT(constructor->methodTable()->getConstructData(constructor, constructData) == ConstructTypeJS);
-#endif
 
     auto& cacheWriteBarrier = pc[4].u.jsCell;
     if (!cacheWriteBarrier)
-        cacheWriteBarrier.set(exec->vm(), exec->codeBlock()->ownerExecutable(), constructor);
+        cacheWriteBarrier.set(exec->vm(), exec->codeBlock(), constructor);
     else if (cacheWriteBarrier.unvalidatedGet() != JSCell::seenMultipleCalleeObjects() && cacheWriteBarrier.get() != constructor)
         cacheWriteBarrier.setWithoutWriteBarrier(JSCell::seenMultipleCalleeObjects());
 
@@ -255,7 +253,7 @@ SLOW_PATH_DECL(slow_path_to_this)
         if (myStructure != otherStructure) {
             if (otherStructure)
                 pc[3].u.toThisStatus = ToThisConflicted;
-            pc[2].u.structure.set(vm, exec->codeBlock()->ownerExecutable(), myStructure);
+            pc[2].u.structure.set(vm, exec->codeBlock(), myStructure);
         }
     } else {
         pc[3].u.toThisStatus = ToThisConflicted;
@@ -268,6 +266,12 @@ SLOW_PATH_DECL(slow_path_throw_tdz_error)
 {
     BEGIN();
     THROW(createTDZError(exec));
+}
+
+SLOW_PATH_DECL(slow_path_throw_strict_mode_readonly_property_write_error)
+{
+    BEGIN();
+    THROW(createTypeError(exec, ASCIILiteral(StrictModeReadonlyPropertyWriteError)));
 }
 
 SLOW_PATH_DECL(slow_path_not)
@@ -361,12 +365,12 @@ SLOW_PATH_DECL(slow_path_add)
     JSValue v2 = OP_C(3).jsValue();
     
     if (v1.isString() && !v2.isObject())
-        RETURN(jsString(exec, asString(v1), v2.toString(exec)));
+        RETURN_WITH_RESULT_PROFILING(jsString(exec, asString(v1), v2.toString(exec)));
     
     if (v1.isNumber() && v2.isNumber())
-        RETURN(jsNumber(v1.asNumber() + v2.asNumber()));
+        RETURN_WITH_RESULT_PROFILING(jsNumber(v1.asNumber() + v2.asNumber()));
     
-    RETURN(jsAddSlowCase(exec, v1, v2));
+    RETURN_WITH_RESULT_PROFILING(jsAddSlowCase(exec, v1, v2));
 }
 
 // The following arithmetic and bitwise operations need to be sure to run
@@ -378,7 +382,7 @@ SLOW_PATH_DECL(slow_path_mul)
     BEGIN();
     double a = OP_C(2).jsValue().toNumber(exec);
     double b = OP_C(3).jsValue().toNumber(exec);
-    RETURN(jsNumber(a * b));
+    RETURN_WITH_RESULT_PROFILING(jsNumber(a * b));
 }
 
 SLOW_PATH_DECL(slow_path_sub)
@@ -386,7 +390,7 @@ SLOW_PATH_DECL(slow_path_sub)
     BEGIN();
     double a = OP_C(2).jsValue().toNumber(exec);
     double b = OP_C(3).jsValue().toNumber(exec);
-    RETURN(jsNumber(a - b));
+    RETURN_WITH_RESULT_PROFILING(jsNumber(a - b));
 }
 
 SLOW_PATH_DECL(slow_path_div)
@@ -394,7 +398,7 @@ SLOW_PATH_DECL(slow_path_div)
     BEGIN();
     double a = OP_C(2).jsValue().toNumber(exec);
     double b = OP_C(3).jsValue().toNumber(exec);
-    RETURN(jsNumber(a / b));
+    RETURN_WITH_RESULT_PROFILING(jsNumber(a / b));
 }
 
 SLOW_PATH_DECL(slow_path_mod)
@@ -525,8 +529,8 @@ SLOW_PATH_DECL(slow_path_to_primitive)
 SLOW_PATH_DECL(slow_path_enter)
 {
     BEGIN();
-    ScriptExecutable* ownerExecutable = exec->codeBlock()->ownerExecutable();
-    Heap::heap(ownerExecutable)->writeBarrier(ownerExecutable);
+    CodeBlock* codeBlock = exec->codeBlock();
+    Heap::heap(codeBlock)->writeBarrier(codeBlock);
     END();
 }
 
@@ -637,6 +641,45 @@ SLOW_PATH_DECL(slow_path_profile_type_clear_log)
     END();
 }
 
+SLOW_PATH_DECL(slow_path_assert)
+{
+    BEGIN();
+    ASSERT_WITH_MESSAGE(OP(1).jsValue().asBoolean(), "JS assertion failed at line %d in:\n%s\n", pc[2].u.operand, exec->codeBlock()->sourceCodeForTools().data());
+    END();
+}
+
+SLOW_PATH_DECL(slow_path_save)
+{
+    // Only save variables and temporary registers. The scope registers are included in them.
+    // But parameters are not included. Because the generator implementation replaces the values of parameters on each generator.next() call.
+    BEGIN();
+    JSValue generator = OP(1).jsValue();
+    GeneratorFrame* frame = nullptr;
+    JSValue value = generator.get(exec, exec->propertyNames().generatorFramePrivateName);
+    if (!value.isNull())
+        frame = jsCast<GeneratorFrame*>(value);
+    else {
+        // FIXME: Once JSGenerator specialized object is introduced, this GeneratorFrame should be embeded into it to avoid allocations.
+        // https://bugs.webkit.org/show_bug.cgi?id=151545
+        frame = GeneratorFrame::create(exec->vm(),  exec->codeBlock()->numCalleeLocals());
+        PutPropertySlot slot(generator, true, PutPropertySlot::PutById);
+        asObject(generator)->methodTable(exec->vm())->put(asObject(generator), exec, exec->propertyNames().generatorFramePrivateName, frame, slot);
+    }
+    unsigned liveCalleeLocalsIndex = pc[2].u.unsignedValue;
+    frame->save(exec, exec->codeBlock()->liveCalleeLocalsAtYield(liveCalleeLocalsIndex));
+    END();
+}
+
+SLOW_PATH_DECL(slow_path_resume)
+{
+    BEGIN();
+    JSValue generator = OP(1).jsValue();
+    GeneratorFrame* frame = jsCast<GeneratorFrame*>(generator.get(exec, exec->propertyNames().generatorFramePrivateName));
+    unsigned liveCalleeLocalsIndex = pc[2].u.unsignedValue;
+    frame->resume(exec, exec->codeBlock()->liveCalleeLocalsAtYield(liveCalleeLocalsIndex));
+    END();
+}
+
 SLOW_PATH_DECL(slow_path_create_lexical_environment)
 {
     BEGIN();
@@ -658,6 +701,56 @@ SLOW_PATH_DECL(slow_path_push_with_scope)
     int scopeReg = pc[3].u.operand;
     JSScope* currentScope = exec->uncheckedR(scopeReg).Register::scope();
     RETURN(JSWithScope::create(exec, newScope, currentScope));
+}
+
+SLOW_PATH_DECL(slow_path_resolve_scope)
+{
+    BEGIN();
+    const Identifier& ident = exec->codeBlock()->identifier(pc[3].u.operand);
+    JSScope* scope = exec->uncheckedR(pc[2].u.operand).Register::scope();
+    JSValue resolvedScope = JSScope::resolve(exec, scope, ident);
+
+    ResolveType resolveType = static_cast<ResolveType>(pc[4].u.operand);
+
+    // ModuleVar does not keep the scope register value alive in DFG.
+    ASSERT(resolveType != ModuleVar);
+
+    if (resolveType == UnresolvedProperty || resolveType == UnresolvedPropertyWithVarInjectionChecks) {
+        if (JSGlobalLexicalEnvironment* globalLexicalEnvironment = jsDynamicCast<JSGlobalLexicalEnvironment*>(resolvedScope)) {
+            if (resolveType == UnresolvedProperty)
+                pc[4].u.operand = GlobalLexicalVar;
+            else
+                pc[4].u.operand = GlobalLexicalVarWithVarInjectionChecks;
+            pc[6].u.pointer = globalLexicalEnvironment;
+        } else if (JSGlobalObject* globalObject = jsDynamicCast<JSGlobalObject*>(resolvedScope)) {
+            if (globalObject->hasProperty(exec, ident)) {
+                if (resolveType == UnresolvedProperty)
+                    pc[4].u.operand = GlobalProperty;
+                else
+                    pc[4].u.operand = GlobalPropertyWithVarInjectionChecks;
+
+                pc[6].u.pointer = globalObject;
+            }
+        }
+    }
+
+    RETURN(resolvedScope);
+}
+
+SLOW_PATH_DECL(slow_path_copy_rest)
+{
+    BEGIN();
+    unsigned arraySize = OP_C(2).jsValue().asUInt32();
+    if (!arraySize) {
+        ASSERT(!jsCast<JSArray*>(OP(1).jsValue())->length());
+        END();
+    }
+    JSArray* array = jsCast<JSArray*>(OP(1).jsValue());
+    ASSERT(arraySize == array->length());
+    unsigned numParamsToSkip = pc[3].u.unsignedValue;
+    for (unsigned i = 0; i < arraySize; i++)
+        array->putDirectIndex(exec, i, exec->uncheckedArgument(i + numParamsToSkip));
+    END();
 }
 
 } // namespace JSC

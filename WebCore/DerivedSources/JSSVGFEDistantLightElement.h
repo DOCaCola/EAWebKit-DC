@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEDistantLightElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDistantLightElement>&& impl)
     {
-        JSSVGFEDistantLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDistantLightElement>(globalObject->vm().heap)) JSSVGFEDistantLightElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEDistantLightElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDistantLightElement>(globalObject->vm().heap)) JSSVGFEDistantLightElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEDistantLightElement& impl() const
+    SVGFEDistantLightElement& wrapped() const
     {
-        return static_cast<SVGFEDistantLightElement&>(Base::impl());
+        return static_cast<SVGFEDistantLightElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEDistantLightElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEDistantLightElement>&&);
+    JSSVGFEDistantLightElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEDistantLightElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

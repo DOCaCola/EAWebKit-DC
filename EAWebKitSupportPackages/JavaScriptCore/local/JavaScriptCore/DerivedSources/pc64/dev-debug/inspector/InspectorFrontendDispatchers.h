@@ -32,50 +32,51 @@
 #define InspectorFrontendDispatchers_h
 
 #include "InspectorProtocolObjects.h"
-#include <inspector/InspectorFrontendChannel.h>
 #include <inspector/InspectorValues.h>
 #include <wtf/text/WTFString.h>
 
 namespace Inspector {
 
-
+class FrontendRouter;
 
 class JS_EXPORT_PRIVATE ApplicationCacheFrontendDispatcher {
 public:
-    ApplicationCacheFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    ApplicationCacheFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void applicationCacheStatusUpdated(const Inspector::Protocol::Network::FrameId& frameId, const String& manifestURL, int status);
     void networkStateUpdated(bool isNowOnline);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE CSSFrontendDispatcher {
 public:
-    CSSFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    CSSFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void mediaQueryResultChanged();
     void styleSheetChanged(const Inspector::Protocol::CSS::StyleSheetId& styleSheetId);
+    void styleSheetAdded(RefPtr<Inspector::Protocol::CSS::CSSStyleSheetHeader> header);
+    void styleSheetRemoved(const Inspector::Protocol::CSS::StyleSheetId& styleSheetId);
     void namedFlowCreated(RefPtr<Inspector::Protocol::CSS::NamedFlow> namedFlow);
     void namedFlowRemoved(int documentNodeId, const String& flowName);
     void regionOversetChanged(RefPtr<Inspector::Protocol::CSS::NamedFlow> namedFlow);
     void registeredNamedFlowContentElement(int documentNodeId, const String& flowName, int contentNodeId, int nextContentNodeId);
     void unregisteredNamedFlowContentElement(int documentNodeId, const String& flowName, int contentNodeId);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE ConsoleFrontendDispatcher {
 public:
-    ConsoleFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    ConsoleFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void messageAdded(RefPtr<Inspector::Protocol::Console::ConsoleMessage> message);
     void messageRepeatCountUpdated(int count);
     void messagesCleared();
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE DOMFrontendDispatcher {
 public:
-    DOMFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    DOMFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void documentUpdated();
     void setChildNodes(int parentId, RefPtr<Inspector::Protocol::Array<Inspector::Protocol::DOM::Node>> nodes);
     void attributeModified(int nodeId, const String& name, const String& value);
@@ -90,46 +91,46 @@ public:
     void pseudoElementAdded(int parentId, RefPtr<Inspector::Protocol::DOM::Node> pseudoElement);
     void pseudoElementRemoved(int parentId, int pseudoElementId);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE DOMStorageFrontendDispatcher {
 public:
-    DOMStorageFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    DOMStorageFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void domStorageItemsCleared(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId);
     void domStorageItemRemoved(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key);
     void domStorageItemAdded(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key, const String& newValue);
     void domStorageItemUpdated(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key, const String& oldValue, const String& newValue);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE DatabaseFrontendDispatcher {
 public:
-    DatabaseFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    DatabaseFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void addDatabase(RefPtr<Inspector::Protocol::Database::Database> database);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE DebuggerFrontendDispatcher {
 public:
-    DebuggerFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    DebuggerFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void globalObjectCleared();
     void scriptParsed(const Inspector::Protocol::Debugger::ScriptId& scriptId, const String& url, int startLine, int startColumn, int endLine, int endColumn, const bool* const isContentScript, const String* const sourceMapURL, const bool* const hasSourceURL);
     void scriptFailedToParse(const String& url, const String& scriptSource, int startLine, int errorLine, const String& errorMessage);
     void breakpointResolved(const Inspector::Protocol::Debugger::BreakpointId& breakpointId, RefPtr<Inspector::Protocol::Debugger::Location> location);
         // Named after parameter 'reason' while generating command/event paused.
         enum class Reason {
-            XHR = 73,
-            DOM = 135,
-            EventListener = 136,
-            Exception = 137,
+            XHR = 81,
+            DOM = 133,
+            EventListener = 134,
+            Exception = 135,
             Assert = 39,
-            CSPViolation = 138,
-            DebuggerStatement = 139,
-            Breakpoint = 140,
-            PauseOnNextStatement = 141,
+            CSPViolation = 136,
+            DebuggerStatement = 137,
+            Breakpoint = 138,
+            PauseOnNextStatement = 139,
             Other = 25,
         }; // enum class Reason
     void paused(RefPtr<Inspector::Protocol::Array<Inspector::Protocol::Debugger::CallFrame>> callFrames, Reason reason, RefPtr<Inspector::InspectorObject> data);
@@ -137,42 +138,50 @@ public:
     void didSampleProbe(RefPtr<Inspector::Protocol::Debugger::ProbeSample> sample);
     void playBreakpointActionSound(int breakpointActionId);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
+};
+
+class JS_EXPORT_PRIVATE HeapFrontendDispatcher {
+public:
+    HeapFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
+    void garbageCollected(RefPtr<Inspector::Protocol::Heap::GarbageCollection> collection);
+private:
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE InspectorFrontendDispatcher {
 public:
-    InspectorFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    InspectorFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void evaluateForTestInFrontend(const String& script);
     void inspect(RefPtr<Inspector::Protocol::Runtime::RemoteObject> object, RefPtr<Inspector::InspectorObject> hints);
     void detached(const String& reason);
     void activateExtraDomains(RefPtr<Inspector::Protocol::Array<String>> domains);
     void targetCrashed();
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE LayerTreeFrontendDispatcher {
 public:
-    LayerTreeFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    LayerTreeFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void layerTreeDidChange();
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE NetworkFrontendDispatcher {
 public:
-    NetworkFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    NetworkFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
         // Named after parameter 'type' while generating command/event requestWillBeSent.
         enum class Type {
-            Document = 68,
-            Stylesheet = 69,
-            Image = 70,
-            Font = 71,
-            Script = 72,
-            XHR = 73,
-            WebSocket = 74,
-            Other = 75,
+            Document = 76,
+            Stylesheet = 77,
+            Image = 78,
+            Font = 79,
+            Script = 80,
+            XHR = 81,
+            WebSocket = 82,
+            Other = 83,
         }; // enum class Type
     void requestWillBeSent(const Inspector::Protocol::Network::RequestId& requestId, const Inspector::Protocol::Network::FrameId& frameId, const Inspector::Protocol::Network::LoaderId& loaderId, const String& documentURL, RefPtr<Inspector::Protocol::Network::Request> request, double timestamp, RefPtr<Inspector::Protocol::Network::Initiator> initiator, RefPtr<Inspector::Protocol::Network::Response> redirectResponse, Inspector::Protocol::Page::ResourceType* type);
     void requestServedFromCache(const Inspector::Protocol::Network::RequestId& requestId);
@@ -189,12 +198,12 @@ public:
     void webSocketFrameError(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, const String& errorMessage);
     void webSocketFrameSent(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, RefPtr<Inspector::Protocol::Network::WebSocketFrame> response);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE PageFrontendDispatcher {
 public:
-    PageFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    PageFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void domContentEventFired(double timestamp);
     void loadEventFired(double timestamp);
     void frameNavigated(RefPtr<Inspector::Protocol::Page::Frame> frame);
@@ -207,36 +216,35 @@ public:
     void javascriptDialogClosed();
     void scriptsEnabled(bool isEnabled);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE RuntimeFrontendDispatcher {
 public:
-    RuntimeFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    RuntimeFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void executionContextCreated(RefPtr<Inspector::Protocol::Runtime::ExecutionContextDescription> context);
 private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
+};
+
+class JS_EXPORT_PRIVATE ScriptProfilerFrontendDispatcher {
+public:
+    ScriptProfilerFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
+    void trackingStart(double timestamp);
+    void trackingUpdate(RefPtr<Inspector::Protocol::ScriptProfiler::Event> event);
+    void trackingComplete(RefPtr<Inspector::Protocol::Array<Inspector::InspectorValue>> profiles);
+private:
+    FrontendRouter& m_frontendRouter;
 };
 
 class JS_EXPORT_PRIVATE TimelineFrontendDispatcher {
 public:
-    TimelineFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
+    TimelineFrontendDispatcher(FrontendRouter& frontendRouter) : m_frontendRouter(frontendRouter) { }
     void eventRecorded(RefPtr<Inspector::Protocol::Timeline::TimelineEvent> record);
     void recordingStarted(double startTime);
     void recordingStopped(double endTime);
 private:
-    FrontendChannel* m_frontendChannel;
-};
-
-class JS_EXPORT_PRIVATE WorkerFrontendDispatcher {
-public:
-    WorkerFrontendDispatcher(FrontendChannel* frontendChannel) : m_frontendChannel(frontendChannel) { }
-    void workerCreated(int workerId, const String& url, bool inspectorConnected);
-    void workerTerminated(int workerId);
-    void dispatchMessageFromWorker(int workerId, RefPtr<Inspector::InspectorObject> message);
-    void disconnectedFromWorker();
-private:
-    FrontendChannel* m_frontendChannel;
+    FrontendRouter& m_frontendRouter;
 };
 
 } // namespace Inspector

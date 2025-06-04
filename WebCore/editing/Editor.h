@@ -204,19 +204,19 @@ public:
         WEBCORE_EXPORT Command();
         Command(const EditorInternalCommand*, EditorCommandSource, PassRefPtr<Frame>);
 
-        WEBCORE_EXPORT bool execute(const String& parameter = String(), Event* triggeringEvent = 0) const;
+        WEBCORE_EXPORT bool execute(const String& parameter = String(), Event* triggeringEvent = nullptr) const;
         WEBCORE_EXPORT bool execute(Event* triggeringEvent) const;
 
         WEBCORE_EXPORT bool isSupported() const;
-        WEBCORE_EXPORT bool isEnabled(Event* triggeringEvent = 0) const;
+        WEBCORE_EXPORT bool isEnabled(Event* triggeringEvent = nullptr) const;
 
-        WEBCORE_EXPORT TriState state(Event* triggeringEvent = 0) const;
-        String value(Event* triggeringEvent = 0) const;
+        WEBCORE_EXPORT TriState state(Event* triggeringEvent = nullptr) const;
+        String value(Event* triggeringEvent = nullptr) const;
 
         WEBCORE_EXPORT bool isTextInsertion() const;
 
     private:
-        const EditorInternalCommand* m_command;
+        const EditorInternalCommand* m_command { nullptr };
         EditorCommandSource m_source;
         RefPtr<Frame> m_frame;
     };
@@ -315,8 +315,6 @@ public:
     WEBCORE_EXPORT void setIgnoreCompositionSelectionChange(bool, RevealSelection shouldRevealExistingSelection = RevealSelection::Yes);
     bool ignoreCompositionSelectionChange() const { return m_ignoreCompositionSelectionChange; }
 
-    void setStartNewKillRingSequence(bool);
-
     WEBCORE_EXPORT PassRefPtr<Range> rangeForPoint(const IntPoint& windowPoint);
 
     void clear();
@@ -338,7 +336,10 @@ public:
     WEBCORE_EXPORT void setDictationPhrasesAsChildOfElement(const Vector<Vector<String>>& dictationPhrases, RetainPtr<id> metadata, Element&);
 #endif
     
-    void addToKillRing(Range*, bool prepend);
+    enum class KillRingInsertionMode { PrependText, AppendText };
+    void addRangeToKillRing(const Range&, KillRingInsertionMode);
+    void addTextToKillRing(const String&, KillRingInsertionMode);
+    void setStartNewKillRingSequence(bool);
 
     void startAlternativeTextUITimer();
     // If user confirmed a correction in the correction panel, correction has non-zero length, otherwise it means that user has dismissed the panel.
@@ -501,7 +502,7 @@ private:
     unsigned m_compositionEnd;
     Vector<CompositionUnderline> m_customCompositionUnderlines;
     bool m_ignoreCompositionSelectionChange;
-    bool m_shouldStartNewKillRingSequence;
+    bool m_shouldStartNewKillRingSequence {false};
     bool m_shouldStyleWithCSS;
     const std::unique_ptr<KillRing> m_killRing;
     const std::unique_ptr<SpellChecker> m_spellChecker;

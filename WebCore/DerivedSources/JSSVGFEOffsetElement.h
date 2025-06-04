@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEOffsetElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEOffsetElement>&& impl)
     {
-        JSSVGFEOffsetElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEOffsetElement>(globalObject->vm().heap)) JSSVGFEOffsetElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEOffsetElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEOffsetElement>(globalObject->vm().heap)) JSSVGFEOffsetElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEOffsetElement& impl() const
+    SVGFEOffsetElement& wrapped() const
     {
-        return static_cast<SVGFEOffsetElement&>(Base::impl());
+        return static_cast<SVGFEOffsetElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEOffsetElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEOffsetElement>&&);
+    JSSVGFEOffsetElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEOffsetElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

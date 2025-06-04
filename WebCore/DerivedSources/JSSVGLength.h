@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGLength : public JSDOMWrapper {
+class JSSVGLength : public JSDOMWrapper<SVGPropertyTearOff<SVGLength>> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPropertyTearOff<SVGLength>> Base;
     static JSSVGLength* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGLength>>&& impl)
     {
-        JSSVGLength* ptr = new (NotNull, JSC::allocateCell<JSSVGLength>(globalObject->vm().heap)) JSSVGLength(structure, globalObject, WTF::move(impl));
+        JSSVGLength* ptr = new (NotNull, JSC::allocateCell<JSSVGLength>(globalObject->vm().heap)) JSSVGLength(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static SVGPropertyTearOff<SVGLength>* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGLength();
 
     DECLARE_INFO;
 
@@ -56,20 +55,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue value(JSC::ExecState*) const;
-    void setValue(JSC::ExecState*, JSC::JSValue);
+    JSC::JSValue value(JSC::ExecState&) const;
+    void setValue(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue convertToSpecifiedUnits(JSC::ExecState*);
-    SVGPropertyTearOff<SVGLength>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGLength>* m_impl;
+    JSC::JSValue convertToSpecifiedUnits(JSC::ExecState&);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSVGLength(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGLength>>&&);
+    JSSVGLength(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPropertyTearOff<SVGLength>>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -92,7 +86,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<S
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGLength>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGLength>& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGLength>& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGLength>*);
 
 
 } // namespace WebCore

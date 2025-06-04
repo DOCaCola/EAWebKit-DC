@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLTableCellElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTableCellElement>&& impl)
     {
-        JSHTMLTableCellElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCellElement>(globalObject->vm().heap)) JSHTMLTableCellElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTableCellElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTableCellElement>(globalObject->vm().heap)) JSHTMLTableCellElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTableCellElement& impl() const
+    HTMLTableCellElement& wrapped() const
     {
-        return static_cast<HTMLTableCellElement&>(Base::impl());
+        return static_cast<HTMLTableCellElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTableCellElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTableCellElement>&&);
+    JSHTMLTableCellElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTableCellElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

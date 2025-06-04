@@ -60,8 +60,8 @@ public:
     friend class LineLayoutState;
 
 protected:
-    RenderBlock(Element&, Ref<RenderStyle>&&, unsigned baseTypeFlags);
-    RenderBlock(Document&, Ref<RenderStyle>&&, unsigned baseTypeFlags);
+    RenderBlock(Element&, Ref<RenderStyle>&&, BaseTypeFlags);
+    RenderBlock(Document&, Ref<RenderStyle>&&, BaseTypeFlags);
     virtual ~RenderBlock();
 
 public:
@@ -195,7 +195,7 @@ public:
 
     static RenderBlock* createAnonymousWithParentRendererAndDisplay(const RenderObject*, EDisplay = BLOCK);
     RenderBlock* createAnonymousBlock(EDisplay display = BLOCK) const { return createAnonymousWithParentRendererAndDisplay(this, display); }
-    static void collapseAnonymousBoxChild(RenderBlock& parent, RenderBlock* child);
+    static void dropAnonymousBoxChild(RenderBlock& parent, RenderBlock& child);
 
     virtual RenderBox* createAnonymousBoxWithSameTypeAs(const RenderObject* parent) const override;
 
@@ -300,7 +300,7 @@ public:
     virtual void updateHitTestResult(HitTestResult&, const LayoutPoint&) override;
 
     virtual bool canHaveChildren() const override { return true; }
-    virtual bool canCollapseAnonymousBlockChild() const { return true; }
+    virtual bool canDropAnonymousBlockChild() const { return true; }
 
     RenderFlowThread* cachedFlowThreadContainingBlock() const;
     void setCachedFlowThreadContainingBlockNeedsUpdate();
@@ -313,7 +313,7 @@ protected:
     virtual void layout() override;
 
     void layoutPositionedObjects(bool relayoutChildren, bool fixedPositionObjectsOnly = false);
-    void layoutPositionedObject(RenderBox&, bool relayoutChildren, bool fixedPositionObjectsOnly);
+    virtual void layoutPositionedObject(RenderBox&, bool relayoutChildren, bool fixedPositionObjectsOnly);
     
     void markFixedPositionObjectForLayoutIfNeeded(RenderObject& child);
 
@@ -413,7 +413,9 @@ private:
     void addChildToContinuation(RenderObject* newChild, RenderObject* beforeChild);
     virtual void addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild) override;
 
-    virtual bool isSelfCollapsingBlock() const override final;
+    virtual bool isSelfCollapsingBlock() const override;
+    virtual bool childrenPreventSelfCollapsing() const;
+    
     // FIXME-BLOCKFLOW: Remove virtualizaion when all callers have moved to RenderBlockFlow
     virtual bool hasLines() const { return false; }
 

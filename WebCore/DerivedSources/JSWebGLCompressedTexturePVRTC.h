@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLCompressedTexturePVRTC : public JSDOMWrapper {
+class JSWebGLCompressedTexturePVRTC : public JSDOMWrapper<WebGLCompressedTexturePVRTC> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLCompressedTexturePVRTC> Base;
     static JSWebGLCompressedTexturePVRTC* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLCompressedTexturePVRTC>&& impl)
     {
-        JSWebGLCompressedTexturePVRTC* ptr = new (NotNull, JSC::allocateCell<JSWebGLCompressedTexturePVRTC>(globalObject->vm().heap)) JSWebGLCompressedTexturePVRTC(structure, globalObject, WTF::move(impl));
+        JSWebGLCompressedTexturePVRTC* ptr = new (NotNull, JSC::allocateCell<JSWebGLCompressedTexturePVRTC>(globalObject->vm().heap)) JSWebGLCompressedTexturePVRTC(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLCompressedTexturePVRTC* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLCompressedTexturePVRTC();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLCompressedTexturePVRTC& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLCompressedTexturePVRTC* m_impl;
 protected:
-    JSWebGLCompressedTexturePVRTC(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLCompressedTexturePVRTC>&&);
+    JSWebGLCompressedTexturePVRTC(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLCompressedTexturePVRTC>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLCompressedTextu
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLCompressedTexturePVRTC*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLCompressedTexturePVRTC& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLCompressedTexturePVRTC& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLCompressedTexturePVRTC*);
 
 
 } // namespace WebCore

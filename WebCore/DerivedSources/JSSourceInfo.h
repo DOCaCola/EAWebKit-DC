@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSourceInfo : public JSDOMWrapper {
+class JSSourceInfo : public JSDOMWrapper<SourceInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SourceInfo> Base;
     static JSSourceInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceInfo>&& impl)
     {
-        JSSourceInfo* ptr = new (NotNull, JSC::allocateCell<JSSourceInfo>(globalObject->vm().heap)) JSSourceInfo(structure, globalObject, WTF::move(impl));
+        JSSourceInfo* ptr = new (NotNull, JSC::allocateCell<JSSourceInfo>(globalObject->vm().heap)) JSSourceInfo(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SourceInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSourceInfo();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    SourceInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SourceInfo* m_impl;
 protected:
-    JSSourceInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<SourceInfo>&&);
+    JSSourceInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<SourceInfo>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SourceInfo*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SourceInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceInfo& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SourceInfo*);
 
 
 } // namespace WebCore

@@ -39,6 +39,7 @@ namespace WebCore {
 class ClientRect;
 class ClientRectList;
 class DatasetDOMStringMap;
+class Dictionary;
 class DOMTokenList;
 class ElementRareData;
 class HTMLDocument;
@@ -197,12 +198,10 @@ public:
     virtual const AtomicString& prefix() const override final { return m_tagName.prefix(); }
     virtual const AtomicString& namespaceURI() const override final { return m_tagName.namespaceURI(); }
 
-    virtual URL baseURI() const override final;
-
     virtual String nodeName() const override;
 
-    RefPtr<Element> cloneElementWithChildren(Document&);
-    RefPtr<Element> cloneElementWithoutChildren(Document&);
+    Ref<Element> cloneElementWithChildren(Document&);
+    Ref<Element> cloneElementWithoutChildren(Document&);
 
     void normalizeAttributes();
     String nodeNamePreservingCase() const;
@@ -248,6 +247,9 @@ public:
 
     WEBCORE_EXPORT ShadowRoot* shadowRoot() const;
     WEBCORE_EXPORT RefPtr<ShadowRoot> createShadowRoot(ExceptionCode&);
+
+    ShadowRoot* bindingShadowRoot() const;
+    RefPtr<ShadowRoot> attachShadow(const Dictionary&, ExceptionCode&);
 
     ShadowRoot* userAgentShadowRoot() const;
     WEBCORE_EXPORT ShadowRoot& ensureUserAgentShadowRoot();
@@ -325,7 +327,7 @@ public:
     static AXTextStateChangeIntent defaultFocusTextStateChangeIntent() { return AXTextStateChangeIntent(AXTextStateChangeTypeSelectionMove, AXTextSelection { AXTextSelectionDirectionDiscontiguous, AXTextSelectionGranularityUnknown, true }); }
     void updateFocusAppearanceAfterAttachIfNeeded();
     virtual void focus(bool restorePreviousSelection = true, FocusDirection = FocusDirectionNone);
-    virtual void updateFocusAppearance(bool restorePreviousSelection);
+    virtual void updateFocusAppearance(SelectionRestorationMode, SelectionRevealMode = SelectionRevealMode::Reveal);
     virtual void blur();
 
     String innerHTML() const;
@@ -344,8 +346,8 @@ public:
     void setMinimumSizeForResizing(const LayoutSize&);
 
     // Use Document::registerForDocumentActivationCallbacks() to subscribe to these
-    virtual void documentWillSuspendForPageCache() { }
-    virtual void documentDidResumeFromPageCache() { }
+    virtual void prepareForDocumentSuspension() { }
+    virtual void resumeFromDocumentSuspension() { }
 
     // Use Document::registerForMediaVolumeCallbacks() to subscribe to this
     virtual void mediaVolumeDidChange() { }
@@ -450,8 +452,8 @@ public:
     bool hasName() const;
     const SpaceSplitString& classNames() const;
 
-    IntSize savedLayerScrollOffset() const;
-    void setSavedLayerScrollOffset(const IntSize&);
+    IntPoint savedLayerScrollPosition() const;
+    void setSavedLayerScrollPosition(const IntPoint&);
 
     bool dispatchMouseEvent(const PlatformMouseEvent&, const AtomicString& eventType, int clickCount = 0, Element* relatedTarget = nullptr);
     bool dispatchWheelEvent(const PlatformWheelEvent&);
@@ -485,6 +487,15 @@ public:
 
     WEBCORE_EXPORT URL absoluteLinkURL() const;
 
+#if ENABLE(TOUCH_EVENTS)
+    virtual bool allowsDoubleTapGesture() const override;
+#endif
+
+    StyleResolver& styleResolver();
+    Ref<RenderStyle> resolveStyle(RenderStyle* parentStyle);
+
+    virtual void isVisibleInViewportChanged() { }
+
 protected:
     Element(const QualifiedName&, Document&, ConstructionType);
 
@@ -502,6 +513,8 @@ protected:
     // svgAttributeChanged (called when element.className.baseValue is set)
     void classAttributeChanged(const AtomicString& newClassString);
 
+    void addShadowRoot(Ref<ShadowRoot>&&);
+
     static void mergeWithNextTextNode(Text& node, ExceptionCode&);
 
 private:
@@ -511,8 +524,6 @@ private:
     bool isUserActionElementActive() const;
     bool isUserActionElementFocused() const;
     bool isUserActionElementHovered() const;
-
-    void resetNeedsNodeRenderingTraversalSlowPath();
 
     virtual void didAddUserAgentShadowRoot(ShadowRoot*) { }
     virtual bool alwaysCreateUserAgentShadowRoot() const { return false; }
@@ -563,11 +574,13 @@ private:
 
     // cloneNode is private so that non-virtual cloneElementWithChildren and cloneElementWithoutChildren
     // are used instead.
-    virtual RefPtr<Node> cloneNodeInternal(Document&, CloningOperation) override;
-    virtual RefPtr<Element> cloneElementWithoutAttributesAndChildren(Document&);
+    virtual Ref<Node> cloneNodeInternal(Document&, CloningOperation) override;
+    virtual Ref<Element> cloneElementWithoutAttributesAndChildren(Document&);
 
-    void addShadowRoot(Ref<ShadowRoot>&&);
     void removeShadowRoot();
+
+    RenderStyle* existingComputedStyle();
+    RenderStyle& resolveComputedStyle();
 
     bool rareDataStyleAffectedByEmpty() const;
     bool rareDataChildrenAffectedByHover() const;

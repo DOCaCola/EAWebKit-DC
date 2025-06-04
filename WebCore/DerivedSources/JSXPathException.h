@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSXPathException : public JSDOMWrapper {
+class JSXPathException : public JSDOMWrapper<XPathException> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<XPathException> Base;
     static JSXPathException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathException>&& impl)
     {
-        JSXPathException* ptr = new (NotNull, JSC::allocateCell<JSXPathException>(globalObject->vm().heap)) JSXPathException(structure, globalObject, WTF::move(impl));
+        JSXPathException* ptr = new (NotNull, JSC::allocateCell<JSXPathException>(globalObject->vm().heap)) JSXPathException(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static XPathException* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSXPathException();
 
     DECLARE_INFO;
 
@@ -53,15 +52,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    XPathException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    XPathException* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSXPathException(JSC::Structure*, JSDOMGlobalObject*, Ref<XPathException>&&);
+    JSXPathException(JSC::Structure*, JSDOMGlobalObject&, Ref<XPathException>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, XPathException*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, XPathException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, XPathException& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, XPathException& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, XPathException*);
 
 
 } // namespace WebCore

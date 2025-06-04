@@ -26,7 +26,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "TimeRanges.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTimeRangesConstructor : public DOMConstructorObject {
-private:
-    JSTimeRangesConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSTimeRangesConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTimeRangesConstructor* ptr = new (NotNull, JSC::allocateCell<JSTimeRangesConstructor>(vm.heap)) JSTimeRangesConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSTimeRanges> JSTimeRangesConstructor;
 
 /* Hash table */
 
@@ -100,33 +81,26 @@ static const struct CompactHashIndex JSTimeRangesTableIndex[2] = {
 
 static const HashTableValue JSTimeRangesTableValues[] =
 {
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTimeRangesLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTimeRangesLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSTimeRangesTable = { 1, 1, true, JSTimeRangesTableValues, 0, JSTimeRangesTableIndex };
-const ClassInfo JSTimeRangesConstructor::s_info = { "TimeRangesConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTimeRangesConstructor) };
-
-JSTimeRangesConstructor::JSTimeRangesConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSTimeRangesTable = { 1, 1, true, JSTimeRangesTableValues, JSTimeRangesTableIndex };
+template<> void JSTimeRangesConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTimeRangesConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTimeRanges::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTimeRanges::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TimeRanges"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTimeRangesConstructor::s_info = { "TimeRangesConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTimeRangesConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTimeRangesPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTimeRangesConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "start", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTimeRangesPrototypeFunctionStart), (intptr_t) (1) },
-    { "end", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTimeRangesPrototypeFunctionEnd), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTimeRangesConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "start", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTimeRangesPrototypeFunctionStart), (intptr_t) (1) } },
+    { "end", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTimeRangesPrototypeFunctionEnd), (intptr_t) (1) } },
 };
 
 const ClassInfo JSTimeRangesPrototype::s_info = { "TimeRangesPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTimeRangesPrototype) };
@@ -139,9 +113,8 @@ void JSTimeRangesPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTimeRanges::s_info = { "TimeRanges", &Base::s_info, &JSTimeRangesTable, CREATE_METHOD_TABLE(JSTimeRanges) };
 
-JSTimeRanges::JSTimeRanges(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TimeRanges>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTimeRanges::JSTimeRanges(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TimeRanges>&& impl)
+    : JSDOMWrapper<TimeRanges>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -161,80 +134,77 @@ void JSTimeRanges::destroy(JSC::JSCell* cell)
     thisObject->JSTimeRanges::~JSTimeRanges();
 }
 
-JSTimeRanges::~JSTimeRanges()
-{
-    releaseImpl();
-}
-
-bool JSTimeRanges::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSTimeRanges::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSTimeRanges*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSTimeRanges, Base>(exec, JSTimeRangesTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSTimeRanges, Base>(state, JSTimeRangesTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsTimeRangesLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTimeRangesLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSTimeRanges*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTimeRangesConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTimeRangesConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTimeRangesPrototype* domObject = jsDynamicCast<JSTimeRangesPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTimeRanges::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSTimeRanges::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSTimeRanges::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTimeRangesConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTimeRangesConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTimeRangesPrototypeFunctionStart(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTimeRangesPrototypeFunctionStart(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTimeRanges* castedThis = jsDynamicCast<JSTimeRanges*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TimeRanges", "start");
+        return throwThisTypeError(*state, "TimeRanges", "start");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTimeRanges::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.start(index, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTimeRangesPrototypeFunctionEnd(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTimeRangesPrototypeFunctionEnd(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTimeRanges* castedThis = jsDynamicCast<JSTimeRanges*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TimeRanges", "end");
+        return throwThisTypeError(*state, "TimeRanges", "end");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTimeRanges::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsNumber(impl.end(index, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -249,7 +219,14 @@ void JSTimeRangesOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context
 {
     auto* jsTimeRanges = jsCast<JSTimeRanges*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTimeRanges->impl(), jsTimeRanges);
+    uncacheWrapper(world, &jsTimeRanges->wrapped(), jsTimeRanges);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, TimeRanges* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSTimeRanges>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TimeRanges* impl)
@@ -271,7 +248,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TimeRanges* 
 TimeRanges* JSTimeRanges::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSTimeRanges*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -22,7 +22,6 @@
 #include "JSSQLResultSetRowList.h"
 
 #include "JSDOMBinding.h"
-#include "SQLResultSetRowList.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -73,15 +72,15 @@ static const struct CompactHashIndex JSSQLResultSetRowListTableIndex[2] = {
 
 static const HashTableValue JSSQLResultSetRowListTableValues[] =
 {
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRowListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSQLResultSetRowListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSSQLResultSetRowListTable = { 1, 1, true, JSSQLResultSetRowListTableValues, 0, JSSQLResultSetRowListTableIndex };
+static const HashTable JSSQLResultSetRowListTable = { 1, 1, true, JSSQLResultSetRowListTableValues, JSSQLResultSetRowListTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSSQLResultSetRowListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSQLResultSetRowListPrototypeFunctionItem), (intptr_t) (1) },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSQLResultSetRowListPrototypeFunctionItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSQLResultSetRowListPrototype::s_info = { "SQLResultSetRowListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLResultSetRowListPrototype) };
@@ -94,9 +93,8 @@ void JSSQLResultSetRowListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSQLResultSetRowList::s_info = { "SQLResultSetRowList", &Base::s_info, &JSSQLResultSetRowListTable, CREATE_METHOD_TABLE(JSSQLResultSetRowList) };
 
-JSSQLResultSetRowList::JSSQLResultSetRowList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLResultSetRowList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSQLResultSetRowList::JSSQLResultSetRowList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SQLResultSetRowList>&& impl)
+    : JSDOMWrapper<SQLResultSetRowList>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -116,38 +114,35 @@ void JSSQLResultSetRowList::destroy(JSC::JSCell* cell)
     thisObject->JSSQLResultSetRowList::~JSSQLResultSetRowList();
 }
 
-JSSQLResultSetRowList::~JSSQLResultSetRowList()
-{
-    releaseImpl();
-}
-
-bool JSSQLResultSetRowList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSSQLResultSetRowList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSQLResultSetRowList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSQLResultSetRowList, Base>(exec, JSSQLResultSetRowListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSSQLResultSetRowList, Base>(state, JSSQLResultSetRowListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsSQLResultSetRowListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSQLResultSetRowListLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSQLResultSetRowList*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsSQLResultSetRowListPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSQLResultSetRowListPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSQLResultSetRowList* castedThis = jsDynamicCast<JSSQLResultSetRowList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SQLResultSetRowList", "item");
+        return throwThisTypeError(*state, "SQLResultSetRowList", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSQLResultSetRowList::info());
-    return JSValue::encode(castedThis->item(exec));
+    return JSValue::encode(castedThis->item(*state));
 }
 
 bool JSSQLResultSetRowListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -161,7 +156,14 @@ void JSSQLResultSetRowListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void
 {
     auto* jsSQLResultSetRowList = jsCast<JSSQLResultSetRowList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSQLResultSetRowList->impl(), jsSQLResultSetRowList);
+    uncacheWrapper(world, &jsSQLResultSetRowList->wrapped(), jsSQLResultSetRowList);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLResultSetRowList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSQLResultSetRowList>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLResultSetRowList* impl)
@@ -183,7 +185,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLResultSet
 SQLResultSetRowList* JSSQLResultSetRowList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSQLResultSetRowList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

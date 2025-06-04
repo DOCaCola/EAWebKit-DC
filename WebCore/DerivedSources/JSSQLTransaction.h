@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSSQLTransaction : public JSDOMWrapper {
+class JSSQLTransaction : public JSDOMWrapper<SQLTransaction> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SQLTransaction> Base;
     static JSSQLTransaction* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLTransaction>&& impl)
     {
-        JSSQLTransaction* ptr = new (NotNull, JSC::allocateCell<JSSQLTransaction>(globalObject->vm().heap)) JSSQLTransaction(structure, globalObject, WTF::move(impl));
+        JSSQLTransaction* ptr = new (NotNull, JSC::allocateCell<JSSQLTransaction>(globalObject->vm().heap)) JSSQLTransaction(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SQLTransaction* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSQLTransaction();
 
     DECLARE_INFO;
 
@@ -52,14 +51,9 @@ public:
 
 
     // Custom functions
-    JSC::JSValue executeSql(JSC::ExecState*);
-    SQLTransaction& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLTransaction* m_impl;
+    JSC::JSValue executeSql(JSC::ExecState&);
 protected:
-    JSSQLTransaction(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLTransaction>&&);
+    JSSQLTransaction(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLTransaction>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLTransaction*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLTransaction*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLTransaction& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLTransaction& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SQLTransaction*);
 
 
 } // namespace WebCore

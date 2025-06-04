@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMediaDeviceInfo : public JSDOMWrapper {
+class JSMediaDeviceInfo : public JSDOMWrapper<MediaDeviceInfo> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MediaDeviceInfo> Base;
     static JSMediaDeviceInfo* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDeviceInfo>&& impl)
     {
-        JSMediaDeviceInfo* ptr = new (NotNull, JSC::allocateCell<JSMediaDeviceInfo>(globalObject->vm().heap)) JSMediaDeviceInfo(structure, globalObject, WTF::move(impl));
+        JSMediaDeviceInfo* ptr = new (NotNull, JSC::allocateCell<JSMediaDeviceInfo>(globalObject->vm().heap)) JSMediaDeviceInfo(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static MediaDeviceInfo* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSMediaDeviceInfo();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    MediaDeviceInfo& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MediaDeviceInfo* m_impl;
 protected:
-    JSMediaDeviceInfo(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaDeviceInfo>&&);
+    JSMediaDeviceInfo(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaDeviceInfo>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MediaDeviceInfo*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MediaDeviceInfo*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MediaDeviceInfo& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MediaDeviceInfo& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MediaDeviceInfo*);
 
 
 } // namespace WebCore

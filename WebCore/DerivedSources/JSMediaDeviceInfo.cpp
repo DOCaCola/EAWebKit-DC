@@ -25,7 +25,6 @@
 #include "JSMediaDeviceInfo.h"
 
 #include "JSDOMBinding.h"
-#include "MediaDeviceInfo.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -70,10 +69,10 @@ private:
 
 static const HashTableValue JSMediaDeviceInfoPrototypeTableValues[] =
 {
-    { "deviceId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoDeviceId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "groupId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoGroupId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kind", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "label", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "deviceId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoDeviceId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "groupId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoGroupId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kind", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "label", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMediaDeviceInfoLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSMediaDeviceInfoPrototype::s_info = { "MediaDeviceInfoPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDeviceInfoPrototype) };
@@ -86,9 +85,8 @@ void JSMediaDeviceInfoPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMediaDeviceInfo::s_info = { "MediaDeviceInfo", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDeviceInfo) };
 
-JSMediaDeviceInfo::JSMediaDeviceInfo(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDeviceInfo>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaDeviceInfo::JSMediaDeviceInfo(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaDeviceInfo>&& impl)
+    : JSDOMWrapper<MediaDeviceInfo>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -108,75 +106,70 @@ void JSMediaDeviceInfo::destroy(JSC::JSCell* cell)
     thisObject->JSMediaDeviceInfo::~JSMediaDeviceInfo();
 }
 
-JSMediaDeviceInfo::~JSMediaDeviceInfo()
+EncodedJSValue jsMediaDeviceInfoDeviceId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsMediaDeviceInfoDeviceId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaDeviceInfo* castedThis = jsDynamicCast<JSMediaDeviceInfo*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaDeviceInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaDeviceInfo", "deviceId");
-        return throwGetterTypeError(*exec, "MediaDeviceInfo", "deviceId");
+            return reportDeprecatedGetterError(*state, "MediaDeviceInfo", "deviceId");
+        return throwGetterTypeError(*state, "MediaDeviceInfo", "deviceId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.deviceId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.deviceId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaDeviceInfoGroupId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaDeviceInfoGroupId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaDeviceInfo* castedThis = jsDynamicCast<JSMediaDeviceInfo*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaDeviceInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaDeviceInfo", "groupId");
-        return throwGetterTypeError(*exec, "MediaDeviceInfo", "groupId");
+            return reportDeprecatedGetterError(*state, "MediaDeviceInfo", "groupId");
+        return throwGetterTypeError(*state, "MediaDeviceInfo", "groupId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.groupId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.groupId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaDeviceInfoKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaDeviceInfoKind(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaDeviceInfo* castedThis = jsDynamicCast<JSMediaDeviceInfo*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaDeviceInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaDeviceInfo", "kind");
-        return throwGetterTypeError(*exec, "MediaDeviceInfo", "kind");
+            return reportDeprecatedGetterError(*state, "MediaDeviceInfo", "kind");
+        return throwGetterTypeError(*state, "MediaDeviceInfo", "kind");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.kind());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMediaDeviceInfoLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMediaDeviceInfoLabel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMediaDeviceInfo* castedThis = jsDynamicCast<JSMediaDeviceInfo*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMediaDeviceInfoPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MediaDeviceInfo", "label");
-        return throwGetterTypeError(*exec, "MediaDeviceInfo", "label");
+            return reportDeprecatedGetterError(*state, "MediaDeviceInfo", "label");
+        return throwGetterTypeError(*state, "MediaDeviceInfo", "label");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.label());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.label());
     return JSValue::encode(result);
 }
 
@@ -192,7 +185,7 @@ void JSMediaDeviceInfoOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsMediaDeviceInfo = jsCast<JSMediaDeviceInfo*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaDeviceInfo->impl(), jsMediaDeviceInfo);
+    uncacheWrapper(world, &jsMediaDeviceInfo->wrapped(), jsMediaDeviceInfo);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -203,6 +196,14 @@ extern "C" { extern void (*const __identifier("??_7MediaDeviceInfo@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15MediaDeviceInfoE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDeviceInfo* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaDeviceInfo>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDeviceInfo* impl)
 {
     if (!impl)
@@ -234,7 +235,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDeviceI
 MediaDeviceInfo* JSMediaDeviceInfo::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaDeviceInfo*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

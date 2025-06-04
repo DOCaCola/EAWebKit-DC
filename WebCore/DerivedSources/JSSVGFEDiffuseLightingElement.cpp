@@ -22,10 +22,10 @@
 #include "JSSVGFEDiffuseLightingElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
-#include "SVGFEDiffuseLightingElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -71,58 +71,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGFEDiffuseLightingElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGFEDiffuseLightingElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGFEDiffuseLightingElement> JSSVGFEDiffuseLightingElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGFEDiffuseLightingElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGFEDiffuseLightingElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGFEDiffuseLightingElementConstructor>(vm.heap)) JSSVGFEDiffuseLightingElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGFEDiffuseLightingElementConstructor::s_info = { "SVGFEDiffuseLightingElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDiffuseLightingElementConstructor) };
-
-JSSVGFEDiffuseLightingElementConstructor::JSSVGFEDiffuseLightingElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGFEDiffuseLightingElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGFEDiffuseLightingElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDiffuseLightingElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGFEDiffuseLightingElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGFEDiffuseLightingElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGFEDiffuseLightingElementConstructor::s_info = { "SVGFEDiffuseLightingElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDiffuseLightingElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGFEDiffuseLightingElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "in1", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "surfaceScale", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementSurfaceScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "diffuseConstant", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementDiffuseConstant), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kernelUnitLengthX", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementKernelUnitLengthX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kernelUnitLengthY", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementKernelUnitLengthY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "result", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "in1", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementIn1), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "surfaceScale", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementSurfaceScale), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "diffuseConstant", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementDiffuseConstant), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kernelUnitLengthX", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementKernelUnitLengthX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kernelUnitLengthY", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementKernelUnitLengthY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "result", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGFEDiffuseLightingElementResult), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGFEDiffuseLightingElementPrototype::s_info = { "SVGFEDiffuseLightingElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDiffuseLightingElementPrototype) };
@@ -135,7 +109,7 @@ void JSSVGFEDiffuseLightingElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGFEDiffuseLightingElement::s_info = { "SVGFEDiffuseLightingElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGFEDiffuseLightingElement) };
 
-JSSVGFEDiffuseLightingElement::JSSVGFEDiffuseLightingElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEDiffuseLightingElement>&& impl)
+JSSVGFEDiffuseLightingElement::JSSVGFEDiffuseLightingElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGFEDiffuseLightingElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -150,197 +124,197 @@ JSObject* JSSVGFEDiffuseLightingElement::getPrototype(VM& vm, JSGlobalObject* gl
     return getDOMPrototype<JSSVGFEDiffuseLightingElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGFEDiffuseLightingElementIn1(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementIn1(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "in1");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "in1");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "in1");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "in1");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.in1Animated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementSurfaceScale(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementSurfaceScale(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "surfaceScale");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "surfaceScale");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "surfaceScale");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "surfaceScale");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.surfaceScaleAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementDiffuseConstant(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementDiffuseConstant(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "diffuseConstant");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "diffuseConstant");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "diffuseConstant");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "diffuseConstant");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.diffuseConstantAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementKernelUnitLengthX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementKernelUnitLengthX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "kernelUnitLengthX");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "kernelUnitLengthX");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "kernelUnitLengthX");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "kernelUnitLengthX");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.kernelUnitLengthXAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementKernelUnitLengthY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementKernelUnitLengthY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "kernelUnitLengthY");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "kernelUnitLengthY");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "kernelUnitLengthY");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "kernelUnitLengthY");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedNumber> obj = impl.kernelUnitLengthYAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "x");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "x");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "y");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "y");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "width");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "width");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "height");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "height");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementResult(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementResult(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGFEDiffuseLightingElement* castedThis = jsDynamicCast<JSSVGFEDiffuseLightingElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGFEDiffuseLightingElement", "result");
-        return throwGetterTypeError(*exec, "SVGFEDiffuseLightingElement", "result");
+            return reportDeprecatedGetterError(*state, "SVGFEDiffuseLightingElement", "result");
+        return throwGetterTypeError(*state, "SVGFEDiffuseLightingElement", "result");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedString> obj = impl.resultAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGFEDiffuseLightingElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGFEDiffuseLightingElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGFEDiffuseLightingElementPrototype* domObject = jsDynamicCast<JSSVGFEDiffuseLightingElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGFEDiffuseLightingElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGFEDiffuseLightingElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGFEDiffuseLightingElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGFEDiffuseLightingElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGFEDiffuseLightingElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

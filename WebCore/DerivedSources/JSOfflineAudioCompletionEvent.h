@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSOfflineAudioCompletionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<OfflineAudioCompletionEvent>&& impl)
     {
-        JSOfflineAudioCompletionEvent* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioCompletionEvent>(globalObject->vm().heap)) JSOfflineAudioCompletionEvent(structure, globalObject, WTF::move(impl));
+        JSOfflineAudioCompletionEvent* ptr = new (NotNull, JSC::allocateCell<JSOfflineAudioCompletionEvent>(globalObject->vm().heap)) JSOfflineAudioCompletionEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    OfflineAudioCompletionEvent& impl() const
+    OfflineAudioCompletionEvent& wrapped() const
     {
-        return static_cast<OfflineAudioCompletionEvent&>(Base::impl());
+        return static_cast<OfflineAudioCompletionEvent&>(Base::wrapped());
     }
 protected:
-    JSOfflineAudioCompletionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<OfflineAudioCompletionEvent>&&);
+    JSOfflineAudioCompletionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<OfflineAudioCompletionEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioCompletionEvent*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, OfflineAudioCompletionEvent& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, OfflineAudioCompletionEvent& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, OfflineAudioCompletionEvent*);
 
 
 } // namespace WebCore

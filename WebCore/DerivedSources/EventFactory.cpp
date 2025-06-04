@@ -35,179 +35,183 @@ namespace WebCore {
 
 PassRefPtr<Event> EventFactory::create(const String& type)
 {
-    if (type == "AnimationEvent")
+    if (equalIgnoringASCIICase(type, "AnimationEvent"))
         return AnimationEvent::create();
 #if ENABLE(WEB_AUDIO)
-    if (type == "AudioProcessingEvent")
+    if (equalIgnoringASCIICase(type, "AudioProcessingEvent"))
         return AudioProcessingEvent::create();
 #endif
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-    if (type == "AutocompleteErrorEvent")
+    if (equalIgnoringASCIICase(type, "AutocompleteErrorEvent"))
         return AutocompleteErrorEvent::create();
 #endif
-    if (type == "BeforeLoadEvent")
+    if (equalIgnoringASCIICase(type, "BeforeLoadEvent"))
         return BeforeLoadEvent::create();
-    if (type == "BeforeUnloadEvent")
+    if (equalIgnoringASCIICase(type, "BeforeUnloadEvent"))
         return BeforeUnloadEvent::create();
 #if ENABLE(FONT_LOAD_EVENTS)
-    if (type == "CSSFontFaceLoadEvent")
+    if (equalIgnoringASCIICase(type, "CSSFontFaceLoadEvent"))
         return CSSFontFaceLoadEvent::create();
 #endif
-    if (type == "CloseEvent")
+    if (equalIgnoringASCIICase(type, "CloseEvent"))
         return CloseEvent::create();
-    if (type == "CompositionEvent")
+    if (equalIgnoringASCIICase(type, "CompositionEvent"))
         return CompositionEvent::create();
-    if (type == "CustomEvent")
+    if (equalIgnoringASCIICase(type, "CustomEvent"))
         return CustomEvent::create();
 #if ENABLE(DEVICE_ORIENTATION)
-    if (type == "DeviceMotionEvent")
+    if (equalIgnoringASCIICase(type, "DeviceMotionEvent"))
         return DeviceMotionEvent::create();
 #endif
 #if ENABLE(DEVICE_ORIENTATION)
-    if (type == "DeviceOrientationEvent")
+    if (equalIgnoringASCIICase(type, "DeviceOrientationEvent"))
         return DeviceOrientationEvent::create();
 #endif
 #if ENABLE(PROXIMITY_EVENTS)
-    if (type == "DeviceProximityEvent")
+    if (equalIgnoringASCIICase(type, "DeviceProximityEvent"))
         return DeviceProximityEvent::create();
 #endif
-    if (type == "ErrorEvent")
+    if (equalIgnoringASCIICase(type, "ErrorEvent"))
         return ErrorEvent::create();
-    if (type == "Event")
+    if (equalIgnoringASCIICase(type, "Event"))
         return Event::create();
-    if (type == "Events")
+    if (equalIgnoringASCIICase(type, "Events"))
         return Event::create();
-    if (type == "FocusEvent")
+    if (equalIgnoringASCIICase(type, "FocusEvent"))
         return FocusEvent::create();
 #if ENABLE(GAMEPAD)
-    if (type == "GamepadEvent")
+    if (equalIgnoringASCIICase(type, "GamepadEvent"))
         return GamepadEvent::create();
 #endif
-#if ENABLE(IOS_GESTURE_EVENTS)
-    if (type == "GestureEvent")
+#if ENABLE(IOS_GESTURE_EVENTS) || ENABLE(MAC_GESTURE_EVENTS)
+    if (equalIgnoringASCIICase(type, "GestureEvent"))
         return GestureEvent::create();
 #endif
-    if (type == "HTMLEvents")
+    if (equalIgnoringASCIICase(type, "HTMLEvents"))
         return Event::create();
-    if (type == "HashChangeEvent")
+    if (equalIgnoringASCIICase(type, "HashChangeEvent"))
         return HashChangeEvent::create();
 #if ENABLE(INDEXED_DATABASE)
-    if (type == "IDBVersionChangeEvent")
+    if (equalIgnoringASCIICase(type, "IDBVersionChangeEvent"))
         return IDBVersionChangeEvent::create();
 #endif
-    if (type == "KeyboardEvent")
+    if (equalIgnoringASCIICase(type, "KeyboardEvent"))
         return KeyboardEvent::create();
-    if (type == "KeyboardEvents")
+    if (equalIgnoringASCIICase(type, "KeyboardEvents"))
         return KeyboardEvent::create();
 #if ENABLE(ENCRYPTED_MEDIA)
-    if (type == "MediaKeyEvent")
+    if (equalIgnoringASCIICase(type, "MediaKeyEvent"))
         return MediaKeyEvent::create();
 #endif
 #if ENABLE(ENCRYPTED_MEDIA_V2)
-    if (type == "MediaKeyMessageEvent")
+    if (equalIgnoringASCIICase(type, "MediaKeyMessageEvent"))
         return MediaKeyMessageEvent::create();
 #endif
 #if ENABLE(ENCRYPTED_MEDIA_V2)
-    if (type == "MediaKeyNeededEvent")
+    if (equalIgnoringASCIICase(type, "MediaKeyNeededEvent"))
         return MediaKeyNeededEvent::create();
 #endif
 #if ENABLE(MEDIA_STREAM)
-    if (type == "MediaStreamEvent")
+    if (equalIgnoringASCIICase(type, "MediaStreamEvent"))
         return MediaStreamEvent::create();
 #endif
 #if ENABLE(MEDIA_STREAM)
-    if (type == "MediaStreamTrackEvent")
+    if (equalIgnoringASCIICase(type, "MediaStreamTrackEvent"))
         return MediaStreamTrackEvent::create();
 #endif
-    if (type == "MessageEvent")
+    if (equalIgnoringASCIICase(type, "MessageEvent"))
         return MessageEvent::create();
-    if (type == "MouseEvent")
+    if (equalIgnoringASCIICase(type, "MouseEvent"))
         return MouseEvent::create();
-    if (type == "MouseEvents")
+    if (equalIgnoringASCIICase(type, "MouseEvents"))
         return MouseEvent::create();
-    if (type == "MutationEvent")
+    if (equalIgnoringASCIICase(type, "MutationEvent"))
         return MutationEvent::create();
-    if (type == "MutationEvents")
+    if (equalIgnoringASCIICase(type, "MutationEvents"))
         return MutationEvent::create();
 #if ENABLE(WEB_AUDIO)
-    if (type == "OfflineAudioCompletionEvent")
+    if (equalIgnoringASCIICase(type, "OfflineAudioCompletionEvent"))
         return OfflineAudioCompletionEvent::create();
 #endif
 #if ENABLE(ORIENTATION_EVENTS)
-    if (type == "OrientationEvent")
+    if (equalIgnoringASCIICase(type, "OrientationEvent"))
         return Event::create();
 #endif
-    if (type == "OverflowEvent")
+    if (equalIgnoringASCIICase(type, "OverflowEvent"))
         return OverflowEvent::create();
-    if (type == "PageTransitionEvent")
+    if (equalIgnoringASCIICase(type, "PageTransitionEvent"))
         return PageTransitionEvent::create();
-    if (type == "PopStateEvent")
+    if (equalIgnoringASCIICase(type, "PopStateEvent"))
         return PopStateEvent::create();
-    if (type == "ProgressEvent")
+    if (equalIgnoringASCIICase(type, "ProgressEvent"))
         return ProgressEvent::create();
 #if ENABLE(MEDIA_STREAM)
-    if (type == "RTCDTMFToneChangeEvent")
+    if (equalIgnoringASCIICase(type, "RTCDTMFToneChangeEvent"))
         return RTCDTMFToneChangeEvent::create();
 #endif
 #if ENABLE(MEDIA_STREAM)
-    if (type == "RTCDataChannelEvent")
+    if (equalIgnoringASCIICase(type, "RTCDataChannelEvent"))
         return RTCDataChannelEvent::create();
 #endif
 #if ENABLE(MEDIA_STREAM)
-    if (type == "RTCIceCandidateEvent")
+    if (equalIgnoringASCIICase(type, "RTCIceCandidateEvent"))
         return RTCIceCandidateEvent::create();
 #endif
-    if (type == "SVGEvents")
+#if ENABLE(MEDIA_STREAM)
+    if (equalIgnoringASCIICase(type, "RTCTrackEvent"))
+        return RTCTrackEvent::create();
+#endif
+    if (equalIgnoringASCIICase(type, "SVGEvents"))
         return Event::create();
-    if (type == "SVGZoomEvent")
+    if (equalIgnoringASCIICase(type, "SVGZoomEvent"))
         return SVGZoomEvent::create();
-    if (type == "SVGZoomEvents")
+    if (equalIgnoringASCIICase(type, "SVGZoomEvents"))
         return SVGZoomEvent::create();
 #if ENABLE(CSP_NEXT)
-    if (type == "SecurityPolicyViolationEvent")
+    if (equalIgnoringASCIICase(type, "SecurityPolicyViolationEvent"))
         return SecurityPolicyViolationEvent::create();
 #endif
 #if ENABLE(SPEECH_SYNTHESIS)
-    if (type == "SpeechSynthesisEvent")
+    if (equalIgnoringASCIICase(type, "SpeechSynthesisEvent"))
         return SpeechSynthesisEvent::create();
 #endif
-    if (type == "StorageEvent")
+    if (equalIgnoringASCIICase(type, "StorageEvent"))
         return StorageEvent::create();
-    if (type == "TextEvent")
+    if (equalIgnoringASCIICase(type, "TextEvent"))
         return TextEvent::create();
 #if ENABLE(TOUCH_EVENTS)
-    if (type == "TouchEvent")
+    if (equalIgnoringASCIICase(type, "TouchEvent"))
         return TouchEvent::create();
 #endif
 #if ENABLE(VIDEO_TRACK)
-    if (type == "TrackEvent")
+    if (equalIgnoringASCIICase(type, "TrackEvent"))
         return TrackEvent::create();
 #endif
-    if (type == "TransitionEvent")
+    if (equalIgnoringASCIICase(type, "TransitionEvent"))
         return TransitionEvent::create();
-    if (type == "UIEvent")
+    if (equalIgnoringASCIICase(type, "UIEvent"))
         return UIEvent::create();
-    if (type == "UIEvents")
+    if (equalIgnoringASCIICase(type, "UIEvents"))
         return UIEvent::create();
 #if ENABLE(INDIE_UI)
-    if (type == "UIRequestEvent")
+    if (equalIgnoringASCIICase(type, "UIRequestEvent"))
         return UIRequestEvent::create();
 #endif
 #if ENABLE(WEBGL)
-    if (type == "WebGLContextEvent")
+    if (equalIgnoringASCIICase(type, "WebGLContextEvent"))
         return WebGLContextEvent::create();
 #endif
-    if (type == "WebKitAnimationEvent")
+    if (equalIgnoringASCIICase(type, "WebKitAnimationEvent"))
         return WebKitAnimationEvent::create();
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    if (type == "WebKitPlaybackTargetAvailabilityEvent")
+    if (equalIgnoringASCIICase(type, "WebKitPlaybackTargetAvailabilityEvent"))
         return WebKitPlaybackTargetAvailabilityEvent::create();
 #endif
-    if (type == "WebKitTransitionEvent")
+    if (equalIgnoringASCIICase(type, "WebKitTransitionEvent"))
         return WebKitTransitionEvent::create();
-    if (type == "WheelEvent")
+    if (equalIgnoringASCIICase(type, "WheelEvent"))
         return WheelEvent::create();
-    if (type == "XMLHttpRequestProgressEvent")
+    if (equalIgnoringASCIICase(type, "XMLHttpRequestProgressEvent"))
         return XMLHttpRequestProgressEvent::create();
     return 0;
 }

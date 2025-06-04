@@ -34,7 +34,7 @@ public:
     typedef JSIDBRequest Base;
     static JSIDBOpenDBRequest* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBOpenDBRequest>&& impl)
     {
-        JSIDBOpenDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequest>(globalObject->vm().heap)) JSIDBOpenDBRequest(structure, globalObject, WTF::move(impl));
+        JSIDBOpenDBRequest* ptr = new (NotNull, JSC::allocateCell<JSIDBOpenDBRequest>(globalObject->vm().heap)) JSIDBOpenDBRequest(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -53,12 +53,12 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    IDBOpenDBRequest& impl() const
+    IDBOpenDBRequest& wrapped() const
     {
-        return static_cast<IDBOpenDBRequest&>(Base::impl());
+        return static_cast<IDBOpenDBRequest&>(Base::wrapped());
     }
 protected:
-    JSIDBOpenDBRequest(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBOpenDBRequest>&&);
+    JSIDBOpenDBRequest(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBOpenDBRequest>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBOpenDBRequest*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBOpenDBRequest*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBOpenDBRequest& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBOpenDBRequest& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBOpenDBRequest*);
 
 
 } // namespace WebCore

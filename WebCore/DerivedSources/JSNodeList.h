@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSNodeList : public JSDOMWrapper {
+class JSNodeList : public JSDOMWrapper<NodeList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<NodeList> Base;
     static JSNodeList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NodeList>&& impl)
     {
-        JSNodeList* ptr = new (NotNull, JSC::allocateCell<JSNodeList>(globalObject->vm().heap)) JSNodeList(structure, globalObject, WTF::move(impl));
+        JSNodeList* ptr = new (NotNull, JSC::allocateCell<JSNodeList>(globalObject->vm().heap)) JSNodeList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,10 +41,8 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static NodeList* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
-    bool getOwnPropertySlotDelegate(JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSNodeList();
 
     DECLARE_INFO;
 
@@ -57,15 +55,10 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    NodeList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NodeList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSNodeList(JSC::Structure*, JSDOMGlobalObject*, Ref<NodeList>&&);
+    JSNodeList(JSC::Structure*, JSDOMGlobalObject&, Ref<NodeList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -88,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NodeList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NodeList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NodeList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, NodeList*);
 
 
 } // namespace WebCore

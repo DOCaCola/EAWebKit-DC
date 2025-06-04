@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSValidityState : public JSDOMWrapper {
+class JSValidityState : public JSDOMWrapper<ValidityState> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<ValidityState> Base;
     static JSValidityState* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<ValidityState>&& impl)
     {
-        JSValidityState* ptr = new (NotNull, JSC::allocateCell<JSValidityState>(globalObject->vm().heap)) JSValidityState(structure, globalObject, WTF::move(impl));
+        JSValidityState* ptr = new (NotNull, JSC::allocateCell<JSValidityState>(globalObject->vm().heap)) JSValidityState(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static ValidityState* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSValidityState();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    ValidityState& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    ValidityState* m_impl;
 protected:
-    JSValidityState(JSC::Structure*, JSDOMGlobalObject*, Ref<ValidityState>&&);
+    JSValidityState(JSC::Structure*, JSDOMGlobalObject&, Ref<ValidityState>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, ValidityState*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, ValidityState*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, ValidityState& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, ValidityState& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, ValidityState*);
 
 
 } // namespace WebCore

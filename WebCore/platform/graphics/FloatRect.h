@@ -57,6 +57,7 @@ namespace WebCore {
 
 class IntRect;
 class IntPoint;
+class TextStream;
 
 class FloatRect {
 public:
@@ -196,8 +197,6 @@ public:
 #endif
 //-EAWebKitChange
 
-    void dump(WTF::PrintStream& out) const;
-
     static FloatRect infiniteRect();
     bool isInfinite() const;
 
@@ -266,6 +265,8 @@ inline bool FloatRect::isInfinite() const
 WEBCORE_EXPORT FloatRect encloseRectToDevicePixels(const FloatRect&, float deviceScaleFactor);
 WEBCORE_EXPORT IntRect enclosingIntRect(const FloatRect&);
 WEBCORE_EXPORT IntRect roundedIntRect(const FloatRect&);
+
+WEBCORE_EXPORT TextStream& operator<<(TextStream&, const FloatRect&);
 
 }
 

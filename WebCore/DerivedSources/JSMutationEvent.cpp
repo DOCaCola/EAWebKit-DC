@@ -23,8 +23,8 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
-#include "MutationEvent.h"
 #include "Node.h"
 #include "URL.h"
 #include <runtime/Error.h>
@@ -73,34 +73,15 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSMutationEventConstructor : public DOMConstructorObject {
-private:
-    JSMutationEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSMutationEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSMutationEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSMutationEventConstructor>(vm.heap)) JSMutationEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSMutationEvent> JSMutationEventConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSMutationEventConstructorTableValues[] =
 {
-    { "MODIFICATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "ADDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "REMOVAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "MODIFICATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "ADDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "REMOVAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 
@@ -108,37 +89,30 @@ COMPILE_ASSERT(1 == MutationEvent::MODIFICATION, MutationEventEnumMODIFICATIONIs
 COMPILE_ASSERT(2 == MutationEvent::ADDITION, MutationEventEnumADDITIONIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(3 == MutationEvent::REMOVAL, MutationEventEnumREMOVALIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSMutationEventConstructor::s_info = { "MutationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMutationEventConstructor) };
-
-JSMutationEventConstructor::JSMutationEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSMutationEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSMutationEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSMutationEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSMutationEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("MutationEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSMutationEventConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSMutationEventConstructor::s_info = { "MutationEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMutationEventConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSMutationEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "relatedNode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventRelatedNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "prevValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventPrevValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "newValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventNewValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "attrName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventAttrName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "attrChange", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventAttrChange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "MODIFICATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "ADDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "REMOVAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "initMutationEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMutationEventPrototypeFunctionInitMutationEvent), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "relatedNode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventRelatedNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "prevValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventPrevValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "newValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventNewValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "attrName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventAttrName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "attrChange", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsMutationEventAttrChange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "MODIFICATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "ADDITION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "REMOVAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "initMutationEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMutationEventPrototypeFunctionInitMutationEvent), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMutationEventPrototype::s_info = { "MutationEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMutationEventPrototype) };
@@ -151,7 +125,7 @@ void JSMutationEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSMutationEvent::s_info = { "MutationEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMutationEvent) };
 
-JSMutationEvent::JSMutationEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MutationEvent>&& impl)
+JSMutationEvent::JSMutationEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MutationEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -166,135 +140,135 @@ JSObject* JSMutationEvent::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSMutationEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsMutationEventRelatedNode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMutationEventRelatedNode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMutationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MutationEvent", "relatedNode");
-        return throwGetterTypeError(*exec, "MutationEvent", "relatedNode");
+            return reportDeprecatedGetterError(*state, "MutationEvent", "relatedNode");
+        return throwGetterTypeError(*state, "MutationEvent", "relatedNode");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.relatedNode()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.relatedNode()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMutationEventPrevValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMutationEventPrevValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMutationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MutationEvent", "prevValue");
-        return throwGetterTypeError(*exec, "MutationEvent", "prevValue");
+            return reportDeprecatedGetterError(*state, "MutationEvent", "prevValue");
+        return throwGetterTypeError(*state, "MutationEvent", "prevValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.prevValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.prevValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMutationEventNewValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMutationEventNewValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMutationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MutationEvent", "newValue");
-        return throwGetterTypeError(*exec, "MutationEvent", "newValue");
+            return reportDeprecatedGetterError(*state, "MutationEvent", "newValue");
+        return throwGetterTypeError(*state, "MutationEvent", "newValue");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.newValue());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.newValue());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMutationEventAttrName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMutationEventAttrName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMutationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MutationEvent", "attrName");
-        return throwGetterTypeError(*exec, "MutationEvent", "attrName");
+            return reportDeprecatedGetterError(*state, "MutationEvent", "attrName");
+        return throwGetterTypeError(*state, "MutationEvent", "attrName");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.attrName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.attrName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMutationEventAttrChange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsMutationEventAttrChange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSMutationEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "MutationEvent", "attrChange");
-        return throwGetterTypeError(*exec, "MutationEvent", "attrChange");
+            return reportDeprecatedGetterError(*state, "MutationEvent", "attrChange");
+        return throwGetterTypeError(*state, "MutationEvent", "attrChange");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.attrChange());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsMutationEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsMutationEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSMutationEventPrototype* domObject = jsDynamicCast<JSMutationEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSMutationEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSMutationEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSMutationEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSMutationEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSMutationEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsMutationEventPrototypeFunctionInitMutationEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsMutationEventPrototypeFunctionInitMutationEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMutationEvent* castedThis = jsDynamicCast<JSMutationEvent*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MutationEvent", "initMutationEvent");
+        return throwThisTypeError(*state, "MutationEvent", "initMutationEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMutationEvent::info());
-    auto& impl = castedThis->impl();
-    String type = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String type = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool canBubble = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool canBubble = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool cancelable = exec->argument(2).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool cancelable = state->argument(2).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Node* relatedNode = JSNode::toWrapped(exec->argument(3));
-    if (UNLIKELY(exec->hadException()))
+    Node* relatedNode = JSNode::toWrapped(state->argument(3));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String prevValue = exec->argument(4).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String prevValue = state->argument(4).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String newValue = exec->argument(5).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String newValue = state->argument(5).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String attrName = exec->argument(6).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String attrName = state->argument(6).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    uint16_t attrChange = toUInt16(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t attrChange = toUInt16(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.initMutationEvent(type, canBubble, cancelable, relatedNode, prevValue, newValue, attrName, attrChange);
     return JSValue::encode(jsUndefined());

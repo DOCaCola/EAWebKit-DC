@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLButtonElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLButtonElement>&& impl)
     {
-        JSHTMLButtonElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElement>(globalObject->vm().heap)) JSHTMLButtonElement(structure, globalObject, WTF::move(impl));
+        JSHTMLButtonElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLButtonElement>(globalObject->vm().heap)) JSHTMLButtonElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLButtonElement& impl() const
+    HTMLButtonElement& wrapped() const
     {
-        return static_cast<HTMLButtonElement&>(Base::impl());
+        return static_cast<HTMLButtonElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLButtonElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLButtonElement>&&);
+    JSHTMLButtonElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLButtonElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

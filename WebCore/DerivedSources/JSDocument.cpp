@@ -30,11 +30,9 @@
 #include "DOMNamedFlowCollection.h"
 #include "DOMSelection.h"
 #include "DOMWindow.h"
-#include "Document.h"
 #include "DocumentFragment.h"
 #include "DocumentType.h"
 #include "Element.h"
-#include "EntityReference.h"
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "HTMLCollection.h"
@@ -48,13 +46,13 @@
 #include "JSComment.h"
 #include "JSCustomXPathNSResolver.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMImplementation.h"
 #include "JSDOMSelection.h"
 #include "JSDOMWindow.h"
 #include "JSDocumentFragment.h"
 #include "JSDocumentType.h"
 #include "JSElement.h"
-#include "JSEntityReference.h"
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "JSEventTarget.h"
@@ -62,6 +60,7 @@
 #include "JSHTMLElement.h"
 #include "JSHTMLHeadElement.h"
 #include "JSHTMLScriptElement.h"
+#include "JSLocation.h"
 #include "JSNode.h"
 #include "JSNodeFilter.h"
 #include "JSNodeIterator.h"
@@ -75,6 +74,7 @@
 #include "JSXPathExpression.h"
 #include "JSXPathNSResolver.h"
 #include "JSXPathResult.h"
+#include "Location.h"
 #include "NameNodeList.h"
 #include "Node.h"
 #include "NodeIterator.h"
@@ -121,7 +121,6 @@ JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateComment(JSC::
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateCDATASection(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateProcessingInstruction(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateAttribute(JSC::ExecState*);
-JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateEntityReference(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByTagName(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionImportNode(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateElementNS(JSC::ExecState*);
@@ -463,29 +462,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDocumentConstructor : public DOMConstructorObject {
-private:
-    JSDocumentConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSDocumentConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDocumentConstructor* ptr = new (NotNull, JSC::allocateCell<JSDocumentConstructor>(vm.heap)) JSDocumentConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSDocument(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
+typedef JSDOMConstructor<JSDocument> JSDocumentConstructor;
 
 /* Hash table */
 
@@ -497,321 +474,307 @@ static const struct CompactHashIndex JSDocumentTableIndex[2] = {
 
 static const HashTableValue JSDocumentTableValues[] =
 {
-    { "location", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentLocation) },
+    { "location", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentLocation) } },
 };
 
-static const HashTable JSDocumentTable = { 1, 1, true, JSDocumentTableValues, 0, JSDocumentTableIndex };
-EncodedJSValue JSC_HOST_CALL JSDocumentConstructor::constructJSDocument(ExecState* exec)
+static const HashTable JSDocumentTable = { 1, 1, true, JSDocumentTableValues, JSDocumentTableIndex };
+template<> EncodedJSValue JSC_HOST_CALL JSDocumentConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSDocumentConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSDocumentConstructor*>(state->callee());
     ScriptExecutionContext* context = castedThis->scriptExecutionContext();
     if (!context)
-        return throwConstructorDocumentUnavailableError(*exec, "Document");
+        return throwConstructorDocumentUnavailableError(*state, "Document");
     RefPtr<Document> object = Document::create(*context);
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSDocumentConstructor::s_info = { "DocumentConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentConstructor) };
-
-JSDocumentConstructor::JSDocumentConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSDocumentConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDocumentConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDocument::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDocument::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Document"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSDocumentConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSDocument;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSDocumentConstructor::s_info = { "DocumentConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDocumentPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "doctype", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDoctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "implementation", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentImplementation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "documentElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDocumentElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "inputEncoding", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentInputEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "xmlEncoding", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "xmlVersion", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentXMLVersion) },
-    { "xmlStandalone", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLStandalone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentXMLStandalone) },
-    { "documentURI", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDocumentURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "defaultView", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDefaultView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "styleSheets", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentStyleSheets), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "contentType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentContentType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "title", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentTitle) },
-    { "referrer", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentReferrer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "domain", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDomain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentDomain) },
-    { "URL", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cookie", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCookie), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentCookie) },
-    { "body", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentBody), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentBody) },
-    { "head", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentHead), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "images", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentImages), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "applets", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentApplets), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "links", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLinks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "forms", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentForms), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "anchors", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentAnchors), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastModified", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLastModified), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "charset", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentCharset) },
-    { "defaultCharset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDefaultCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "characterSet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCharacterSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "preferredStylesheetSet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentPreferredStylesheetSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "selectedStylesheetSet", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentSelectedStylesheetSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentSelectedStylesheetSet) },
-    { "activeElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentActiveElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "compatMode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCompatMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitIsFullScreen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitIsFullScreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitFullScreenKeyboardInputAllowed", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullScreenKeyboardInputAllowed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitCurrentFullScreenElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitCurrentFullScreenElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitFullscreenEnabled", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullscreenEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitFullscreenElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullscreenElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "doctype", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDoctype), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "implementation", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentImplementation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "documentElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDocumentElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "inputEncoding", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentInputEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "xmlEncoding", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLEncoding), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "xmlVersion", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentXMLVersion) } },
+    { "xmlStandalone", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentXMLStandalone), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentXMLStandalone) } },
+    { "documentURI", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDocumentURI), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "defaultView", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDefaultView), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "styleSheets", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentStyleSheets), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "contentType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentContentType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "title", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTitle), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentTitle) } },
+    { "referrer", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentReferrer), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "domain", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDomain), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentDomain) } },
+    { "URL", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentURL), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cookie", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCookie), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentCookie) } },
+    { "body", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentBody), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentBody) } },
+    { "head", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentHead), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "images", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentImages), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "applets", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentApplets), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "links", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLinks), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "forms", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentForms), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "anchors", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentAnchors), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastModified", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLastModified), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "charset", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentCharset) } },
+    { "defaultCharset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentDefaultCharset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "characterSet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCharacterSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "preferredStylesheetSet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentPreferredStylesheetSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "selectedStylesheetSet", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentSelectedStylesheetSet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentSelectedStylesheetSet) } },
+    { "activeElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentActiveElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "compatMode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCompatMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitIsFullScreen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitIsFullScreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitFullScreenKeyboardInputAllowed", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullScreenKeyboardInputAllowed), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitCurrentFullScreenElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitCurrentFullScreenElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitFullscreenEnabled", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullscreenEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitFullscreenElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentWebkitFullscreenElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(POINTER_LOCK)
-    { "pointerLockElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentPointerLockElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "pointerLockElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentPointerLockElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(FONT_LOAD_EVENTS)
-    { "fonts", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFonts), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "fonts", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFonts), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "visibilityState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentVisibilityState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "hidden", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentHidden), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "visibilityState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentVisibilityState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "hidden", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentHidden), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(CSP_NEXT)
-    { "securityPolicy", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentSecurityPolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "securityPolicy", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentSecurityPolicy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "currentScript", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCurrentScript), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "origin", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "scrollingElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentScrollingElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onbeforecopy", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforecopy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforecopy) },
-    { "onbeforecut", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforecut), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforecut) },
-    { "onbeforepaste", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforepaste), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforepaste) },
-    { "oncopy", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncopy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncopy) },
-    { "oncut", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncut), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncut) },
-    { "onpaste", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpaste), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpaste) },
-    { "onselectstart", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselectstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselectstart) },
+    { "currentScript", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentCurrentScript), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "origin", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOrigin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "scrollingElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentScrollingElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onbeforecopy", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforecopy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforecopy) } },
+    { "onbeforecut", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforecut), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforecut) } },
+    { "onbeforepaste", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnbeforepaste), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnbeforepaste) } },
+    { "oncopy", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncopy), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncopy) } },
+    { "oncut", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncut), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncut) } },
+    { "onpaste", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpaste), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpaste) } },
+    { "onselectstart", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselectstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselectstart) } },
 #if ENABLE(FULLSCREEN_API)
-    { "onwebkitfullscreenchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitfullscreenchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitfullscreenchange) },
+    { "onwebkitfullscreenchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitfullscreenchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitfullscreenchange) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(FULLSCREEN_API)
-    { "onwebkitfullscreenerror", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitfullscreenerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitfullscreenerror) },
+    { "onwebkitfullscreenerror", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitfullscreenerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitfullscreenerror) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "onselectionchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselectionchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselectionchange) },
-    { "onreadystatechange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnreadystatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnreadystatechange) },
+    { "onselectionchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselectionchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselectionchange) } },
+    { "onreadystatechange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnreadystatechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnreadystatechange) } },
 #if ENABLE(CSP_NEXT)
-    { "onsecuritypolicyviolation", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsecuritypolicyviolation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsecuritypolicyviolation) },
+    { "onsecuritypolicyviolation", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsecuritypolicyviolation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsecuritypolicyviolation) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(POINTER_LOCK)
-    { "onpointerlockchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpointerlockchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpointerlockchange) },
+    { "onpointerlockchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpointerlockchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpointerlockchange) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(POINTER_LOCK)
-    { "onpointerlockerror", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpointerlockerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpointerlockerror) },
+    { "onpointerlockerror", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpointerlockerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpointerlockerror) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "onabort", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnabort) },
+    { "onabort", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnabort), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnabort) } },
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-    { "onautocomplete", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnautocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnautocomplete) },
+    { "onautocomplete", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnautocomplete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnautocomplete) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-    { "onautocompleteerror", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnautocompleteerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnautocompleteerror) },
+    { "onautocompleteerror", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnautocompleteerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnautocompleteerror) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "onblur", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnblur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnblur) },
-    { "oncanplay", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncanplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncanplay) },
-    { "oncanplaythrough", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncanplaythrough), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncanplaythrough) },
-    { "onchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnchange) },
-    { "onclick", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnclick) },
-    { "oncontextmenu", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncontextmenu), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncontextmenu) },
-    { "ondblclick", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndblclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndblclick) },
-    { "ondrag", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndrag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndrag) },
-    { "ondragend", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragend) },
-    { "ondragenter", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragenter) },
-    { "ondragleave", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragleave) },
-    { "ondragover", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragover) },
-    { "ondragstart", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragstart) },
-    { "ondrop", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndrop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndrop) },
-    { "ondurationchange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndurationchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndurationchange) },
-    { "onemptied", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnemptied), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnemptied) },
-    { "onended", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnended) },
-    { "onerror", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnerror) },
-    { "onfocus", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnfocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnfocus) },
-    { "oninput", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOninput), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOninput) },
-    { "oninvalid", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOninvalid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOninvalid) },
-    { "onkeydown", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeydown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeydown) },
-    { "onkeypress", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeypress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeypress) },
-    { "onkeyup", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeyup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeyup) },
-    { "onload", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnload) },
-    { "onloadeddata", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadeddata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadeddata) },
-    { "onloadedmetadata", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadedmetadata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadedmetadata) },
-    { "onloadstart", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadstart) },
-    { "onmousedown", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousedown) },
-    { "onmouseenter", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseenter) },
-    { "onmouseleave", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseleave) },
-    { "onmousemove", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousemove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousemove) },
-    { "onmouseout", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseout) },
-    { "onmouseover", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseover) },
-    { "onmouseup", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseup) },
-    { "onmousewheel", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousewheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousewheel) },
-    { "onpause", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpause), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpause) },
-    { "onplay", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnplay) },
-    { "onplaying", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnplaying), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnplaying) },
-    { "onprogress", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnprogress) },
-    { "onratechange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnratechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnratechange) },
-    { "onreset", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnreset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnreset) },
-    { "onscroll", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnscroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnscroll) },
-    { "onseeked", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnseeked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnseeked) },
-    { "onseeking", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnseeking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnseeking) },
-    { "onselect", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselect) },
-    { "onstalled", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnstalled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnstalled) },
-    { "onsubmit", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsubmit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsubmit) },
-    { "onsuspend", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsuspend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsuspend) },
-    { "ontimeupdate", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntimeupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntimeupdate) },
-    { "onvolumechange", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnvolumechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnvolumechange) },
-    { "onwaiting", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwaiting), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwaiting) },
-    { "onsearch", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsearch) },
-    { "onwheel", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwheel) },
+    { "onblur", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnblur), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnblur) } },
+    { "oncanplay", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncanplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncanplay) } },
+    { "oncanplaythrough", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncanplaythrough), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncanplaythrough) } },
+    { "onchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnchange) } },
+    { "onclick", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnclick) } },
+    { "oncontextmenu", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOncontextmenu), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOncontextmenu) } },
+    { "ondblclick", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndblclick), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndblclick) } },
+    { "ondrag", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndrag), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndrag) } },
+    { "ondragend", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragend) } },
+    { "ondragenter", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragenter) } },
+    { "ondragleave", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragleave) } },
+    { "ondragover", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragover) } },
+    { "ondragstart", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndragstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndragstart) } },
+    { "ondrop", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndrop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndrop) } },
+    { "ondurationchange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOndurationchange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOndurationchange) } },
+    { "onemptied", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnemptied), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnemptied) } },
+    { "onended", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnended), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnended) } },
+    { "onerror", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnerror) } },
+    { "onfocus", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnfocus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnfocus) } },
+    { "oninput", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOninput), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOninput) } },
+    { "oninvalid", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOninvalid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOninvalid) } },
+    { "onkeydown", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeydown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeydown) } },
+    { "onkeypress", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeypress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeypress) } },
+    { "onkeyup", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnkeyup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnkeyup) } },
+    { "onload", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnload), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnload) } },
+    { "onloadeddata", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadeddata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadeddata) } },
+    { "onloadedmetadata", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadedmetadata), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadedmetadata) } },
+    { "onloadstart", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnloadstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnloadstart) } },
+    { "onmousedown", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousedown) } },
+    { "onmouseenter", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseenter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseenter) } },
+    { "onmouseleave", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseleave), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseleave) } },
+    { "onmousemove", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousemove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousemove) } },
+    { "onmouseout", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseout), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseout) } },
+    { "onmouseover", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseover), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseover) } },
+    { "onmouseup", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmouseup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmouseup) } },
+    { "onmousewheel", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnmousewheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnmousewheel) } },
+    { "onpause", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnpause), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnpause) } },
+    { "onplay", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnplay), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnplay) } },
+    { "onplaying", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnplaying), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnplaying) } },
+    { "onprogress", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnprogress) } },
+    { "onratechange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnratechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnratechange) } },
+    { "onreset", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnreset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnreset) } },
+    { "onscroll", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnscroll), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnscroll) } },
+    { "onseeked", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnseeked), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnseeked) } },
+    { "onseeking", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnseeking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnseeking) } },
+    { "onselect", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnselect), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnselect) } },
+    { "onstalled", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnstalled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnstalled) } },
+    { "onsubmit", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsubmit), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsubmit) } },
+    { "onsuspend", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsuspend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsuspend) } },
+    { "ontimeupdate", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntimeupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntimeupdate) } },
+    { "onvolumechange", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnvolumechange), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnvolumechange) } },
+    { "onwaiting", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwaiting), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwaiting) } },
+    { "onsearch", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnsearch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnsearch) } },
+    { "onwheel", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwheel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwheel) } },
 #if ENABLE(TOUCH_EVENTS)
-    { "ontouchcancel", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchcancel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchcancel) },
+    { "ontouchcancel", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchcancel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchcancel) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(TOUCH_EVENTS)
-    { "ontouchend", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchend) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(TOUCH_EVENTS)
-    { "ontouchmove", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchmove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchmove) },
+    { "ontouchend", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchend), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchend) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(TOUCH_EVENTS)
-    { "ontouchstart", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchstart) },
+    { "ontouchmove", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchmove), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchmove) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(TOUCH_EVENTS)
+    { "ontouchstart", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOntouchstart), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOntouchstart) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "onwebkitmouseforcechanged", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcechanged), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcechanged) },
+    { "onwebkitmouseforcechanged", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcechanged), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcechanged) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "onwebkitmouseforcedown", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcedown) },
+    { "onwebkitmouseforcedown", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcedown), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcedown) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "onwebkitmouseforcewillbegin", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcewillbegin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcewillbegin) },
+    { "onwebkitmouseforcewillbegin", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforcewillbegin), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforcewillbegin) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MOUSE_FORCE_EVENTS)
-    { "onwebkitmouseforceup", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforceup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforceup) },
+    { "onwebkitmouseforceup", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitmouseforceup), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitmouseforceup) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealbottom", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealbottom), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealbottom) },
+    { "onwebkitwillrevealbottom", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealbottom), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealbottom) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealleft", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealleft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealleft) },
+    { "onwebkitwillrevealleft", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealleft), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealleft) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealright", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealright), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealright) },
+    { "onwebkitwillrevealright", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealright), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealright) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-    { "onwebkitwillrevealtop", DontDelete | DontEnum | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealtop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealtop) },
+    { "onwebkitwillrevealtop", DontEnum | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentOnwebkitwillrevealtop), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDocumentOnwebkitwillrevealtop) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "children", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentChildren), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "firstElementChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFirstElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lastElementChild", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLastElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "childElementCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentChildElementCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "createElement", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateElement), (intptr_t) (0) },
-    { "createDocumentFragment", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateDocumentFragment), (intptr_t) (0) },
-    { "createTextNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTextNode), (intptr_t) (0) },
-    { "createComment", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateComment), (intptr_t) (0) },
-    { "createCDATASection", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateCDATASection), (intptr_t) (0) },
-    { "createProcessingInstruction", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateProcessingInstruction), (intptr_t) (0) },
-    { "createAttribute", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateAttribute), (intptr_t) (0) },
-    { "createEntityReference", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateEntityReference), (intptr_t) (0) },
-    { "getElementsByTagName", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByTagName), (intptr_t) (0) },
-    { "importNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionImportNode), (intptr_t) (0) },
-    { "createElementNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateElementNS), (intptr_t) (0) },
-    { "createAttributeNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateAttributeNS), (intptr_t) (0) },
-    { "getElementsByTagNameNS", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByTagNameNS), (intptr_t) (0) },
-    { "adoptNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionAdoptNode), (intptr_t) (0) },
-    { "createEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateEvent), (intptr_t) (0) },
-    { "createRange", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateRange), (intptr_t) (0) },
-    { "createNodeIterator", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateNodeIterator), (intptr_t) (0) },
-    { "createTreeWalker", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTreeWalker), (intptr_t) (0) },
-    { "getOverrideStyle", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetOverrideStyle), (intptr_t) (0) },
-    { "createExpression", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateExpression), (intptr_t) (0) },
-    { "createNSResolver", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateNSResolver), (intptr_t) (1) },
-    { "evaluate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionEvaluate), (intptr_t) (0) },
-    { "execCommand", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionExecCommand), (intptr_t) (0) },
-    { "queryCommandEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandEnabled), (intptr_t) (0) },
-    { "queryCommandIndeterm", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandIndeterm), (intptr_t) (0) },
-    { "queryCommandState", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandState), (intptr_t) (0) },
-    { "queryCommandSupported", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandSupported), (intptr_t) (0) },
-    { "queryCommandValue", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandValue), (intptr_t) (0) },
-    { "getElementsByName", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByName), (intptr_t) (0) },
-    { "elementFromPoint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionElementFromPoint), (intptr_t) (0) },
-    { "caretRangeFromPoint", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCaretRangeFromPoint), (intptr_t) (0) },
-    { "getSelection", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetSelection), (intptr_t) (0) },
-    { "getCSSCanvasContext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetCSSCanvasContext), (intptr_t) (4) },
-    { "getElementsByClassName", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByClassName), (intptr_t) (0) },
-    { "hasFocus", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionHasFocus), (intptr_t) (0) },
-    { "webkitCancelFullScreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitCancelFullScreen), (intptr_t) (0) },
-    { "webkitExitFullscreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitExitFullscreen), (intptr_t) (0) },
+    { "children", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentChildren), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "firstElementChild", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentFirstElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lastElementChild", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentLastElementChild), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "childElementCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentChildElementCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "createElement", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateElement), (intptr_t) (1) } },
+    { "createDocumentFragment", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateDocumentFragment), (intptr_t) (0) } },
+    { "createTextNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTextNode), (intptr_t) (0) } },
+    { "createComment", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateComment), (intptr_t) (0) } },
+    { "createCDATASection", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateCDATASection), (intptr_t) (0) } },
+    { "createProcessingInstruction", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateProcessingInstruction), (intptr_t) (0) } },
+    { "createAttribute", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateAttribute), (intptr_t) (0) } },
+    { "getElementsByTagName", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByTagName), (intptr_t) (0) } },
+    { "importNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionImportNode), (intptr_t) (0) } },
+    { "createElementNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateElementNS), (intptr_t) (0) } },
+    { "createAttributeNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateAttributeNS), (intptr_t) (0) } },
+    { "getElementsByTagNameNS", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByTagNameNS), (intptr_t) (0) } },
+    { "adoptNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionAdoptNode), (intptr_t) (0) } },
+    { "createEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateEvent), (intptr_t) (0) } },
+    { "createRange", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateRange), (intptr_t) (0) } },
+    { "createNodeIterator", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateNodeIterator), (intptr_t) (1) } },
+    { "createTreeWalker", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTreeWalker), (intptr_t) (1) } },
+    { "getOverrideStyle", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetOverrideStyle), (intptr_t) (0) } },
+    { "createExpression", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateExpression), (intptr_t) (0) } },
+    { "createNSResolver", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateNSResolver), (intptr_t) (1) } },
+    { "evaluate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionEvaluate), (intptr_t) (0) } },
+    { "execCommand", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionExecCommand), (intptr_t) (0) } },
+    { "queryCommandEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandEnabled), (intptr_t) (0) } },
+    { "queryCommandIndeterm", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandIndeterm), (intptr_t) (0) } },
+    { "queryCommandState", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandState), (intptr_t) (0) } },
+    { "queryCommandSupported", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandSupported), (intptr_t) (0) } },
+    { "queryCommandValue", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQueryCommandValue), (intptr_t) (0) } },
+    { "getElementsByName", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByName), (intptr_t) (0) } },
+    { "elementFromPoint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionElementFromPoint), (intptr_t) (0) } },
+    { "caretRangeFromPoint", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCaretRangeFromPoint), (intptr_t) (0) } },
+    { "getSelection", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetSelection), (intptr_t) (0) } },
+    { "getCSSCanvasContext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetCSSCanvasContext), (intptr_t) (4) } },
+    { "getElementsByClassName", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementsByClassName), (intptr_t) (0) } },
+    { "hasFocus", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionHasFocus), (intptr_t) (0) } },
+    { "webkitCancelFullScreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitCancelFullScreen), (intptr_t) (0) } },
+    { "webkitExitFullscreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitExitFullscreen), (intptr_t) (0) } },
 #if ENABLE(POINTER_LOCK)
-    { "exitPointerLock", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionExitPointerLock), (intptr_t) (0) },
+    { "exitPointerLock", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionExitPointerLock), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(CSS_REGIONS)
-    { "webkitGetNamedFlows", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitGetNamedFlows), (intptr_t) (0) },
+    { "webkitGetNamedFlows", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionWebkitGetNamedFlows), (intptr_t) (0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "createTouch", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouch), (intptr_t) (0) },
-    { "createTouchList", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouchList), (intptr_t) (0) },
-    { "getElementById", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementById), (intptr_t) (0) },
-    { "prepend", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionPrepend), (intptr_t) (1) },
-    { "append", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionAppend), (intptr_t) (1) },
-    { "querySelector", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQuerySelector), (intptr_t) (1) },
-    { "querySelectorAll", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQuerySelectorAll), (intptr_t) (1) },
+    { "createTouch", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouch), (intptr_t) (0) } },
+    { "createTouchList", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionCreateTouchList), (intptr_t) (0) } },
+    { "getElementById", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionGetElementById), (intptr_t) (0) } },
+    { "prepend", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionPrepend), (intptr_t) (0) } },
+    { "append", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionAppend), (intptr_t) (0) } },
+    { "querySelector", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQuerySelector), (intptr_t) (1) } },
+    { "querySelectorAll", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentPrototypeFunctionQuerySelectorAll), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDocumentPrototype::s_info = { "DocumentPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentPrototype) };
@@ -824,7 +787,7 @@ void JSDocumentPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDocument::s_info = { "Document", &Base::s_info, &JSDocumentTable, CREATE_METHOD_TABLE(JSDocument) };
 
-JSDocument::JSDocument(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Document>&& impl)
+JSDocument::JSDocument(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Document>&& impl)
     : JSNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -839,4474 +802,4495 @@ JSObject* JSDocument::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSDocument>(vm, globalObject);
 }
 
-bool JSDocument::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDocument::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDocument*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSDocument, Base>(exec, JSDocumentTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDocument, Base>(state, JSDocumentTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsDocumentDoctype(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDoctype(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "doctype");
-        return throwGetterTypeError(*exec, "Document", "doctype");
+            return reportDeprecatedGetterError(*state, "Document", "doctype");
+        return throwGetterTypeError(*state, "Document", "doctype");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.doctype()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.doctype()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentImplementation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentImplementation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "implementation");
-        return throwGetterTypeError(*exec, "Document", "implementation");
+            return reportDeprecatedGetterError(*state, "Document", "implementation");
+        return throwGetterTypeError(*state, "Document", "implementation");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.implementation()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.implementation()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentDocumentElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDocumentElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "documentElement");
-        return throwGetterTypeError(*exec, "Document", "documentElement");
+            return reportDeprecatedGetterError(*state, "Document", "documentElement");
+        return throwGetterTypeError(*state, "Document", "documentElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.documentElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.documentElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentInputEncoding(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentInputEncoding(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "inputEncoding");
-        return throwGetterTypeError(*exec, "Document", "inputEncoding");
+            return reportDeprecatedGetterError(*state, "Document", "inputEncoding");
+        return throwGetterTypeError(*state, "Document", "inputEncoding");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.inputEncoding());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.characterSetWithUTF8Fallback());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentXMLEncoding(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentXMLEncoding(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "xmlEncoding");
-        return throwGetterTypeError(*exec, "Document", "xmlEncoding");
+            return reportDeprecatedGetterError(*state, "Document", "xmlEncoding");
+        return throwGetterTypeError(*state, "Document", "xmlEncoding");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.xmlEncoding());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.xmlEncoding());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentXMLVersion(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentXMLVersion(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "xmlVersion");
-        return throwGetterTypeError(*exec, "Document", "xmlVersion");
+            return reportDeprecatedGetterError(*state, "Document", "xmlVersion");
+        return throwGetterTypeError(*state, "Document", "xmlVersion");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.xmlVersion());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.xmlVersion());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentXMLStandalone(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentXMLStandalone(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "xmlStandalone");
-        return throwGetterTypeError(*exec, "Document", "xmlStandalone");
+            return reportDeprecatedGetterError(*state, "Document", "xmlStandalone");
+        return throwGetterTypeError(*state, "Document", "xmlStandalone");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.xmlStandalone());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentDocumentURI(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDocumentURI(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "documentURI");
-        return throwGetterTypeError(*exec, "Document", "documentURI");
+            return reportDeprecatedGetterError(*state, "Document", "documentURI");
+        return throwGetterTypeError(*state, "Document", "documentURI");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.documentURI());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.documentURI());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentDefaultView(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDefaultView(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "defaultView");
-        return throwGetterTypeError(*exec, "Document", "defaultView");
+            return reportDeprecatedGetterError(*state, "Document", "defaultView");
+        return throwGetterTypeError(*state, "Document", "defaultView");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.defaultView()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.defaultView()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentStyleSheets(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentStyleSheets(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "styleSheets");
-        return throwGetterTypeError(*exec, "Document", "styleSheets");
+            return reportDeprecatedGetterError(*state, "Document", "styleSheets");
+        return throwGetterTypeError(*state, "Document", "styleSheets");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.styleSheets()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.styleSheets()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentContentType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentContentType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "contentType");
-        return throwGetterTypeError(*exec, "Document", "contentType");
+            return reportDeprecatedGetterError(*state, "Document", "contentType");
+        return throwGetterTypeError(*state, "Document", "contentType");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.contentType());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.contentType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTitle(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTitle(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "title");
-        return throwGetterTypeError(*exec, "Document", "title");
+            return reportDeprecatedGetterError(*state, "Document", "title");
+        return throwGetterTypeError(*state, "Document", "title");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.title());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.title());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentReferrer(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentReferrer(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "referrer");
-        return throwGetterTypeError(*exec, "Document", "referrer");
+            return reportDeprecatedGetterError(*state, "Document", "referrer");
+        return throwGetterTypeError(*state, "Document", "referrer");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.referrer());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.referrer());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentDomain(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDomain(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "domain");
-        return throwGetterTypeError(*exec, "Document", "domain");
+            return reportDeprecatedGetterError(*state, "Document", "domain");
+        return throwGetterTypeError(*state, "Document", "domain");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.domain());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.domain());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentURL(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentURL(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "URL");
-        return throwGetterTypeError(*exec, "Document", "URL");
+            return reportDeprecatedGetterError(*state, "Document", "URL");
+        return throwGetterTypeError(*state, "Document", "URL");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.url());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.url());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentCookie(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentCookie(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "cookie");
-        return throwGetterTypeError(*exec, "Document", "cookie");
+            return reportDeprecatedGetterError(*state, "Document", "cookie");
+        return throwGetterTypeError(*state, "Document", "cookie");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.cookie(ec));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.cookie(ec));
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentBody(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentBody(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "body");
-        return throwGetterTypeError(*exec, "Document", "body");
+            return reportDeprecatedGetterError(*state, "Document", "body");
+        return throwGetterTypeError(*state, "Document", "body");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.bodyOrFrameset()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.bodyOrFrameset()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentHead(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentHead(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "head");
-        return throwGetterTypeError(*exec, "Document", "head");
+            return reportDeprecatedGetterError(*state, "Document", "head");
+        return throwGetterTypeError(*state, "Document", "head");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.head()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.head()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentImages(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentImages(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "images");
-        return throwGetterTypeError(*exec, "Document", "images");
+            return reportDeprecatedGetterError(*state, "Document", "images");
+        return throwGetterTypeError(*state, "Document", "images");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.images()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.images()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentApplets(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentApplets(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "applets");
-        return throwGetterTypeError(*exec, "Document", "applets");
+            return reportDeprecatedGetterError(*state, "Document", "applets");
+        return throwGetterTypeError(*state, "Document", "applets");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.applets()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.applets()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentLinks(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentLinks(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "links");
-        return throwGetterTypeError(*exec, "Document", "links");
+            return reportDeprecatedGetterError(*state, "Document", "links");
+        return throwGetterTypeError(*state, "Document", "links");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.links()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.links()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentForms(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentForms(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "forms");
-        return throwGetterTypeError(*exec, "Document", "forms");
+            return reportDeprecatedGetterError(*state, "Document", "forms");
+        return throwGetterTypeError(*state, "Document", "forms");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.forms()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.forms()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentAnchors(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentAnchors(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "anchors");
-        return throwGetterTypeError(*exec, "Document", "anchors");
+            return reportDeprecatedGetterError(*state, "Document", "anchors");
+        return throwGetterTypeError(*state, "Document", "anchors");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.anchors()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.anchors()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentLastModified(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentLastModified(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "lastModified");
-        return throwGetterTypeError(*exec, "Document", "lastModified");
+            return reportDeprecatedGetterError(*state, "Document", "lastModified");
+        return throwGetterTypeError(*state, "Document", "lastModified");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.lastModified());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.lastModified());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentLocation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentLocation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDocument*>(slotBase);
-    return JSValue::encode(castedThis->location(exec));
-}
-
-
-EncodedJSValue jsDocumentCharset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "charset");
-        return throwGetterTypeError(*exec, "Document", "charset");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrUndefined(exec, impl.charset());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.location()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentDefaultCharset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentCharset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "defaultCharset");
-        return throwGetterTypeError(*exec, "Document", "defaultCharset");
+            return reportDeprecatedGetterError(*state, "Document", "charset");
+        return throwGetterTypeError(*state, "Document", "charset");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrUndefined(exec, impl.defaultCharset());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrUndefined(state, impl.charset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentDefaultCharset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "readyState");
-        return throwGetterTypeError(*exec, "Document", "readyState");
+            return reportDeprecatedGetterError(*state, "Document", "defaultCharset");
+        return throwGetterTypeError(*state, "Document", "defaultCharset");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrUndefined(exec, impl.readyState());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrUndefined(state, impl.defaultCharset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentCharacterSet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentReadyState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "characterSet");
-        return throwGetterTypeError(*exec, "Document", "characterSet");
+            return reportDeprecatedGetterError(*state, "Document", "readyState");
+        return throwGetterTypeError(*state, "Document", "readyState");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.characterSet());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrUndefined(state, impl.readyState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentPreferredStylesheetSet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentCharacterSet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "preferredStylesheetSet");
-        return throwGetterTypeError(*exec, "Document", "preferredStylesheetSet");
+            return reportDeprecatedGetterError(*state, "Document", "characterSet");
+        return throwGetterTypeError(*state, "Document", "characterSet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.preferredStylesheetSet());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.characterSetWithUTF8Fallback());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentSelectedStylesheetSet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentPreferredStylesheetSet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "selectedStylesheetSet");
-        return throwGetterTypeError(*exec, "Document", "selectedStylesheetSet");
+            return reportDeprecatedGetterError(*state, "Document", "preferredStylesheetSet");
+        return throwGetterTypeError(*state, "Document", "preferredStylesheetSet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.selectedStylesheetSet());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.preferredStylesheetSet());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentActiveElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentSelectedStylesheetSet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "activeElement");
-        return throwGetterTypeError(*exec, "Document", "activeElement");
+            return reportDeprecatedGetterError(*state, "Document", "selectedStylesheetSet");
+        return throwGetterTypeError(*state, "Document", "selectedStylesheetSet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.activeElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.selectedStylesheetSet());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentCompatMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentActiveElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "compatMode");
-        return throwGetterTypeError(*exec, "Document", "compatMode");
+            return reportDeprecatedGetterError(*state, "Document", "activeElement");
+        return throwGetterTypeError(*state, "Document", "activeElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.compatMode());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.activeElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentWebkitIsFullScreen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentCompatMode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "webkitIsFullScreen");
-        return throwGetterTypeError(*exec, "Document", "webkitIsFullScreen");
+            return reportDeprecatedGetterError(*state, "Document", "compatMode");
+        return throwGetterTypeError(*state, "Document", "compatMode");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.compatMode());
+    return JSValue::encode(result);
+}
+
+
+EncodedJSValue jsDocumentWebkitIsFullScreen(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "Document", "webkitIsFullScreen");
+        return throwGetterTypeError(*state, "Document", "webkitIsFullScreen");
+    }
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitIsFullScreen());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentWebkitFullScreenKeyboardInputAllowed(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentWebkitFullScreenKeyboardInputAllowed(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "webkitFullScreenKeyboardInputAllowed");
-        return throwGetterTypeError(*exec, "Document", "webkitFullScreenKeyboardInputAllowed");
+            return reportDeprecatedGetterError(*state, "Document", "webkitFullScreenKeyboardInputAllowed");
+        return throwGetterTypeError(*state, "Document", "webkitFullScreenKeyboardInputAllowed");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitFullScreenKeyboardInputAllowed());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentWebkitCurrentFullScreenElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentWebkitCurrentFullScreenElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "webkitCurrentFullScreenElement");
-        return throwGetterTypeError(*exec, "Document", "webkitCurrentFullScreenElement");
+            return reportDeprecatedGetterError(*state, "Document", "webkitCurrentFullScreenElement");
+        return throwGetterTypeError(*state, "Document", "webkitCurrentFullScreenElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.webkitCurrentFullScreenElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.webkitCurrentFullScreenElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentWebkitFullscreenEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentWebkitFullscreenEnabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "webkitFullscreenEnabled");
-        return throwGetterTypeError(*exec, "Document", "webkitFullscreenEnabled");
+            return reportDeprecatedGetterError(*state, "Document", "webkitFullscreenEnabled");
+        return throwGetterTypeError(*state, "Document", "webkitFullscreenEnabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitFullscreenEnabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentWebkitFullscreenElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentWebkitFullscreenElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "webkitFullscreenElement");
-        return throwGetterTypeError(*exec, "Document", "webkitFullscreenElement");
+            return reportDeprecatedGetterError(*state, "Document", "webkitFullscreenElement");
+        return throwGetterTypeError(*state, "Document", "webkitFullscreenElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.webkitFullscreenElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.webkitFullscreenElement()));
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue jsDocumentPointerLockElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentPointerLockElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "pointerLockElement");
-        return throwGetterTypeError(*exec, "Document", "pointerLockElement");
+            return reportDeprecatedGetterError(*state, "Document", "pointerLockElement");
+        return throwGetterTypeError(*state, "Document", "pointerLockElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.pointerLockElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.pointerLockElement()));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(FONT_LOAD_EVENTS)
-EncodedJSValue jsDocumentFonts(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentFonts(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "fonts");
-        return throwGetterTypeError(*exec, "Document", "fonts");
+            return reportDeprecatedGetterError(*state, "Document", "fonts");
+        return throwGetterTypeError(*state, "Document", "fonts");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.fonts()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.fonts()));
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue jsDocumentVisibilityState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentVisibilityState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "visibilityState");
-        return throwGetterTypeError(*exec, "Document", "visibilityState");
+            return reportDeprecatedGetterError(*state, "Document", "visibilityState");
+        return throwGetterTypeError(*state, "Document", "visibilityState");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.visibilityState());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.visibilityState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentHidden(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentHidden(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "hidden");
-        return throwGetterTypeError(*exec, "Document", "hidden");
+            return reportDeprecatedGetterError(*state, "Document", "hidden");
+        return throwGetterTypeError(*state, "Document", "hidden");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.hidden());
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(CSP_NEXT)
-EncodedJSValue jsDocumentSecurityPolicy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentSecurityPolicy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "securityPolicy");
-        return throwGetterTypeError(*exec, "Document", "securityPolicy");
+            return reportDeprecatedGetterError(*state, "Document", "securityPolicy");
+        return throwGetterTypeError(*state, "Document", "securityPolicy");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.securityPolicy()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.securityPolicy()));
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue jsDocumentCurrentScript(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentCurrentScript(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "currentScript");
-        return throwGetterTypeError(*exec, "Document", "currentScript");
+            return reportDeprecatedGetterError(*state, "Document", "currentScript");
+        return throwGetterTypeError(*state, "Document", "currentScript");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.currentScript()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.currentScript()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentOrigin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOrigin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "origin");
-        return throwGetterTypeError(*exec, "Document", "origin");
+            return reportDeprecatedGetterError(*state, "Document", "origin");
+        return throwGetterTypeError(*state, "Document", "origin");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.origin());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.origin());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentScrollingElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentScrollingElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "scrollingElement");
-        return throwGetterTypeError(*exec, "Document", "scrollingElement");
+            return reportDeprecatedGetterError(*state, "Document", "scrollingElement");
+        return throwGetterTypeError(*state, "Document", "scrollingElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.scrollingElement()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.scrollingElement()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentOnbeforecopy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnbeforecopy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onbeforecopy");
-        return throwGetterTypeError(*exec, "Document", "onbeforecopy");
+            return reportDeprecatedGetterError(*state, "Document", "onbeforecopy");
+        return throwGetterTypeError(*state, "Document", "onbeforecopy");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().beforecopyEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().beforecopyEvent));
 }
 
 
-EncodedJSValue jsDocumentOnbeforecut(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnbeforecut(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onbeforecut");
-        return throwGetterTypeError(*exec, "Document", "onbeforecut");
+            return reportDeprecatedGetterError(*state, "Document", "onbeforecut");
+        return throwGetterTypeError(*state, "Document", "onbeforecut");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().beforecutEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().beforecutEvent));
 }
 
 
-EncodedJSValue jsDocumentOnbeforepaste(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnbeforepaste(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onbeforepaste");
-        return throwGetterTypeError(*exec, "Document", "onbeforepaste");
+            return reportDeprecatedGetterError(*state, "Document", "onbeforepaste");
+        return throwGetterTypeError(*state, "Document", "onbeforepaste");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().beforepasteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().beforepasteEvent));
 }
 
 
-EncodedJSValue jsDocumentOncopy(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOncopy(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oncopy");
-        return throwGetterTypeError(*exec, "Document", "oncopy");
+            return reportDeprecatedGetterError(*state, "Document", "oncopy");
+        return throwGetterTypeError(*state, "Document", "oncopy");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().copyEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().copyEvent));
 }
 
 
-EncodedJSValue jsDocumentOncut(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOncut(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oncut");
-        return throwGetterTypeError(*exec, "Document", "oncut");
+            return reportDeprecatedGetterError(*state, "Document", "oncut");
+        return throwGetterTypeError(*state, "Document", "oncut");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().cutEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().cutEvent));
 }
 
 
-EncodedJSValue jsDocumentOnpaste(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnpaste(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onpaste");
-        return throwGetterTypeError(*exec, "Document", "onpaste");
+            return reportDeprecatedGetterError(*state, "Document", "onpaste");
+        return throwGetterTypeError(*state, "Document", "onpaste");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().pasteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().pasteEvent));
 }
 
 
-EncodedJSValue jsDocumentOnselectstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnselectstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onselectstart");
-        return throwGetterTypeError(*exec, "Document", "onselectstart");
+            return reportDeprecatedGetterError(*state, "Document", "onselectstart");
+        return throwGetterTypeError(*state, "Document", "onselectstart");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().selectstartEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().selectstartEvent));
 }
 
 
 #if ENABLE(FULLSCREEN_API)
-EncodedJSValue jsDocumentOnwebkitfullscreenchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitfullscreenchange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitfullscreenchange");
-        return throwGetterTypeError(*exec, "Document", "onwebkitfullscreenchange");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitfullscreenchange");
+        return throwGetterTypeError(*state, "Document", "onwebkitfullscreenchange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitfullscreenchangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitfullscreenchangeEvent));
 }
 
 #endif
 
 #if ENABLE(FULLSCREEN_API)
-EncodedJSValue jsDocumentOnwebkitfullscreenerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitfullscreenerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitfullscreenerror");
-        return throwGetterTypeError(*exec, "Document", "onwebkitfullscreenerror");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitfullscreenerror");
+        return throwGetterTypeError(*state, "Document", "onwebkitfullscreenerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitfullscreenerrorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitfullscreenerrorEvent));
 }
 
 #endif
 
-EncodedJSValue jsDocumentOnselectionchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnselectionchange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onselectionchange");
-        return throwGetterTypeError(*exec, "Document", "onselectionchange");
+            return reportDeprecatedGetterError(*state, "Document", "onselectionchange");
+        return throwGetterTypeError(*state, "Document", "onselectionchange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().selectionchangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().selectionchangeEvent));
 }
 
 
-EncodedJSValue jsDocumentOnreadystatechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnreadystatechange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onreadystatechange");
-        return throwGetterTypeError(*exec, "Document", "onreadystatechange");
+            return reportDeprecatedGetterError(*state, "Document", "onreadystatechange");
+        return throwGetterTypeError(*state, "Document", "onreadystatechange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().readystatechangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().readystatechangeEvent));
 }
 
 
 #if ENABLE(CSP_NEXT)
-EncodedJSValue jsDocumentOnsecuritypolicyviolation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnsecuritypolicyviolation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onsecuritypolicyviolation");
-        return throwGetterTypeError(*exec, "Document", "onsecuritypolicyviolation");
+            return reportDeprecatedGetterError(*state, "Document", "onsecuritypolicyviolation");
+        return throwGetterTypeError(*state, "Document", "onsecuritypolicyviolation");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().securitypolicyviolationEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().securitypolicyviolationEvent));
 }
 
 #endif
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue jsDocumentOnpointerlockchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnpointerlockchange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onpointerlockchange");
-        return throwGetterTypeError(*exec, "Document", "onpointerlockchange");
+            return reportDeprecatedGetterError(*state, "Document", "onpointerlockchange");
+        return throwGetterTypeError(*state, "Document", "onpointerlockchange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().pointerlockchangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().pointerlockchangeEvent));
 }
 
 #endif
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue jsDocumentOnpointerlockerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnpointerlockerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onpointerlockerror");
-        return throwGetterTypeError(*exec, "Document", "onpointerlockerror");
+            return reportDeprecatedGetterError(*state, "Document", "onpointerlockerror");
+        return throwGetterTypeError(*state, "Document", "onpointerlockerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().pointerlockerrorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().pointerlockerrorEvent));
 }
 
 #endif
 
-EncodedJSValue jsDocumentOnabort(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnabort(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onabort");
-        return throwGetterTypeError(*exec, "Document", "onabort");
+            return reportDeprecatedGetterError(*state, "Document", "onabort");
+        return throwGetterTypeError(*state, "Document", "onabort");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().abortEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().abortEvent));
 }
 
 
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-EncodedJSValue jsDocumentOnautocomplete(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnautocomplete(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onautocomplete");
-        return throwGetterTypeError(*exec, "Document", "onautocomplete");
+            return reportDeprecatedGetterError(*state, "Document", "onautocomplete");
+        return throwGetterTypeError(*state, "Document", "onautocomplete");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().autocompleteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().autocompleteEvent));
 }
 
 #endif
 
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-EncodedJSValue jsDocumentOnautocompleteerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnautocompleteerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onautocompleteerror");
-        return throwGetterTypeError(*exec, "Document", "onautocompleteerror");
+            return reportDeprecatedGetterError(*state, "Document", "onautocompleteerror");
+        return throwGetterTypeError(*state, "Document", "onautocompleteerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().autocompleteerrorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().autocompleteerrorEvent));
 }
 
 #endif
 
-EncodedJSValue jsDocumentOnblur(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnblur(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onblur");
-        return throwGetterTypeError(*exec, "Document", "onblur");
+            return reportDeprecatedGetterError(*state, "Document", "onblur");
+        return throwGetterTypeError(*state, "Document", "onblur");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().blurEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().blurEvent));
 }
 
 
-EncodedJSValue jsDocumentOncanplay(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOncanplay(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oncanplay");
-        return throwGetterTypeError(*exec, "Document", "oncanplay");
+            return reportDeprecatedGetterError(*state, "Document", "oncanplay");
+        return throwGetterTypeError(*state, "Document", "oncanplay");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().canplayEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().canplayEvent));
 }
 
 
-EncodedJSValue jsDocumentOncanplaythrough(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOncanplaythrough(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oncanplaythrough");
-        return throwGetterTypeError(*exec, "Document", "oncanplaythrough");
+            return reportDeprecatedGetterError(*state, "Document", "oncanplaythrough");
+        return throwGetterTypeError(*state, "Document", "oncanplaythrough");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().canplaythroughEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().canplaythroughEvent));
 }
 
 
-EncodedJSValue jsDocumentOnchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnchange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onchange");
-        return throwGetterTypeError(*exec, "Document", "onchange");
+            return reportDeprecatedGetterError(*state, "Document", "onchange");
+        return throwGetterTypeError(*state, "Document", "onchange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().changeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().changeEvent));
 }
 
 
-EncodedJSValue jsDocumentOnclick(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnclick(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onclick");
-        return throwGetterTypeError(*exec, "Document", "onclick");
+            return reportDeprecatedGetterError(*state, "Document", "onclick");
+        return throwGetterTypeError(*state, "Document", "onclick");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().clickEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().clickEvent));
 }
 
 
-EncodedJSValue jsDocumentOncontextmenu(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOncontextmenu(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oncontextmenu");
-        return throwGetterTypeError(*exec, "Document", "oncontextmenu");
+            return reportDeprecatedGetterError(*state, "Document", "oncontextmenu");
+        return throwGetterTypeError(*state, "Document", "oncontextmenu");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().contextmenuEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().contextmenuEvent));
 }
 
 
-EncodedJSValue jsDocumentOndblclick(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndblclick(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondblclick");
-        return throwGetterTypeError(*exec, "Document", "ondblclick");
+            return reportDeprecatedGetterError(*state, "Document", "ondblclick");
+        return throwGetterTypeError(*state, "Document", "ondblclick");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dblclickEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dblclickEvent));
 }
 
 
-EncodedJSValue jsDocumentOndrag(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndrag(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondrag");
-        return throwGetterTypeError(*exec, "Document", "ondrag");
+            return reportDeprecatedGetterError(*state, "Document", "ondrag");
+        return throwGetterTypeError(*state, "Document", "ondrag");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragEvent));
 }
 
 
-EncodedJSValue jsDocumentOndragend(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndragend(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondragend");
-        return throwGetterTypeError(*exec, "Document", "ondragend");
+            return reportDeprecatedGetterError(*state, "Document", "ondragend");
+        return throwGetterTypeError(*state, "Document", "ondragend");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragendEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragendEvent));
 }
 
 
-EncodedJSValue jsDocumentOndragenter(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndragenter(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondragenter");
-        return throwGetterTypeError(*exec, "Document", "ondragenter");
+            return reportDeprecatedGetterError(*state, "Document", "ondragenter");
+        return throwGetterTypeError(*state, "Document", "ondragenter");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragenterEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragenterEvent));
 }
 
 
-EncodedJSValue jsDocumentOndragleave(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndragleave(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondragleave");
-        return throwGetterTypeError(*exec, "Document", "ondragleave");
+            return reportDeprecatedGetterError(*state, "Document", "ondragleave");
+        return throwGetterTypeError(*state, "Document", "ondragleave");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragleaveEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragleaveEvent));
 }
 
 
-EncodedJSValue jsDocumentOndragover(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndragover(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondragover");
-        return throwGetterTypeError(*exec, "Document", "ondragover");
+            return reportDeprecatedGetterError(*state, "Document", "ondragover");
+        return throwGetterTypeError(*state, "Document", "ondragover");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragoverEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragoverEvent));
 }
 
 
-EncodedJSValue jsDocumentOndragstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndragstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondragstart");
-        return throwGetterTypeError(*exec, "Document", "ondragstart");
+            return reportDeprecatedGetterError(*state, "Document", "ondragstart");
+        return throwGetterTypeError(*state, "Document", "ondragstart");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dragstartEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dragstartEvent));
 }
 
 
-EncodedJSValue jsDocumentOndrop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndrop(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondrop");
-        return throwGetterTypeError(*exec, "Document", "ondrop");
+            return reportDeprecatedGetterError(*state, "Document", "ondrop");
+        return throwGetterTypeError(*state, "Document", "ondrop");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().dropEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().dropEvent));
 }
 
 
-EncodedJSValue jsDocumentOndurationchange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOndurationchange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ondurationchange");
-        return throwGetterTypeError(*exec, "Document", "ondurationchange");
+            return reportDeprecatedGetterError(*state, "Document", "ondurationchange");
+        return throwGetterTypeError(*state, "Document", "ondurationchange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().durationchangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().durationchangeEvent));
 }
 
 
-EncodedJSValue jsDocumentOnemptied(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnemptied(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onemptied");
-        return throwGetterTypeError(*exec, "Document", "onemptied");
+            return reportDeprecatedGetterError(*state, "Document", "onemptied");
+        return throwGetterTypeError(*state, "Document", "onemptied");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().emptiedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().emptiedEvent));
 }
 
 
-EncodedJSValue jsDocumentOnended(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnended(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onended");
-        return throwGetterTypeError(*exec, "Document", "onended");
+            return reportDeprecatedGetterError(*state, "Document", "onended");
+        return throwGetterTypeError(*state, "Document", "onended");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().endedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().endedEvent));
 }
 
 
-EncodedJSValue jsDocumentOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onerror");
-        return throwGetterTypeError(*exec, "Document", "onerror");
+            return reportDeprecatedGetterError(*state, "Document", "onerror");
+        return throwGetterTypeError(*state, "Document", "onerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsDocumentOnfocus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnfocus(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onfocus");
-        return throwGetterTypeError(*exec, "Document", "onfocus");
+            return reportDeprecatedGetterError(*state, "Document", "onfocus");
+        return throwGetterTypeError(*state, "Document", "onfocus");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().focusEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().focusEvent));
 }
 
 
-EncodedJSValue jsDocumentOninput(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOninput(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oninput");
-        return throwGetterTypeError(*exec, "Document", "oninput");
+            return reportDeprecatedGetterError(*state, "Document", "oninput");
+        return throwGetterTypeError(*state, "Document", "oninput");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().inputEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().inputEvent));
 }
 
 
-EncodedJSValue jsDocumentOninvalid(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOninvalid(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "oninvalid");
-        return throwGetterTypeError(*exec, "Document", "oninvalid");
+            return reportDeprecatedGetterError(*state, "Document", "oninvalid");
+        return throwGetterTypeError(*state, "Document", "oninvalid");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().invalidEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().invalidEvent));
 }
 
 
-EncodedJSValue jsDocumentOnkeydown(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnkeydown(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onkeydown");
-        return throwGetterTypeError(*exec, "Document", "onkeydown");
+            return reportDeprecatedGetterError(*state, "Document", "onkeydown");
+        return throwGetterTypeError(*state, "Document", "onkeydown");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().keydownEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().keydownEvent));
 }
 
 
-EncodedJSValue jsDocumentOnkeypress(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnkeypress(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onkeypress");
-        return throwGetterTypeError(*exec, "Document", "onkeypress");
+            return reportDeprecatedGetterError(*state, "Document", "onkeypress");
+        return throwGetterTypeError(*state, "Document", "onkeypress");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().keypressEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().keypressEvent));
 }
 
 
-EncodedJSValue jsDocumentOnkeyup(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnkeyup(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onkeyup");
-        return throwGetterTypeError(*exec, "Document", "onkeyup");
+            return reportDeprecatedGetterError(*state, "Document", "onkeyup");
+        return throwGetterTypeError(*state, "Document", "onkeyup");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().keyupEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().keyupEvent));
 }
 
 
-EncodedJSValue jsDocumentOnload(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnload(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onload");
-        return throwGetterTypeError(*exec, "Document", "onload");
+            return reportDeprecatedGetterError(*state, "Document", "onload");
+        return throwGetterTypeError(*state, "Document", "onload");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadEvent));
 }
 
 
-EncodedJSValue jsDocumentOnloadeddata(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnloadeddata(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onloadeddata");
-        return throwGetterTypeError(*exec, "Document", "onloadeddata");
+            return reportDeprecatedGetterError(*state, "Document", "onloadeddata");
+        return throwGetterTypeError(*state, "Document", "onloadeddata");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadeddataEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadeddataEvent));
 }
 
 
-EncodedJSValue jsDocumentOnloadedmetadata(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnloadedmetadata(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onloadedmetadata");
-        return throwGetterTypeError(*exec, "Document", "onloadedmetadata");
+            return reportDeprecatedGetterError(*state, "Document", "onloadedmetadata");
+        return throwGetterTypeError(*state, "Document", "onloadedmetadata");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadedmetadataEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadedmetadataEvent));
 }
 
 
-EncodedJSValue jsDocumentOnloadstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnloadstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onloadstart");
-        return throwGetterTypeError(*exec, "Document", "onloadstart");
+            return reportDeprecatedGetterError(*state, "Document", "onloadstart");
+        return throwGetterTypeError(*state, "Document", "onloadstart");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().loadstartEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().loadstartEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmousedown(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmousedown(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmousedown");
-        return throwGetterTypeError(*exec, "Document", "onmousedown");
+            return reportDeprecatedGetterError(*state, "Document", "onmousedown");
+        return throwGetterTypeError(*state, "Document", "onmousedown");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mousedownEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mousedownEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmouseenter(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmouseenter(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmouseenter");
-        return throwGetterTypeError(*exec, "Document", "onmouseenter");
+            return reportDeprecatedGetterError(*state, "Document", "onmouseenter");
+        return throwGetterTypeError(*state, "Document", "onmouseenter");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mouseenterEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mouseenterEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmouseleave(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmouseleave(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmouseleave");
-        return throwGetterTypeError(*exec, "Document", "onmouseleave");
+            return reportDeprecatedGetterError(*state, "Document", "onmouseleave");
+        return throwGetterTypeError(*state, "Document", "onmouseleave");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mouseleaveEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mouseleaveEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmousemove(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmousemove(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmousemove");
-        return throwGetterTypeError(*exec, "Document", "onmousemove");
+            return reportDeprecatedGetterError(*state, "Document", "onmousemove");
+        return throwGetterTypeError(*state, "Document", "onmousemove");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mousemoveEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mousemoveEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmouseout(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmouseout(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmouseout");
-        return throwGetterTypeError(*exec, "Document", "onmouseout");
+            return reportDeprecatedGetterError(*state, "Document", "onmouseout");
+        return throwGetterTypeError(*state, "Document", "onmouseout");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mouseoutEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mouseoutEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmouseover(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmouseover(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmouseover");
-        return throwGetterTypeError(*exec, "Document", "onmouseover");
+            return reportDeprecatedGetterError(*state, "Document", "onmouseover");
+        return throwGetterTypeError(*state, "Document", "onmouseover");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mouseoverEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mouseoverEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmouseup(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmouseup(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmouseup");
-        return throwGetterTypeError(*exec, "Document", "onmouseup");
+            return reportDeprecatedGetterError(*state, "Document", "onmouseup");
+        return throwGetterTypeError(*state, "Document", "onmouseup");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mouseupEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mouseupEvent));
 }
 
 
-EncodedJSValue jsDocumentOnmousewheel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnmousewheel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onmousewheel");
-        return throwGetterTypeError(*exec, "Document", "onmousewheel");
+            return reportDeprecatedGetterError(*state, "Document", "onmousewheel");
+        return throwGetterTypeError(*state, "Document", "onmousewheel");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().mousewheelEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().mousewheelEvent));
 }
 
 
-EncodedJSValue jsDocumentOnpause(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnpause(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onpause");
-        return throwGetterTypeError(*exec, "Document", "onpause");
+            return reportDeprecatedGetterError(*state, "Document", "onpause");
+        return throwGetterTypeError(*state, "Document", "onpause");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().pauseEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().pauseEvent));
 }
 
 
-EncodedJSValue jsDocumentOnplay(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnplay(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onplay");
-        return throwGetterTypeError(*exec, "Document", "onplay");
+            return reportDeprecatedGetterError(*state, "Document", "onplay");
+        return throwGetterTypeError(*state, "Document", "onplay");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().playEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().playEvent));
 }
 
 
-EncodedJSValue jsDocumentOnplaying(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnplaying(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onplaying");
-        return throwGetterTypeError(*exec, "Document", "onplaying");
+            return reportDeprecatedGetterError(*state, "Document", "onplaying");
+        return throwGetterTypeError(*state, "Document", "onplaying");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().playingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().playingEvent));
 }
 
 
-EncodedJSValue jsDocumentOnprogress(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnprogress(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onprogress");
-        return throwGetterTypeError(*exec, "Document", "onprogress");
+            return reportDeprecatedGetterError(*state, "Document", "onprogress");
+        return throwGetterTypeError(*state, "Document", "onprogress");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().progressEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().progressEvent));
 }
 
 
-EncodedJSValue jsDocumentOnratechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnratechange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onratechange");
-        return throwGetterTypeError(*exec, "Document", "onratechange");
+            return reportDeprecatedGetterError(*state, "Document", "onratechange");
+        return throwGetterTypeError(*state, "Document", "onratechange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().ratechangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().ratechangeEvent));
 }
 
 
-EncodedJSValue jsDocumentOnreset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnreset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onreset");
-        return throwGetterTypeError(*exec, "Document", "onreset");
+            return reportDeprecatedGetterError(*state, "Document", "onreset");
+        return throwGetterTypeError(*state, "Document", "onreset");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().resetEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().resetEvent));
 }
 
 
-EncodedJSValue jsDocumentOnscroll(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnscroll(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onscroll");
-        return throwGetterTypeError(*exec, "Document", "onscroll");
+            return reportDeprecatedGetterError(*state, "Document", "onscroll");
+        return throwGetterTypeError(*state, "Document", "onscroll");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().scrollEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().scrollEvent));
 }
 
 
-EncodedJSValue jsDocumentOnseeked(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnseeked(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onseeked");
-        return throwGetterTypeError(*exec, "Document", "onseeked");
+            return reportDeprecatedGetterError(*state, "Document", "onseeked");
+        return throwGetterTypeError(*state, "Document", "onseeked");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().seekedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().seekedEvent));
 }
 
 
-EncodedJSValue jsDocumentOnseeking(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnseeking(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onseeking");
-        return throwGetterTypeError(*exec, "Document", "onseeking");
+            return reportDeprecatedGetterError(*state, "Document", "onseeking");
+        return throwGetterTypeError(*state, "Document", "onseeking");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().seekingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().seekingEvent));
 }
 
 
-EncodedJSValue jsDocumentOnselect(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnselect(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onselect");
-        return throwGetterTypeError(*exec, "Document", "onselect");
+            return reportDeprecatedGetterError(*state, "Document", "onselect");
+        return throwGetterTypeError(*state, "Document", "onselect");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().selectEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().selectEvent));
 }
 
 
-EncodedJSValue jsDocumentOnstalled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnstalled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onstalled");
-        return throwGetterTypeError(*exec, "Document", "onstalled");
+            return reportDeprecatedGetterError(*state, "Document", "onstalled");
+        return throwGetterTypeError(*state, "Document", "onstalled");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().stalledEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().stalledEvent));
 }
 
 
-EncodedJSValue jsDocumentOnsubmit(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnsubmit(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onsubmit");
-        return throwGetterTypeError(*exec, "Document", "onsubmit");
+            return reportDeprecatedGetterError(*state, "Document", "onsubmit");
+        return throwGetterTypeError(*state, "Document", "onsubmit");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().submitEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().submitEvent));
 }
 
 
-EncodedJSValue jsDocumentOnsuspend(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnsuspend(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onsuspend");
-        return throwGetterTypeError(*exec, "Document", "onsuspend");
+            return reportDeprecatedGetterError(*state, "Document", "onsuspend");
+        return throwGetterTypeError(*state, "Document", "onsuspend");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().suspendEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().suspendEvent));
 }
 
 
-EncodedJSValue jsDocumentOntimeupdate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOntimeupdate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ontimeupdate");
-        return throwGetterTypeError(*exec, "Document", "ontimeupdate");
+            return reportDeprecatedGetterError(*state, "Document", "ontimeupdate");
+        return throwGetterTypeError(*state, "Document", "ontimeupdate");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().timeupdateEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().timeupdateEvent));
 }
 
 
-EncodedJSValue jsDocumentOnvolumechange(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnvolumechange(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onvolumechange");
-        return throwGetterTypeError(*exec, "Document", "onvolumechange");
+            return reportDeprecatedGetterError(*state, "Document", "onvolumechange");
+        return throwGetterTypeError(*state, "Document", "onvolumechange");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().volumechangeEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().volumechangeEvent));
 }
 
 
-EncodedJSValue jsDocumentOnwaiting(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwaiting(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwaiting");
-        return throwGetterTypeError(*exec, "Document", "onwaiting");
+            return reportDeprecatedGetterError(*state, "Document", "onwaiting");
+        return throwGetterTypeError(*state, "Document", "onwaiting");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().waitingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().waitingEvent));
 }
 
 
-EncodedJSValue jsDocumentOnsearch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnsearch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onsearch");
-        return throwGetterTypeError(*exec, "Document", "onsearch");
+            return reportDeprecatedGetterError(*state, "Document", "onsearch");
+        return throwGetterTypeError(*state, "Document", "onsearch");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().searchEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().searchEvent));
 }
 
 
-EncodedJSValue jsDocumentOnwheel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwheel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwheel");
-        return throwGetterTypeError(*exec, "Document", "onwheel");
+            return reportDeprecatedGetterError(*state, "Document", "onwheel");
+        return throwGetterTypeError(*state, "Document", "onwheel");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().wheelEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().wheelEvent));
 }
 
 
 #if ENABLE(TOUCH_EVENTS)
-EncodedJSValue jsDocumentOntouchcancel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOntouchcancel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ontouchcancel");
-        return throwGetterTypeError(*exec, "Document", "ontouchcancel");
+            return reportDeprecatedGetterError(*state, "Document", "ontouchcancel");
+        return throwGetterTypeError(*state, "Document", "ontouchcancel");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().touchcancelEvent));
-}
-
-#endif
-
-#if ENABLE(TOUCH_EVENTS)
-EncodedJSValue jsDocumentOntouchend(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ontouchend");
-        return throwGetterTypeError(*exec, "Document", "ontouchend");
-    }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().touchendEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().touchcancelEvent));
 }
 
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-EncodedJSValue jsDocumentOntouchmove(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOntouchend(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ontouchmove");
-        return throwGetterTypeError(*exec, "Document", "ontouchmove");
+            return reportDeprecatedGetterError(*state, "Document", "ontouchend");
+        return throwGetterTypeError(*state, "Document", "ontouchend");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().touchmoveEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().touchendEvent));
 }
 
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-EncodedJSValue jsDocumentOntouchstart(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOntouchmove(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "ontouchstart");
-        return throwGetterTypeError(*exec, "Document", "ontouchstart");
+            return reportDeprecatedGetterError(*state, "Document", "ontouchmove");
+        return throwGetterTypeError(*state, "Document", "ontouchmove");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().touchstartEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().touchmoveEvent));
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+EncodedJSValue jsDocumentOntouchstart(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
+            return reportDeprecatedGetterError(*state, "Document", "ontouchstart");
+        return throwGetterTypeError(*state, "Document", "ontouchstart");
+    }
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().touchstartEvent));
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitmouseforcechanged(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitmouseforcechanged(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitmouseforcechanged");
-        return throwGetterTypeError(*exec, "Document", "onwebkitmouseforcechanged");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitmouseforcechanged");
+        return throwGetterTypeError(*state, "Document", "onwebkitmouseforcechanged");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitmouseforcechangedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitmouseforcechangedEvent));
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitmouseforcedown(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitmouseforcedown(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitmouseforcedown");
-        return throwGetterTypeError(*exec, "Document", "onwebkitmouseforcedown");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitmouseforcedown");
+        return throwGetterTypeError(*state, "Document", "onwebkitmouseforcedown");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitmouseforcedownEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitmouseforcedownEvent));
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitmouseforcewillbegin(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitmouseforcewillbegin(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitmouseforcewillbegin");
-        return throwGetterTypeError(*exec, "Document", "onwebkitmouseforcewillbegin");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitmouseforcewillbegin");
+        return throwGetterTypeError(*state, "Document", "onwebkitmouseforcewillbegin");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitmouseforcewillbeginEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitmouseforcewillbeginEvent));
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitmouseforceup(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitmouseforceup(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitmouseforceup");
-        return throwGetterTypeError(*exec, "Document", "onwebkitmouseforceup");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitmouseforceup");
+        return throwGetterTypeError(*state, "Document", "onwebkitmouseforceup");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitmouseforceupEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitmouseforceupEvent));
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitwillrevealbottom(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitwillrevealbottom(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitwillrevealbottom");
-        return throwGetterTypeError(*exec, "Document", "onwebkitwillrevealbottom");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitwillrevealbottom");
+        return throwGetterTypeError(*state, "Document", "onwebkitwillrevealbottom");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealbottomEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitwillrevealbottomEvent));
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitwillrevealleft(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitwillrevealleft(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitwillrevealleft");
-        return throwGetterTypeError(*exec, "Document", "onwebkitwillrevealleft");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitwillrevealleft");
+        return throwGetterTypeError(*state, "Document", "onwebkitwillrevealleft");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealleftEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitwillrevealleftEvent));
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitwillrevealright(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitwillrevealright(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitwillrevealright");
-        return throwGetterTypeError(*exec, "Document", "onwebkitwillrevealright");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitwillrevealright");
+        return throwGetterTypeError(*state, "Document", "onwebkitwillrevealright");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealrightEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitwillrevealrightEvent));
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-EncodedJSValue jsDocumentOnwebkitwillrevealtop(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentOnwebkitwillrevealtop(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "onwebkitwillrevealtop");
-        return throwGetterTypeError(*exec, "Document", "onwebkitwillrevealtop");
+            return reportDeprecatedGetterError(*state, "Document", "onwebkitwillrevealtop");
+        return throwGetterTypeError(*state, "Document", "onwebkitwillrevealtop");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().webkitwillrevealtopEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().webkitwillrevealtopEvent));
 }
 
 #endif
 
-EncodedJSValue jsDocumentChildren(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentChildren(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "children");
-        return throwGetterTypeError(*exec, "Document", "children");
+            return reportDeprecatedGetterError(*state, "Document", "children");
+        return throwGetterTypeError(*state, "Document", "children");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.children()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.children()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentFirstElementChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentFirstElementChild(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "firstElementChild");
-        return throwGetterTypeError(*exec, "Document", "firstElementChild");
+            return reportDeprecatedGetterError(*state, "Document", "firstElementChild");
+        return throwGetterTypeError(*state, "Document", "firstElementChild");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.firstElementChild()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.firstElementChild()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentLastElementChild(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentLastElementChild(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "lastElementChild");
-        return throwGetterTypeError(*exec, "Document", "lastElementChild");
+            return reportDeprecatedGetterError(*state, "Document", "lastElementChild");
+        return throwGetterTypeError(*state, "Document", "lastElementChild");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.lastElementChild()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.lastElementChild()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentChildElementCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentChildElementCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "Document", "childElementCount");
-        return throwGetterTypeError(*exec, "Document", "childElementCount");
+            return reportDeprecatedGetterError(*state, "Document", "childElementCount");
+        return throwGetterTypeError(*state, "Document", "childElementCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.childElementCount());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDocumentConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSDocumentPrototype* domObject = jsDynamicCast<JSDocumentPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDocument::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDocument::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSDocumentXMLVersion(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentXMLVersion(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "xmlVersion");
+            reportDeprecatedSetterError(*state, "Document", "xmlVersion");
         else
-            throwSetterTypeError(*exec, "Document", "xmlVersion");
+            throwSetterTypeError(*state, "Document", "xmlVersion");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setXMLVersion(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDocumentXMLStandalone(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentXMLStandalone(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "xmlStandalone");
+            reportDeprecatedSetterError(*state, "Document", "xmlStandalone");
         else
-            throwSetterTypeError(*exec, "Document", "xmlStandalone");
+            throwSetterTypeError(*state, "Document", "xmlStandalone");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setXMLStandalone(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDocumentTitle(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentTitle(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "title");
+            reportDeprecatedSetterError(*state, "Document", "title");
         else
-            throwSetterTypeError(*exec, "Document", "title");
+            throwSetterTypeError(*state, "Document", "title");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setTitle(nativeValue);
 }
 
 
-void setJSDocumentDomain(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentDomain(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "domain");
+            reportDeprecatedSetterError(*state, "Document", "domain");
         else
-            throwSetterTypeError(*exec, "Document", "domain");
+            throwSetterTypeError(*state, "Document", "domain");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setDomain(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDocumentCookie(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentCookie(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "cookie");
+            reportDeprecatedSetterError(*state, "Document", "cookie");
         else
-            throwSetterTypeError(*exec, "Document", "cookie");
+            throwSetterTypeError(*state, "Document", "cookie");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCookie(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDocumentBody(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentBody(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "body");
+            reportDeprecatedSetterError(*state, "Document", "body");
         else
-            throwSetterTypeError(*exec, "Document", "body");
+            throwSetterTypeError(*state, "Document", "body");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
+    if (UNLIKELY(!value.isUndefinedOrNull() && !value.inherits(JSHTMLElement::info()))) {
+        throwAttributeTypeError(*state, "Document", "body", "HTMLElement");
+        return;
+    };
     HTMLElement* nativeValue = JSHTMLElement::toWrapped(value);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBodyOrFrameset(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
-void setJSDocumentLocation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentLocation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSDocument*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setLocation(exec, value);
+    UNUSED_PARAM(state);
+    RefPtr<Location> forwardedImpl = castedThis->wrapped().location();
+    if (!forwardedImpl)
+        return;
+    auto& impl = *forwardedImpl;
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return;
+    impl.setHref(activeDOMWindow(state), firstDOMWindow(state), nativeValue);
 }
 
 
-void setJSDocumentCharset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentCharset(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "charset");
+            reportDeprecatedSetterError(*state, "Document", "charset");
         else
-            throwSetterTypeError(*exec, "Document", "charset");
+            throwSetterTypeError(*state, "Document", "charset");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCharset(nativeValue);
 }
 
 
-void setJSDocumentSelectedStylesheetSet(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentSelectedStylesheetSet(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "selectedStylesheetSet");
+            reportDeprecatedSetterError(*state, "Document", "selectedStylesheetSet");
         else
-            throwSetterTypeError(*exec, "Document", "selectedStylesheetSet");
+            throwSetterTypeError(*state, "Document", "selectedStylesheetSet");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSelectedStylesheetSet(nativeValue);
 }
 
 
-void setJSDocumentOnbeforecopy(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnbeforecopy(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onbeforecopy");
+            reportDeprecatedSetterError(*state, "Document", "onbeforecopy");
         else
-            throwSetterTypeError(*exec, "Document", "onbeforecopy");
+            throwSetterTypeError(*state, "Document", "onbeforecopy");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().beforecopyEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().beforecopyEvent, value);
 }
 
 
-void setJSDocumentOnbeforecut(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnbeforecut(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onbeforecut");
+            reportDeprecatedSetterError(*state, "Document", "onbeforecut");
         else
-            throwSetterTypeError(*exec, "Document", "onbeforecut");
+            throwSetterTypeError(*state, "Document", "onbeforecut");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().beforecutEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().beforecutEvent, value);
 }
 
 
-void setJSDocumentOnbeforepaste(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnbeforepaste(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onbeforepaste");
+            reportDeprecatedSetterError(*state, "Document", "onbeforepaste");
         else
-            throwSetterTypeError(*exec, "Document", "onbeforepaste");
+            throwSetterTypeError(*state, "Document", "onbeforepaste");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().beforepasteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().beforepasteEvent, value);
 }
 
 
-void setJSDocumentOncopy(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOncopy(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oncopy");
+            reportDeprecatedSetterError(*state, "Document", "oncopy");
         else
-            throwSetterTypeError(*exec, "Document", "oncopy");
+            throwSetterTypeError(*state, "Document", "oncopy");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().copyEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().copyEvent, value);
 }
 
 
-void setJSDocumentOncut(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOncut(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oncut");
+            reportDeprecatedSetterError(*state, "Document", "oncut");
         else
-            throwSetterTypeError(*exec, "Document", "oncut");
+            throwSetterTypeError(*state, "Document", "oncut");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().cutEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().cutEvent, value);
 }
 
 
-void setJSDocumentOnpaste(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnpaste(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onpaste");
+            reportDeprecatedSetterError(*state, "Document", "onpaste");
         else
-            throwSetterTypeError(*exec, "Document", "onpaste");
+            throwSetterTypeError(*state, "Document", "onpaste");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pasteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().pasteEvent, value);
 }
 
 
-void setJSDocumentOnselectstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnselectstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onselectstart");
+            reportDeprecatedSetterError(*state, "Document", "onselectstart");
         else
-            throwSetterTypeError(*exec, "Document", "onselectstart");
+            throwSetterTypeError(*state, "Document", "onselectstart");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().selectstartEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().selectstartEvent, value);
 }
 
 
 #if ENABLE(FULLSCREEN_API)
-void setJSDocumentOnwebkitfullscreenchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitfullscreenchange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitfullscreenchange");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitfullscreenchange");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitfullscreenchange");
+            throwSetterTypeError(*state, "Document", "onwebkitfullscreenchange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitfullscreenchangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitfullscreenchangeEvent, value);
 }
 
 #endif
 
 #if ENABLE(FULLSCREEN_API)
-void setJSDocumentOnwebkitfullscreenerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitfullscreenerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitfullscreenerror");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitfullscreenerror");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitfullscreenerror");
+            throwSetterTypeError(*state, "Document", "onwebkitfullscreenerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitfullscreenerrorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitfullscreenerrorEvent, value);
 }
 
 #endif
 
-void setJSDocumentOnselectionchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnselectionchange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onselectionchange");
+            reportDeprecatedSetterError(*state, "Document", "onselectionchange");
         else
-            throwSetterTypeError(*exec, "Document", "onselectionchange");
+            throwSetterTypeError(*state, "Document", "onselectionchange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().selectionchangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().selectionchangeEvent, value);
 }
 
 
-void setJSDocumentOnreadystatechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnreadystatechange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onreadystatechange");
+            reportDeprecatedSetterError(*state, "Document", "onreadystatechange");
         else
-            throwSetterTypeError(*exec, "Document", "onreadystatechange");
+            throwSetterTypeError(*state, "Document", "onreadystatechange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().readystatechangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().readystatechangeEvent, value);
 }
 
 
 #if ENABLE(CSP_NEXT)
-void setJSDocumentOnsecuritypolicyviolation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnsecuritypolicyviolation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onsecuritypolicyviolation");
+            reportDeprecatedSetterError(*state, "Document", "onsecuritypolicyviolation");
         else
-            throwSetterTypeError(*exec, "Document", "onsecuritypolicyviolation");
+            throwSetterTypeError(*state, "Document", "onsecuritypolicyviolation");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().securitypolicyviolationEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().securitypolicyviolationEvent, value);
 }
 
 #endif
 
 #if ENABLE(POINTER_LOCK)
-void setJSDocumentOnpointerlockchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnpointerlockchange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onpointerlockchange");
+            reportDeprecatedSetterError(*state, "Document", "onpointerlockchange");
         else
-            throwSetterTypeError(*exec, "Document", "onpointerlockchange");
+            throwSetterTypeError(*state, "Document", "onpointerlockchange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pointerlockchangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().pointerlockchangeEvent, value);
 }
 
 #endif
 
 #if ENABLE(POINTER_LOCK)
-void setJSDocumentOnpointerlockerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnpointerlockerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onpointerlockerror");
+            reportDeprecatedSetterError(*state, "Document", "onpointerlockerror");
         else
-            throwSetterTypeError(*exec, "Document", "onpointerlockerror");
+            throwSetterTypeError(*state, "Document", "onpointerlockerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pointerlockerrorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().pointerlockerrorEvent, value);
 }
 
 #endif
 
-void setJSDocumentOnabort(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnabort(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onabort");
+            reportDeprecatedSetterError(*state, "Document", "onabort");
         else
-            throwSetterTypeError(*exec, "Document", "onabort");
+            throwSetterTypeError(*state, "Document", "onabort");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().abortEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().abortEvent, value);
 }
 
 
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-void setJSDocumentOnautocomplete(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnautocomplete(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onautocomplete");
+            reportDeprecatedSetterError(*state, "Document", "onautocomplete");
         else
-            throwSetterTypeError(*exec, "Document", "onautocomplete");
+            throwSetterTypeError(*state, "Document", "onautocomplete");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().autocompleteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().autocompleteEvent, value);
 }
 
 #endif
 
 #if ENABLE(REQUEST_AUTOCOMPLETE)
-void setJSDocumentOnautocompleteerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnautocompleteerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onautocompleteerror");
+            reportDeprecatedSetterError(*state, "Document", "onautocompleteerror");
         else
-            throwSetterTypeError(*exec, "Document", "onautocompleteerror");
+            throwSetterTypeError(*state, "Document", "onautocompleteerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().autocompleteerrorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().autocompleteerrorEvent, value);
 }
 
 #endif
 
-void setJSDocumentOnblur(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnblur(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onblur");
+            reportDeprecatedSetterError(*state, "Document", "onblur");
         else
-            throwSetterTypeError(*exec, "Document", "onblur");
+            throwSetterTypeError(*state, "Document", "onblur");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().blurEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().blurEvent, value);
 }
 
 
-void setJSDocumentOncanplay(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOncanplay(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oncanplay");
+            reportDeprecatedSetterError(*state, "Document", "oncanplay");
         else
-            throwSetterTypeError(*exec, "Document", "oncanplay");
+            throwSetterTypeError(*state, "Document", "oncanplay");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().canplayEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().canplayEvent, value);
 }
 
 
-void setJSDocumentOncanplaythrough(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOncanplaythrough(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oncanplaythrough");
+            reportDeprecatedSetterError(*state, "Document", "oncanplaythrough");
         else
-            throwSetterTypeError(*exec, "Document", "oncanplaythrough");
+            throwSetterTypeError(*state, "Document", "oncanplaythrough");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().canplaythroughEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().canplaythroughEvent, value);
 }
 
 
-void setJSDocumentOnchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnchange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onchange");
+            reportDeprecatedSetterError(*state, "Document", "onchange");
         else
-            throwSetterTypeError(*exec, "Document", "onchange");
+            throwSetterTypeError(*state, "Document", "onchange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().changeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().changeEvent, value);
 }
 
 
-void setJSDocumentOnclick(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnclick(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onclick");
+            reportDeprecatedSetterError(*state, "Document", "onclick");
         else
-            throwSetterTypeError(*exec, "Document", "onclick");
+            throwSetterTypeError(*state, "Document", "onclick");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().clickEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().clickEvent, value);
 }
 
 
-void setJSDocumentOncontextmenu(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOncontextmenu(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oncontextmenu");
+            reportDeprecatedSetterError(*state, "Document", "oncontextmenu");
         else
-            throwSetterTypeError(*exec, "Document", "oncontextmenu");
+            throwSetterTypeError(*state, "Document", "oncontextmenu");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().contextmenuEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().contextmenuEvent, value);
 }
 
 
-void setJSDocumentOndblclick(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndblclick(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondblclick");
+            reportDeprecatedSetterError(*state, "Document", "ondblclick");
         else
-            throwSetterTypeError(*exec, "Document", "ondblclick");
+            throwSetterTypeError(*state, "Document", "ondblclick");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dblclickEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dblclickEvent, value);
 }
 
 
-void setJSDocumentOndrag(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndrag(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondrag");
+            reportDeprecatedSetterError(*state, "Document", "ondrag");
         else
-            throwSetterTypeError(*exec, "Document", "ondrag");
+            throwSetterTypeError(*state, "Document", "ondrag");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragEvent, value);
 }
 
 
-void setJSDocumentOndragend(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndragend(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondragend");
+            reportDeprecatedSetterError(*state, "Document", "ondragend");
         else
-            throwSetterTypeError(*exec, "Document", "ondragend");
+            throwSetterTypeError(*state, "Document", "ondragend");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragendEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragendEvent, value);
 }
 
 
-void setJSDocumentOndragenter(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndragenter(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondragenter");
+            reportDeprecatedSetterError(*state, "Document", "ondragenter");
         else
-            throwSetterTypeError(*exec, "Document", "ondragenter");
+            throwSetterTypeError(*state, "Document", "ondragenter");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragenterEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragenterEvent, value);
 }
 
 
-void setJSDocumentOndragleave(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndragleave(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondragleave");
+            reportDeprecatedSetterError(*state, "Document", "ondragleave");
         else
-            throwSetterTypeError(*exec, "Document", "ondragleave");
+            throwSetterTypeError(*state, "Document", "ondragleave");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragleaveEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragleaveEvent, value);
 }
 
 
-void setJSDocumentOndragover(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndragover(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondragover");
+            reportDeprecatedSetterError(*state, "Document", "ondragover");
         else
-            throwSetterTypeError(*exec, "Document", "ondragover");
+            throwSetterTypeError(*state, "Document", "ondragover");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragoverEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragoverEvent, value);
 }
 
 
-void setJSDocumentOndragstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndragstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondragstart");
+            reportDeprecatedSetterError(*state, "Document", "ondragstart");
         else
-            throwSetterTypeError(*exec, "Document", "ondragstart");
+            throwSetterTypeError(*state, "Document", "ondragstart");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dragstartEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dragstartEvent, value);
 }
 
 
-void setJSDocumentOndrop(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndrop(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondrop");
+            reportDeprecatedSetterError(*state, "Document", "ondrop");
         else
-            throwSetterTypeError(*exec, "Document", "ondrop");
+            throwSetterTypeError(*state, "Document", "ondrop");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().dropEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().dropEvent, value);
 }
 
 
-void setJSDocumentOndurationchange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOndurationchange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ondurationchange");
+            reportDeprecatedSetterError(*state, "Document", "ondurationchange");
         else
-            throwSetterTypeError(*exec, "Document", "ondurationchange");
+            throwSetterTypeError(*state, "Document", "ondurationchange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().durationchangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().durationchangeEvent, value);
 }
 
 
-void setJSDocumentOnemptied(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnemptied(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onemptied");
+            reportDeprecatedSetterError(*state, "Document", "onemptied");
         else
-            throwSetterTypeError(*exec, "Document", "onemptied");
+            throwSetterTypeError(*state, "Document", "onemptied");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().emptiedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().emptiedEvent, value);
 }
 
 
-void setJSDocumentOnended(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnended(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onended");
+            reportDeprecatedSetterError(*state, "Document", "onended");
         else
-            throwSetterTypeError(*exec, "Document", "onended");
+            throwSetterTypeError(*state, "Document", "onended");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().endedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().endedEvent, value);
 }
 
 
-void setJSDocumentOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onerror");
+            reportDeprecatedSetterError(*state, "Document", "onerror");
         else
-            throwSetterTypeError(*exec, "Document", "onerror");
+            throwSetterTypeError(*state, "Document", "onerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().errorEvent, value);
 }
 
 
-void setJSDocumentOnfocus(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnfocus(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onfocus");
+            reportDeprecatedSetterError(*state, "Document", "onfocus");
         else
-            throwSetterTypeError(*exec, "Document", "onfocus");
+            throwSetterTypeError(*state, "Document", "onfocus");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().focusEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().focusEvent, value);
 }
 
 
-void setJSDocumentOninput(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOninput(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oninput");
+            reportDeprecatedSetterError(*state, "Document", "oninput");
         else
-            throwSetterTypeError(*exec, "Document", "oninput");
+            throwSetterTypeError(*state, "Document", "oninput");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().inputEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().inputEvent, value);
 }
 
 
-void setJSDocumentOninvalid(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOninvalid(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "oninvalid");
+            reportDeprecatedSetterError(*state, "Document", "oninvalid");
         else
-            throwSetterTypeError(*exec, "Document", "oninvalid");
+            throwSetterTypeError(*state, "Document", "oninvalid");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().invalidEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().invalidEvent, value);
 }
 
 
-void setJSDocumentOnkeydown(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnkeydown(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onkeydown");
+            reportDeprecatedSetterError(*state, "Document", "onkeydown");
         else
-            throwSetterTypeError(*exec, "Document", "onkeydown");
+            throwSetterTypeError(*state, "Document", "onkeydown");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().keydownEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().keydownEvent, value);
 }
 
 
-void setJSDocumentOnkeypress(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnkeypress(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onkeypress");
+            reportDeprecatedSetterError(*state, "Document", "onkeypress");
         else
-            throwSetterTypeError(*exec, "Document", "onkeypress");
+            throwSetterTypeError(*state, "Document", "onkeypress");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().keypressEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().keypressEvent, value);
 }
 
 
-void setJSDocumentOnkeyup(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnkeyup(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onkeyup");
+            reportDeprecatedSetterError(*state, "Document", "onkeyup");
         else
-            throwSetterTypeError(*exec, "Document", "onkeyup");
+            throwSetterTypeError(*state, "Document", "onkeyup");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().keyupEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().keyupEvent, value);
 }
 
 
-void setJSDocumentOnload(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnload(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onload");
+            reportDeprecatedSetterError(*state, "Document", "onload");
         else
-            throwSetterTypeError(*exec, "Document", "onload");
+            throwSetterTypeError(*state, "Document", "onload");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadEvent, value);
 }
 
 
-void setJSDocumentOnloadeddata(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnloadeddata(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onloadeddata");
+            reportDeprecatedSetterError(*state, "Document", "onloadeddata");
         else
-            throwSetterTypeError(*exec, "Document", "onloadeddata");
+            throwSetterTypeError(*state, "Document", "onloadeddata");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadeddataEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadeddataEvent, value);
 }
 
 
-void setJSDocumentOnloadedmetadata(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnloadedmetadata(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onloadedmetadata");
+            reportDeprecatedSetterError(*state, "Document", "onloadedmetadata");
         else
-            throwSetterTypeError(*exec, "Document", "onloadedmetadata");
+            throwSetterTypeError(*state, "Document", "onloadedmetadata");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadedmetadataEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadedmetadataEvent, value);
 }
 
 
-void setJSDocumentOnloadstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnloadstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onloadstart");
+            reportDeprecatedSetterError(*state, "Document", "onloadstart");
         else
-            throwSetterTypeError(*exec, "Document", "onloadstart");
+            throwSetterTypeError(*state, "Document", "onloadstart");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().loadstartEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().loadstartEvent, value);
 }
 
 
-void setJSDocumentOnmousedown(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmousedown(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmousedown");
+            reportDeprecatedSetterError(*state, "Document", "onmousedown");
         else
-            throwSetterTypeError(*exec, "Document", "onmousedown");
+            throwSetterTypeError(*state, "Document", "onmousedown");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mousedownEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mousedownEvent, value);
 }
 
 
-void setJSDocumentOnmouseenter(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmouseenter(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmouseenter");
+            reportDeprecatedSetterError(*state, "Document", "onmouseenter");
         else
-            throwSetterTypeError(*exec, "Document", "onmouseenter");
+            throwSetterTypeError(*state, "Document", "onmouseenter");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mouseenterEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mouseenterEvent, value);
 }
 
 
-void setJSDocumentOnmouseleave(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmouseleave(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmouseleave");
+            reportDeprecatedSetterError(*state, "Document", "onmouseleave");
         else
-            throwSetterTypeError(*exec, "Document", "onmouseleave");
+            throwSetterTypeError(*state, "Document", "onmouseleave");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mouseleaveEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mouseleaveEvent, value);
 }
 
 
-void setJSDocumentOnmousemove(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmousemove(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmousemove");
+            reportDeprecatedSetterError(*state, "Document", "onmousemove");
         else
-            throwSetterTypeError(*exec, "Document", "onmousemove");
+            throwSetterTypeError(*state, "Document", "onmousemove");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mousemoveEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mousemoveEvent, value);
 }
 
 
-void setJSDocumentOnmouseout(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmouseout(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmouseout");
+            reportDeprecatedSetterError(*state, "Document", "onmouseout");
         else
-            throwSetterTypeError(*exec, "Document", "onmouseout");
+            throwSetterTypeError(*state, "Document", "onmouseout");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mouseoutEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mouseoutEvent, value);
 }
 
 
-void setJSDocumentOnmouseover(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmouseover(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmouseover");
+            reportDeprecatedSetterError(*state, "Document", "onmouseover");
         else
-            throwSetterTypeError(*exec, "Document", "onmouseover");
+            throwSetterTypeError(*state, "Document", "onmouseover");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mouseoverEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mouseoverEvent, value);
 }
 
 
-void setJSDocumentOnmouseup(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmouseup(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmouseup");
+            reportDeprecatedSetterError(*state, "Document", "onmouseup");
         else
-            throwSetterTypeError(*exec, "Document", "onmouseup");
+            throwSetterTypeError(*state, "Document", "onmouseup");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mouseupEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mouseupEvent, value);
 }
 
 
-void setJSDocumentOnmousewheel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnmousewheel(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onmousewheel");
+            reportDeprecatedSetterError(*state, "Document", "onmousewheel");
         else
-            throwSetterTypeError(*exec, "Document", "onmousewheel");
+            throwSetterTypeError(*state, "Document", "onmousewheel");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().mousewheelEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().mousewheelEvent, value);
 }
 
 
-void setJSDocumentOnpause(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnpause(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onpause");
+            reportDeprecatedSetterError(*state, "Document", "onpause");
         else
-            throwSetterTypeError(*exec, "Document", "onpause");
+            throwSetterTypeError(*state, "Document", "onpause");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().pauseEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().pauseEvent, value);
 }
 
 
-void setJSDocumentOnplay(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnplay(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onplay");
+            reportDeprecatedSetterError(*state, "Document", "onplay");
         else
-            throwSetterTypeError(*exec, "Document", "onplay");
+            throwSetterTypeError(*state, "Document", "onplay");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().playEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().playEvent, value);
 }
 
 
-void setJSDocumentOnplaying(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnplaying(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onplaying");
+            reportDeprecatedSetterError(*state, "Document", "onplaying");
         else
-            throwSetterTypeError(*exec, "Document", "onplaying");
+            throwSetterTypeError(*state, "Document", "onplaying");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().playingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().playingEvent, value);
 }
 
 
-void setJSDocumentOnprogress(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnprogress(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onprogress");
+            reportDeprecatedSetterError(*state, "Document", "onprogress");
         else
-            throwSetterTypeError(*exec, "Document", "onprogress");
+            throwSetterTypeError(*state, "Document", "onprogress");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().progressEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().progressEvent, value);
 }
 
 
-void setJSDocumentOnratechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnratechange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onratechange");
+            reportDeprecatedSetterError(*state, "Document", "onratechange");
         else
-            throwSetterTypeError(*exec, "Document", "onratechange");
+            throwSetterTypeError(*state, "Document", "onratechange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().ratechangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().ratechangeEvent, value);
 }
 
 
-void setJSDocumentOnreset(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnreset(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onreset");
+            reportDeprecatedSetterError(*state, "Document", "onreset");
         else
-            throwSetterTypeError(*exec, "Document", "onreset");
+            throwSetterTypeError(*state, "Document", "onreset");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().resetEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().resetEvent, value);
 }
 
 
-void setJSDocumentOnscroll(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnscroll(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onscroll");
+            reportDeprecatedSetterError(*state, "Document", "onscroll");
         else
-            throwSetterTypeError(*exec, "Document", "onscroll");
+            throwSetterTypeError(*state, "Document", "onscroll");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().scrollEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().scrollEvent, value);
 }
 
 
-void setJSDocumentOnseeked(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnseeked(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onseeked");
+            reportDeprecatedSetterError(*state, "Document", "onseeked");
         else
-            throwSetterTypeError(*exec, "Document", "onseeked");
+            throwSetterTypeError(*state, "Document", "onseeked");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().seekedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().seekedEvent, value);
 }
 
 
-void setJSDocumentOnseeking(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnseeking(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onseeking");
+            reportDeprecatedSetterError(*state, "Document", "onseeking");
         else
-            throwSetterTypeError(*exec, "Document", "onseeking");
+            throwSetterTypeError(*state, "Document", "onseeking");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().seekingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().seekingEvent, value);
 }
 
 
-void setJSDocumentOnselect(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnselect(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onselect");
+            reportDeprecatedSetterError(*state, "Document", "onselect");
         else
-            throwSetterTypeError(*exec, "Document", "onselect");
+            throwSetterTypeError(*state, "Document", "onselect");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().selectEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().selectEvent, value);
 }
 
 
-void setJSDocumentOnstalled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnstalled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onstalled");
+            reportDeprecatedSetterError(*state, "Document", "onstalled");
         else
-            throwSetterTypeError(*exec, "Document", "onstalled");
+            throwSetterTypeError(*state, "Document", "onstalled");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().stalledEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().stalledEvent, value);
 }
 
 
-void setJSDocumentOnsubmit(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnsubmit(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onsubmit");
+            reportDeprecatedSetterError(*state, "Document", "onsubmit");
         else
-            throwSetterTypeError(*exec, "Document", "onsubmit");
+            throwSetterTypeError(*state, "Document", "onsubmit");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().submitEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().submitEvent, value);
 }
 
 
-void setJSDocumentOnsuspend(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnsuspend(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onsuspend");
+            reportDeprecatedSetterError(*state, "Document", "onsuspend");
         else
-            throwSetterTypeError(*exec, "Document", "onsuspend");
+            throwSetterTypeError(*state, "Document", "onsuspend");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().suspendEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().suspendEvent, value);
 }
 
 
-void setJSDocumentOntimeupdate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOntimeupdate(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ontimeupdate");
+            reportDeprecatedSetterError(*state, "Document", "ontimeupdate");
         else
-            throwSetterTypeError(*exec, "Document", "ontimeupdate");
+            throwSetterTypeError(*state, "Document", "ontimeupdate");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().timeupdateEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().timeupdateEvent, value);
 }
 
 
-void setJSDocumentOnvolumechange(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnvolumechange(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onvolumechange");
+            reportDeprecatedSetterError(*state, "Document", "onvolumechange");
         else
-            throwSetterTypeError(*exec, "Document", "onvolumechange");
+            throwSetterTypeError(*state, "Document", "onvolumechange");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().volumechangeEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().volumechangeEvent, value);
 }
 
 
-void setJSDocumentOnwaiting(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwaiting(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwaiting");
+            reportDeprecatedSetterError(*state, "Document", "onwaiting");
         else
-            throwSetterTypeError(*exec, "Document", "onwaiting");
+            throwSetterTypeError(*state, "Document", "onwaiting");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().waitingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().waitingEvent, value);
 }
 
 
-void setJSDocumentOnsearch(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnsearch(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onsearch");
+            reportDeprecatedSetterError(*state, "Document", "onsearch");
         else
-            throwSetterTypeError(*exec, "Document", "onsearch");
+            throwSetterTypeError(*state, "Document", "onsearch");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().searchEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().searchEvent, value);
 }
 
 
-void setJSDocumentOnwheel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwheel(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwheel");
+            reportDeprecatedSetterError(*state, "Document", "onwheel");
         else
-            throwSetterTypeError(*exec, "Document", "onwheel");
+            throwSetterTypeError(*state, "Document", "onwheel");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().wheelEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().wheelEvent, value);
 }
 
 
 #if ENABLE(TOUCH_EVENTS)
-void setJSDocumentOntouchcancel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOntouchcancel(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ontouchcancel");
+            reportDeprecatedSetterError(*state, "Document", "ontouchcancel");
         else
-            throwSetterTypeError(*exec, "Document", "ontouchcancel");
+            throwSetterTypeError(*state, "Document", "ontouchcancel");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().touchcancelEvent, value);
-}
-
-#endif
-
-#if ENABLE(TOUCH_EVENTS)
-void setJSDocumentOntouchend(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ontouchend");
-        else
-            throwSetterTypeError(*exec, "Document", "ontouchend");
-        return;
-    }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().touchendEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().touchcancelEvent, value);
 }
 
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-void setJSDocumentOntouchmove(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOntouchend(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ontouchmove");
+            reportDeprecatedSetterError(*state, "Document", "ontouchend");
         else
-            throwSetterTypeError(*exec, "Document", "ontouchmove");
+            throwSetterTypeError(*state, "Document", "ontouchend");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().touchmoveEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().touchendEvent, value);
 }
 
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-void setJSDocumentOntouchstart(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOntouchmove(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "ontouchstart");
+            reportDeprecatedSetterError(*state, "Document", "ontouchmove");
         else
-            throwSetterTypeError(*exec, "Document", "ontouchstart");
+            throwSetterTypeError(*state, "Document", "ontouchmove");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().touchstartEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().touchmoveEvent, value);
+}
+
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+void setJSDocumentOntouchstart(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThis)) {
+        if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
+            reportDeprecatedSetterError(*state, "Document", "ontouchstart");
+        else
+            throwSetterTypeError(*state, "Document", "ontouchstart");
+        return;
+    }
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().touchstartEvent, value);
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-void setJSDocumentOnwebkitmouseforcechanged(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitmouseforcechanged(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitmouseforcechanged");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitmouseforcechanged");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitmouseforcechanged");
+            throwSetterTypeError(*state, "Document", "onwebkitmouseforcechanged");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitmouseforcechangedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitmouseforcechangedEvent, value);
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-void setJSDocumentOnwebkitmouseforcedown(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitmouseforcedown(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitmouseforcedown");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitmouseforcedown");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitmouseforcedown");
+            throwSetterTypeError(*state, "Document", "onwebkitmouseforcedown");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitmouseforcedownEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitmouseforcedownEvent, value);
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-void setJSDocumentOnwebkitmouseforcewillbegin(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitmouseforcewillbegin(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitmouseforcewillbegin");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitmouseforcewillbegin");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitmouseforcewillbegin");
+            throwSetterTypeError(*state, "Document", "onwebkitmouseforcewillbegin");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitmouseforcewillbeginEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitmouseforcewillbeginEvent, value);
 }
 
 #endif
 
 #if ENABLE(MOUSE_FORCE_EVENTS)
-void setJSDocumentOnwebkitmouseforceup(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitmouseforceup(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitmouseforceup");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitmouseforceup");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitmouseforceup");
+            throwSetterTypeError(*state, "Document", "onwebkitmouseforceup");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitmouseforceupEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitmouseforceupEvent, value);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSDocumentOnwebkitwillrevealbottom(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitwillrevealbottom(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitwillrevealbottom");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitwillrevealbottom");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitwillrevealbottom");
+            throwSetterTypeError(*state, "Document", "onwebkitwillrevealbottom");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealbottomEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitwillrevealbottomEvent, value);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSDocumentOnwebkitwillrevealleft(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitwillrevealleft(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitwillrevealleft");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitwillrevealleft");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitwillrevealleft");
+            throwSetterTypeError(*state, "Document", "onwebkitwillrevealleft");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealleftEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitwillrevealleftEvent, value);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSDocumentOnwebkitwillrevealright(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitwillrevealright(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitwillrevealright");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitwillrevealright");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitwillrevealright");
+            throwSetterTypeError(*state, "Document", "onwebkitwillrevealright");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealrightEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitwillrevealrightEvent, value);
 }
 
 #endif
 
 #if ENABLE(WILL_REVEAL_EDGE_EVENTS)
-void setJSDocumentOnwebkitwillrevealtop(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDocumentOnwebkitwillrevealtop(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDocument* castedThis = jsDocumentCast(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "Document", "onwebkitwillrevealtop");
+            reportDeprecatedSetterError(*state, "Document", "onwebkitwillrevealtop");
         else
-            throwSetterTypeError(*exec, "Document", "onwebkitwillrevealtop");
+            throwSetterTypeError(*state, "Document", "onwebkitwillrevealtop");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().webkitwillrevealtopEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().webkitwillrevealtopEvent, value);
 }
 
 #endif
 
 JSValue JSDocument::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDocumentConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDocumentConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateElement(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateElement(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createElement");
+        return throwThisTypeError(*state, "Document", "createElement");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String tagName = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    String tagName = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createElement(tagName, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createElement(tagName, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateDocumentFragment(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateDocumentFragment(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createDocumentFragment");
+        return throwThisTypeError(*state, "Document", "createDocumentFragment");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createDocumentFragment()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createDocumentFragment()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTextNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTextNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createTextNode");
+        return throwThisTypeError(*state, "Document", "createTextNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String data = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String data = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createTextNode(data)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createTextNode(data)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateComment(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateComment(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createComment");
+        return throwThisTypeError(*state, "Document", "createComment");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String data = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String data = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createComment(data)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createComment(data)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateCDATASection(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateCDATASection(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createCDATASection");
+        return throwThisTypeError(*state, "Document", "createCDATASection");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String data = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String data = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createCDATASection(data, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createCDATASection(data, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateProcessingInstruction(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateProcessingInstruction(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createProcessingInstruction");
+        return throwThisTypeError(*state, "Document", "createProcessingInstruction");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String target = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String target = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String data = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String data = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createProcessingInstruction(target, data, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createProcessingInstruction(target, data, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateAttribute(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateAttribute(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createAttribute");
+        return throwThisTypeError(*state, "Document", "createAttribute");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createAttribute(name, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createAttribute(name, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateEntityReference(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByTagName(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createEntityReference");
+        return throwThisTypeError(*state, "Document", "getElementsByTagName");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    String tagname = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getElementsByTagName(tagname)));
+    return JSValue::encode(result);
+}
+
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionImportNode(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSDocument* castedThis = jsDocumentCast(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Document", "importNode");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String name = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createEntityReference(name, ec)));
-
-    setDOMException(exec, ec);
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByTagName(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDocument* castedThis = jsDocumentCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getElementsByTagName");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String tagname = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementsByTagName(tagname)));
-    return JSValue::encode(result);
-}
-
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionImportNode(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSDocument* castedThis = jsDocumentCast(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "importNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    ExceptionCode ec = 0;
-    Node* importedNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* importedNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
-    size_t argsCount = exec->argumentCount();
+    size_t argsCount = state->argumentCount();
     if (argsCount <= 1) {
-        JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.importNode(importedNode, ec)));
+        JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.importNode(importedNode, ec)));
 
-        setDOMException(exec, ec);
+        setDOMException(state, ec);
         return JSValue::encode(result);
     }
 
-    bool deep = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool deep = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.importNode(importedNode, deep, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.importNode(importedNode, deep, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateElementNS(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateElementNS(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createElementNS");
+        return throwThisTypeError(*state, "Document", "createElementNS");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    String namespaceURI = valueToStringWithNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String qualifiedName = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    String qualifiedName = valueToStringWithNullCheck(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createElementNS(namespaceURI, qualifiedName, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createElementNS(namespaceURI, qualifiedName, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateAttributeNS(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateAttributeNS(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createAttributeNS");
+        return throwThisTypeError(*state, "Document", "createAttributeNS");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    String namespaceURI = valueToStringWithNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String qualifiedName = valueToStringWithNullCheck(exec, exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    String qualifiedName = valueToStringWithNullCheck(state, state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createAttributeNS(namespaceURI, qualifiedName, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createAttributeNS(namespaceURI, qualifiedName, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByTagNameNS(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByTagNameNS(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getElementsByTagNameNS");
+        return throwThisTypeError(*state, "Document", "getElementsByTagNameNS");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String namespaceURI = valueToStringWithNullCheck(exec, exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String namespaceURI = valueToStringWithNullCheck(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String localName = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String localName = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementsByTagNameNS(namespaceURI, localName)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getElementsByTagNameNS(namespaceURI, localName)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionAdoptNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionAdoptNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "adoptNode");
+        return throwThisTypeError(*state, "Document", "adoptNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    Node* source = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* source = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.adoptNode(source, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.adoptNode(source, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createEvent");
+        return throwThisTypeError(*state, "Document", "createEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String eventType = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String eventType = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createEvent(eventType, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createEvent(eventType, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateRange(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateRange(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createRange");
+        return throwThisTypeError(*state, "Document", "createRange");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createRange()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createRange()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateNodeIterator(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateNodeIterator(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createNodeIterator");
+        return throwThisTypeError(*state, "Document", "createNodeIterator");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* root = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* root = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned whatToShow = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    RefPtr<NodeFilter> filter = JSNodeFilter::toWrapped(exec->vm(), exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool expandEntityReferences = exec->argument(3).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createNodeIterator(root, whatToShow, filter.get(), expandEntityReferences, ec)));
 
-    setDOMException(exec, ec);
+    size_t argsCount = state->argumentCount();
+    if (argsCount <= 1) {
+        JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createNodeIterator(root, ec)));
+
+        setDOMException(state, ec);
+        return JSValue::encode(result);
+    }
+
+    unsigned whatToShow = state->argument(1).isUndefined() ? 0xFFFFFFFF : toUInt32(state, state->uncheckedArgument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    RefPtr<NodeFilter> filter;
+    if (!state->argument(2).isUndefinedOrNull()) {
+        if (!state->uncheckedArgument(2).isObject())
+            return throwArgumentMustBeFunctionError(*state, 2, "filter", "Document", "createNodeIterator");
+        filter = JSNodeFilter::create(asObject(state->uncheckedArgument(2)), castedThis->globalObject());
+    }
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createNodeIterator(root, whatToShow, filter.get(), ec)));
+
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTreeWalker(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTreeWalker(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createTreeWalker");
+        return throwThisTypeError(*state, "Document", "createTreeWalker");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Node* root = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* root = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    unsigned whatToShow = toUInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    RefPtr<NodeFilter> filter = JSNodeFilter::toWrapped(exec->vm(), exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    bool expandEntityReferences = exec->argument(3).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createTreeWalker(root, whatToShow, filter.get(), expandEntityReferences, ec)));
 
-    setDOMException(exec, ec);
+    size_t argsCount = state->argumentCount();
+    if (argsCount <= 1) {
+        JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createTreeWalker(root, ec)));
+
+        setDOMException(state, ec);
+        return JSValue::encode(result);
+    }
+
+    unsigned whatToShow = state->argument(1).isUndefined() ? 0xFFFFFFFF : toUInt32(state, state->uncheckedArgument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    RefPtr<NodeFilter> filter;
+    if (!state->argument(2).isUndefinedOrNull()) {
+        if (!state->uncheckedArgument(2).isObject())
+            return throwArgumentMustBeFunctionError(*state, 2, "filter", "Document", "createTreeWalker");
+        filter = JSNodeFilter::create(asObject(state->uncheckedArgument(2)), castedThis->globalObject());
+    }
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createTreeWalker(root, whatToShow, filter.get(), ec)));
+
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetOverrideStyle(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetOverrideStyle(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getOverrideStyle");
+        return throwThisTypeError(*state, "Document", "getOverrideStyle");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    Element* element = JSElement::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    Element* element = JSElement::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String pseudoElement = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String pseudoElement = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getOverrideStyle(element, pseudoElement)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getOverrideStyle(element, pseudoElement)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateExpression(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateExpression(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createExpression");
+        return throwThisTypeError(*state, "Document", "createExpression");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String expression = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String expression = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<XPathNSResolver> customResolver;
-    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(exec->argument(1));
+    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(state->argument(1));
     if (!resolver) {
-        customResolver = JSCustomXPathNSResolver::create(exec, exec->argument(1));
-        if (UNLIKELY(exec->hadException()))
+        customResolver = JSCustomXPathNSResolver::create(state, state->argument(1));
+        if (UNLIKELY(state->hadException()))
             return JSValue::encode(jsUndefined());
         resolver = customResolver.get();
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createExpression(expression, resolver, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createExpression(expression, resolver, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateNSResolver(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateNSResolver(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createNSResolver");
+        return throwThisTypeError(*state, "Document", "createNSResolver");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    Node* nodeResolver = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Node* nodeResolver = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createNSResolver(nodeResolver)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createNSResolver(nodeResolver)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionEvaluate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionEvaluate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "evaluate");
+        return throwThisTypeError(*state, "Document", "evaluate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String expression = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String expression = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Node* contextNode = JSNode::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Node* contextNode = JSNode::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<XPathNSResolver> customResolver;
-    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(exec->argument(2));
+    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(state->argument(2));
     if (!resolver) {
-        customResolver = JSCustomXPathNSResolver::create(exec, exec->argument(2));
-        if (UNLIKELY(exec->hadException()))
+        customResolver = JSCustomXPathNSResolver::create(state, state->argument(2));
+        if (UNLIKELY(state->hadException()))
             return JSValue::encode(jsUndefined());
         resolver = customResolver.get();
     }
-    uint16_t type = toUInt16(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t type = toUInt16(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    XPathResult* inResult = JSXPathResult::toWrapped(exec->argument(4));
-    if (UNLIKELY(exec->hadException()))
+    XPathResult* inResult = JSXPathResult::toWrapped(state->argument(4));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.evaluate(expression, contextNode, resolver, type, inResult, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.evaluate(expression, contextNode, resolver, type, inResult, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExecCommand(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExecCommand(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "execCommand");
+        return throwThisTypeError(*state, "Document", "execCommand");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    bool userInterface = exec->argument(1).toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    bool userInterface = state->argument(1).toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String value = valueToStringWithUndefinedOrNullCheck(exec, exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    String value = valueToStringWithUndefinedOrNullCheck(state, state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.execCommand(command, userInterface, value));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "queryCommandEnabled");
+        return throwThisTypeError(*state, "Document", "queryCommandEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.queryCommandEnabled(command));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandIndeterm(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandIndeterm(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "queryCommandIndeterm");
+        return throwThisTypeError(*state, "Document", "queryCommandIndeterm");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.queryCommandIndeterm(command));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandState(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandState(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "queryCommandState");
+        return throwThisTypeError(*state, "Document", "queryCommandState");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.queryCommandState(command));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandSupported(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandSupported(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "queryCommandSupported");
+        return throwThisTypeError(*state, "Document", "queryCommandSupported");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.queryCommandSupported(command));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandValue(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQueryCommandValue(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "queryCommandValue");
+        return throwThisTypeError(*state, "Document", "queryCommandValue");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String command = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String command = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = jsStringWithCache(exec, impl.queryCommandValue(command));
+    JSValue result = jsStringWithCache(state, impl.queryCommandValue(command));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByName(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByName(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getElementsByName");
+        return throwThisTypeError(*state, "Document", "getElementsByName");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String elementName = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String elementName = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementsByName(elementName)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getElementsByName(elementName)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionElementFromPoint(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionElementFromPoint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "elementFromPoint");
+        return throwThisTypeError(*state, "Document", "elementFromPoint");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.elementFromPoint(x, y)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.elementFromPoint(x, y)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCaretRangeFromPoint(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCaretRangeFromPoint(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "caretRangeFromPoint");
+        return throwThisTypeError(*state, "Document", "caretRangeFromPoint");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    int x = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int x = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int y = toInt32(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int y = toInt32(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.caretRangeFromPoint(x, y)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.caretRangeFromPoint(x, y)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetSelection(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetSelection(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getSelection");
+        return throwThisTypeError(*state, "Document", "getSelection");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getSelection()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getSelection()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetCSSCanvasContext(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetCSSCanvasContext(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getCSSCanvasContext");
+        return throwThisTypeError(*state, "Document", "getCSSCanvasContext");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 4))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    String contextId = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 4))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    String contextId = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    String name = exec->argument(1).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String name = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int width = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int width = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int height = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int height = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getCSSCanvasContext(contextId, name, width, height)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getCSSCanvasContext(contextId, name, width, height)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByClassName(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementsByClassName(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getElementsByClassName");
+        return throwThisTypeError(*state, "Document", "getElementsByClassName");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    String classNames = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String classNames = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementsByClassName(classNames)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getElementsByClassName(classNames)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionHasFocus(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionHasFocus(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "hasFocus");
+        return throwThisTypeError(*state, "Document", "hasFocus");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.hasFocus());
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitCancelFullScreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitCancelFullScreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "webkitCancelFullScreen");
+        return throwThisTypeError(*state, "Document", "webkitCancelFullScreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.webkitCancelFullScreen();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitExitFullscreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitExitFullscreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "webkitExitFullscreen");
+        return throwThisTypeError(*state, "Document", "webkitExitFullscreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.webkitExitFullscreen();
     return JSValue::encode(jsUndefined());
 }
 
 #if ENABLE(POINTER_LOCK)
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExitPointerLock(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExitPointerLock(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "exitPointerLock");
+        return throwThisTypeError(*state, "Document", "exitPointerLock");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.exitPointerLock();
     return JSValue::encode(jsUndefined());
 }
@@ -5314,159 +5298,159 @@ EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionExitPointerLock(ExecStat
 #endif
 
 #if ENABLE(CSS_REGIONS)
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitGetNamedFlows(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionWebkitGetNamedFlows(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "webkitGetNamedFlows");
+        return throwThisTypeError(*state, "Document", "webkitGetNamedFlows");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.webkitGetNamedFlows()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.webkitGetNamedFlows()));
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouch(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouch(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createTouch");
+        return throwThisTypeError(*state, "Document", "createTouch");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    DOMWindow* window = JSDOMWindow::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    DOMWindow* window = JSDOMWindow::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    EventTarget* target = JSEventTarget::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    EventTarget* target = JSEventTarget::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int identifier = toInt32(exec, exec->argument(2), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int identifier = toInt32(state, state->argument(2), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int pageX = toInt32(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageX = toInt32(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int pageY = toInt32(exec, exec->argument(4), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int pageY = toInt32(state, state->argument(4), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int screenX = toInt32(exec, exec->argument(5), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int screenX = toInt32(state, state->argument(5), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int screenY = toInt32(exec, exec->argument(6), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int screenY = toInt32(state, state->argument(6), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int webkitRadiusX = toInt32(exec, exec->argument(7), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int webkitRadiusX = toInt32(state, state->argument(7), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    int webkitRadiusY = toInt32(exec, exec->argument(8), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int webkitRadiusY = toInt32(state, state->argument(8), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float webkitRotationAngle = exec->argument(9).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float webkitRotationAngle = state->argument(9).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float webkitForce = exec->argument(10).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float webkitForce = state->argument(10).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJSNewlyCreated(exec, castedThis->globalObject(), WTF::getPtr(impl.createTouch(window, target, identifier, pageX, pageY, screenX, screenY, webkitRadiusX, webkitRadiusY, webkitRotationAngle, webkitForce, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.createTouch(window, target, identifier, pageX, pageY, screenX, screenY, webkitRadiusX, webkitRadiusY, webkitRotationAngle, webkitForce, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouchList(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionCreateTouchList(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "createTouchList");
+        return throwThisTypeError(*state, "Document", "createTouchList");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    return JSValue::encode(castedThis->createTouchList(exec));
+    return JSValue::encode(castedThis->createTouchList(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementById(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionGetElementById(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "getElementById");
+        return throwThisTypeError(*state, "Document", "getElementById");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    AtomicString elementId = exec->argument(0).toString(exec)->toExistingAtomicString(exec).get();
+    auto& impl = castedThis->wrapped();
+    AtomicString elementId = state->argument(0).toString(state)->toExistingAtomicString(state).get();
     if (elementId.isNull())
         return JSValue::encode(jsNull());
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.getElementById(elementId)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getElementById(elementId)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionPrepend(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionPrepend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "prepend");
+        return throwThisTypeError(*state, "Document", "prepend");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    return JSValue::encode(castedThis->prepend(exec));
+    return JSValue::encode(castedThis->prepend(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionAppend(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionAppend(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "append");
+        return throwThisTypeError(*state, "Document", "append");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    return JSValue::encode(castedThis->append(exec));
+    return JSValue::encode(castedThis->append(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQuerySelector(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQuerySelector(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "querySelector");
+        return throwThisTypeError(*state, "Document", "querySelector");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String selectors = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String selectors = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.querySelector(selectors, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.querySelector(selectors, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQuerySelectorAll(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentPrototypeFunctionQuerySelectorAll(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocument* castedThis = jsDocumentCast(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Document", "querySelectorAll");
+        return throwThisTypeError(*state, "Document", "querySelectorAll");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocument::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    String selectors = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String selectors = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.querySelectorAll(selectors, ec)));
+    JSValue result = toJSNewlyCreated(state, castedThis->globalObject(), WTF::getPtr(impl.querySelectorAll(selectors, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 Document* JSDocument::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDocumentCast(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

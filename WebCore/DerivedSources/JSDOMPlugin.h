@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMPlugin : public JSDOMWrapper {
+class JSDOMPlugin : public JSDOMWrapper<DOMPlugin> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMPlugin> Base;
     static JSDOMPlugin* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMPlugin>&& impl)
     {
-        JSDOMPlugin* ptr = new (NotNull, JSC::allocateCell<JSDOMPlugin>(globalObject->vm().heap)) JSDOMPlugin(structure, globalObject, WTF::move(impl));
+        JSDOMPlugin* ptr = new (NotNull, JSC::allocateCell<JSDOMPlugin>(globalObject->vm().heap)) JSDOMPlugin(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSDOMPlugin();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMPlugin& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMPlugin* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMPlugin(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMPlugin>&&);
+    JSDOMPlugin(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMPlugin>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,8 +65,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, DOMPlugin*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSDOMPluginOwner : public JSC::WeakHandleOwner {
@@ -88,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMPlugin*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMPlugin*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMPlugin& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMPlugin& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMPlugin*);
 
 
 } // namespace WebCore

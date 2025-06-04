@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSNode : public JSDOMWrapper {
+class WEBCORE_EXPORT JSNode : public JSDOMWrapper<Node> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Node> Base;
     static JSNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Node>&& impl)
     {
-        JSNode* ptr = new (NotNull, JSC::allocateCell<JSNode>(globalObject->vm().heap)) JSNode(structure, globalObject, WTF::move(impl));
+        JSNode* ptr = new (NotNull, JSC::allocateCell<JSNode>(globalObject->vm().heap)) JSNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Node* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNode();
 
 protected:
     static const JSC::ClassInfo s_info;
@@ -61,17 +60,12 @@ public:
 
 
     // Custom functions
-    JSC::JSValue insertBefore(JSC::ExecState*);
-    JSC::JSValue replaceChild(JSC::ExecState*);
-    JSC::JSValue removeChild(JSC::ExecState*);
-    JSC::JSValue appendChild(JSC::ExecState*);
-    Node& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Node* m_impl;
+    JSC::JSValue insertBefore(JSC::ExecState&);
+    JSC::JSValue replaceChild(JSC::ExecState&);
+    JSC::JSValue removeChild(JSC::ExecState&);
+    JSC::JSValue appendChild(JSC::ExecState&);
 protected:
-    JSNode(JSC::Structure*, JSDOMGlobalObject*, Ref<Node>&&);
+    JSNode(JSC::Structure*, JSDOMGlobalObject&, Ref<Node>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -94,7 +88,7 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Node*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Node*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Node& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Node& impl) { return toJS(state, globalObject, &impl); }
 JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Node*);
 
 

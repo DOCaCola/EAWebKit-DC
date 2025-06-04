@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSCanvasGradient : public JSDOMWrapper {
+class JSCanvasGradient : public JSDOMWrapper<CanvasGradient> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CanvasGradient> Base;
     static JSCanvasGradient* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CanvasGradient>&& impl)
     {
-        JSCanvasGradient* ptr = new (NotNull, JSC::allocateCell<JSCanvasGradient>(globalObject->vm().heap)) JSCanvasGradient(structure, globalObject, WTF::move(impl));
+        JSCanvasGradient* ptr = new (NotNull, JSC::allocateCell<JSCanvasGradient>(globalObject->vm().heap)) JSCanvasGradient(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static CanvasGradient* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSCanvasGradient();
 
     DECLARE_INFO;
 
@@ -51,13 +50,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CanvasGradient& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CanvasGradient* m_impl;
 protected:
-    JSCanvasGradient(JSC::Structure*, JSDOMGlobalObject*, Ref<CanvasGradient>&&);
+    JSCanvasGradient(JSC::Structure*, JSDOMGlobalObject&, Ref<CanvasGradient>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +74,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CanvasGradient*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CanvasGradient*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CanvasGradient& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CanvasGradient& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CanvasGradient*);
 
 
 } // namespace WebCore

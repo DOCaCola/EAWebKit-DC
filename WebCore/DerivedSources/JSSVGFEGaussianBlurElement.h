@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFEGaussianBlurElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFEGaussianBlurElement>&& impl)
     {
-        JSSVGFEGaussianBlurElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEGaussianBlurElement>(globalObject->vm().heap)) JSSVGFEGaussianBlurElement(structure, globalObject, WTF::move(impl));
+        JSSVGFEGaussianBlurElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFEGaussianBlurElement>(globalObject->vm().heap)) JSSVGFEGaussianBlurElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFEGaussianBlurElement& impl() const
+    SVGFEGaussianBlurElement& wrapped() const
     {
-        return static_cast<SVGFEGaussianBlurElement&>(Base::impl());
+        return static_cast<SVGFEGaussianBlurElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFEGaussianBlurElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFEGaussianBlurElement>&&);
+    JSSVGFEGaussianBlurElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFEGaussianBlurElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

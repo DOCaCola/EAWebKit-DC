@@ -31,7 +31,7 @@ public:
     typedef JSCSSRule Base;
     static JSCSSSupportsRule* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSSupportsRule>&& impl)
     {
-        JSCSSSupportsRule* ptr = new (NotNull, JSC::allocateCell<JSCSSSupportsRule>(globalObject->vm().heap)) JSCSSSupportsRule(structure, globalObject, WTF::move(impl));
+        JSCSSSupportsRule* ptr = new (NotNull, JSC::allocateCell<JSCSSSupportsRule>(globalObject->vm().heap)) JSCSSSupportsRule(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -46,12 +46,12 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    CSSSupportsRule& impl() const
+    CSSSupportsRule& wrapped() const
     {
-        return static_cast<CSSSupportsRule&>(Base::impl());
+        return static_cast<CSSSupportsRule&>(Base::wrapped());
     }
 protected:
-    JSCSSSupportsRule(JSC::Structure*, JSDOMGlobalObject*, Ref<CSSSupportsRule>&&);
+    JSCSSSupportsRule(JSC::Structure*, JSDOMGlobalObject&, Ref<CSSSupportsRule>&&);
 
     void finishCreation(JSC::VM& vm)
     {

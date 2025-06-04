@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSDOMApplicationCache.h"
 
-#include "DOMApplicationCache.h"
 #include "Event.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
@@ -92,27 +91,27 @@ private:
 
 static const HashTableValue JSDOMApplicationCachePrototypeTableValues[] =
 {
-    { "status", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheStatus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onchecking", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnchecking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnchecking) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnerror) },
-    { "onnoupdate", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnnoupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnnoupdate) },
-    { "ondownloading", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOndownloading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOndownloading) },
-    { "onprogress", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnprogress) },
-    { "onupdateready", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnupdateready), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnupdateready) },
-    { "oncached", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOncached), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOncached) },
-    { "onobsolete", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnobsolete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnobsolete) },
-    { "UNCACHED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "IDLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "CHECKING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "DOWNLOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "UPDATEREADY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "OBSOLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "update", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionUpdate), (intptr_t) (0) },
-    { "swapCache", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionSwapCache), (intptr_t) (0) },
-    { "abort", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionAbort), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionDispatchEvent), (intptr_t) (1) },
+    { "status", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheStatus), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onchecking", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnchecking), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnchecking) } },
+    { "onerror", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnerror) } },
+    { "onnoupdate", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnnoupdate), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnnoupdate) } },
+    { "ondownloading", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOndownloading), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOndownloading) } },
+    { "onprogress", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnprogress), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnprogress) } },
+    { "onupdateready", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnupdateready), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnupdateready) } },
+    { "oncached", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOncached), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOncached) } },
+    { "onobsolete", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMApplicationCacheOnobsolete), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSDOMApplicationCacheOnobsolete) } },
+    { "UNCACHED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "IDLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "CHECKING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "DOWNLOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "UPDATEREADY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "OBSOLETE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "update", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionUpdate), (intptr_t) (0) } },
+    { "swapCache", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionSwapCache), (intptr_t) (0) } },
+    { "abort", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionAbort), (intptr_t) (0) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDOMApplicationCachePrototypeFunctionDispatchEvent), (intptr_t) (1) } },
 };
 
 const ClassInfo JSDOMApplicationCachePrototype::s_info = { "DOMApplicationCachePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMApplicationCachePrototype) };
@@ -125,9 +124,8 @@ void JSDOMApplicationCachePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDOMApplicationCache::s_info = { "DOMApplicationCache", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMApplicationCache) };
 
-JSDOMApplicationCache::JSDOMApplicationCache(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMApplicationCache>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMApplicationCache::JSDOMApplicationCache(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMApplicationCache>&& impl)
+    : JSDOMWrapper<DOMApplicationCache>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -147,371 +145,366 @@ void JSDOMApplicationCache::destroy(JSC::JSCell* cell)
     thisObject->JSDOMApplicationCache::~JSDOMApplicationCache();
 }
 
-JSDOMApplicationCache::~JSDOMApplicationCache()
+EncodedJSValue jsDOMApplicationCacheStatus(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsDOMApplicationCacheStatus(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "status");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "status");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "status");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "status");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.status());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnchecking(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnchecking(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onchecking");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onchecking");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onchecking");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onchecking");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().checkingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().checkingEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onerror");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onerror");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onerror");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onerror");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnnoupdate(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnnoupdate(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onnoupdate");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onnoupdate");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onnoupdate");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onnoupdate");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().noupdateEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().noupdateEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOndownloading(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOndownloading(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "ondownloading");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "ondownloading");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "ondownloading");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "ondownloading");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().downloadingEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().downloadingEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnprogress(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnprogress(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onprogress");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onprogress");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onprogress");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onprogress");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().progressEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().progressEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnupdateready(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnupdateready(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onupdateready");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onupdateready");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onupdateready");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onupdateready");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().updatereadyEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().updatereadyEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOncached(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOncached(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "oncached");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "oncached");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "oncached");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "oncached");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().cachedEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().cachedEvent));
 }
 
 
-EncodedJSValue jsDOMApplicationCacheOnobsolete(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMApplicationCacheOnobsolete(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DOMApplicationCache", "onobsolete");
-        return throwGetterTypeError(*exec, "DOMApplicationCache", "onobsolete");
+            return reportDeprecatedGetterError(*state, "DOMApplicationCache", "onobsolete");
+        return throwGetterTypeError(*state, "DOMApplicationCache", "onobsolete");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().obsoleteEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().obsoleteEvent));
 }
 
 
-void setJSDOMApplicationCacheOnchecking(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnchecking(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onchecking");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onchecking");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onchecking");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onchecking");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().checkingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().checkingEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onerror");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onerror");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onerror");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onerror");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().errorEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().errorEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOnnoupdate(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnnoupdate(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onnoupdate");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onnoupdate");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onnoupdate");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onnoupdate");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().noupdateEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().noupdateEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOndownloading(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOndownloading(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "ondownloading");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "ondownloading");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "ondownloading");
+            throwSetterTypeError(*state, "DOMApplicationCache", "ondownloading");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().downloadingEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().downloadingEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOnprogress(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnprogress(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onprogress");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onprogress");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onprogress");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onprogress");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().progressEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().progressEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOnupdateready(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnupdateready(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onupdateready");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onupdateready");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onupdateready");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onupdateready");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().updatereadyEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().updatereadyEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOncached(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOncached(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "oncached");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "oncached");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "oncached");
+            throwSetterTypeError(*state, "DOMApplicationCache", "oncached");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().cachedEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().cachedEvent, value);
 }
 
 
-void setJSDOMApplicationCacheOnobsolete(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSDOMApplicationCacheOnobsolete(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDOMApplicationCachePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "DOMApplicationCache", "onobsolete");
+            reportDeprecatedSetterError(*state, "DOMApplicationCache", "onobsolete");
         else
-            throwSetterTypeError(*exec, "DOMApplicationCache", "onobsolete");
+            throwSetterTypeError(*state, "DOMApplicationCache", "onobsolete");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().obsoleteEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().obsoleteEvent, value);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionUpdate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionUpdate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "update");
+        return throwThisTypeError(*state, "DOMApplicationCache", "update");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.update(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionSwapCache(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionSwapCache(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "swapCache");
+        return throwThisTypeError(*state, "DOMApplicationCache", "swapCache");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.swapCache(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionAbort(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionAbort(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "abort");
+        return throwThisTypeError(*state, "DOMApplicationCache", "abort");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.abort();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "addEventListener");
+        return throwThisTypeError(*state, "DOMApplicationCache", "addEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "removeEventListener");
+        return throwThisTypeError(*state, "DOMApplicationCache", "removeEventListener");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDOMApplicationCachePrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDOMApplicationCache* castedThis = jsDynamicCast<JSDOMApplicationCache*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DOMApplicationCache", "dispatchEvent");
+        return throwThisTypeError(*state, "DOMApplicationCache", "dispatchEvent");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDOMApplicationCache::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -520,15 +513,15 @@ void JSDOMApplicationCache::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSDOMApplicationCache*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSDOMApplicationCacheOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsDOMApplicationCache = jsCast<JSDOMApplicationCache*>(handle.slot()->asCell());
-    if (jsDOMApplicationCache->impl().isFiringEventListeners())
+    if (jsDOMApplicationCache->wrapped().isFiringEventListeners())
         return true;
-    Frame* root = WTF::getPtr(jsDOMApplicationCache->impl().frame());
+    Frame* root = WTF::getPtr(jsDOMApplicationCache->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -538,7 +531,7 @@ void JSDOMApplicationCacheOwner::finalize(JSC::Handle<JSC::Unknown> handle, void
 {
     auto* jsDOMApplicationCache = jsCast<JSDOMApplicationCache*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMApplicationCache->impl(), jsDOMApplicationCache);
+    uncacheWrapper(world, &jsDOMApplicationCache->wrapped(), jsDOMApplicationCache);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -549,6 +542,14 @@ extern "C" { extern void (*const __identifier("??_7DOMApplicationCache@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19DOMApplicationCacheE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMApplicationCache* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMApplicationCache>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMApplicationCache* impl)
 {
     if (!impl)
@@ -580,7 +581,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMApplicati
 DOMApplicationCache* JSDOMApplicationCache::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMApplicationCache*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

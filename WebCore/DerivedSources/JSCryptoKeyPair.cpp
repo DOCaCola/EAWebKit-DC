@@ -25,7 +25,6 @@
 #include "JSCryptoKeyPair.h"
 
 #include "CryptoKey.h"
-#include "CryptoKeyPair.h"
 #include "JSCryptoKey.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
@@ -68,8 +67,8 @@ private:
 
 static const HashTableValue JSCryptoKeyPairPrototypeTableValues[] =
 {
-    { "publicKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPublicKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "privateKey", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPrivateKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "publicKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPublicKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "privateKey", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCryptoKeyPairPrivateKey), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCryptoKeyPairPrototype::s_info = { "KeyPairPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPairPrototype) };
@@ -82,9 +81,8 @@ void JSCryptoKeyPairPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCryptoKeyPair::s_info = { "KeyPair", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCryptoKeyPair) };
 
-JSCryptoKeyPair::JSCryptoKeyPair(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKeyPair>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCryptoKeyPair::JSCryptoKeyPair(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CryptoKeyPair>&& impl)
+    : JSDOMWrapper<CryptoKeyPair>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -104,41 +102,36 @@ void JSCryptoKeyPair::destroy(JSC::JSCell* cell)
     thisObject->JSCryptoKeyPair::~JSCryptoKeyPair();
 }
 
-JSCryptoKeyPair::~JSCryptoKeyPair()
+EncodedJSValue jsCryptoKeyPairPublicKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsCryptoKeyPairPublicKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCryptoKeyPair* castedThis = jsDynamicCast<JSCryptoKeyPair*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCryptoKeyPairPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKeyPair", "publicKey");
-        return throwGetterTypeError(*exec, "CryptoKeyPair", "publicKey");
+            return reportDeprecatedGetterError(*state, "CryptoKeyPair", "publicKey");
+        return throwGetterTypeError(*state, "CryptoKeyPair", "publicKey");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.publicKey()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.publicKey()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCryptoKeyPairPrivateKey(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCryptoKeyPairPrivateKey(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCryptoKeyPair* castedThis = jsDynamicCast<JSCryptoKeyPair*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCryptoKeyPairPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CryptoKeyPair", "privateKey");
-        return throwGetterTypeError(*exec, "CryptoKeyPair", "privateKey");
+            return reportDeprecatedGetterError(*state, "CryptoKeyPair", "privateKey");
+        return throwGetterTypeError(*state, "CryptoKeyPair", "privateKey");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.privateKey()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.privateKey()));
     return JSValue::encode(result);
 }
 
@@ -162,7 +155,14 @@ void JSCryptoKeyPairOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsCryptoKeyPair = jsCast<JSCryptoKeyPair*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCryptoKeyPair->impl(), jsCryptoKeyPair);
+    uncacheWrapper(world, &jsCryptoKeyPair->wrapped(), jsCryptoKeyPair);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, CryptoKeyPair* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSCryptoKeyPair>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CryptoKeyPair* impl)
@@ -184,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CryptoKeyPai
 CryptoKeyPair* JSCryptoKeyPair::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCryptoKeyPair*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

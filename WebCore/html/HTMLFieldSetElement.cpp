@@ -160,9 +160,14 @@ HTMLLegendElement* HTMLFieldSetElement::legend() const
     return const_cast<HTMLLegendElement*>(childrenOfType<HTMLLegendElement>(*this).first());
 }
 
-Ref<HTMLCollection> HTMLFieldSetElement::elements()
+Ref<HTMLFormControlsCollection> HTMLFieldSetElement::elements()
 {
     return ensureRareData().ensureNodeLists().addCachedCollection<HTMLFormControlsCollection>(*this, FormControls);
+}
+
+Ref<HTMLCollection> HTMLFieldSetElement::elementsForNativeBindings()
+{
+    return elements();
 }
 
 void HTMLFieldSetElement::refreshElementsIfNeeded() const
@@ -193,8 +198,8 @@ unsigned HTMLFieldSetElement::length() const
 {
     refreshElementsIfNeeded();
     unsigned length = 0;
-    for (unsigned i = 0; i < m_associatedElements.size(); ++i) {
-        if (m_associatedElements[i]->isEnumeratable())
+    for (auto& element : m_associatedElements) {
+        if (element->isEnumeratable())
             ++length;
     }
     return length;

@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/ErrorPrototype.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/ErrorPrototype.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -11,15 +9,11 @@ static const struct CompactHashIndex errorPrototypeTableIndex[2] = {
     { -1, -1 },
 };
 
-
 static const struct HashTableValue errorPrototypeTableValues[1] = {
- #if JSC_BUILTIN_EXISTS(ERRORPROTOTYPETOSTRING)
-   { "toString", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(errorPrototypeToStringCodeGenerator), (intptr_t)0 },
- #else
-   { "toString", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(errorProtoFuncToString), (intptr_t)(0) },
- #endif
+   { "toString", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(errorProtoFuncToString), (intptr_t)(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable errorPrototypeTable =
-    { 1, 1, false, errorPrototypeTableValues, 0, errorPrototypeTableIndex };
-} // namespace
+static const struct HashTable errorPrototypeTable =
+    { 1, 1, false, errorPrototypeTableValues, errorPrototypeTableIndex };
+
+} // namespace JSC

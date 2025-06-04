@@ -32,6 +32,8 @@
 
 namespace JSC { namespace FTL {
 
+using namespace B3;
+
 JITCode::JITCode()
     : JSC::JITCode(FTLJIT)
 {
@@ -39,17 +41,33 @@ JITCode::JITCode()
 
 JITCode::~JITCode()
 {
-    if (FTL::shouldShowDisassembly()) {
+    if (FTL::shouldDumpDisassembly()) {
         dataLog("Destroying FTL JIT code at ");
         CommaPrinter comma;
+#if FTL_USES_B3
+        dataLog(comma, m_b3Code);
+        dataLog(comma, m_arityCheckEntrypoint);
+#else
         for (auto& handle : m_handles)
             dataLog(comma, pointerDump(handle.get()));
         dataLog(comma, pointerDump(m_arityCheckEntrypoint.executableMemory()));
         dataLog(comma, pointerDump(m_exitThunks.executableMemory()));
         dataLog("\n");
+#endif
     }
 }
 
+#if FTL_USES_B3
+void JITCode::initializeB3Code(CodeRef b3Code)
+{
+    m_b3Code = b3Code;
+}
+
+void JITCode::initializeB3Byproducts(std::unique_ptr<OpaqueByproducts> byproducts)
+{
+    m_b3Byproducts = WTF::move(byproducts);
+}
+#else // FTL_USES_B3
 void JITCode::initializeExitThunks(CodeRef exitThunks)
 {
     m_exitThunks = exitThunks;
@@ -64,18 +82,19 @@ void JITCode::addDataSection(PassRefPtr<DataSection> dataSection)
 {
     m_dataSections.append(dataSection);
 }
-
-void JITCode::initializeArityCheckEntrypoint(CodeRef entrypoint)
-{
-    m_arityCheckEntrypoint = entrypoint;
-}
+#endif // FTL_USES_B3
 
 void JITCode::initializeAddressForCall(CodePtr address)
 {
     m_addressForCall = address;
 }
 
-JITCode::CodePtr JITCode::addressForCall(VM&, ExecutableBase*, ArityCheckMode arityCheck, RegisterPreservationMode)
+void JITCode::initializeArityCheckEntrypoint(CodeRef entrypoint)
+{
+    m_arityCheckEntrypoint = entrypoint;
+}
+
+JITCode::CodePtr JITCode::addressForCall(ArityCheckMode arityCheck)
 {
     switch (arityCheck) {
     case ArityCheckNotRequired:
@@ -121,10 +140,12 @@ bool JITCode::contains(void*)
     return false;
 }
 
+#if !FTL_USES_B3
 JITCode::CodePtr JITCode::exitThunks()
 {
     return m_exitThunks.code();
 }
+#endif
 
 JITCode* JITCode::ftl()
 {
@@ -141,7 +162,22 @@ void JITCode::validateReferences(const TrackedReferences& trackedReferences)
     common.validateReferences(trackedReferences);
     
     for (OSRExit& exit : osrExit)
-        exit.validateReferences(trackedReferences);
+        exit.m_descriptor->validateReferences(trackedReferences);
+}
+
+RegisterSet JITCode::liveRegistersToPreserveAtExceptionHandlingCallSite(CodeBlock*, CallSiteIndex callSiteIndex)
+{
+#if FTL_USES_B3
+    UNUSED_PARAM(callSiteIndex);
+#else // FTL_USES_B3
+    for (OSRExit& exit : osrExit) {
+        if (exit.m_exceptionHandlerCallSiteIndex.bits() == callSiteIndex.bits()) {
+            RELEASE_ASSERT(exit.m_isExceptionHandler);
+            return stackmaps.records[exit.m_stackmapRecordIndex].usedRegisterSet();
+        }
+    }
+#endif // FTL_USES_B3
+    return RegisterSet();
 }
 
 } } // namespace JSC::FTL

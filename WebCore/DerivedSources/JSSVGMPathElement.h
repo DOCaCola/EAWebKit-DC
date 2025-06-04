@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGMPathElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMPathElement>&& impl)
     {
-        JSSVGMPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMPathElement>(globalObject->vm().heap)) JSSVGMPathElement(structure, globalObject, WTF::move(impl));
+        JSSVGMPathElement* ptr = new (NotNull, JSC::allocateCell<JSSVGMPathElement>(globalObject->vm().heap)) JSSVGMPathElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGMPathElement& impl() const
+    SVGMPathElement& wrapped() const
     {
-        return static_cast<SVGMPathElement&>(Base::impl());
+        return static_cast<SVGMPathElement&>(Base::wrapped());
     }
 protected:
-    JSSVGMPathElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGMPathElement>&&);
+    JSSVGMPathElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGMPathElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

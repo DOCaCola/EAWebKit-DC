@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSPeriodicWave : public JSDOMWrapper {
+class JSPeriodicWave : public JSDOMWrapper<PeriodicWave> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<PeriodicWave> Base;
     static JSPeriodicWave* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<PeriodicWave>&& impl)
     {
-        JSPeriodicWave* ptr = new (NotNull, JSC::allocateCell<JSPeriodicWave>(globalObject->vm().heap)) JSPeriodicWave(structure, globalObject, WTF::move(impl));
+        JSPeriodicWave* ptr = new (NotNull, JSC::allocateCell<JSPeriodicWave>(globalObject->vm().heap)) JSPeriodicWave(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static PeriodicWave* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSPeriodicWave();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    PeriodicWave& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    PeriodicWave* m_impl;
 protected:
-    JSPeriodicWave(JSC::Structure*, JSDOMGlobalObject*, Ref<PeriodicWave>&&);
+    JSPeriodicWave(JSC::Structure*, JSDOMGlobalObject&, Ref<PeriodicWave>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, PeriodicWave*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, PeriodicWave*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, PeriodicWave& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, PeriodicWave& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, PeriodicWave*);
 
 
 } // namespace WebCore

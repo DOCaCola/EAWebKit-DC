@@ -23,6 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGMatrix.h"
 #include "SVGMatrix.h"
 #include <runtime/Error.h>
@@ -87,65 +88,39 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGMatrixConstructor : public DOMConstructorObject {
-private:
-    JSSVGMatrixConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGMatrix> JSSVGMatrixConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGMatrixConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGMatrixConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGMatrixConstructor>(vm.heap)) JSSVGMatrixConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGMatrixConstructor::s_info = { "SVGMatrixConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMatrixConstructor) };
-
-JSSVGMatrixConstructor::JSSVGMatrixConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGMatrixConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGMatrixConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGMatrix::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGMatrix::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGMatrix"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGMatrixConstructor::s_info = { "SVGMatrixConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMatrixConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGMatrixPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "a", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixA), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixA) },
-    { "b", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixB) },
-    { "c", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixC), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixC) },
-    { "d", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixD), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixD) },
-    { "e", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixE), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixE) },
-    { "f", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixF), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixF) },
-    { "multiply", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionMultiply), (intptr_t) (1) },
-    { "inverse", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionInverse), (intptr_t) (0) },
-    { "translate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionTranslate), (intptr_t) (2) },
-    { "scale", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionScale), (intptr_t) (1) },
-    { "scaleNonUniform", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionScaleNonUniform), (intptr_t) (2) },
-    { "rotate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionRotate), (intptr_t) (1) },
-    { "rotateFromVector", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionRotateFromVector), (intptr_t) (2) },
-    { "flipX", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionFlipX), (intptr_t) (0) },
-    { "flipY", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionFlipY), (intptr_t) (0) },
-    { "skewX", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionSkewX), (intptr_t) (1) },
-    { "skewY", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionSkewY), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "a", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixA), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixA) } },
+    { "b", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixB) } },
+    { "c", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixC), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixC) } },
+    { "d", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixD), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixD) } },
+    { "e", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixE), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixE) } },
+    { "f", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMatrixF), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGMatrixF) } },
+    { "multiply", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionMultiply), (intptr_t) (1) } },
+    { "inverse", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionInverse), (intptr_t) (0) } },
+    { "translate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionTranslate), (intptr_t) (2) } },
+    { "scale", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionScale), (intptr_t) (1) } },
+    { "scaleNonUniform", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionScaleNonUniform), (intptr_t) (2) } },
+    { "rotate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionRotate), (intptr_t) (1) } },
+    { "rotateFromVector", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionRotateFromVector), (intptr_t) (2) } },
+    { "flipX", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionFlipX), (intptr_t) (0) } },
+    { "flipY", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionFlipY), (intptr_t) (0) } },
+    { "skewX", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionSkewX), (intptr_t) (1) } },
+    { "skewY", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGMatrixPrototypeFunctionSkewY), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSVGMatrixPrototype::s_info = { "SVGMatrixPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMatrixPrototype) };
@@ -158,9 +133,8 @@ void JSSVGMatrixPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGMatrix::s_info = { "SVGMatrix", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMatrix) };
 
-JSSVGMatrix::JSSVGMatrix(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGMatrix>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGMatrix::JSSVGMatrix(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPropertyTearOff<SVGMatrix>>&& impl)
+    : JSDOMWrapper<SVGPropertyTearOff<SVGMatrix>>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -180,139 +154,134 @@ void JSSVGMatrix::destroy(JSC::JSCell* cell)
     thisObject->JSSVGMatrix::~JSSVGMatrix();
 }
 
-JSSVGMatrix::~JSSVGMatrix()
+EncodedJSValue jsSVGMatrixA(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGMatrixA(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "a");
-        return throwGetterTypeError(*exec, "SVGMatrix", "a");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "a");
+        return throwGetterTypeError(*state, "SVGMatrix", "a");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.a());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixB(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMatrixB(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "b");
-        return throwGetterTypeError(*exec, "SVGMatrix", "b");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "b");
+        return throwGetterTypeError(*state, "SVGMatrix", "b");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.b());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixC(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMatrixC(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "c");
-        return throwGetterTypeError(*exec, "SVGMatrix", "c");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "c");
+        return throwGetterTypeError(*state, "SVGMatrix", "c");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.c());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixD(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMatrixD(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "d");
-        return throwGetterTypeError(*exec, "SVGMatrix", "d");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "d");
+        return throwGetterTypeError(*state, "SVGMatrix", "d");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.d());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixE(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMatrixE(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "e");
-        return throwGetterTypeError(*exec, "SVGMatrix", "e");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "e");
+        return throwGetterTypeError(*state, "SVGMatrix", "e");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.e());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixF(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGMatrixF(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGMatrix", "f");
-        return throwGetterTypeError(*exec, "SVGMatrix", "f");
+            return reportDeprecatedGetterError(*state, "SVGMatrix", "f");
+        return throwGetterTypeError(*state, "SVGMatrix", "f");
     }
-    SVGMatrix& impl = castedThis->impl().propertyReference();
+    SVGMatrix& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.f());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGMatrixConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGMatrixConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGMatrixPrototype* domObject = jsDynamicCast<JSSVGMatrixPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGMatrix::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGMatrix::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGMatrixA(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixA(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "a");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "a");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "a");
+            throwSetterTypeError(*state, "SVGMatrix", "a");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -321,24 +290,24 @@ void setJSSVGMatrixA(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 }
 
 
-void setJSSVGMatrixB(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixB(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "b");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "b");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "b");
+            throwSetterTypeError(*state, "SVGMatrix", "b");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -347,24 +316,24 @@ void setJSSVGMatrixB(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 }
 
 
-void setJSSVGMatrixC(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixC(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "c");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "c");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "c");
+            throwSetterTypeError(*state, "SVGMatrix", "c");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -373,24 +342,24 @@ void setJSSVGMatrixC(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 }
 
 
-void setJSSVGMatrixD(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixD(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "d");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "d");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "d");
+            throwSetterTypeError(*state, "SVGMatrix", "d");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -399,24 +368,24 @@ void setJSSVGMatrixD(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 }
 
 
-void setJSSVGMatrixE(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixE(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "e");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "e");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "e");
+            throwSetterTypeError(*state, "SVGMatrix", "e");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -425,24 +394,24 @@ void setJSSVGMatrixE(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 }
 
 
-void setJSSVGMatrixF(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGMatrixF(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGMatrixPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGMatrix", "f");
+            reportDeprecatedSetterError(*state, "SVGMatrix", "f");
         else
-            throwSetterTypeError(*exec, "SVGMatrix", "f");
+            throwSetterTypeError(*state, "SVGMatrix", "f");
         return;
     }
-    auto& impl = castedThis->impl();
-    double nativeValue = value.toNumber(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    double nativeValue = value.toNumber(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGMatrix& podImpl = impl.propertyReference();
@@ -453,254 +422,254 @@ void setJSSVGMatrixF(ExecState* exec, JSObject* baseObject, EncodedJSValue thisV
 
 JSValue JSSVGMatrix::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGMatrixConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGMatrixConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionMultiply(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionMultiply(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "multiply");
+        return throwThisTypeError(*state, "SVGMatrix", "multiply");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    if (!exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(JSSVGMatrix::info()))
-        return throwArgumentTypeError(*exec, 0, "secondMatrix", "SVGMatrix", "multiply", "SVGMatrix");
-    SVGPropertyTearOff<SVGMatrix>* secondMatrix = JSSVGMatrix::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    if (!state->argument(0).isUndefinedOrNull() && !state->argument(0).inherits(JSSVGMatrix::info()))
+        return throwArgumentTypeError(*state, 0, "secondMatrix", "SVGMatrix", "multiply", "SVGMatrix");
+    SVGPropertyTearOff<SVGMatrix>* secondMatrix = JSSVGMatrix::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     if (!secondMatrix) {
-        setDOMException(exec, TYPE_MISMATCH_ERR);
+        setDOMException(state, TYPE_MISMATCH_ERR);
         return JSValue::encode(jsUndefined());
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.multiply(secondMatrix->propertyReference()))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.multiply(secondMatrix->propertyReference()))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionInverse(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionInverse(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "inverse");
+        return throwThisTypeError(*state, "SVGMatrix", "inverse");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.inverse(ec))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.inverse(ec))));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionTranslate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionTranslate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "translate");
+        return throwThisTypeError(*state, "SVGMatrix", "translate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.translate(x, y))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.translate(x, y))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionScale(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionScale(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "scale");
+        return throwThisTypeError(*state, "SVGMatrix", "scale");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float scaleFactor = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float scaleFactor = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.scale(scaleFactor))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.scale(scaleFactor))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionScaleNonUniform(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionScaleNonUniform(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "scaleNonUniform");
+        return throwThisTypeError(*state, "SVGMatrix", "scaleNonUniform");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float scaleFactorX = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float scaleFactorX = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float scaleFactorY = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float scaleFactorY = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.scaleNonUniform(scaleFactorX, scaleFactorY))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.scaleNonUniform(scaleFactorX, scaleFactorY))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionRotate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionRotate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "rotate");
+        return throwThisTypeError(*state, "SVGMatrix", "rotate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.rotate(angle))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.rotate(angle))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionRotateFromVector(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionRotateFromVector(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "rotateFromVector");
+        return throwThisTypeError(*state, "SVGMatrix", "rotateFromVector");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    float x = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float x = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float y = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float y = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.rotateFromVector(x, y, ec))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.rotateFromVector(x, y, ec))));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionFlipX(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionFlipX(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "flipX");
+        return throwThisTypeError(*state, "SVGMatrix", "flipX");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.flipX())));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.flipX())));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionFlipY(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionFlipY(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "flipY");
+        return throwThisTypeError(*state, "SVGMatrix", "flipY");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.flipY())));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.flipY())));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionSkewX(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionSkewX(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "skewX");
+        return throwThisTypeError(*state, "SVGMatrix", "skewX");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.skewX(angle))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.skewX(angle))));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionSkewY(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGMatrixPrototypeFunctionSkewY(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGMatrix* castedThis = jsDynamicCast<JSSVGMatrix*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGMatrix", "skewY");
+        return throwThisTypeError(*state, "SVGMatrix", "skewY");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGMatrix::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGMatrix& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    float angle = exec->argument(0).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    float angle = state->argument(0).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.skewY(angle))));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(SVGPropertyTearOff<SVGMatrix>::create(podImpl.skewY(angle))));
     return JSValue::encode(result);
 }
 
@@ -715,7 +684,14 @@ void JSSVGMatrixOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsSVGMatrix = jsCast<JSSVGMatrix*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGMatrix->impl(), jsSVGMatrix);
+    uncacheWrapper(world, &jsSVGMatrix->wrapped(), jsSVGMatrix);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGMatrix>* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGMatrix, SVGPropertyTearOff<SVGMatrix>>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGMatrix>* impl)
@@ -730,7 +706,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyT
 SVGPropertyTearOff<SVGMatrix>* JSSVGMatrix::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGMatrix*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

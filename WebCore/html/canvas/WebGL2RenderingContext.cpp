@@ -950,7 +950,7 @@ WebGLExtension* WebGL2RenderingContext::getExtension(const String& name)
     if (isContextLostOrPending())
         return nullptr;
 
-    if (equalIgnoringCase(name, "WEBKIT_EXT_texture_filter_anisotropic")
+    if ((equalIgnoringCase(name, "EXT_texture_filter_anisotropic") || equalIgnoringCase(name, "WEBKIT_EXT_texture_filter_anisotropic"))
         && m_context->getExtensions()->supports("GL_EXT_texture_filter_anisotropic")) {
         if (!m_extTextureFilterAnisotropic) {
             m_context->getExtensions()->ensureEnabled("GL_EXT_texture_filter_anisotropic");
@@ -1021,20 +1021,18 @@ WebGLExtension* WebGL2RenderingContext::getExtension(const String& name)
         }
         return m_webglDepthTexture.get();
     }
-    if (allowPrivilegedExtensions()) {
-        if (equalIgnoringCase(name, "WEBGL_debug_renderer_info")) {
-            if (!m_webglDebugRendererInfo)
-                m_webglDebugRendererInfo = std::make_unique<WebGLDebugRendererInfo>(this);
-            return m_webglDebugRendererInfo.get();
-        }
-        if (equalIgnoringCase(name, "WEBGL_debug_shaders")
-            && m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source")) {
-            if (!m_webglDebugShaders)
-                m_webglDebugShaders = std::make_unique<WebGLDebugShaders>(this);
-            return m_webglDebugShaders.get();
-        }
+    if (equalIgnoringCase(name, "WEBGL_debug_renderer_info")) {
+        if (!m_webglDebugRendererInfo)
+            m_webglDebugRendererInfo = std::make_unique<WebGLDebugRendererInfo>(this);
+        return m_webglDebugRendererInfo.get();
     }
-    
+    if (equalIgnoringCase(name, "WEBGL_debug_shaders")
+        && m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source")) {
+        if (!m_webglDebugShaders)
+            m_webglDebugShaders = std::make_unique<WebGLDebugShaders>(this);
+        return m_webglDebugShaders.get();
+    }
+
     return nullptr;
 }
 
@@ -1064,12 +1062,10 @@ Vector<String> WebGL2RenderingContext::getSupportedExtensions()
     if (WebGLDepthTexture::supported(graphicsContext3D()))
         result.append("WEBGL_depth_texture");
     result.append("WEBGL_lose_context");
-    if (allowPrivilegedExtensions()) {
-        if (m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source"))
-            result.append("WEBGL_debug_shaders");
-        result.append("WEBGL_debug_renderer_info");
-    }
-    
+    if (m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source"))
+        result.append("WEBGL_debug_shaders");
+    result.append("WEBGL_debug_renderer_info");
+
     return result;
 }
 
@@ -1423,8 +1419,11 @@ void WebGL2RenderingContext::texSubImage2D(GC3Denum target, GC3Dint level, GC3Di
         return;
     
     RefPtr<Image> imageForRender = image->cachedImage()->imageForRenderer(image->renderer());
+    if (!imageForRender)
+        return;
+
     if (imageForRender->isSVGImage())
-        imageForRender = drawImageIntoBuffer(imageForRender.get(), image->width(), image->height(), 1);
+        imageForRender = drawImageIntoBuffer(*imageForRender, image->width(), image->height(), 1);
     
     if (!imageForRender || !validateTexFunc("texSubImage2D", TexSubImage, SourceHTMLImageElement, target, level, GraphicsContext3D::NONE, imageForRender->width(), imageForRender->height(), 0, format, type, xoffset, yoffset))
         return;

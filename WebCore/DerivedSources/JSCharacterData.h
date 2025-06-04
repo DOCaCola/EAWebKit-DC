@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSCharacterData* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CharacterData>&& impl)
     {
-        JSCharacterData* ptr = new (NotNull, JSC::allocateCell<JSCharacterData>(globalObject->vm().heap)) JSCharacterData(structure, globalObject, WTF::move(impl));
+        JSCharacterData* ptr = new (NotNull, JSC::allocateCell<JSCharacterData>(globalObject->vm().heap)) JSCharacterData(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,15 +49,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue before(JSC::ExecState*);
-    JSC::JSValue after(JSC::ExecState*);
-    JSC::JSValue replaceWith(JSC::ExecState*);
-    CharacterData& impl() const
+    JSC::JSValue before(JSC::ExecState&);
+    JSC::JSValue after(JSC::ExecState&);
+    JSC::JSValue replaceWith(JSC::ExecState&);
+    CharacterData& wrapped() const
     {
-        return static_cast<CharacterData&>(Base::impl());
+        return static_cast<CharacterData&>(Base::wrapped());
     }
 protected:
-    JSCharacterData(JSC::Structure*, JSDOMGlobalObject*, Ref<CharacterData>&&);
+    JSCharacterData(JSC::Structure*, JSDOMGlobalObject&, Ref<CharacterData>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -25,6 +25,7 @@
 #include "ExceptionCode.h"
 #include "JSBlob.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMURL.h"
 #include "JSErrorHandler.h"
 #include "JSEvent.h"
@@ -101,6 +102,34 @@ JSC::EncodedJSValue jsWorkerGlobalScopeNavigator(JSC::ExecState*, JSC::JSObject*
 void setJSWorkerGlobalScopeNavigator(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsWorkerGlobalScopeWebkitURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSWorkerGlobalScopeWebkitURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#if ENABLE(WEB_SOCKETS)
+JSC::EncodedJSValue jsWorkerGlobalScopeWebSocketConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeWebSocketConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+#if ENABLE(CHANNEL_MESSAGING)
+JSC::EncodedJSValue jsWorkerGlobalScopeMessageChannelConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeMessageChannelConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+#endif
+JSC::EncodedJSValue jsWorkerGlobalScopeMessageEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeMessageEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeBlobConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeBlobConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeFileReaderConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeFileReaderConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeFileReaderSyncConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeFileReaderSyncConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeImageDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeImageDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeEventSourceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeEventSourceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeWorkerLocationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeWorkerLocationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
+JSC::EncodedJSValue jsWorkerGlobalScopeXMLHttpRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+void setJSWorkerGlobalScopeXMLHttpRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #if ENABLE(INDEXED_DATABASE_IN_WORKERS)
 JSC::EncodedJSValue jsWorkerGlobalScopeWebkitIndexedDB(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
@@ -183,129 +212,22 @@ void setJSWorkerGlobalScopeIDBTransactionConstructor(JSC::ExecState*, JSC::JSObj
 JSC::EncodedJSValue jsWorkerGlobalScopeIDBVersionChangeEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSWorkerGlobalScopeIDBVersionChangeEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
-#if ENABLE(WEB_SOCKETS)
-JSC::EncodedJSValue jsWorkerGlobalScopeWebSocketConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeWebSocketConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
-#if ENABLE(CHANNEL_MESSAGING)
-JSC::EncodedJSValue jsWorkerGlobalScopeMessageChannelConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeMessageChannelConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-#endif
-JSC::EncodedJSValue jsWorkerGlobalScopeMessageEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeMessageEventConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeBlobConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeBlobConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeFileReaderConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeFileReaderConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeFileReaderSyncConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeFileReaderSyncConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeURLConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeImageDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeImageDataConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeEventSourceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeEventSourceConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeWorkerLocationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeWorkerLocationConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
-JSC::EncodedJSValue jsWorkerGlobalScopeXMLHttpRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-void setJSWorkerGlobalScopeXMLHttpRequestConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsWorkerGlobalScopeConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
-class JSWorkerGlobalScopeConstructor : public DOMConstructorObject {
-private:
-    JSWorkerGlobalScopeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSWorkerGlobalScopeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWorkerGlobalScopeConstructor* ptr = new (NotNull, JSC::allocateCell<JSWorkerGlobalScopeConstructor>(vm.heap)) JSWorkerGlobalScopeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSWorkerGlobalScope> JSWorkerGlobalScopeConstructor;
 
 /* Hash table */
 
 static const struct CompactHashIndex JSWorkerGlobalScopeTableIndex[134] = {
     { -1, -1 },
-    { 14, 130 },
+    { 26, 133 },
     { -1, -1 },
     { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 23, -1 },
-    { 4, -1 },
-    { 15, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 18, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 9, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 40, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 26, -1 },
-    { -1, -1 },
-    { 1, -1 },
-    { -1, -1 },
-    { 22, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 31, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 13, -1 },
-    { 2, -1 },
-    { -1, -1 },
-    { 34, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 33, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 12, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
     { 35, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 16, -1 },
-    { -1, -1 },
+    { 4, -1 },
     { 27, -1 },
     { -1, -1 },
     { -1, -1 },
@@ -313,20 +235,11 @@ static const struct CompactHashIndex JSWorkerGlobalScopeTableIndex[134] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 36, -1 },
+    { 30, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { -1, -1 },
-    { 25, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { -1, -1 },
-    { 0, 131 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
@@ -335,198 +248,260 @@ static const struct CompactHashIndex JSWorkerGlobalScopeTableIndex[134] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 29, -1 },
     { -1, -1 },
     { -1, -1 },
+    { 19, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 38, -1 },
+    { -1, -1 },
+    { 1, -1 },
+    { -1, -1 },
+    { 34, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 10, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 25, -1 },
+    { 2, -1 },
+    { -1, -1 },
+    { 13, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 12, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 24, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 14, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 28, -1 },
     { -1, -1 },
     { 39, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 7, 128 },
     { -1, -1 },
     { -1, -1 },
-    { 6, -1 },
-    { 24, -1 },
-    { 3, -1 },
     { -1, -1 },
-    { 11, -1 },
     { -1, -1 },
-    { 17, 133 },
+    { 15, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
     { -1, -1 },
     { -1, -1 },
     { 37, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 0, 128 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 33, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 8, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 18, -1 },
+    { -1, -1 },
+    { -1, -1 },
+    { 7, 129 },
+    { -1, -1 },
+    { -1, -1 },
+    { 6, -1 },
+    { 36, -1 },
+    { 3, -1 },
+    { -1, -1 },
+    { 23, -1 },
+    { -1, -1 },
+    { 17, 131 },
+    { -1, -1 },
+    { -1, -1 },
+    { 16, -1 },
     { 5, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 10, 129 },
-    { 28, -1 },
+    { 22, 132 },
+    { 40, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 8, 132 },
-    { 19, -1 },
+    { 9, -1 },
+    { 11, 130 },
     { 20, -1 },
-    { 30, -1 },
+    { 29, -1 },
+    { 31, -1 },
     { 32, -1 },
-    { 38, -1 },
 };
 
 
 static const HashTableValue JSWorkerGlobalScopeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "self", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeSelf), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeSelf) },
-    { "location", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeLocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeLocation) },
-    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnerror) },
-    { "onoffline", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnoffline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnoffline) },
-    { "ononline", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnonline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnonline) },
-    { "navigator", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeNavigator), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeNavigator) },
-    { "webkitURL", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitURLConstructor) },
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIndexedDB", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIndexedDB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBCursor", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBCursorConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBDatabase", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBDatabaseConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBDatabaseConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBFactory", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBFactoryConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBIndex", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBIndexConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBKeyRange", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBKeyRangeConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBObjectStore", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBObjectStoreConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBRequest", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBRequestConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "webkitIDBTransaction", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBTransactionConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "indexedDB", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIndexedDB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBCursor", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBCursorConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBCursorWithValue", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBCursorWithValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBCursorWithValueConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBDatabase", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBDatabaseConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBDatabaseConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBFactory", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBFactoryConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBIndex", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBIndexConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBKeyRange", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBKeyRangeConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBObjectStore", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBObjectStoreConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBOpenDBRequest", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBOpenDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBOpenDBRequestConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBRequest", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBRequestConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBTransaction", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBTransactionConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-    { "IDBVersionChangeEvent", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBVersionChangeEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBVersionChangeEventConstructor) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "self", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeSelf), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeSelf) } },
+    { "location", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeLocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeLocation) } },
+    { "onerror", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnerror), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnerror) } },
+    { "onoffline", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnoffline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnoffline) } },
+    { "ononline", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeOnonline), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeOnonline) } },
+    { "navigator", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeNavigator), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeNavigator) } },
+    { "webkitURL", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitURLConstructor) } },
 #if ENABLE(WEB_SOCKETS)
-    { "WebSocket", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebSocketConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebSocketConstructor) },
+    { "WebSocket", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebSocketConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebSocketConstructor) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(CHANNEL_MESSAGING)
-    { "MessageChannel", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeMessageChannelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeMessageChannelConstructor) },
+    { "MessageChannel", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeMessageChannelConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeMessageChannelConstructor) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "MessageEvent", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeMessageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeMessageEventConstructor) },
-    { "Blob", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeBlobConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeBlobConstructor) },
-    { "FileReader", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeFileReaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeFileReaderConstructor) },
-    { "FileReaderSync", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeFileReaderSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeFileReaderSyncConstructor) },
-    { "URL", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeURLConstructor) },
-    { "ImageData", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeImageDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeImageDataConstructor) },
-    { "EventSource", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeEventSourceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeEventSourceConstructor) },
-    { "WorkerGlobalScope", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWorkerGlobalScopeConstructor) },
-    { "WorkerLocation", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWorkerLocationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWorkerLocationConstructor) },
-    { "XMLHttpRequest", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeXMLHttpRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeXMLHttpRequestConstructor) },
+    { "MessageEvent", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeMessageEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeMessageEventConstructor) } },
+    { "Blob", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeBlobConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeBlobConstructor) } },
+    { "FileReader", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeFileReaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeFileReaderConstructor) } },
+    { "FileReaderSync", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeFileReaderSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeFileReaderSyncConstructor) } },
+    { "URL", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeURLConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeURLConstructor) } },
+    { "ImageData", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeImageDataConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeImageDataConstructor) } },
+    { "EventSource", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeEventSourceConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeEventSourceConstructor) } },
+    { "WorkerGlobalScope", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWorkerGlobalScopeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWorkerGlobalScopeConstructor) } },
+    { "WorkerLocation", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWorkerLocationConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWorkerLocationConstructor) } },
+    { "XMLHttpRequest", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeXMLHttpRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeXMLHttpRequestConstructor) } },
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIndexedDB", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIndexedDB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBCursor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBCursorConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBDatabase", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBDatabaseConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBDatabaseConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBFactory", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBFactoryConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBIndex", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBIndexConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBKeyRange", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBKeyRangeConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBObjectStore", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBObjectStoreConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBRequest", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBRequestConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "webkitIDBTransaction", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeWebkitIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeWebkitIDBTransactionConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "indexedDB", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIndexedDB), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBCursor", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBCursorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBCursorConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBCursorWithValue", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBCursorWithValueConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBCursorWithValueConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBDatabase", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBDatabaseConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBDatabaseConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBFactory", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBFactoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBFactoryConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBIndex", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBIndexConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBIndexConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBKeyRange", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBKeyRangeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBKeyRangeConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBObjectStore", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBObjectStoreConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBObjectStoreConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBOpenDBRequest", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBOpenDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBOpenDBRequestConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBRequest", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBRequestConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBRequestConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBTransaction", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBTransactionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBTransactionConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+    { "IDBVersionChangeEvent", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWorkerGlobalScopeIDBVersionChangeEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSWorkerGlobalScopeIDBVersionChangeEventConstructor) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
 };
 
-static const HashTable JSWorkerGlobalScopeTable = { 41, 127, true, JSWorkerGlobalScopeTableValues, 0, JSWorkerGlobalScopeTableIndex };
-const ClassInfo JSWorkerGlobalScopeConstructor::s_info = { "WorkerGlobalScopeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerGlobalScopeConstructor) };
-
-JSWorkerGlobalScopeConstructor::JSWorkerGlobalScopeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSWorkerGlobalScopeTable = { 41, 127, true, JSWorkerGlobalScopeTableValues, JSWorkerGlobalScopeTableIndex };
+template<> void JSWorkerGlobalScopeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWorkerGlobalScopeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, globalObject->prototype(), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, globalObject.prototype(), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WorkerGlobalScope"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWorkerGlobalScopeConstructor::s_info = { "WorkerGlobalScopeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWorkerGlobalScopeConstructor) };
 
 /* Hash table for prototype */
 
@@ -570,26 +545,26 @@ static const struct CompactHashIndex JSWorkerGlobalScopePrototypeTableIndex[34] 
 
 static const HashTableValue JSWorkerGlobalScopePrototypeTableValues[] =
 {
-    { "close", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClose), (intptr_t) (0) },
-    { "importScripts", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionImportScripts), (intptr_t) (0) },
-    { "addEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionAddEventListener), (intptr_t) (2) },
-    { "removeEventListener", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionRemoveEventListener), (intptr_t) (2) },
-    { "dispatchEvent", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionDispatchEvent), (intptr_t) (1) },
-    { "setTimeout", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionSetTimeout), (intptr_t) (1) },
-    { "clearTimeout", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClearTimeout), (intptr_t) (0) },
-    { "setInterval", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionSetInterval), (intptr_t) (1) },
-    { "clearInterval", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClearInterval), (intptr_t) (0) },
+    { "close", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClose), (intptr_t) (0) } },
+    { "importScripts", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionImportScripts), (intptr_t) (0) } },
+    { "addEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionAddEventListener), (intptr_t) (2) } },
+    { "removeEventListener", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionRemoveEventListener), (intptr_t) (2) } },
+    { "dispatchEvent", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionDispatchEvent), (intptr_t) (1) } },
+    { "setTimeout", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionSetTimeout), (intptr_t) (1) } },
+    { "clearTimeout", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClearTimeout), (intptr_t) (0) } },
+    { "setInterval", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionSetInterval), (intptr_t) (1) } },
+    { "clearInterval", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsWorkerGlobalScopePrototypeFunctionClearInterval), (intptr_t) (0) } },
 };
 
-static const HashTable JSWorkerGlobalScopePrototypeTable = { 9, 31, false, JSWorkerGlobalScopePrototypeTableValues, 0, JSWorkerGlobalScopePrototypeTableIndex };
+static const HashTable JSWorkerGlobalScopePrototypeTable = { 9, 31, false, JSWorkerGlobalScopePrototypeTableValues, JSWorkerGlobalScopePrototypeTableIndex };
 const ClassInfo JSWorkerGlobalScopePrototype::s_info = { "WorkerGlobalScopePrototype", &Base::s_info, &JSWorkerGlobalScopePrototypeTable, CREATE_METHOD_TABLE(JSWorkerGlobalScopePrototype) };
 
-bool JSWorkerGlobalScopePrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSWorkerGlobalScopePrototype::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
-    VM& vm = exec->vm();
+    VM& vm = state->vm();
     UNUSED_PARAM(vm);
     auto* thisObject = jsCast<JSWorkerGlobalScopePrototype*>(object);
-    return getStaticFunctionSlot<JSObject>(exec, JSWorkerGlobalScopePrototypeTable, thisObject, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(state, JSWorkerGlobalScopePrototypeTable, thisObject, propertyName, slot);
 }
 
 const ClassInfo JSWorkerGlobalScope::s_info = { "WorkerGlobalScope", &Base::s_info, &JSWorkerGlobalScopeTable, CREATE_METHOD_TABLE(JSWorkerGlobalScope) };
@@ -599,1026 +574,1028 @@ JSWorkerGlobalScope::JSWorkerGlobalScope(VM& vm, Structure* structure, Ref<Worke
 {
 }
 
-bool JSWorkerGlobalScope::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSWorkerGlobalScope::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSWorkerGlobalScope*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSWorkerGlobalScope, Base>(exec, JSWorkerGlobalScopeTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSWorkerGlobalScope, Base>(state, JSWorkerGlobalScopeTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSWorkerGlobalScope::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSWorkerGlobalScope::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSWorkerGlobalScope*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsWorkerGlobalScopeSelf(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeSelf(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.self()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.self()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeLocation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeLocation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.location()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.location()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeOnerror(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeOnerror(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().errorEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().errorEvent));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeOnoffline(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeOnoffline(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().offlineEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().offlineEvent));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeOnonline(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeOnonline(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().onlineEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().onlineEvent));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeNavigator(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeNavigator(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.navigator()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.navigator()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeWebkitURLConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeWebkitURLConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSDOMURL::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSDOMURL::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIndexedDB(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(WorkerGlobalScopeIndexedDatabase::indexedDB(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBCursorConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBCursor::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBDatabaseConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBDatabase::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBFactoryConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBFactory::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBIndexConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBIndex::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBKeyRangeConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBKeyRange::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBObjectStoreConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBObjectStore::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBRequestConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBRequest::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeWebkitIDBTransactionConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBTransaction::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIndexedDB(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(WorkerGlobalScopeIndexedDatabase::indexedDB(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBCursorConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBCursor::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBCursorWithValueConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBCursorWithValue::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBDatabaseConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBDatabase::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBFactoryConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBFactory::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBIndexConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBIndex::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBKeyRangeConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBKeyRange::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBObjectStoreConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBObjectStore::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBOpenDBRequestConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBOpenDBRequest::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBRequestConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBRequest::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBTransactionConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBTransaction::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-EncodedJSValue jsWorkerGlobalScopeIDBVersionChangeEventConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSIDBVersionChangeEvent::getConstructor(exec->vm(), castedThis->globalObject()));
-}
-
-#endif
 
 #if ENABLE(WEB_SOCKETS)
-EncodedJSValue jsWorkerGlobalScopeWebSocketConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeWebSocketConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     if (!RuntimeEnabledFeatures::sharedFeatures().webSocketEnabled())
         return JSValue::encode(jsUndefined());
-    return JSValue::encode(JSWebSocket::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSWebSocket::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 #endif
 
 #if ENABLE(CHANNEL_MESSAGING)
-EncodedJSValue jsWorkerGlobalScopeMessageChannelConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeMessageChannelConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSMessageChannel::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSMessageChannel::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 #endif
 
-EncodedJSValue jsWorkerGlobalScopeMessageEventConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeMessageEventConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSMessageEvent::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSMessageEvent::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeBlobConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeBlobConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSBlob::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSBlob::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeFileReaderConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeFileReaderConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSFileReader::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSFileReader::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeFileReaderSyncConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeFileReaderSyncConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSFileReaderSync::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSFileReaderSync::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeURLConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeURLConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSDOMURL::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSDOMURL::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeImageDataConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeImageDataConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSImageData::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSImageData::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeEventSourceConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeEventSourceConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSEventSource::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSEventSource::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeWorkerGlobalScopeConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeWorkerGlobalScopeConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSWorkerGlobalScope::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSWorkerGlobalScope::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeWorkerLocationConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeWorkerLocationConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSWorkerLocation::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSWorkerLocation::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeXMLHttpRequestConstructor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWorkerGlobalScopeXMLHttpRequestConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    return JSValue::encode(JSXMLHttpRequest::getConstructor(exec->vm(), castedThis->globalObject()));
+    return JSValue::encode(JSXMLHttpRequest::getConstructor(state->vm(), castedThis->globalObject()));
 }
 
 
-EncodedJSValue jsWorkerGlobalScopeConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIndexedDB(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(WebCore::WorkerGlobalScopeIndexedDatabase::indexedDB(impl)));
+    return JSValue::encode(result);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBCursorConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBCursor::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBDatabaseConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBDatabase::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBFactoryConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBFactory::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBIndexConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBIndex::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBKeyRangeConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBKeyRange::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBObjectStoreConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBObjectStore::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBRequestConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBRequest::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeWebkitIDBTransactionConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBTransaction::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIndexedDB(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(WebCore::WorkerGlobalScopeIndexedDatabase::indexedDB(impl)));
+    return JSValue::encode(result);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBCursorConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBCursor::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBCursorWithValueConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBCursorWithValue::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBDatabaseConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBDatabase::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBFactoryConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBFactory::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBIndexConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBIndex::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBKeyRangeConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBKeyRange::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBObjectStoreConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBObjectStore::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBOpenDBRequestConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBOpenDBRequest::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBRequestConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBRequest::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBTransactionConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBTransaction::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+EncodedJSValue jsWorkerGlobalScopeIDBVersionChangeEventConstructor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    return JSValue::encode(JSIDBVersionChangeEvent::getConstructor(state->vm(), castedThis->globalObject()));
+}
+
+#endif
+
+EncodedJSValue jsWorkerGlobalScopeConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSWorkerGlobalScope* domObject = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWorkerGlobalScope::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWorkerGlobalScope::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSWorkerGlobalScopeSelf(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeSelf(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in object.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "self"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "self"), value);
 }
 
 
-void setJSWorkerGlobalScopeLocation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeLocation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in object.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "location"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "location"), value);
 }
 
 
-void setJSWorkerGlobalScopeOnerror(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeOnerror(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    castedThis->impl().setAttributeEventListener(eventNames().errorEvent, createJSErrorHandler(exec, value, castedThis));
+    castedThis->wrapped().setAttributeEventListener(eventNames().errorEvent, createJSErrorHandler(state, value, castedThis));
 }
 
 
-void setJSWorkerGlobalScopeOnoffline(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeOnoffline(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().offlineEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().offlineEvent, value);
 }
 
 
-void setJSWorkerGlobalScopeOnonline(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeOnonline(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().onlineEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().onlineEvent, value);
 }
 
 
-void setJSWorkerGlobalScopeNavigator(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeNavigator(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in object.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "navigator"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "navigator"), value);
 }
 
 
-void setJSWorkerGlobalScopeWebkitURLConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeWebkitURLConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitURL"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitURL"), value);
 }
 
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBCursorConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBCursor"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBDatabaseConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBDatabase"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBFactoryConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBFactory"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBIndexConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBIndex"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBKeyRangeConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBKeyRange"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBObjectStoreConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBObjectStore"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBRequestConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBRequest"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeWebkitIDBTransactionConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "webkitIDBTransaction"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBCursorConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBCursor"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBCursorWithValueConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBCursorWithValue"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBDatabaseConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBDatabase"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBFactoryConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBFactory"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBIndexConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBIndex"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBKeyRangeConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBKeyRange"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBObjectStoreConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBObjectStore"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBOpenDBRequestConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBOpenDBRequest"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBRequestConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBRequest"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBTransactionConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBTransaction"), value);
-}
-
-#endif
-
-#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
-void setJSWorkerGlobalScopeIDBVersionChangeEventConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
-{
-    JSValue value = JSValue::decode(encodedValue);
-    UNUSED_PARAM(baseObject);
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
-    // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "IDBVersionChangeEvent"), value);
-}
-
-#endif
 
 #if ENABLE(WEB_SOCKETS)
-void setJSWorkerGlobalScopeWebSocketConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeWebSocketConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "WebSocket"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "WebSocket"), value);
 }
 
 #endif
 
 #if ENABLE(CHANNEL_MESSAGING)
-void setJSWorkerGlobalScopeMessageChannelConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeMessageChannelConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "MessageChannel"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "MessageChannel"), value);
 }
 
 #endif
 
-void setJSWorkerGlobalScopeMessageEventConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeMessageEventConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "MessageEvent"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "MessageEvent"), value);
 }
 
 
-void setJSWorkerGlobalScopeBlobConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeBlobConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "Blob"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "Blob"), value);
 }
 
 
-void setJSWorkerGlobalScopeFileReaderConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeFileReaderConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "FileReader"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "FileReader"), value);
 }
 
 
-void setJSWorkerGlobalScopeFileReaderSyncConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeFileReaderSyncConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "FileReaderSync"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "FileReaderSync"), value);
 }
 
 
-void setJSWorkerGlobalScopeURLConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeURLConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "URL"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "URL"), value);
 }
 
 
-void setJSWorkerGlobalScopeImageDataConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeImageDataConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "ImageData"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "ImageData"), value);
 }
 
 
-void setJSWorkerGlobalScopeEventSourceConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeEventSourceConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "EventSource"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "EventSource"), value);
 }
 
 
-void setJSWorkerGlobalScopeWorkerGlobalScopeConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeWorkerGlobalScopeConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "WorkerGlobalScope"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "WorkerGlobalScope"), value);
 }
 
 
-void setJSWorkerGlobalScopeWorkerLocationConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeWorkerLocationConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "WorkerLocation"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "WorkerLocation"), value);
 }
 
 
-void setJSWorkerGlobalScopeXMLHttpRequestConstructor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSWorkerGlobalScopeXMLHttpRequestConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
     // Shadowing a built-in constructor.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "XMLHttpRequest"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "XMLHttpRequest"), value);
 }
 
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBCursorConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBCursor"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBDatabaseConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBDatabase"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBFactoryConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBFactory"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBIndexConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBIndex"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBKeyRangeConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBKeyRange"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBObjectStoreConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBObjectStore"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBRequestConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBRequest"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeWebkitIDBTransactionConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "webkitIDBTransaction"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBCursorConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBCursor"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBCursorWithValueConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBCursorWithValue"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBDatabaseConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBDatabase"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBFactoryConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBFactory"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBIndexConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBIndex"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBKeyRangeConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBKeyRange"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBObjectStoreConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBObjectStore"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBOpenDBRequestConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBOpenDBRequest"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBRequestConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBRequest"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBTransactionConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBTransaction"), value);
+}
+
+#endif
+
+#if ENABLE(INDEXED_DATABASE_IN_WORKERS)
+void setJSWorkerGlobalScopeIDBVersionChangeEventConstructor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+{
+    JSValue value = JSValue::decode(encodedValue);
+    UNUSED_PARAM(baseObject);
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(JSValue::decode(thisValue));
+    // Shadowing a built-in constructor.
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "IDBVersionChangeEvent"), value);
+}
+
+#endif
 
 JSValue JSWorkerGlobalScope::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWorkerGlobalScopeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWorkerGlobalScopeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClose(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClose(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.close();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionImportScripts(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionImportScripts(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    return JSValue::encode(castedThis->importScripts(exec));
+    return JSValue::encode(castedThis->importScripts(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionAddEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionAddEventListener(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.addEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForAdd(*exec, *asObject(listener), *castedThis), exec->argument(2).toBoolean(exec));
+    impl.addEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForAdd(*state, *asObject(listener), *castedThis), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionRemoveEventListener(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionRemoveEventListener(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
-    JSValue listener = exec->argument(1);
+    auto& impl = castedThis->wrapped();
+    JSValue listener = state->argument(1);
     if (UNLIKELY(!listener.isObject()))
         return JSValue::encode(jsUndefined());
-    impl.removeEventListener(exec->argument(0).toString(exec)->toAtomicString(exec), createJSEventListenerForRemove(*exec, *asObject(listener), *castedThis).ptr(), exec->argument(2).toBoolean(exec));
+    impl.removeEventListener(state->argument(0).toString(state)->toAtomicString(state), createJSEventListenerForRemove(*state, *asObject(listener), *castedThis).ptr(), state->argument(2).toBoolean(state));
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionDispatchEvent(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionDispatchEvent(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    Event* event = JSEvent::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Event* event = JSEvent::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     JSValue result = jsBoolean(impl.dispatchEvent(event, ec));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionSetTimeout(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionSetTimeout(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    return JSValue::encode(castedThis->setTimeout(exec));
+    return JSValue::encode(castedThis->setTimeout(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClearTimeout(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClearTimeout(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
-    int handle = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int handle = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearTimeout(handle);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionSetInterval(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionSetInterval(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    return JSValue::encode(castedThis->setInterval(exec));
+    return JSValue::encode(castedThis->setInterval(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClearInterval(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsWorkerGlobalScopePrototypeFunctionClearInterval(ExecState* state)
 {
-    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(exec->thisValue().toThis(exec, NotStrictMode));
+    JSWorkerGlobalScope* castedThis = toJSWorkerGlobalScope(state->thisValue().toThis(state, NotStrictMode));
     if (UNLIKELY(!castedThis))
-        return throwVMTypeError(exec);
+        return throwVMTypeError(state);
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSWorkerGlobalScope::info());
-    auto& impl = castedThis->impl();
-    int handle = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    int handle = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.clearInterval(handle);
     return JSValue::encode(jsUndefined());
@@ -1629,7 +1606,7 @@ void JSWorkerGlobalScope::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSWorkerGlobalScope*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
     thisObject->visitAdditionalChildren(visitor);
 }
 

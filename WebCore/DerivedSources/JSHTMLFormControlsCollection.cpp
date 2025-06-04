@@ -22,8 +22,8 @@
 #include "JSHTMLFormControlsCollection.h"
 
 #include "Element.h"
-#include "HTMLFormControlsCollection.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "JSNodeCustom.h"
 #include "Node.h"
@@ -69,26 +69,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLFormControlsCollectionConstructor : public DOMConstructorObject {
-private:
-    JSHTMLFormControlsCollectionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLFormControlsCollectionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLFormControlsCollectionConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLFormControlsCollectionConstructor>(vm.heap)) JSHTMLFormControlsCollectionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLFormControlsCollection> JSHTMLFormControlsCollectionConstructor;
 
 /* Hash table */
 
@@ -100,31 +81,24 @@ static const struct CompactHashIndex JSHTMLFormControlsCollectionTableIndex[2] =
 
 static const HashTableValue JSHTMLFormControlsCollectionTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormControlsCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLFormControlsCollectionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSHTMLFormControlsCollectionTable = { 1, 1, true, JSHTMLFormControlsCollectionTableValues, 0, JSHTMLFormControlsCollectionTableIndex };
-const ClassInfo JSHTMLFormControlsCollectionConstructor::s_info = { "HTMLFormControlsCollectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormControlsCollectionConstructor) };
-
-JSHTMLFormControlsCollectionConstructor::JSHTMLFormControlsCollectionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHTMLFormControlsCollectionTable = { 1, 1, true, JSHTMLFormControlsCollectionTableValues, JSHTMLFormControlsCollectionTableIndex };
+template<> void JSHTMLFormControlsCollectionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLFormControlsCollectionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLFormControlsCollection::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLFormControlsCollection::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLFormControlsCollection"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLFormControlsCollectionConstructor::s_info = { "HTMLFormControlsCollectionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormControlsCollectionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLFormControlsCollectionPrototypeTableValues[] =
 {
-    { "namedItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLFormControlsCollectionPrototypeFunctionNamedItem), (intptr_t) (0) },
+    { "namedItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLFormControlsCollectionPrototypeFunctionNamedItem), (intptr_t) (0) } },
 };
 
 const ClassInfo JSHTMLFormControlsCollectionPrototype::s_info = { "HTMLFormControlsCollectionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLFormControlsCollectionPrototype) };
@@ -137,7 +111,7 @@ void JSHTMLFormControlsCollectionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLFormControlsCollection::s_info = { "HTMLFormControlsCollection", &Base::s_info, &JSHTMLFormControlsCollectionTable, CREATE_METHOD_TABLE(JSHTMLFormControlsCollection) };
 
-JSHTMLFormControlsCollection::JSHTMLFormControlsCollection(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLFormControlsCollection>&& impl)
+JSHTMLFormControlsCollection::JSHTMLFormControlsCollection(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLFormControlsCollection>&& impl)
     : JSHTMLCollection(structure, globalObject, WTF::move(impl))
 {
 }
@@ -152,86 +126,85 @@ JSObject* JSHTMLFormControlsCollection::getPrototype(VM& vm, JSGlobalObject* glo
     return getDOMPrototype<JSHTMLFormControlsCollection>(vm, globalObject);
 }
 
-bool JSHTMLFormControlsCollection::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHTMLFormControlsCollection::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFormControlsCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    JSValue proto = thisObject->prototype();
-    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(exec, propertyName))
-        return false;
-
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSHTMLFormControlsCollection>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
+    if (getStaticValueSlot<JSHTMLFormControlsCollection, Base>(state, JSHTMLFormControlsCollectionTable, thisObject, propertyName, slot))
         return true;
+    JSValue proto = thisObject->prototype();
+    if (proto.isObject() && jsCast<JSObject*>(proto)->hasProperty(state, propertyName))
+        return false;
+
+    if (!optionalIndex && thisObject->classInfo() == info()) {
+        JSValue value;
+        if (thisObject->nameGetter(state, propertyName, value)) {
+            slot.setValue(thisObject, ReadOnly | DontDelete | DontEnum, value);
+            return true;
+        }
     }
-    return getStaticValueSlot<JSHTMLFormControlsCollection, Base>(exec, JSHTMLFormControlsCollectionTable, thisObject, propertyName, slot);
+    return false;
 }
 
-bool JSHTMLFormControlsCollection::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHTMLFormControlsCollection::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHTMLFormControlsCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    Identifier propertyName = Identifier::from(exec, index);
-    if (canGetItemsForName(exec, &thisObject->impl(), propertyName)) {
-        slot.setCustom(thisObject, ReadOnly | DontDelete | DontEnum, thisObject->nameGetter);
-        return true;
-    }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHTMLFormControlsCollectionConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLFormControlsCollectionConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSHTMLFormControlsCollection* domObject = jsDynamicCast<JSHTMLFormControlsCollection*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLFormControlsCollection::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLFormControlsCollection::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHTMLFormControlsCollection::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSHTMLFormControlsCollection::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSHTMLFormControlsCollection*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    if (mode.includeDontEnumProperties()) {
+        for (auto& propertyName : thisObject->wrapped().supportedPropertyNames())
+            propertyNames.add(Identifier::fromString(state, propertyName));
+    }
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
 JSValue JSHTMLFormControlsCollection::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLFormControlsCollectionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLFormControlsCollectionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLFormControlsCollectionPrototypeFunctionNamedItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLFormControlsCollectionPrototypeFunctionNamedItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLFormControlsCollection* castedThis = jsDynamicCast<JSHTMLFormControlsCollection*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLFormControlsCollection", "namedItem");
+        return throwThisTypeError(*state, "HTMLFormControlsCollection", "namedItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLFormControlsCollection::info());
-    return JSValue::encode(castedThis->namedItem(exec));
+    return JSValue::encode(castedThis->namedItem(*state));
 }
 
 bool JSHTMLFormControlsCollectionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsHTMLFormControlsCollection = jsCast<JSHTMLFormControlsCollection*>(handle.slot()->asCell());
-    void* root = WebCore::root(jsHTMLFormControlsCollection->impl().ownerNode());
+    void* root = WebCore::root(jsHTMLFormControlsCollection->wrapped().ownerNode());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -239,7 +212,7 @@ void JSHTMLFormControlsCollectionOwner::finalize(JSC::Handle<JSC::Unknown> handl
 {
     auto* jsHTMLFormControlsCollection = jsCast<JSHTMLFormControlsCollection*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsHTMLFormControlsCollection->impl(), jsHTMLFormControlsCollection);
+    uncacheWrapper(world, &jsHTMLFormControlsCollection->wrapped(), jsHTMLFormControlsCollection);
 }
 
 

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGException : public JSDOMWrapper {
+class JSSVGException : public JSDOMWrapper<SVGException> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGException> Base;
     static JSSVGException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGException>&& impl)
     {
-        JSSVGException* ptr = new (NotNull, JSC::allocateCell<JSSVGException>(globalObject->vm().heap)) JSSVGException(structure, globalObject, WTF::move(impl));
+        JSSVGException* ptr = new (NotNull, JSC::allocateCell<JSSVGException>(globalObject->vm().heap)) JSSVGException(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static SVGException* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGException();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGException* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSVGException(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGException>&&);
+    JSSVGException(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGException>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGException*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGException& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGException& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGException*);
 
 
 } // namespace WebCore

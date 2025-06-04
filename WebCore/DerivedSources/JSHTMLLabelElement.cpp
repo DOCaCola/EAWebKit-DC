@@ -23,9 +23,9 @@
 
 #include "HTMLElement.h"
 #include "HTMLFormElement.h"
-#include "HTMLLabelElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSHTMLElement.h"
 #include "JSHTMLFormElement.h"
 #include "URL.h"
@@ -69,51 +69,25 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLLabelElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLLabelElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLLabelElement> JSHTMLLabelElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLLabelElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLLabelElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLLabelElementConstructor>(vm.heap)) JSHTMLLabelElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLLabelElementConstructor::s_info = { "HTMLLabelElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLabelElementConstructor) };
-
-JSHTMLLabelElementConstructor::JSHTMLLabelElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLLabelElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLLabelElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLLabelElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLLabelElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLLabelElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLLabelElementConstructor::s_info = { "HTMLLabelElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLabelElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLLabelElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "form", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "htmlFor", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementHtmlFor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLabelElementHtmlFor) },
-    { "control", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementControl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "form", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementForm), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "htmlFor", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementHtmlFor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLLabelElementHtmlFor) } },
+    { "control", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLLabelElementControl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLLabelElementPrototype::s_info = { "HTMLLabelElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLabelElementPrototype) };
@@ -126,7 +100,7 @@ void JSHTMLLabelElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLLabelElement::s_info = { "HTMLLabelElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLLabelElement) };
 
-JSHTMLLabelElement::JSHTMLLabelElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLabelElement>&& impl)
+JSHTMLLabelElement::JSHTMLLabelElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLLabelElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -141,80 +115,80 @@ JSObject* JSHTMLLabelElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLLabelElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLLabelElementForm(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLabelElementForm(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLabelElement* castedThis = jsDynamicCast<JSHTMLLabelElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLabelElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLabelElement", "form");
-        return throwGetterTypeError(*exec, "HTMLLabelElement", "form");
+            return reportDeprecatedGetterError(*state, "HTMLLabelElement", "form");
+        return throwGetterTypeError(*state, "HTMLLabelElement", "form");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.form()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.form()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLabelElementHtmlFor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLabelElementHtmlFor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLabelElement* castedThis = jsDynamicCast<JSHTMLLabelElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLabelElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLabelElement", "htmlFor");
-        return throwGetterTypeError(*exec, "HTMLLabelElement", "htmlFor");
+            return reportDeprecatedGetterError(*state, "HTMLLabelElement", "htmlFor");
+        return throwGetterTypeError(*state, "HTMLLabelElement", "htmlFor");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::forAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::forAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLabelElementControl(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLLabelElementControl(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLLabelElement* castedThis = jsDynamicCast<JSHTMLLabelElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLabelElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLLabelElement", "control");
-        return throwGetterTypeError(*exec, "HTMLLabelElement", "control");
+            return reportDeprecatedGetterError(*state, "HTMLLabelElement", "control");
+        return throwGetterTypeError(*state, "HTMLLabelElement", "control");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.control()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.control()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLLabelElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLLabelElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLLabelElementPrototype* domObject = jsDynamicCast<JSHTMLLabelElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLLabelElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLLabelElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLLabelElementHtmlFor(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLLabelElementHtmlFor(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLLabelElement* castedThis = jsDynamicCast<JSHTMLLabelElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLLabelElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLLabelElement", "htmlFor");
+            reportDeprecatedSetterError(*state, "HTMLLabelElement", "htmlFor");
         else
-            throwSetterTypeError(*exec, "HTMLLabelElement", "htmlFor");
+            throwSetterTypeError(*state, "HTMLLabelElement", "htmlFor");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::forAttr, nativeValue);
 }
@@ -222,7 +196,7 @@ void setJSHTMLLabelElementHtmlFor(ExecState* exec, JSObject* baseObject, Encoded
 
 JSValue JSHTMLLabelElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLLabelElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLLabelElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

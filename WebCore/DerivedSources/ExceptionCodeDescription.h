@@ -34,13 +34,14 @@ typedef int ExceptionCode;
 
 enum ExceptionType {
     DOMCoreExceptionType,
-    EventExceptionType,
     FileExceptionType,
-    RangeExceptionType,
     SQLExceptionType,
     SVGExceptionType,
     XMLHttpRequestExceptionType,
     XPathExceptionType,
+#if ENABLE(INDEXED_DATABASE)
+    IDBDatabaseExceptionType,
+#endif
 };
 
 struct ExceptionCodeDescription {

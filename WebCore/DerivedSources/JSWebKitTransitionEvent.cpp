@@ -22,9 +22,9 @@
 #include "JSWebKitTransitionEvent.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDictionary.h"
 #include "URL.h"
-#include "WebKitTransitionEvent.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -65,51 +65,31 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebKitTransitionEventConstructor : public DOMConstructorObject {
-private:
-    JSWebKitTransitionEventConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSWebKitTransitionEvent> JSWebKitTransitionEventConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebKitTransitionEventConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebKitTransitionEventConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebKitTransitionEventConstructor>(vm.heap)) JSWebKitTransitionEventConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSWebKitTransitionEvent(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSWebKitTransitionEventConstructor::constructJSWebKitTransitionEvent(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSWebKitTransitionEventConstructor::construct(ExecState* state)
 {
-    auto* jsConstructor = jsCast<JSWebKitTransitionEventConstructor*>(exec->callee());
+    auto* jsConstructor = jsCast<JSWebKitTransitionEventConstructor*>(state->callee());
 
-    ScriptExecutionContext* executionContext = jsConstructor->scriptExecutionContext();
-    if (!executionContext)
-        return throwVMError(exec, createReferenceError(exec, "Constructor associated execution context is unavailable"));
+    if (!jsConstructor->scriptExecutionContext())
+        return throwVMError(state, createReferenceError(state, "Constructor associated execution context is unavailable"));
 
-    AtomicString eventType = exec->argument(0).toString(exec)->toAtomicString(exec);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+
+    AtomicString eventType = state->argument(0).toString(state)->toAtomicString(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
 
     WebKitTransitionEventInit eventInit;
 
-    JSValue initializerValue = exec->argument(1);
+    JSValue initializerValue = state->argument(1);
     if (!initializerValue.isUndefinedOrNull()) {
         // Given the above test, this will always yield an object.
-        JSObject* initializerObject = initializerValue.toObject(exec);
+        JSObject* initializerObject = initializerValue.toObject(state);
 
         // Create the dictionary wrapper from the initializer object.
-        JSDictionary dictionary(exec, initializerObject);
+        JSDictionary dictionary(state, initializerObject);
 
         // Attempt to fill in the EventInit.
         if (!fillWebKitTransitionEventInit(eventInit, dictionary))
@@ -117,7 +97,7 @@ EncodedJSValue JSC_HOST_CALL JSWebKitTransitionEventConstructor::constructJSWebK
     }
 
     RefPtr<WebKitTransitionEvent> event = WebKitTransitionEvent::create(eventType, eventInit);
-    return JSValue::encode(toJS(exec, jsConstructor->globalObject(), event.get()));
+    return JSValue::encode(toJS(state, jsConstructor->globalObject(), event.get()));
 }
 
 bool fillWebKitTransitionEventInit(WebKitTransitionEventInit& eventInit, JSDictionary& dictionary)
@@ -134,36 +114,23 @@ bool fillWebKitTransitionEventInit(WebKitTransitionEventInit& eventInit, JSDicti
     return true;
 }
 
-const ClassInfo JSWebKitTransitionEventConstructor::s_info = { "WebKitTransitionEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitTransitionEventConstructor) };
-
-JSWebKitTransitionEventConstructor::JSWebKitTransitionEventConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebKitTransitionEventConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebKitTransitionEventConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebKitTransitionEvent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebKitTransitionEvent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebKitTransitionEvent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
 }
 
-ConstructType JSWebKitTransitionEventConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSWebKitTransitionEvent;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSWebKitTransitionEventConstructor::s_info = { "WebKitTransitionEventConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitTransitionEventConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebKitTransitionEventPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "propertyName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventPropertyName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "elapsedTime", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "pseudoElement", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventPseudoElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "propertyName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventPropertyName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "elapsedTime", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventElapsedTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "pseudoElement", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebKitTransitionEventPseudoElement), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebKitTransitionEventPrototype::s_info = { "WebKitTransitionEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitTransitionEventPrototype) };
@@ -176,7 +143,7 @@ void JSWebKitTransitionEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebKitTransitionEvent::s_info = { "WebKitTransitionEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebKitTransitionEvent) };
 
-JSWebKitTransitionEvent::JSWebKitTransitionEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitTransitionEvent>&& impl)
+JSWebKitTransitionEvent::JSWebKitTransitionEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebKitTransitionEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -191,68 +158,68 @@ JSObject* JSWebKitTransitionEvent::getPrototype(VM& vm, JSGlobalObject* globalOb
     return getDOMPrototype<JSWebKitTransitionEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsWebKitTransitionEventPropertyName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitTransitionEventPropertyName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitTransitionEvent* castedThis = jsDynamicCast<JSWebKitTransitionEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitTransitionEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitTransitionEvent", "propertyName");
-        return throwGetterTypeError(*exec, "WebKitTransitionEvent", "propertyName");
+            return reportDeprecatedGetterError(*state, "WebKitTransitionEvent", "propertyName");
+        return throwGetterTypeError(*state, "WebKitTransitionEvent", "propertyName");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.propertyName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.propertyName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitTransitionEventElapsedTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitTransitionEventElapsedTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitTransitionEvent* castedThis = jsDynamicCast<JSWebKitTransitionEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitTransitionEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitTransitionEvent", "elapsedTime");
-        return throwGetterTypeError(*exec, "WebKitTransitionEvent", "elapsedTime");
+            return reportDeprecatedGetterError(*state, "WebKitTransitionEvent", "elapsedTime");
+        return throwGetterTypeError(*state, "WebKitTransitionEvent", "elapsedTime");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.elapsedTime());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitTransitionEventPseudoElement(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsWebKitTransitionEventPseudoElement(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSWebKitTransitionEvent* castedThis = jsDynamicCast<JSWebKitTransitionEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSWebKitTransitionEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "WebKitTransitionEvent", "pseudoElement");
-        return throwGetterTypeError(*exec, "WebKitTransitionEvent", "pseudoElement");
+            return reportDeprecatedGetterError(*state, "WebKitTransitionEvent", "pseudoElement");
+        return throwGetterTypeError(*state, "WebKitTransitionEvent", "pseudoElement");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.pseudoElement());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.pseudoElement());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsWebKitTransitionEventConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebKitTransitionEventConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebKitTransitionEventPrototype* domObject = jsDynamicCast<JSWebKitTransitionEventPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebKitTransitionEvent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebKitTransitionEvent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebKitTransitionEvent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebKitTransitionEventConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebKitTransitionEventConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

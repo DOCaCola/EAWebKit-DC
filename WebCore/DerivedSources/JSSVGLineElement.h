@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGLineElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGLineElement>&& impl)
     {
-        JSSVGLineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElement>(globalObject->vm().heap)) JSSVGLineElement(structure, globalObject, WTF::move(impl));
+        JSSVGLineElement* ptr = new (NotNull, JSC::allocateCell<JSSVGLineElement>(globalObject->vm().heap)) JSSVGLineElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGLineElement& impl() const
+    SVGLineElement& wrapped() const
     {
-        return static_cast<SVGLineElement&>(Base::impl());
+        return static_cast<SVGLineElement&>(Base::wrapped());
     }
 protected:
-    JSSVGLineElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGLineElement>&&);
+    JSSVGLineElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGLineElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

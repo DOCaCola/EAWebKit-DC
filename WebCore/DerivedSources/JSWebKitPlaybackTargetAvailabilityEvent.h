@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSWebKitPlaybackTargetAvailabilityEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebKitPlaybackTargetAvailabilityEvent>&& impl)
     {
-        JSWebKitPlaybackTargetAvailabilityEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitPlaybackTargetAvailabilityEvent>(globalObject->vm().heap)) JSWebKitPlaybackTargetAvailabilityEvent(structure, globalObject, WTF::move(impl));
+        JSWebKitPlaybackTargetAvailabilityEvent* ptr = new (NotNull, JSC::allocateCell<JSWebKitPlaybackTargetAvailabilityEvent>(globalObject->vm().heap)) JSWebKitPlaybackTargetAvailabilityEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    WebKitPlaybackTargetAvailabilityEvent& impl() const
+    WebKitPlaybackTargetAvailabilityEvent& wrapped() const
     {
-        return static_cast<WebKitPlaybackTargetAvailabilityEvent&>(Base::impl());
+        return static_cast<WebKitPlaybackTargetAvailabilityEvent&>(Base::wrapped());
     }
 protected:
-    JSWebKitPlaybackTargetAvailabilityEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<WebKitPlaybackTargetAvailabilityEvent>&&);
+    JSWebKitPlaybackTargetAvailabilityEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<WebKitPlaybackTargetAvailabilityEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

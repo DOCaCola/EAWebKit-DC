@@ -51,14 +51,15 @@ void SourceAlpha::platformApplySoftware()
     ImageBuffer* resultImage = createImageBufferResult();
     if (!resultImage)
         return;
-    GraphicsContext* filterContext = resultImage->context();
+    GraphicsContext& filterContext = resultImage->context();
 
     ImageBuffer* imageBuffer = inputEffect(0)->asImageBuffer();
-    ASSERT(imageBuffer);
+    if (!imageBuffer)
+        return;
 
     FloatRect imageRect(FloatPoint(), absolutePaintRect().size());
-    filterContext->fillRect(imageRect, Color::black, ColorSpaceDeviceRGB);
-    filterContext->drawImageBuffer(imageBuffer, ColorSpaceDeviceRGB, IntPoint(), CompositeDestinationIn);
+    filterContext.fillRect(imageRect, Color::black);
+    filterContext.drawImageBuffer(*imageBuffer, IntPoint(), CompositeDestinationIn);
 }
 
 void SourceAlpha::dump()

@@ -26,11 +26,11 @@
 #include "config.h"
 #include "RenderNamedFlowThread.h"
 
+#include "ComposedTreeAncestorIterator.h"
 #include "ExceptionCodePlaceholder.h"
 #include "FlowThreadController.h"
 #include "InlineTextBox.h"
 #include "InspectorInstrumentation.h"
-#include "NodeRenderingTraversal.h"
 #include "NodeTraversal.h"
 #include "Position.h"
 #include "Range.h"
@@ -547,7 +547,7 @@ bool RenderNamedFlowThread::isChildAllowed(const RenderObject& child, const Rend
 
     ASSERT(is<Element>(*child.node()));
 
-    Node* originalParent = NodeRenderingTraversal::parent(child.node());
+    auto* originalParent = composedTreeAncestors(*child.node()).first();
     if (!is<Element>(originalParent) || !originalParent->renderer())
         return true;
 
@@ -696,7 +696,7 @@ void RenderNamedFlowThread::getRanges(Vector<RefPtr<Range>>& rangeObjects, const
                     if (!startsAboveRegion) {
                         if (range->intersectsNode(node, IGNORE_EXCEPTION))
                             range->setEndBefore(node, IGNORE_EXCEPTION);
-                        rangeObjects.append(range->cloneRange(IGNORE_EXCEPTION));
+                        rangeObjects.append(range->cloneRange());
                         range = Range::create(contentElement->document());
                         startsAboveRegion = true;
                     } else

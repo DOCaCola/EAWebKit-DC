@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLQuoteElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLQuoteElement>&& impl)
     {
-        JSHTMLQuoteElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLQuoteElement>(globalObject->vm().heap)) JSHTMLQuoteElement(structure, globalObject, WTF::move(impl));
+        JSHTMLQuoteElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLQuoteElement>(globalObject->vm().heap)) JSHTMLQuoteElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLQuoteElement& impl() const
+    HTMLQuoteElement& wrapped() const
     {
-        return static_cast<HTMLQuoteElement&>(Base::impl());
+        return static_cast<HTMLQuoteElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLQuoteElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLQuoteElement>&&);
+    JSHTMLQuoteElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLQuoteElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

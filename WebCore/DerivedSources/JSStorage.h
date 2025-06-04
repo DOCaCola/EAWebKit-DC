@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSStorage : public JSDOMWrapper {
+class JSStorage : public JSDOMWrapper<Storage> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Storage> Base;
     static JSStorage* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Storage>&& impl)
     {
-        JSStorage* ptr = new (NotNull, JSC::allocateCell<JSStorage>(globalObject->vm().heap)) JSStorage(structure, globalObject, WTF::move(impl));
+        JSStorage* ptr = new (NotNull, JSC::allocateCell<JSStorage>(globalObject->vm().heap)) JSStorage(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -46,7 +46,6 @@ public:
     static void putByIndex(JSC::JSCell*, JSC::ExecState*, unsigned propertyName, JSC::JSValue, bool shouldThrow);
     bool putDelegate(JSC::ExecState*, JSC::PropertyName, JSC::JSValue, JSC::PutPropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSStorage();
 
     DECLARE_INFO;
 
@@ -59,15 +58,10 @@ public:
     static bool deletePropertyByIndex(JSC::JSCell*, JSC::ExecState*, unsigned);
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    Storage& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Storage* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSStorage(JSC::Structure*, JSDOMGlobalObject*, Ref<Storage>&&);
+    JSStorage(JSC::Structure*, JSDOMGlobalObject&, Ref<Storage>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -76,8 +70,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, Storage*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSStorageOwner : public JSC::WeakHandleOwner {
@@ -93,7 +86,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Storage*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Storage*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Storage& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Storage& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Storage*);
 
 
 } // namespace WebCore

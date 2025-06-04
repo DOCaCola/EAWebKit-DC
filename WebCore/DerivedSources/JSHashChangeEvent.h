@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSHashChangeEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HashChangeEvent>&& impl)
     {
-        JSHashChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSHashChangeEvent>(globalObject->vm().heap)) JSHashChangeEvent(structure, globalObject, WTF::move(impl));
+        JSHashChangeEvent* ptr = new (NotNull, JSC::allocateCell<JSHashChangeEvent>(globalObject->vm().heap)) JSHashChangeEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HashChangeEvent& impl() const
+    HashChangeEvent& wrapped() const
     {
-        return static_cast<HashChangeEvent&>(Base::impl());
+        return static_cast<HashChangeEvent&>(Base::wrapped());
     }
 protected:
-    JSHashChangeEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<HashChangeEvent>&&);
+    JSHashChangeEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<HashChangeEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

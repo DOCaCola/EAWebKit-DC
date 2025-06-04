@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSDOMStringMap.h"
 
-#include "DOMStringMap.h"
 #include "Element.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNodeCustom.h"
 #include <wtf/GetPtr.h>
 
@@ -58,26 +58,7 @@ private:
     }
 };
 
-class JSDOMStringMapConstructor : public DOMConstructorObject {
-private:
-    JSDOMStringMapConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSDOMStringMapConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDOMStringMapConstructor* ptr = new (NotNull, JSC::allocateCell<JSDOMStringMapConstructor>(vm.heap)) JSDOMStringMapConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSDOMStringMap> JSDOMStringMapConstructor;
 
 /* Hash table */
 
@@ -89,34 +70,26 @@ static const struct CompactHashIndex JSDOMStringMapTableIndex[2] = {
 
 static const HashTableValue JSDOMStringMapTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringMapConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDOMStringMapConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSDOMStringMapTable = { 1, 1, true, JSDOMStringMapTableValues, 0, JSDOMStringMapTableIndex };
-const ClassInfo JSDOMStringMapConstructor::s_info = { "DOMStringMapConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringMapConstructor) };
-
-JSDOMStringMapConstructor::JSDOMStringMapConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSDOMStringMapTable = { 1, 1, true, JSDOMStringMapTableValues, JSDOMStringMapTableIndex };
+template<> void JSDOMStringMapConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDOMStringMapConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDOMStringMap::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDOMStringMap::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DOMStringMap"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDOMStringMapConstructor::s_info = { "DOMStringMapConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringMapConstructor) };
 
 /* Hash table for prototype */
 const ClassInfo JSDOMStringMapPrototype::s_info = { "DOMStringMapPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDOMStringMapPrototype) };
 
 const ClassInfo JSDOMStringMap::s_info = { "DOMStringMap", &Base::s_info, &JSDOMStringMapTable, CREATE_METHOD_TABLE(JSDOMStringMap) };
 
-JSDOMStringMap::JSDOMStringMap(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMStringMap>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSDOMStringMap::JSDOMStringMap(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DOMStringMap>&& impl)
+    : JSDOMWrapper<DOMStringMap>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -136,67 +109,64 @@ void JSDOMStringMap::destroy(JSC::JSCell* cell)
     thisObject->JSDOMStringMap::~JSDOMStringMap();
 }
 
-JSDOMStringMap::~JSDOMStringMap()
-{
-    releaseImpl();
-}
-
-bool JSDOMStringMap::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSDOMStringMap::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMStringMap*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSDOMStringMap, Base>(exec, JSDOMStringMapTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSDOMStringMap, Base>(state, JSDOMStringMapTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSDOMStringMap::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSDOMStringMap::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMStringMap*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsDOMStringMapConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDOMStringMapConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSDOMStringMap* domObject = jsDynamicCast<JSDOMStringMap*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDOMStringMap::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDOMStringMap::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSDOMStringMap::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSDOMStringMap::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSDOMStringMap*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSDOMStringMap::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSDOMStringMap::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSDOMStringMap*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
 JSValue JSDOMStringMap::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDOMStringMapConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDOMStringMapConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSDOMStringMapOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsDOMStringMap = jsCast<JSDOMStringMap*>(handle.slot()->asCell());
-    Element* element = WTF::getPtr(jsDOMStringMap->impl().element());
+    Element* element = WTF::getPtr(jsDOMStringMap->wrapped().element());
     if (!element)
         return false;
     void* root = WebCore::root(element);
@@ -207,7 +177,14 @@ void JSDOMStringMapOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsDOMStringMap = jsCast<JSDOMStringMap*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsDOMStringMap->impl(), jsDOMStringMap);
+    uncacheWrapper(world, &jsDOMStringMap->wrapped(), jsDOMStringMap);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMStringMap* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDOMStringMap>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMStringMap* impl)
@@ -222,7 +199,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DOMStringMap
 DOMStringMap* JSDOMStringMap::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDOMStringMap*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

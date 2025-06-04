@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSDocumentType.h"
 
-#include "DocumentType.h"
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNamedNodeMap.h"
 #include "NamedNodeMap.h"
 #include "URL.h"
@@ -77,58 +77,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSDocumentTypeConstructor : public DOMConstructorObject {
-private:
-    JSDocumentTypeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSDocumentType> JSDocumentTypeConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSDocumentTypeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSDocumentTypeConstructor* ptr = new (NotNull, JSC::allocateCell<JSDocumentTypeConstructor>(vm.heap)) JSDocumentTypeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSDocumentTypeConstructor::s_info = { "DocumentTypeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentTypeConstructor) };
-
-JSDocumentTypeConstructor::JSDocumentTypeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSDocumentTypeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSDocumentTypeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSDocumentType::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSDocumentType::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("DocumentType"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSDocumentTypeConstructor::s_info = { "DocumentTypeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentTypeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSDocumentTypePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "name", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "entities", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeEntities), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "notations", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeNotations), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "publicId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypePublicId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "systemId", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeSystemId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "internalSubset", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeInternalSubset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "before", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionBefore), (intptr_t) (1) },
-    { "after", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionAfter), (intptr_t) (1) },
-    { "replaceWith", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionReplaceWith), (intptr_t) (1) },
-    { "remove", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionRemove), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "name", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "entities", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeEntities), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "notations", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeNotations), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "publicId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypePublicId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "systemId", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeSystemId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "internalSubset", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsDocumentTypeInternalSubset), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "before", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionBefore), (intptr_t) (0) } },
+    { "after", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionAfter), (intptr_t) (0) } },
+    { "replaceWith", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionReplaceWith), (intptr_t) (0) } },
+    { "remove", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsDocumentTypePrototypeFunctionRemove), (intptr_t) (0) } },
 };
 
 const ClassInfo JSDocumentTypePrototype::s_info = { "DocumentTypePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentTypePrototype) };
@@ -141,7 +115,7 @@ void JSDocumentTypePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSDocumentType::s_info = { "DocumentType", &Base::s_info, 0, CREATE_METHOD_TABLE(JSDocumentType) };
 
-JSDocumentType::JSDocumentType(Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentType>&& impl)
+JSDocumentType::JSDocumentType(Structure* structure, JSDOMGlobalObject& globalObject, Ref<DocumentType>&& impl)
     : JSNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -156,169 +130,213 @@ JSObject* JSDocumentType::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSDocumentType>(vm, globalObject);
 }
 
-EncodedJSValue jsDocumentTypeName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypeName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "name");
-        return throwGetterTypeError(*exec, "DocumentType", "name");
+            return reportDeprecatedGetterError(*state, "DocumentType", "name");
+        return throwGetterTypeError(*state, "DocumentType", "name");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.name());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.name());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypeEntities(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypeEntities(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "entities");
-        return throwGetterTypeError(*exec, "DocumentType", "entities");
+            return reportDeprecatedGetterError(*state, "DocumentType", "entities");
+        return throwGetterTypeError(*state, "DocumentType", "entities");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.entities()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.entities()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypeNotations(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypeNotations(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "notations");
-        return throwGetterTypeError(*exec, "DocumentType", "notations");
+            return reportDeprecatedGetterError(*state, "DocumentType", "notations");
+        return throwGetterTypeError(*state, "DocumentType", "notations");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.notations()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.notations()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypePublicId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypePublicId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "publicId");
-        return throwGetterTypeError(*exec, "DocumentType", "publicId");
+            return reportDeprecatedGetterError(*state, "DocumentType", "publicId");
+        return throwGetterTypeError(*state, "DocumentType", "publicId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.publicId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.publicId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypeSystemId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypeSystemId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "systemId");
-        return throwGetterTypeError(*exec, "DocumentType", "systemId");
+            return reportDeprecatedGetterError(*state, "DocumentType", "systemId");
+        return throwGetterTypeError(*state, "DocumentType", "systemId");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.systemId());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.systemId());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypeInternalSubset(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsDocumentTypeInternalSubset(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSDocumentTypePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "DocumentType", "internalSubset");
-        return throwGetterTypeError(*exec, "DocumentType", "internalSubset");
+            return reportDeprecatedGetterError(*state, "DocumentType", "internalSubset");
+        return throwGetterTypeError(*state, "DocumentType", "internalSubset");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringOrNull(exec, impl.internalSubset());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringOrNull(state, impl.internalSubset());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsDocumentTypeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsDocumentTypeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSDocumentTypePrototype* domObject = jsDynamicCast<JSDocumentTypePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSDocumentType::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSDocumentType::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSDocumentType::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSDocumentTypeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSDocumentTypeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionBefore(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionBefore(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentType", "before");
+        return throwThisTypeError(*state, "DocumentType", "before");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentType::info());
-    return JSValue::encode(castedThis->before(exec));
+    return JSValue::encode(castedThis->before(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionAfter(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionAfter(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentType", "after");
+        return throwThisTypeError(*state, "DocumentType", "after");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentType::info());
-    return JSValue::encode(castedThis->after(exec));
+    return JSValue::encode(castedThis->after(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionReplaceWith(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionReplaceWith(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentType", "replaceWith");
+        return throwThisTypeError(*state, "DocumentType", "replaceWith");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentType::info());
-    return JSValue::encode(castedThis->replaceWith(exec));
+    return JSValue::encode(castedThis->replaceWith(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionRemove(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsDocumentTypePrototypeFunctionRemove(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSDocumentType* castedThis = jsDynamicCast<JSDocumentType*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "DocumentType", "remove");
+        return throwThisTypeError(*state, "DocumentType", "remove");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSDocumentType::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.remove(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
+}
+
+#if ENABLE(BINDING_INTEGRITY)
+#if PLATFORM(WIN)
+#pragma warning(disable: 4483)
+extern "C" { extern void (*const __identifier("??_7DocumentType@WebCore@@6B@")[])(); }
+#else
+extern "C" { extern void* _ZTVN7WebCore12DocumentTypeE[]; }
+#endif
+#endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, DocumentType* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSDocumentType>(globalObject, impl);
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, DocumentType* impl)
+{
+    if (!impl)
+        return jsNull();
+    if (JSValue result = getExistingWrapper<JSDocumentType>(globalObject, impl))
+        return result;
+
+#if ENABLE(BINDING_INTEGRITY)
+    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
+#if PLATFORM(WIN)
+    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7DocumentType@WebCore@@6B@"));
+#else
+    void* expectedVTablePointer = &_ZTVN7WebCore12DocumentTypeE[2];
+#if COMPILER(CLANG)
+    // If this fails DocumentType does not have a vtable, so you need to add the
+    // ImplementationLacksVTable attribute to the interface definition
+    COMPILE_ASSERT(__is_polymorphic(DocumentType), DocumentType_is_not_polymorphic);
+#endif
+#endif
+    // If you hit this assertion you either have a use after free bug, or
+    // DocumentType has subclasses. If DocumentType has subclasses that get passed
+    // to toJS() we currently require DocumentType you to opt out of binding hardening
+    // by adding the SkipVTableValidation attribute to the interface IDL definition
+    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
+#endif
+    return createNewWrapper<JSDocumentType>(globalObject, impl);
 }
 
 DocumentType* JSDocumentType::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSDocumentType*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

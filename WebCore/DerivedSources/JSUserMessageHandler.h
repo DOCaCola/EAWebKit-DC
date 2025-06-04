@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSUserMessageHandler : public JSDOMWrapper {
+class JSUserMessageHandler : public JSDOMWrapper<UserMessageHandler> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<UserMessageHandler> Base;
     static JSUserMessageHandler* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<UserMessageHandler>&& impl)
     {
-        JSUserMessageHandler* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandler>(globalObject->vm().heap)) JSUserMessageHandler(structure, globalObject, WTF::move(impl));
+        JSUserMessageHandler* ptr = new (NotNull, JSC::allocateCell<JSUserMessageHandler>(globalObject->vm().heap)) JSUserMessageHandler(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static UserMessageHandler* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSUserMessageHandler();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    UserMessageHandler& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    UserMessageHandler* m_impl;
 protected:
-    JSUserMessageHandler(JSC::Structure*, JSDOMGlobalObject*, Ref<UserMessageHandler>&&);
+    JSUserMessageHandler(JSC::Structure*, JSDOMGlobalObject&, Ref<UserMessageHandler>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, UserMessageHandler*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, UserMessageHandler*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, UserMessageHandler& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, UserMessageHandler& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, UserMessageHandler*);
 
 
 } // namespace WebCore

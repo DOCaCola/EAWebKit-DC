@@ -24,8 +24,8 @@
 
 #include "JSChannelMergerNode.h"
 
-#include "ChannelMergerNode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSChannelMergerNodeConstructor : public DOMConstructorObject {
-private:
-    JSChannelMergerNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSChannelMergerNode> JSChannelMergerNodeConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSChannelMergerNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSChannelMergerNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSChannelMergerNodeConstructor>(vm.heap)) JSChannelMergerNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSChannelMergerNodeConstructor::s_info = { "ChannelMergerNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelMergerNodeConstructor) };
-
-JSChannelMergerNodeConstructor::JSChannelMergerNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSChannelMergerNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSChannelMergerNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSChannelMergerNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSChannelMergerNode::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ChannelMergerNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSChannelMergerNodeConstructor::s_info = { "ChannelMergerNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelMergerNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSChannelMergerNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsChannelMergerNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsChannelMergerNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSChannelMergerNodePrototype::s_info = { "ChannelMergerNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelMergerNodePrototype) };
@@ -115,7 +89,7 @@ void JSChannelMergerNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSChannelMergerNode::s_info = { "ChannelMergerNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSChannelMergerNode) };
 
-JSChannelMergerNode::JSChannelMergerNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ChannelMergerNode>&& impl)
+JSChannelMergerNode::JSChannelMergerNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ChannelMergerNode>&& impl)
     : JSAudioNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,17 +104,17 @@ JSObject* JSChannelMergerNode::getPrototype(VM& vm, JSGlobalObject* globalObject
     return getDOMPrototype<JSChannelMergerNode>(vm, globalObject);
 }
 
-EncodedJSValue jsChannelMergerNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsChannelMergerNodeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSChannelMergerNodePrototype* domObject = jsDynamicCast<JSChannelMergerNodePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSChannelMergerNode::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSChannelMergerNode::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSChannelMergerNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSChannelMergerNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSChannelMergerNodeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -151,6 +125,14 @@ extern "C" { extern void (*const __identifier("??_7ChannelMergerNode@WebCore@@6B
 extern "C" { extern void* _ZTVN7WebCore17ChannelMergerNodeE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ChannelMergerNode* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSChannelMergerNode>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ChannelMergerNode* impl)
 {
     if (!impl)

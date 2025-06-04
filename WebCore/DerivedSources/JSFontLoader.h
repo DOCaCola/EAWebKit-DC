@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSFontLoader : public JSDOMWrapper {
+class JSFontLoader : public JSDOMWrapper<FontLoader> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<FontLoader> Base;
     static JSFontLoader* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<FontLoader>&& impl)
     {
-        JSFontLoader* ptr = new (NotNull, JSC::allocateCell<JSFontLoader>(globalObject->vm().heap)) JSFontLoader(structure, globalObject, WTF::move(impl));
+        JSFontLoader* ptr = new (NotNull, JSC::allocateCell<JSFontLoader>(globalObject->vm().heap)) JSFontLoader(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static FontLoader* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSFontLoader();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    FontLoader& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    FontLoader* m_impl;
 protected:
-    JSFontLoader(JSC::Structure*, JSDOMGlobalObject*, Ref<FontLoader>&&);
+    JSFontLoader(JSC::Structure*, JSDOMGlobalObject&, Ref<FontLoader>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, FontLoader*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, FontLoader*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, FontLoader& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, FontLoader& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, FontLoader*);
 
 
 } // namespace WebCore

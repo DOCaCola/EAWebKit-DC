@@ -25,7 +25,6 @@
 #include "JSWebGLDepthTexture.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLDepthTexture.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSWebGLDepthTexturePrototypeTableValues[] =
 {
-    { "UNSIGNED_INT_24_8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x84FA), (intptr_t) (0) },
+    { "UNSIGNED_INT_24_8_WEBGL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x84FA) } },
 };
 
 const ClassInfo JSWebGLDepthTexturePrototype::s_info = { "WebGLDepthTexturePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDepthTexturePrototype) };
@@ -74,9 +73,8 @@ void JSWebGLDepthTexturePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLDepthTexture::s_info = { "WebGLDepthTexture", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLDepthTexture) };
 
-JSWebGLDepthTexture::JSWebGLDepthTexture(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLDepthTexture>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLDepthTexture::JSWebGLDepthTexture(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLDepthTexture>&& impl)
+    : JSDOMWrapper<WebGLDepthTexture>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSWebGLDepthTexture::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLDepthTexture::~JSWebGLDepthTexture();
 }
 
-JSWebGLDepthTexture::~JSWebGLDepthTexture()
-{
-    releaseImpl();
-}
-
 bool JSWebGLDepthTextureOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsWebGLDepthTexture = jsCast<JSWebGLDepthTexture*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDepthTexture->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsWebGLDepthTexture->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSWebGLDepthTextureOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* 
 {
     auto* jsWebGLDepthTexture = jsCast<JSWebGLDepthTexture*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLDepthTexture->impl(), jsWebGLDepthTexture);
+    uncacheWrapper(world, &jsWebGLDepthTexture->wrapped(), jsWebGLDepthTexture);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLDepthTexture@WebCore@@6B
 extern "C" { extern void* _ZTVN7WebCore17WebGLDepthTextureE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDepthTexture* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLDepthTexture>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDepthTexture* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLDepthTe
 WebGLDepthTexture* JSWebGLDepthTexture::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLDepthTexture*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

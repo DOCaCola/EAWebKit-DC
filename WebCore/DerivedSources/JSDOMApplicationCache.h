@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSDOMApplicationCache : public JSDOMWrapper {
+class JSDOMApplicationCache : public JSDOMWrapper<DOMApplicationCache> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<DOMApplicationCache> Base;
     static JSDOMApplicationCache* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMApplicationCache>&& impl)
     {
-        JSDOMApplicationCache* ptr = new (NotNull, JSC::allocateCell<JSDOMApplicationCache>(globalObject->vm().heap)) JSDOMApplicationCache(structure, globalObject, WTF::move(impl));
+        JSDOMApplicationCache* ptr = new (NotNull, JSC::allocateCell<JSDOMApplicationCache>(globalObject->vm().heap)) JSDOMApplicationCache(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static DOMApplicationCache* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSDOMApplicationCache();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    DOMApplicationCache& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    DOMApplicationCache* m_impl;
 protected:
-    JSDOMApplicationCache(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMApplicationCache>&&);
+    JSDOMApplicationCache(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMApplicationCache>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, DOMApplicationCache*
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMApplicationCache*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMApplicationCache& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMApplicationCache& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMApplicationCache*);
 
 
 } // namespace WebCore

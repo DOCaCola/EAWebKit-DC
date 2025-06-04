@@ -34,7 +34,6 @@ FontPlatformData::FontPlatformData(FontPlatformDataPrivate* privData, int size, 
 	, m_widthVariant(RegularWidth)
 	, m_privData(privData)
 	, m_isColorBitmapFont(false)
-	, m_isCompositeFontReference(false)
 {
 	
 }

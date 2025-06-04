@@ -31,7 +31,7 @@ public:
     typedef JSEvent Base;
     static JSBeforeUnloadEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<BeforeUnloadEvent>&& impl)
     {
-        JSBeforeUnloadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeUnloadEvent>(globalObject->vm().heap)) JSBeforeUnloadEvent(structure, globalObject, WTF::move(impl));
+        JSBeforeUnloadEvent* ptr = new (NotNull, JSC::allocateCell<JSBeforeUnloadEvent>(globalObject->vm().heap)) JSBeforeUnloadEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    BeforeUnloadEvent& impl() const
+    BeforeUnloadEvent& wrapped() const
     {
-        return static_cast<BeforeUnloadEvent&>(Base::impl());
+        return static_cast<BeforeUnloadEvent&>(Base::wrapped());
     }
 protected:
-    JSBeforeUnloadEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<BeforeUnloadEvent>&&);
+    JSBeforeUnloadEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<BeforeUnloadEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

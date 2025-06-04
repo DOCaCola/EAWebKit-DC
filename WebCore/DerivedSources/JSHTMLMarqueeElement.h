@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLMarqueeElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLMarqueeElement>&& impl)
     {
-        JSHTMLMarqueeElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMarqueeElement>(globalObject->vm().heap)) JSHTMLMarqueeElement(structure, globalObject, WTF::move(impl));
+        JSHTMLMarqueeElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLMarqueeElement>(globalObject->vm().heap)) JSHTMLMarqueeElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLMarqueeElement& impl() const
+    HTMLMarqueeElement& wrapped() const
     {
-        return static_cast<HTMLMarqueeElement&>(Base::impl());
+        return static_cast<HTMLMarqueeElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLMarqueeElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLMarqueeElement>&&);
+    JSHTMLMarqueeElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLMarqueeElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

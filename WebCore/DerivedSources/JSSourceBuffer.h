@@ -34,7 +34,7 @@ public:
     typedef JSEventTarget Base;
     static JSSourceBuffer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBuffer>&& impl)
     {
-        JSSourceBuffer* ptr = new (NotNull, JSC::allocateCell<JSSourceBuffer>(globalObject->vm().heap)) JSSourceBuffer(structure, globalObject, WTF::move(impl));
+        JSSourceBuffer* ptr = new (NotNull, JSC::allocateCell<JSSourceBuffer>(globalObject->vm().heap)) JSSourceBuffer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,12 +52,12 @@ public:
 
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    SourceBuffer& impl() const
+    SourceBuffer& wrapped() const
     {
-        return static_cast<SourceBuffer&>(Base::impl());
+        return static_cast<SourceBuffer&>(Base::wrapped());
     }
 protected:
-    JSSourceBuffer(JSC::Structure*, JSDOMGlobalObject*, Ref<SourceBuffer>&&);
+    JSSourceBuffer(JSC::Structure*, JSDOMGlobalObject&, Ref<SourceBuffer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -80,7 +80,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SourceBuffer*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SourceBuffer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SourceBuffer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SourceBuffer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SourceBuffer*);
 
 
 } // namespace WebCore

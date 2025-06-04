@@ -21,9 +21,9 @@
 #include "config.h"
 #include "JSHTMLModElement.h"
 
-#include "HTMLModElement.h"
 #include "HTMLNames.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -65,50 +65,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLModElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLModElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLModElement> JSHTMLModElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLModElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLModElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLModElementConstructor>(vm.heap)) JSHTMLModElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLModElementConstructor::s_info = { "HTMLModElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLModElementConstructor) };
-
-JSHTMLModElementConstructor::JSHTMLModElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLModElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLModElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLModElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLModElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLModElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLModElementConstructor::s_info = { "HTMLModElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLModElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLModElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cite", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementCite), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLModElementCite) },
-    { "dateTime", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementDateTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLModElementDateTime) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cite", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementCite), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLModElementCite) } },
+    { "dateTime", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLModElementDateTime), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLModElementDateTime) } },
 };
 
 const ClassInfo JSHTMLModElementPrototype::s_info = { "HTMLModElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLModElementPrototype) };
@@ -121,7 +95,7 @@ void JSHTMLModElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLModElement::s_info = { "HTMLModElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLModElement) };
 
-JSHTMLModElement::JSHTMLModElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLModElement>&& impl)
+JSHTMLModElement::JSHTMLModElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLModElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,83 +110,83 @@ JSObject* JSHTMLModElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLModElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLModElementCite(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLModElementCite(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLModElement* castedThis = jsDynamicCast<JSHTMLModElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLModElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLModElement", "cite");
-        return throwGetterTypeError(*exec, "HTMLModElement", "cite");
+            return reportDeprecatedGetterError(*state, "HTMLModElement", "cite");
+        return throwGetterTypeError(*state, "HTMLModElement", "cite");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::citeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getURLAttribute(WebCore::HTMLNames::citeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLModElementDateTime(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLModElementDateTime(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLModElement* castedThis = jsDynamicCast<JSHTMLModElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLModElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLModElement", "dateTime");
-        return throwGetterTypeError(*exec, "HTMLModElement", "dateTime");
+            return reportDeprecatedGetterError(*state, "HTMLModElement", "dateTime");
+        return throwGetterTypeError(*state, "HTMLModElement", "dateTime");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::datetimeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::datetimeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLModElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLModElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLModElementPrototype* domObject = jsDynamicCast<JSHTMLModElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLModElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLModElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLModElementCite(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLModElementCite(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLModElement* castedThis = jsDynamicCast<JSHTMLModElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLModElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLModElement", "cite");
+            reportDeprecatedSetterError(*state, "HTMLModElement", "cite");
         else
-            throwSetterTypeError(*exec, "HTMLModElement", "cite");
+            throwSetterTypeError(*state, "HTMLModElement", "cite");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::citeAttr, nativeValue);
 }
 
 
-void setJSHTMLModElementDateTime(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLModElementDateTime(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLModElement* castedThis = jsDynamicCast<JSHTMLModElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLModElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLModElement", "dateTime");
+            reportDeprecatedSetterError(*state, "HTMLModElement", "dateTime");
         else
-            throwSetterTypeError(*exec, "HTMLModElement", "dateTime");
+            throwSetterTypeError(*state, "HTMLModElement", "dateTime");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::datetimeAttr, nativeValue);
 }
@@ -220,7 +194,7 @@ void setJSHTMLModElementDateTime(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSHTMLModElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLModElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLModElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

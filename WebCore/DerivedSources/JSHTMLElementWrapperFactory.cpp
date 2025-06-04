@@ -34,7 +34,7 @@
 #include "JSHTMLAppletElement.h"
 #include "JSHTMLAreaElement.h"
 #include "JSHTMLBaseElement.h"
-#include "JSHTMLBaseFontElement.h"
+#include "JSHTMLUnknownElement.h"
 #include "JSHTMLQuoteElement.h"
 #include "JSHTMLBodyElement.h"
 #include "JSHTMLBRElement.h"
@@ -57,7 +57,6 @@
 #include "JSHTMLHRElement.h"
 #include "JSHTMLHtmlElement.h"
 #include "JSHTMLIFrameElement.h"
-#include "JSHTMLUnknownElement.h"
 #include "JSHTMLImageElement.h"
 #include "JSHTMLInputElement.h"
 #include "JSHTMLKeygenElement.h"
@@ -77,15 +76,19 @@
 #include "JSHTMLOutputElement.h"
 #include "JSHTMLParagraphElement.h"
 #include "JSHTMLParamElement.h"
+#include "JSHTMLPictureElement.h"
 #include "JSHTMLProgressElement.h"
 #include "JSHTMLScriptElement.h"
 #include "JSHTMLSelectElement.h"
+#include "JSHTMLSourceElement.h"
 #include "JSHTMLSpanElement.h"
 #include "JSHTMLStyleElement.h"
 #include "JSHTMLTableElement.h"
 #include "JSHTMLTableSectionElement.h"
-#include "JSHTMLTableCellElement.h"
+#include "JSHTMLTableDataCellElement.h"
 #include "JSHTMLTextAreaElement.h"
+#include "JSHTMLTableHeaderCellElement.h"
+#include "JSHTMLTimeElement.h"
 #include "JSHTMLTitleElement.h"
 #include "JSHTMLTableRowElement.h"
 #include "JSHTMLUListElement.h"
@@ -95,7 +98,7 @@
 #include "HTMLAppletElement.h"
 #include "HTMLAreaElement.h"
 #include "HTMLBaseElement.h"
-#include "HTMLBaseFontElement.h"
+#include "HTMLUnknownElement.h"
 #include "HTMLBDIElement.h"
 #include "HTMLQuoteElement.h"
 #include "HTMLBodyElement.h"
@@ -119,7 +122,6 @@
 #include "HTMLHRElement.h"
 #include "HTMLHtmlElement.h"
 #include "HTMLIFrameElement.h"
-#include "HTMLUnknownElement.h"
 #include "HTMLImageElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLKeygenElement.h"
@@ -139,17 +141,21 @@
 #include "HTMLOutputElement.h"
 #include "HTMLParagraphElement.h"
 #include "HTMLParamElement.h"
+#include "HTMLPictureElement.h"
 #include "HTMLProgressElement.h"
 #include "RubyTextElement.h"
 #include "RubyElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLSelectElement.h"
+#include "HTMLSourceElement.h"
 #include "HTMLSpanElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTableElement.h"
 #include "HTMLTableSectionElement.h"
-#include "HTMLTableCellElement.h"
+#include "HTMLTableDataCellElement.h"
 #include "HTMLTextAreaElement.h"
+#include "HTMLTableHeaderCellElement.h"
+#include "HTMLTimeElement.h"
 #include "HTMLTitleElement.h"
 #include "HTMLTableRowElement.h"
 #include "HTMLUListElement.h"
@@ -185,6 +191,11 @@
 #include "JSHTMLMeterElement.h"
 #endif
 
+#if ENABLE(SHADOW_DOM)
+#include "HTMLSlotElement.h"
+#include "JSHTMLSlotElement.h"
+#endif
+
 #if ENABLE(TEMPLATE_ELEMENT)
 #include "HTMLTemplateElement.h"
 #include "JSHTMLTemplateElement.h"
@@ -192,10 +203,8 @@
 
 #if ENABLE(VIDEO)
 #include "HTMLAudioElement.h"
-#include "HTMLSourceElement.h"
 #include "HTMLVideoElement.h"
 #include "JSHTMLAudioElement.h"
-#include "JSHTMLSourceElement.h"
 #include "JSHTMLVideoElement.h"
 #endif
 
@@ -210,31 +219,31 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-typedef JSDOMWrapper* (*CreateHTMLElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<HTMLElement>);
+typedef JSDOMObject* (*CreateHTMLElementWrapperFunction)(JSDOMGlobalObject*, PassRefPtr<HTMLElement>);
 
-static JSDOMWrapper* createHTMLAnchorElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLAnchorElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLAnchorElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLAppletElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLAppletElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLAppletElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLAreaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLAreaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLAreaElement, element.get());
 }
 
 #if ENABLE(ATTACHMENT_ELEMENT)
 
-static JSDOMWrapper* createHTMLAttachmentElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLAttachmentElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     if (element->isHTMLUnknownElement())
         return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
@@ -245,7 +254,7 @@ static JSDOMWrapper* createHTMLAttachmentElementWrapper(JSDOMGlobalObject* globa
 
 #if ENABLE(VIDEO)
 
-static JSDOMWrapper* createHTMLAudioElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLAudioElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     if (element->isHTMLUnknownElement())
         return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
@@ -254,331 +263,344 @@ static JSDOMWrapper* createHTMLAudioElementWrapper(JSDOMGlobalObject* globalObje
 
 #endif
 
-static JSDOMWrapper* createHTMLBaseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLBaseElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLBaseElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLBaseFontElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLUnknownElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, HTMLBaseFontElement, element.get());
+    return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLQuoteElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLQuoteElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLQuoteElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLBodyElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLBodyElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLBodyElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLBRElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLBRElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLBRElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLButtonElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLButtonElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLButtonElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLCanvasElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLCanvasElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLCanvasElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableCaptionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableCaptionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTableCaptionElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableColElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableColElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTableColElement, element.get());
 }
 
 #if ENABLE(DATALIST_ELEMENT)
 
-static JSDOMWrapper* createHTMLDataListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLDataListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLDataListElement, element.get());
 }
 
 #endif
 
-static JSDOMWrapper* createHTMLModElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLModElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLModElement, element.get());
 }
 
 #if ENABLE(DETAILS_ELEMENT)
 
-static JSDOMWrapper* createHTMLDetailsElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLDetailsElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLDetailsElement, element.get());
 }
 
 #endif
 
-static JSDOMWrapper* createHTMLDirectoryElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLDirectoryElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLDirectoryElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLDivElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLDivElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLDivElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLDListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLDListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLDListElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLEmbedElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLEmbedElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLEmbedElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLFieldSetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLFieldSetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLFieldSetElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLFontElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLFontElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLFontElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLFormElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLFormElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLFormElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLFrameElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLFrameElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLFrameElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLFrameSetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLFrameSetElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLFrameSetElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLHeadingElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLHeadingElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLHeadingElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLHeadElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLHeadElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLHeadElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLHRElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLHRElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLHRElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLHtmlElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLHtmlElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLHtmlElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLIFrameElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLIFrameElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLIFrameElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLUnknownElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
-{
-    return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
-}
-
-static JSDOMWrapper* createHTMLImageElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLImageElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLImageElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLInputElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLInputElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLInputElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLKeygenElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLKeygenElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLKeygenElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLLabelElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLLabelElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLLabelElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLLegendElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLLegendElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLLegendElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLLIElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLLIElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLLIElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLLinkElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLLinkElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLLinkElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLPreElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLPreElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLPreElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLMapElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLMapElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLMapElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLMarqueeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLMarqueeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLMarqueeElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLMenuElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLMenuElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLMenuElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLMetaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLMetaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLMetaElement, element.get());
 }
 
 #if ENABLE(METER_ELEMENT)
 
-static JSDOMWrapper* createHTMLMeterElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLMeterElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLMeterElement, element.get());
 }
 
 #endif
 
-static JSDOMWrapper* createHTMLObjectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLObjectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLObjectElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLOListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLOListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLOListElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLOptGroupElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLOptGroupElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLOptGroupElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLOptionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLOptionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLOptionElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLOutputElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLOutputElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLOutputElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLParagraphElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLParagraphElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLParagraphElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLParamElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLParamElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLParamElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLProgressElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLPictureElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+{
+    return CREATE_DOM_WRAPPER(globalObject, HTMLPictureElement, element.get());
+}
+
+static JSDOMObject* createHTMLProgressElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLProgressElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLScriptElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLScriptElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLScriptElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLSelectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLSelectElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLSelectElement, element.get());
 }
 
-#if ENABLE(VIDEO)
+#if ENABLE(SHADOW_DOM)
 
-static JSDOMWrapper* createHTMLSourceElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLSlotElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
-    if (element->isHTMLUnknownElement())
-        return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
-    return CREATE_DOM_WRAPPER(globalObject, HTMLSourceElement, element.get());
+    return CREATE_DOM_WRAPPER(globalObject, HTMLSlotElement, element.get());
 }
 
 #endif
 
-static JSDOMWrapper* createHTMLSpanElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLSourceElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+{
+    return CREATE_DOM_WRAPPER(globalObject, HTMLSourceElement, element.get());
+}
+
+static JSDOMObject* createHTMLSpanElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLSpanElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLStyleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLStyleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLStyleElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTableElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableSectionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableSectionElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTableSectionElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableCellElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableDataCellElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
-    return CREATE_DOM_WRAPPER(globalObject, HTMLTableCellElement, element.get());
+    return CREATE_DOM_WRAPPER(globalObject, HTMLTableDataCellElement, element.get());
 }
 
 #if ENABLE(TEMPLATE_ELEMENT)
 
-static JSDOMWrapper* createHTMLTemplateElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTemplateElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTemplateElement, element.get());
 }
 
 #endif
 
-static JSDOMWrapper* createHTMLTextAreaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTextAreaElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTextAreaElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTitleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableHeaderCellElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+{
+    return CREATE_DOM_WRAPPER(globalObject, HTMLTableHeaderCellElement, element.get());
+}
+
+static JSDOMObject* createHTMLTimeElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+{
+    return CREATE_DOM_WRAPPER(globalObject, HTMLTimeElement, element.get());
+}
+
+static JSDOMObject* createHTMLTitleElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTitleElement, element.get());
 }
 
-static JSDOMWrapper* createHTMLTableRowElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTableRowElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLTableRowElement, element.get());
 }
 
 #if ENABLE(VIDEO_TRACK)
 
-static JSDOMWrapper* createHTMLTrackElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLTrackElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     if (element->isHTMLUnknownElement())
         return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
@@ -587,14 +609,14 @@ static JSDOMWrapper* createHTMLTrackElementWrapper(JSDOMGlobalObject* globalObje
 
 #endif
 
-static JSDOMWrapper* createHTMLUListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLUListElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     return CREATE_DOM_WRAPPER(globalObject, HTMLUListElement, element.get());
 }
 
 #if ENABLE(VIDEO)
 
-static JSDOMWrapper* createHTMLVideoElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+static JSDOMObject* createHTMLVideoElementWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     if (element->isHTMLUnknownElement())
         return CREATE_DOM_WRAPPER(globalObject, HTMLUnknownElement, element.get());
@@ -628,10 +650,10 @@ static NEVER_INLINE void populateHTMLWrapperMap(HashMap<AtomicStringImpl*, Creat
 #endif
         { bTag, &createHTMLElementWrapper },
         { baseTag, &createHTMLBaseElementWrapper },
-        { basefontTag, &createHTMLBaseFontElementWrapper },
+        { basefontTag, &createHTMLUnknownElementWrapper },
         { bdiTag, &createHTMLElementWrapper },
         { bdoTag, &createHTMLElementWrapper },
-        { bgsoundTag, &createHTMLElementWrapper },
+        { bgsoundTag, &createHTMLUnknownElementWrapper },
         { bigTag, &createHTMLElementWrapper },
         { blockquoteTag, &createHTMLQuoteElementWrapper },
         { bodyTag, &createHTMLBodyElementWrapper },
@@ -716,6 +738,7 @@ static NEVER_INLINE void populateHTMLWrapperMap(HashMap<AtomicStringImpl*, Creat
         { outputTag, &createHTMLOutputElementWrapper },
         { pTag, &createHTMLParagraphElementWrapper },
         { paramTag, &createHTMLParamElementWrapper },
+        { pictureTag, &createHTMLPictureElementWrapper },
         { plaintextTag, &createHTMLElementWrapper },
         { preTag, &createHTMLPreElementWrapper },
         { progressTag, &createHTMLProgressElementWrapper },
@@ -730,10 +753,11 @@ static NEVER_INLINE void populateHTMLWrapperMap(HashMap<AtomicStringImpl*, Creat
         { scriptTag, &createHTMLScriptElementWrapper },
         { sectionTag, &createHTMLElementWrapper },
         { selectTag, &createHTMLSelectElementWrapper },
-        { smallTag, &createHTMLElementWrapper },
-#if ENABLE(VIDEO)
-        { sourceTag, &createHTMLSourceElementWrapper },
+#if ENABLE(SHADOW_DOM)
+        { slotTag, &createHTMLSlotElementWrapper },
 #endif
+        { smallTag, &createHTMLElementWrapper },
+        { sourceTag, &createHTMLSourceElementWrapper },
         { spanTag, &createHTMLSpanElementWrapper },
         { strikeTag, &createHTMLElementWrapper },
         { strongTag, &createHTMLElementWrapper },
@@ -745,15 +769,15 @@ static NEVER_INLINE void populateHTMLWrapperMap(HashMap<AtomicStringImpl*, Creat
         { supTag, &createHTMLElementWrapper },
         { tableTag, &createHTMLTableElementWrapper },
         { tbodyTag, &createHTMLTableSectionElementWrapper },
-        { tdTag, &createHTMLTableCellElementWrapper },
+        { tdTag, &createHTMLTableDataCellElementWrapper },
 #if ENABLE(TEMPLATE_ELEMENT)
         { templateTag, &createHTMLTemplateElementWrapper },
 #endif
         { textareaTag, &createHTMLTextAreaElementWrapper },
         { tfootTag, &createHTMLTableSectionElementWrapper },
-        { thTag, &createHTMLTableCellElementWrapper },
+        { thTag, &createHTMLTableHeaderCellElementWrapper },
         { theadTag, &createHTMLTableSectionElementWrapper },
-        { timeTag, &createHTMLElementWrapper },
+        { timeTag, &createHTMLTimeElementWrapper },
         { titleTag, &createHTMLTitleElementWrapper },
         { trTag, &createHTMLTableRowElementWrapper },
 #if ENABLE(VIDEO_TRACK)
@@ -775,7 +799,7 @@ static NEVER_INLINE void populateHTMLWrapperMap(HashMap<AtomicStringImpl*, Creat
         map.add(table[i].name.localName().impl(), table[i].function);
 }
 
-JSDOMWrapper* createJSHTMLWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
+JSDOMObject* createJSHTMLWrapper(JSDOMGlobalObject* globalObject, PassRefPtr<HTMLElement> element)
 {
     static NeverDestroyed<HashMap<AtomicStringImpl*, CreateHTMLElementWrapperFunction>> functions;
     if (functions.get().isEmpty())

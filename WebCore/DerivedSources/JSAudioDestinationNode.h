@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSAudioDestinationNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioDestinationNode>&& impl)
     {
-        JSAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSAudioDestinationNode>(globalObject->vm().heap)) JSAudioDestinationNode(structure, globalObject, WTF::move(impl));
+        JSAudioDestinationNode* ptr = new (NotNull, JSC::allocateCell<JSAudioDestinationNode>(globalObject->vm().heap)) JSAudioDestinationNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AudioDestinationNode& impl() const
+    AudioDestinationNode& wrapped() const
     {
-        return static_cast<AudioDestinationNode&>(Base::impl());
+        return static_cast<AudioDestinationNode&>(Base::wrapped());
     }
 protected:
-    JSAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioDestinationNode>&&);
+    JSAudioDestinationNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioDestinationNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioDestinationNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioDestinationNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioDestinationNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioDestinationNode*);
 
 
 } // namespace WebCore

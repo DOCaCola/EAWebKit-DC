@@ -69,7 +69,7 @@ class FrameLoaderClientEA : public FrameLoaderClient {
     bool callErrorPageExtension(const ResourceError&);
 public:
     FrameLoaderClientEA();
-    ~FrameLoaderClientEA();
+    ~FrameLoaderClientEA() override;
     virtual void frameLoaderDestroyed() override;
 
 	void setFrame(EA::WebKit::WebFrame* webFrame, Frame* frame);
@@ -96,7 +96,7 @@ public:
     virtual void dispatchDidFailLoading(WebCore::DocumentLoader*, unsigned long, const WebCore::ResourceError&) override;
     virtual bool dispatchDidLoadResourceFromMemoryCache(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, int) override;
 
-    virtual void dispatchDidHandleOnloadEvents() override;
+    virtual void dispatchDidDispatchOnloadEvents() override;
     virtual void dispatchDidReceiveServerRedirectForProvisionalLoad() override;
     virtual void dispatchDidCancelClientRedirect() override;
     virtual void dispatchWillPerformClientRedirect(const URL&, double interval, double fireDate) override;
@@ -155,6 +155,7 @@ public:
 
     virtual ResourceError cancelledError(const ResourceRequest&) override;
     virtual ResourceError blockedError(const ResourceRequest&) override;
+    virtual ResourceError blockedByContentBlockerError(const ResourceRequest&) override;
     virtual ResourceError cannotShowURLError(const ResourceRequest&) override;
     virtual ResourceError interruptedForPolicyChangeError(const ResourceRequest&) override;
 
@@ -193,7 +194,7 @@ public:
     virtual void dispatchDidBecomeFrameset(bool) override;
 
     virtual bool canCachePage() const override;
-    virtual void convertMainResourceLoadToDownload(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&) override;
+    virtual void convertMainResourceLoadToDownload(WebCore::DocumentLoader*, SessionID, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&) override;
 
     virtual RefPtr<Frame> createFrame(const URL&, const String& name, HTMLFrameOwnerElement*, const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight) override;
     virtual RefPtr<Widget> createPlugin(const IntSize&, HTMLPlugInElement*, const URL&, const Vector<String>&, const Vector<String>&, const String&, bool) override;
@@ -201,8 +202,7 @@ public:
     virtual void redirectDataToPlugin(Widget* pluginWidget) override;
 
     virtual PassRefPtr<Widget> createJavaAppletWidget(const IntSize&, HTMLAppletElement*, const URL& baseURL, const Vector<String>& paramNames, const Vector<String>& paramValues) override;
-
-    virtual ObjectContentType objectContentType(const URL&, const String& mimeTypeIn, bool shouldPreferPlugInsForImages) override;
+    virtual ObjectContentType objectContentType(const URL&, const String& mimeTypeIn) override;
     virtual String overrideMediaType() const override;
 
     virtual void dispatchDidClearWindowObjectInWorld(DOMWrapperWorld&) override;
@@ -210,6 +210,7 @@ public:
     virtual void registerForIconNotification(bool) override;
 
     virtual PassRefPtr<FrameNetworkingContext> createNetworkingContext() override;
+    void prefetchDNS(const String&) override;
 	
     const URL& lastRequestedUrl() const { return m_lastRequestedUrl; }
     

@@ -28,7 +28,10 @@
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
 #include "JSDOMPromise.h"
-#include "MediaDevices.h"
+#include "JSMediaTrackSupportedConstraints.h"
+#include "MediaDevicesBuiltins.h"
+#include "MediaTrackSupportedConstraints.h"
+#include "WebCoreJSClientData.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -38,7 +41,9 @@ namespace WebCore {
 
 // Functions
 
-JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMedia(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetSupportedConstraints(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionEnumerateDevices(JSC::ExecState*);
+JSC::EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMediaFromJS(JSC::ExecState*);
 
 class JSMediaDevicesPrototype : public JSC::JSNonFinalObject {
 public:
@@ -69,7 +74,9 @@ private:
 
 static const HashTableValue JSMediaDevicesPrototypeTableValues[] =
 {
-    { "getUserMedia", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionGetUserMedia), (intptr_t) (1) },
+    { "getSupportedConstraints", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionGetSupportedConstraints), (intptr_t) (0) } },
+    { "getUserMedia", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(mediaDevicesGetUserMediaCodeGenerator), (intptr_t) (1) } },
+    { "enumerateDevices", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsMediaDevicesPrototypeFunctionEnumerateDevices), (intptr_t) (0) } },
 };
 
 const ClassInfo JSMediaDevicesPrototype::s_info = { "MediaDevicesPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDevicesPrototype) };
@@ -78,13 +85,14 @@ void JSMediaDevicesPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSMediaDevicesPrototypeTableValues, *this);
+    JSVMClientData& clientData = *static_cast<JSVMClientData*>(vm.clientData);
+    putDirect(vm, clientData.builtinNames().getUserMediaFromJSPrivateName(), JSFunction::create(vm, globalObject(), 0, String(), jsMediaDevicesPrototypeFunctionGetUserMediaFromJS), ReadOnly | DontEnum);
 }
 
 const ClassInfo JSMediaDevices::s_info = { "MediaDevices", &Base::s_info, 0, CREATE_METHOD_TABLE(JSMediaDevices) };
 
-JSMediaDevices::JSMediaDevices(Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaDevices>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSMediaDevices::JSMediaDevices(Structure* structure, JSDOMGlobalObject& globalObject, Ref<MediaDevices>&& impl)
+    : JSDOMWrapper<MediaDevices>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -104,33 +112,60 @@ void JSMediaDevices::destroy(JSC::JSCell* cell)
     thisObject->JSMediaDevices::~JSMediaDevices();
 }
 
-JSMediaDevices::~JSMediaDevices()
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetSupportedConstraints(ExecState* state)
 {
-    releaseImpl();
-}
-
-static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState*, JSPromiseDeferred*);
-EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMedia(ExecState* exec)
-{
-    return JSValue::encode(callPromiseFunction(*exec, jsMediaDevicesPrototypeFunctionGetUserMediaPromise));
-}
-
-static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaPromise(ExecState* exec, JSPromiseDeferred* promiseDeferred)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSMediaDevices* castedThis = jsDynamicCast<JSMediaDevices*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "MediaDevices", "getUserMedia");
+        return throwThisTypeError(*state, "MediaDevices", "getSupportedConstraints");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaDevices::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.getSupportedConstraints()));
+    return JSValue::encode(result);
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise(ExecState*, JSPromiseDeferred*);
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionEnumerateDevices(ExecState* state)
+{
+    return JSValue::encode(callPromiseFunction(*state, jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise));
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionEnumerateDevicesPromise(ExecState* state, JSPromiseDeferred* promiseDeferred)
+{
+    JSValue thisValue = state->thisValue();
+    JSMediaDevices* castedThis = jsDynamicCast<JSMediaDevices*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "MediaDevices", "enumerateDevices");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaDevices::info());
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    Dictionary options = { exec, exec->argument(0) };
-    if (UNLIKELY(exec->hadException()))
+    impl.enumerateDevices(DeferredWrapper(state, castedThis->globalObject(), promiseDeferred), ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaFromJSPromise(ExecState*, JSPromiseDeferred*);
+EncodedJSValue JSC_HOST_CALL jsMediaDevicesPrototypeFunctionGetUserMediaFromJS(ExecState* state)
+{
+    return JSValue::encode(callPromiseFunction(*state, jsMediaDevicesPrototypeFunctionGetUserMediaFromJSPromise));
+}
+
+static inline EncodedJSValue jsMediaDevicesPrototypeFunctionGetUserMediaFromJSPromise(ExecState* state, JSPromiseDeferred* promiseDeferred)
+{
+    JSValue thisValue = state->thisValue();
+    JSMediaDevices* castedThis = jsDynamicCast<JSMediaDevices*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "MediaDevices", "getUserMediaFromJS");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSMediaDevices::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    Dictionary options = { state, state->argument(0) };
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    impl.getUserMedia(options, DeferredWrapper(exec, castedThis->globalObject(), promiseDeferred), ec);
-    setDOMException(exec, ec);
+    impl.getUserMedia(options, DeferredWrapper(state, castedThis->globalObject(), promiseDeferred), ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
@@ -145,7 +180,7 @@ void JSMediaDevicesOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* conte
 {
     auto* jsMediaDevices = jsCast<JSMediaDevices*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsMediaDevices->impl(), jsMediaDevices);
+    uncacheWrapper(world, &jsMediaDevices->wrapped(), jsMediaDevices);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -156,6 +191,14 @@ extern "C" { extern void (*const __identifier("??_7MediaDevices@WebCore@@6B@")[]
 extern "C" { extern void* _ZTVN7WebCore12MediaDevicesE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSMediaDevices>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices* impl)
 {
     if (!impl)
@@ -187,7 +230,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, MediaDevices
 MediaDevices* JSMediaDevices::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSMediaDevices*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

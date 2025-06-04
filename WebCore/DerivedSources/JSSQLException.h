@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSQLException : public JSDOMWrapper {
+class JSSQLException : public JSDOMWrapper<SQLException> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SQLException> Base;
     static JSSQLException* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLException>&& impl)
     {
-        JSSQLException* ptr = new (NotNull, JSC::allocateCell<JSSQLException>(globalObject->vm().heap)) JSSQLException(structure, globalObject, WTF::move(impl));
+        JSSQLException* ptr = new (NotNull, JSC::allocateCell<JSSQLException>(globalObject->vm().heap)) JSSQLException(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static SQLException* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSQLException();
 
     DECLARE_INFO;
 
@@ -53,15 +52,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SQLException& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SQLException* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSQLException(JSC::Structure*, JSDOMGlobalObject*, Ref<SQLException>&&);
+    JSSQLException(JSC::Structure*, JSDOMGlobalObject&, Ref<SQLException>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -84,7 +78,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SQLException*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLException*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SQLException& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLException& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SQLException*);
 
 
 } // namespace WebCore

@@ -76,12 +76,12 @@ private:
 
 static const HashTableValue JSScriptProfileNodePrototypeTableValues[] =
 {
-    { "id", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "functionName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeFunctionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "url", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "lineNumber", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeLineNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "columnNumber", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeColumnNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "children", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsScriptProfileNodePrototypeFunctionChildren), (intptr_t) (0) },
+    { "id", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeId), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "functionName", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeFunctionName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "url", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeUrl), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "lineNumber", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeLineNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "columnNumber", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProfileNodeColumnNumber), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "children", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsScriptProfileNodePrototypeFunctionChildren), (intptr_t) (0) } },
 };
 
 const ClassInfo JSScriptProfileNodePrototype::s_info = { "ScriptProfileNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProfileNodePrototype) };
@@ -94,9 +94,8 @@ void JSScriptProfileNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSScriptProfileNode::s_info = { "ScriptProfileNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProfileNode) };
 
-JSScriptProfileNode::JSScriptProfileNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ScriptProfileNode>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSScriptProfileNode::JSScriptProfileNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ScriptProfileNode>&& impl)
+    : JSDOMWrapper<ScriptProfileNode>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -116,105 +115,100 @@ void JSScriptProfileNode::destroy(JSC::JSCell* cell)
     thisObject->JSScriptProfileNode::~JSScriptProfileNode();
 }
 
-JSScriptProfileNode::~JSScriptProfileNode()
+EncodedJSValue jsScriptProfileNodeId(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsScriptProfileNodeId(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfileNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfileNode", "id");
-        return throwGetterTypeError(*exec, "ScriptProfileNode", "id");
+            return reportDeprecatedGetterError(*state, "ScriptProfileNode", "id");
+        return throwGetterTypeError(*state, "ScriptProfileNode", "id");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.id());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileNodeFunctionName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileNodeFunctionName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfileNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfileNode", "functionName");
-        return throwGetterTypeError(*exec, "ScriptProfileNode", "functionName");
+            return reportDeprecatedGetterError(*state, "ScriptProfileNode", "functionName");
+        return throwGetterTypeError(*state, "ScriptProfileNode", "functionName");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.functionName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.functionName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileNodeUrl(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileNodeUrl(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfileNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfileNode", "url");
-        return throwGetterTypeError(*exec, "ScriptProfileNode", "url");
+            return reportDeprecatedGetterError(*state, "ScriptProfileNode", "url");
+        return throwGetterTypeError(*state, "ScriptProfileNode", "url");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.url());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.url());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileNodeLineNumber(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileNodeLineNumber(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfileNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfileNode", "lineNumber");
-        return throwGetterTypeError(*exec, "ScriptProfileNode", "lineNumber");
+            return reportDeprecatedGetterError(*state, "ScriptProfileNode", "lineNumber");
+        return throwGetterTypeError(*state, "ScriptProfileNode", "lineNumber");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.lineNumber());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProfileNodeColumnNumber(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProfileNodeColumnNumber(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProfileNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProfileNode", "columnNumber");
-        return throwGetterTypeError(*exec, "ScriptProfileNode", "columnNumber");
+            return reportDeprecatedGetterError(*state, "ScriptProfileNode", "columnNumber");
+        return throwGetterTypeError(*state, "ScriptProfileNode", "columnNumber");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.columnNumber());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue JSC_HOST_CALL jsScriptProfileNodePrototypeFunctionChildren(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsScriptProfileNodePrototypeFunctionChildren(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSScriptProfileNode* castedThis = jsDynamicCast<JSScriptProfileNode*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "ScriptProfileNode", "children");
+        return throwThisTypeError(*state, "ScriptProfileNode", "children");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSScriptProfileNode::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), impl.children());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsArray(state, castedThis->globalObject(), impl.children());
     return JSValue::encode(result);
 }
 
@@ -229,7 +223,14 @@ void JSScriptProfileNodeOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* 
 {
     auto* jsScriptProfileNode = jsCast<JSScriptProfileNode*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsScriptProfileNode->impl(), jsScriptProfileNode);
+    uncacheWrapper(world, &jsScriptProfileNode->wrapped(), jsScriptProfileNode);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfileNode* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSScriptProfileNode>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfileNode* impl)
@@ -251,7 +252,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProfil
 ScriptProfileNode* JSScriptProfileNode::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSScriptProfileNode*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

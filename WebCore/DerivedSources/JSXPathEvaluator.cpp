@@ -24,11 +24,11 @@
 #include "ExceptionCode.h"
 #include "JSCustomXPathNSResolver.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "JSXPathExpression.h"
 #include "JSXPathNSResolver.h"
 #include "JSXPathResult.h"
-#include "XPathEvaluator.h"
 #include "XPathExpression.h"
 #include "XPathNSResolver.h"
 #include "XPathResult.h"
@@ -74,67 +74,32 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXPathEvaluatorConstructor : public DOMConstructorObject {
-private:
-    JSXPathEvaluatorConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructor<JSXPathEvaluator> JSXPathEvaluatorConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSXPathEvaluatorConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXPathEvaluatorConstructor* ptr = new (NotNull, JSC::allocateCell<JSXPathEvaluatorConstructor>(vm.heap)) JSXPathEvaluatorConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-protected:
-    static JSC::EncodedJSValue JSC_HOST_CALL constructJSXPathEvaluator(JSC::ExecState*);
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-EncodedJSValue JSC_HOST_CALL JSXPathEvaluatorConstructor::constructJSXPathEvaluator(ExecState* exec)
+template<> EncodedJSValue JSC_HOST_CALL JSXPathEvaluatorConstructor::construct(ExecState* state)
 {
-    auto* castedThis = jsCast<JSXPathEvaluatorConstructor*>(exec->callee());
+    auto* castedThis = jsCast<JSXPathEvaluatorConstructor*>(state->callee());
     RefPtr<XPathEvaluator> object = XPathEvaluator::create();
-    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(state, castedThis->globalObject(), object.get())));
 }
 
-const ClassInfo JSXPathEvaluatorConstructor::s_info = { "XPathEvaluatorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathEvaluatorConstructor) };
-
-JSXPathEvaluatorConstructor::JSXPathEvaluatorConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXPathEvaluatorConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXPathEvaluatorConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXPathEvaluator::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXPathEvaluator::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XPathEvaluator"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSXPathEvaluatorConstructor::getConstructData(JSCell*, ConstructData& constructData)
-{
-    constructData.native.function = constructJSXPathEvaluator;
-    return ConstructTypeHost;
-}
+template<> const ClassInfo JSXPathEvaluatorConstructor::s_info = { "XPathEvaluatorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathEvaluatorConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXPathEvaluatorPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathEvaluatorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "createExpression", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionCreateExpression), (intptr_t) (0) },
-    { "createNSResolver", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionCreateNSResolver), (intptr_t) (0) },
-    { "evaluate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionEvaluate), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathEvaluatorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "createExpression", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionCreateExpression), (intptr_t) (0) } },
+    { "createNSResolver", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionCreateNSResolver), (intptr_t) (0) } },
+    { "evaluate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathEvaluatorPrototypeFunctionEvaluate), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathEvaluatorPrototype::s_info = { "XPathEvaluatorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathEvaluatorPrototype) };
@@ -147,9 +112,8 @@ void JSXPathEvaluatorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathEvaluator::s_info = { "XPathEvaluator", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathEvaluator) };
 
-JSXPathEvaluator::JSXPathEvaluator(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathEvaluator>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathEvaluator::JSXPathEvaluator(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathEvaluator>&& impl)
+    : JSDOMWrapper<XPathEvaluator>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -169,97 +133,92 @@ void JSXPathEvaluator::destroy(JSC::JSCell* cell)
     thisObject->JSXPathEvaluator::~JSXPathEvaluator();
 }
 
-JSXPathEvaluator::~JSXPathEvaluator()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsXPathEvaluatorConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXPathEvaluatorConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXPathEvaluatorPrototype* domObject = jsDynamicCast<JSXPathEvaluatorPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXPathEvaluator::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXPathEvaluator::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSXPathEvaluator::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXPathEvaluatorConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXPathEvaluatorConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionCreateExpression(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionCreateExpression(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathEvaluator* castedThis = jsDynamicCast<JSXPathEvaluator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathEvaluator", "createExpression");
+        return throwThisTypeError(*state, "XPathEvaluator", "createExpression");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathEvaluator::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String expression = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String expression = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<XPathNSResolver> customResolver;
-    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(exec->argument(1));
+    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(state->argument(1));
     if (!resolver) {
-        customResolver = JSCustomXPathNSResolver::create(exec, exec->argument(1));
-        if (UNLIKELY(exec->hadException()))
+        customResolver = JSCustomXPathNSResolver::create(state, state->argument(1));
+        if (UNLIKELY(state->hadException()))
             return JSValue::encode(jsUndefined());
         resolver = customResolver.get();
     }
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createExpression(expression, resolver, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createExpression(expression, resolver, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionCreateNSResolver(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionCreateNSResolver(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathEvaluator* castedThis = jsDynamicCast<JSXPathEvaluator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathEvaluator", "createNSResolver");
+        return throwThisTypeError(*state, "XPathEvaluator", "createNSResolver");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathEvaluator::info());
-    auto& impl = castedThis->impl();
-    Node* nodeResolver = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    Node* nodeResolver = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.createNSResolver(nodeResolver)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.createNSResolver(nodeResolver)));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionEvaluate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathEvaluatorPrototypeFunctionEvaluate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathEvaluator* castedThis = jsDynamicCast<JSXPathEvaluator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathEvaluator", "evaluate");
+        return throwThisTypeError(*state, "XPathEvaluator", "evaluate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathEvaluator::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String expression = exec->argument(0).toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    String expression = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    Node* contextNode = JSNode::toWrapped(exec->argument(1));
-    if (UNLIKELY(exec->hadException()))
+    Node* contextNode = JSNode::toWrapped(state->argument(1));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     RefPtr<XPathNSResolver> customResolver;
-    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(exec->argument(2));
+    XPathNSResolver* resolver = JSXPathNSResolver::toWrapped(state->argument(2));
     if (!resolver) {
-        customResolver = JSCustomXPathNSResolver::create(exec, exec->argument(2));
-        if (UNLIKELY(exec->hadException()))
+        customResolver = JSCustomXPathNSResolver::create(state, state->argument(2));
+        if (UNLIKELY(state->hadException()))
             return JSValue::encode(jsUndefined());
         resolver = customResolver.get();
     }
-    uint16_t type = toUInt16(exec, exec->argument(3), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t type = toUInt16(state, state->argument(3), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    XPathResult* inResult = JSXPathResult::toWrapped(exec->argument(4));
-    if (UNLIKELY(exec->hadException()))
+    XPathResult* inResult = JSXPathResult::toWrapped(state->argument(4));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.evaluate(expression, contextNode, resolver, type, inResult, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.evaluate(expression, contextNode, resolver, type, inResult, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -274,7 +233,14 @@ void JSXPathEvaluatorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsXPathEvaluator = jsCast<JSXPathEvaluator*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathEvaluator->impl(), jsXPathEvaluator);
+    uncacheWrapper(world, &jsXPathEvaluator->wrapped(), jsXPathEvaluator);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathEvaluator* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXPathEvaluator>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathEvaluator* impl)
@@ -296,7 +262,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathEvaluat
 XPathEvaluator* JSXPathEvaluator::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXPathEvaluator*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

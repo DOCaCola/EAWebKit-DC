@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSCryptoKey : public JSDOMWrapper {
+class JSCryptoKey : public JSDOMWrapper<CryptoKey> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<CryptoKey> Base;
     static JSCryptoKey* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CryptoKey>&& impl)
     {
-        JSCryptoKey* ptr = new (NotNull, JSC::allocateCell<JSCryptoKey>(globalObject->vm().heap)) JSCryptoKey(structure, globalObject, WTF::move(impl));
+        JSCryptoKey* ptr = new (NotNull, JSC::allocateCell<JSCryptoKey>(globalObject->vm().heap)) JSCryptoKey(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static CryptoKey* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSCryptoKey();
 
     DECLARE_INFO;
 
@@ -55,16 +54,11 @@ public:
 
 
     // Custom attributes
-    JSC::JSValue algorithm(JSC::ExecState*) const;
-    CryptoKey& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    CryptoKey* m_impl;
+    JSC::JSValue algorithm(JSC::ExecState&) const;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSCryptoKey(JSC::Structure*, JSDOMGlobalObject*, Ref<CryptoKey>&&);
+    JSCryptoKey(JSC::Structure*, JSDOMGlobalObject&, Ref<CryptoKey>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -87,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, CryptoKey*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, CryptoKey*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, CryptoKey& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, CryptoKey& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, CryptoKey*);
 
 
 } // namespace WebCore

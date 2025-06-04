@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSDynamicsCompressorNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DynamicsCompressorNode>&& impl)
     {
-        JSDynamicsCompressorNode* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNode>(globalObject->vm().heap)) JSDynamicsCompressorNode(structure, globalObject, WTF::move(impl));
+        JSDynamicsCompressorNode* ptr = new (NotNull, JSC::allocateCell<JSDynamicsCompressorNode>(globalObject->vm().heap)) JSDynamicsCompressorNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DynamicsCompressorNode& impl() const
+    DynamicsCompressorNode& wrapped() const
     {
-        return static_cast<DynamicsCompressorNode&>(Base::impl());
+        return static_cast<DynamicsCompressorNode&>(Base::wrapped());
     }
 protected:
-    JSDynamicsCompressorNode(JSC::Structure*, JSDOMGlobalObject*, Ref<DynamicsCompressorNode>&&);
+    JSDynamicsCompressorNode(JSC::Structure*, JSDOMGlobalObject&, Ref<DynamicsCompressorNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DynamicsCompressorNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DynamicsCompressorNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DynamicsCompressorNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DynamicsCompressorNode*);
 
 
 } // namespace WebCore

@@ -32,7 +32,7 @@ public:
     typedef JSSVGGraphicsElement Base;
     static JSSVGEllipseElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGEllipseElement>&& impl)
     {
-        JSSVGEllipseElement* ptr = new (NotNull, JSC::allocateCell<JSSVGEllipseElement>(globalObject->vm().heap)) JSSVGEllipseElement(structure, globalObject, WTF::move(impl));
+        JSSVGEllipseElement* ptr = new (NotNull, JSC::allocateCell<JSSVGEllipseElement>(globalObject->vm().heap)) JSSVGEllipseElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGEllipseElement& impl() const
+    SVGEllipseElement& wrapped() const
     {
-        return static_cast<SVGEllipseElement&>(Base::impl());
+        return static_cast<SVGEllipseElement&>(Base::wrapped());
     }
 protected:
-    JSSVGEllipseElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGEllipseElement>&&);
+    JSSVGEllipseElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGEllipseElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

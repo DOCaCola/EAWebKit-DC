@@ -31,7 +31,7 @@ public:
     typedef JSDocument Base;
     static JSHTMLDocument* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLDocument>&& impl)
     {
-        JSHTMLDocument* ptr = new (NotNull, JSC::allocateCell<JSHTMLDocument>(globalObject->vm().heap)) JSHTMLDocument(structure, globalObject, WTF::move(impl));
+        JSHTMLDocument* ptr = new (NotNull, JSC::allocateCell<JSHTMLDocument>(globalObject->vm().heap)) JSHTMLDocument(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,21 +51,21 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    JSC::JSValue all(JSC::ExecState*) const;
-    void setAll(JSC::ExecState*, JSC::JSValue);
+    JSC::JSValue all(JSC::ExecState&) const;
+    void setAll(JSC::ExecState&, JSC::JSValue);
 
     // Custom functions
-    JSC::JSValue open(JSC::ExecState*);
-    JSC::JSValue write(JSC::ExecState*);
-    JSC::JSValue writeln(JSC::ExecState*);
-    HTMLDocument& impl() const
+    JSC::JSValue open(JSC::ExecState&);
+    JSC::JSValue write(JSC::ExecState&);
+    JSC::JSValue writeln(JSC::ExecState&);
+    HTMLDocument& wrapped() const
     {
-        return static_cast<HTMLDocument&>(Base::impl());
+        return static_cast<HTMLDocument&>(Base::wrapped());
     }
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::NewImpurePropertyFiresWatchpoints | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpure | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::NewImpurePropertyFiresWatchpoints | JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSHTMLDocument(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLDocument>&&);
+    JSHTMLDocument(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLDocument>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -74,8 +74,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLDocument*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 

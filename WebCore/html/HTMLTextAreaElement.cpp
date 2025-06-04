@@ -251,9 +251,9 @@ bool HTMLTextAreaElement::isMouseFocusable() const
     return isFocusable();
 }
 
-void HTMLTextAreaElement::updateFocusAppearance(bool restorePreviousSelection)
+void HTMLTextAreaElement::updateFocusAppearance(SelectionRestorationMode restorationMode, SelectionRevealMode revealMode)
 {
-    if (!restorePreviousSelection || !hasCachedSelection()) {
+    if (restorationMode == SelectionRestorationMode::SetDefault || !hasCachedSelection()) {
         // If this is the first focus, set a caret at the beginning of the text.  
         // This matches some browsers' behavior; see bug 11746 Comment #15.
         // http://bugs.webkit.org/show_bug.cgi?id=11746#c15
@@ -261,13 +261,13 @@ void HTMLTextAreaElement::updateFocusAppearance(bool restorePreviousSelection)
     } else
         restoreCachedSelection(Element::defaultFocusTextStateChangeIntent());
 
-    if (document().frame())
+    if (document().frame() && revealMode == SelectionRevealMode::Reveal)
         document().frame()->selection().revealSelection();
 }
 
 void HTMLTextAreaElement::defaultEventHandler(Event* event)
 {
-    if (renderer() && (event->isMouseEvent() || event->isDragEvent() || event->eventInterface() == WheelEventInterfaceType || event->type() == eventNames().blurEvent))
+    if (renderer() && (event->isMouseEvent() || event->type() == eventNames().blurEvent))
         forwardEvent(event);
     else if (renderer() && is<BeforeTextInsertedEvent>(*event))
         handleBeforeTextInsertedEvent(downcast<BeforeTextInsertedEvent>(event));
@@ -406,13 +406,12 @@ void HTMLTextAreaElement::setDefaultValue(const String& defaultValue)
     Ref<HTMLTextAreaElement> protectFromMutationEvents(*this);
 
     // To preserve comments, remove only the text nodes, then add a single text node.
-    Vector<RefPtr<Text>> textNodes;
+    Vector<Ref<Text>> textNodes;
     for (Text* textNode = TextNodeTraversal::firstChild(*this); textNode; textNode = TextNodeTraversal::nextSibling(*textNode))
-        textNodes.append(textNode);
+        textNodes.append(*textNode);
 
-    size_t size = textNodes.size();
-    for (size_t i = 0; i < size; ++i)
-        removeChild(textNodes[i].get(), IGNORE_EXCEPTION);
+    for (auto& textNode : textNodes)
+        removeChild(textNode.get(), IGNORE_EXCEPTION);
 
     // Normalize line endings.
     String value = defaultValue;
@@ -523,8 +522,8 @@ void HTMLTextAreaElement::updatePlaceholderText()
     String placeholderText = strippedPlaceholder();
     if (placeholderText.isEmpty()) {
         if (m_placeholder) {
-            userAgentShadowRoot()->removeChild(m_placeholder, ASSERT_NO_EXCEPTION);
-            m_placeholder = 0;
+            userAgentShadowRoot()->removeChild(*m_placeholder, ASSERT_NO_EXCEPTION);
+            m_placeholder = nullptr;
         }
         return;
     }
@@ -533,7 +532,7 @@ void HTMLTextAreaElement::updatePlaceholderText()
         m_placeholder = placeholder.get();
         m_placeholder->setPseudo(AtomicString("-webkit-input-placeholder", AtomicString::ConstructFromLiteral));
         m_placeholder->setInlineStyleProperty(CSSPropertyDisplay, isPlaceholderVisible() ? CSSValueBlock : CSSValueNone, true);
-        userAgentShadowRoot()->insertBefore(m_placeholder, innerTextElement()->nextSibling());
+        userAgentShadowRoot()->insertBefore(*m_placeholder, innerTextElement()->nextSibling());
     }
     m_placeholder->setInnerText(placeholderText, ASSERT_NO_EXCEPTION);
 }

@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSStyleSheetList : public JSDOMWrapper {
+class JSStyleSheetList : public JSDOMWrapper<StyleSheetList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<StyleSheetList> Base;
     static JSStyleSheetList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<StyleSheetList>&& impl)
     {
-        JSStyleSheetList* ptr = new (NotNull, JSC::allocateCell<JSStyleSheetList>(globalObject->vm().heap)) JSStyleSheetList(structure, globalObject, WTF::move(impl));
+        JSStyleSheetList* ptr = new (NotNull, JSC::allocateCell<JSStyleSheetList>(globalObject->vm().heap)) JSStyleSheetList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSStyleSheetList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    StyleSheetList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    StyleSheetList* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSStyleSheetList(JSC::Structure*, JSDOMGlobalObject*, Ref<StyleSheetList>&&);
+    JSStyleSheetList(JSC::Structure*, JSDOMGlobalObject&, Ref<StyleSheetList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,8 +65,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, StyleSheetList*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSStyleSheetListOwner : public JSC::WeakHandleOwner {
@@ -88,7 +81,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, StyleSheetList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, StyleSheetList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, StyleSheetList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, StyleSheetList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, StyleSheetList*);
 
 
 } // namespace WebCore

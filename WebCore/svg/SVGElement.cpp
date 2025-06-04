@@ -488,9 +488,9 @@ SVGUseElement* SVGElement::correspondingUseElement() const
     auto* root = containingShadowRoot();
     if (!root)
         return nullptr;
-    if (root->type() != ShadowRoot::UserAgentShadowRoot)
+    if (root->type() != ShadowRoot::Type::UserAgent)
         return nullptr;
-    auto* host = root->hostElement();
+    auto* host = root->host();
     if (!is<SVGUseElement>(host))
         return nullptr;
     return &downcast<SVGUseElement>(*host);
@@ -791,10 +791,11 @@ void SVGElement::synchronizeSystemLanguage(SVGElement* contextElement)
 
 RefPtr<RenderStyle> SVGElement::customStyleForRenderer(RenderStyle& parentStyle)
 {
-    if (!correspondingElement())
-        return document().ensureStyleResolver().styleForElement(this, &parentStyle);
+    // If the element is in a <use> tree we get the style from the definition tree.
+    if (auto* styleElement = this->correspondingElement())
+        return styleElement->styleResolver().styleForElement(styleElement, &parentStyle, DisallowStyleSharing);
 
-    return document().ensureStyleResolver().styleForElement(correspondingElement(), &parentStyle, DisallowStyleSharing);
+    return resolveStyle(&parentStyle);
 }
 
 MutableStyleProperties* SVGElement::animatedSMILStyleProperties() const

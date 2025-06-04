@@ -37,6 +37,7 @@ namespace WebCore {
 
 class CachedRawResource;
 class ContentFilterUnblockHandler;
+class DocumentLoader;
 class PlatformContentFilter;
 class SharedBuffer;
 
@@ -47,20 +48,21 @@ class ContentFilter final : private CachedRawResourceClient {
 public:
     template <typename T> static void addType() { types().append(type<T>()); }
 
-    using DecisionFunction = std::function<void()>;
-    static std::unique_ptr<ContentFilter> createIfNeeded(DecisionFunction);
+    static std::unique_ptr<ContentFilter> createIfEnabled(DocumentLoader&);
     ~ContentFilter() override;
 
     static const char* urlScheme() { return "x-apple-content-filter"; }
 
     void willSendRequest(ResourceRequest&, const ResourceResponse&);
     void startFilteringMainResource(CachedRawResource&);
+    void stopFilteringMainResource();
 
     enum class State {
         Initialized,
         Filtering,
         Allowed,
-        Blocked
+        Blocked,
+        Stopped
     };
     State state() const { return m_state; }
     ContentFilterUnblockHandler unblockHandler() const;
@@ -76,8 +78,8 @@ private:
     WEBCORE_EXPORT static Vector<Type>& types();
 
     using Container = Vector<std::unique_ptr<PlatformContentFilter>>;
-    friend std::unique_ptr<ContentFilter> std::make_unique<ContentFilter>(Container&&, DecisionFunction&&);
-    ContentFilter(Container, DecisionFunction);
+    friend std::unique_ptr<ContentFilter> std::make_unique<ContentFilter>(Container&&, DocumentLoader&);
+    ContentFilter(Container, DocumentLoader&);
 
     // CachedRawResourceClient
     void responseReceived(CachedResource*, const ResourceResponse&) override;
@@ -89,9 +91,10 @@ private:
 
     void forEachContentFilterUntilBlocked(std::function<void(PlatformContentFilter&)>);
     void didDecide(State);
+    void deliverResourceData(CachedResource&);
 
     const Container m_contentFilters;
-    const DecisionFunction m_decisionFunction;
+    DocumentLoader& m_documentLoader;
     CachedResourceHandle<CachedRawResource> m_mainResource;
     PlatformContentFilter* m_blockingContentFilter { nullptr };
     State m_state { State::Initialized };

@@ -22,8 +22,8 @@
 #include "JSHTMLStyleElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLStyleElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSStyleSheet.h"
 #include "StyleSheet.h"
 #include "URL.h"
@@ -70,52 +70,26 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLStyleElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLStyleElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLStyleElement> JSHTMLStyleElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLStyleElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLStyleElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLStyleElementConstructor>(vm.heap)) JSHTMLStyleElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLStyleElementConstructor::s_info = { "HTMLStyleElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLStyleElementConstructor) };
-
-JSHTMLStyleElementConstructor::JSHTMLStyleElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLStyleElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLStyleElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLStyleElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLStyleElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLStyleElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLStyleElementConstructor::s_info = { "HTMLStyleElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLStyleElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLStyleElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "disabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementDisabled) },
-    { "media", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementMedia) },
-    { "type", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementType) },
-    { "sheet", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "disabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementDisabled) } },
+    { "media", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementMedia), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementMedia) } },
+    { "type", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLStyleElementType) } },
+    { "sheet", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLStyleElementSheet), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSHTMLStyleElementPrototype::s_info = { "HTMLStyleElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLStyleElementPrototype) };
@@ -128,7 +102,7 @@ void JSHTMLStyleElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLStyleElement::s_info = { "HTMLStyleElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLStyleElement) };
 
-JSHTMLStyleElement::JSHTMLStyleElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLStyleElement>&& impl)
+JSHTMLStyleElement::JSHTMLStyleElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLStyleElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -143,137 +117,137 @@ JSObject* JSHTMLStyleElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLStyleElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLStyleElementDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLStyleElementDisabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLStyleElement", "disabled");
-        return throwGetterTypeError(*exec, "HTMLStyleElement", "disabled");
+            return reportDeprecatedGetterError(*state, "HTMLStyleElement", "disabled");
+        return throwGetterTypeError(*state, "HTMLStyleElement", "disabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.disabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLStyleElementMedia(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLStyleElementMedia(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLStyleElement", "media");
-        return throwGetterTypeError(*exec, "HTMLStyleElement", "media");
+            return reportDeprecatedGetterError(*state, "HTMLStyleElement", "media");
+        return throwGetterTypeError(*state, "HTMLStyleElement", "media");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::mediaAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::mediaAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLStyleElementType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLStyleElementType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLStyleElement", "type");
-        return throwGetterTypeError(*exec, "HTMLStyleElement", "type");
+            return reportDeprecatedGetterError(*state, "HTMLStyleElement", "type");
+        return throwGetterTypeError(*state, "HTMLStyleElement", "type");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.fastGetAttribute(WebCore::HTMLNames::typeAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLStyleElementSheet(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLStyleElementSheet(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLStyleElement", "sheet");
-        return throwGetterTypeError(*exec, "HTMLStyleElement", "sheet");
+            return reportDeprecatedGetterError(*state, "HTMLStyleElement", "sheet");
+        return throwGetterTypeError(*state, "HTMLStyleElement", "sheet");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.sheet()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.sheet()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLStyleElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLStyleElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLStyleElementPrototype* domObject = jsDynamicCast<JSHTMLStyleElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLStyleElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLStyleElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLStyleElementDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLStyleElementDisabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLStyleElement", "disabled");
+            reportDeprecatedSetterError(*state, "HTMLStyleElement", "disabled");
         else
-            throwSetterTypeError(*exec, "HTMLStyleElement", "disabled");
+            throwSetterTypeError(*state, "HTMLStyleElement", "disabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setDisabled(nativeValue);
 }
 
 
-void setJSHTMLStyleElementMedia(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLStyleElementMedia(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLStyleElement", "media");
+            reportDeprecatedSetterError(*state, "HTMLStyleElement", "media");
         else
-            throwSetterTypeError(*exec, "HTMLStyleElement", "media");
+            throwSetterTypeError(*state, "HTMLStyleElement", "media");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::mediaAttr, nativeValue);
 }
 
 
-void setJSHTMLStyleElementType(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLStyleElementType(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLStyleElement* castedThis = jsDynamicCast<JSHTMLStyleElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLStyleElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLStyleElement", "type");
+            reportDeprecatedSetterError(*state, "HTMLStyleElement", "type");
         else
-            throwSetterTypeError(*exec, "HTMLStyleElement", "type");
+            throwSetterTypeError(*state, "HTMLStyleElement", "type");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::typeAttr, nativeValue);
 }
@@ -281,7 +255,7 @@ void setJSHTMLStyleElementType(ExecState* exec, JSObject* baseObject, EncodedJSV
 
 JSValue JSHTMLStyleElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLStyleElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLStyleElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

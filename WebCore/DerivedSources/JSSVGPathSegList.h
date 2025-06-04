@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGPathSegList : public JSDOMWrapper {
+class JSSVGPathSegList : public JSDOMWrapper<SVGPathSegListPropertyTearOff> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPathSegListPropertyTearOff> Base;
     static JSSVGPathSegList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegListPropertyTearOff>&& impl)
     {
-        JSSVGPathSegList* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegList>(globalObject->vm().heap)) JSSVGPathSegList(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegList* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegList>(globalObject->vm().heap)) JSSVGPathSegList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static SVGPathSegListPropertyTearOff* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSSVGPathSegList();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegListPropertyTearOff& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPathSegListPropertyTearOff* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSSVGPathSegList(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegListPropertyTearOff>&&);
+    JSSVGPathSegList(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegListPropertyTearOff>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPathSegListProper
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSegListPropertyTearOff*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPathSegListPropertyTearOff& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPathSegListPropertyTearOff& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPathSegListPropertyTearOff*);
 
 
 } // namespace WebCore

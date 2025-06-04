@@ -23,7 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "SVGLength.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -74,26 +74,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGLengthConstructor : public DOMConstructorObject {
-private:
-    JSSVGLengthConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGLengthConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGLengthConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGLengthConstructor>(vm.heap)) JSSVGLengthConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGLength> JSSVGLengthConstructor;
 
 /* Hash table */
 
@@ -105,25 +86,25 @@ static const struct CompactHashIndex JSSVGLengthTableIndex[2] = {
 
 static const HashTableValue JSSVGLengthTableValues[] =
 {
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValue) },
+    { "value", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValue) } },
 };
 
-static const HashTable JSSVGLengthTable = { 1, 1, true, JSSVGLengthTableValues, 0, JSSVGLengthTableIndex };
+static const HashTable JSSVGLengthTable = { 1, 1, true, JSSVGLengthTableValues, JSSVGLengthTableIndex };
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGLengthConstructorTableValues[] =
 {
-    { "SVG_LENGTHTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
+    { "SVG_LENGTHTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_LENGTHTYPE_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_LENGTHTYPE_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_LENGTHTYPE_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_LENGTHTYPE_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_LENGTHTYPE_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "SVG_LENGTHTYPE_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "SVG_LENGTHTYPE_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "SVG_LENGTHTYPE_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "SVG_LENGTHTYPE_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "SVG_LENGTHTYPE_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
 };
 
 
@@ -139,44 +120,37 @@ COMPILE_ASSERT(8 == SVGLength::SVG_LENGTHTYPE_IN, SVGLengthEnumSVG_LENGTHTYPE_IN
 COMPILE_ASSERT(9 == SVGLength::SVG_LENGTHTYPE_PT, SVGLengthEnumSVG_LENGTHTYPE_PTIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(10 == SVGLength::SVG_LENGTHTYPE_PC, SVGLengthEnumSVG_LENGTHTYPE_PCIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSSVGLengthConstructor::s_info = { "SVGLengthConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLengthConstructor) };
-
-JSSVGLengthConstructor::JSSVGLengthConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGLengthConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGLengthConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGLength::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGLength::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGLength"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGLengthConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGLengthConstructor::s_info = { "SVGLengthConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLengthConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGLengthPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "unitType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthUnitType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "valueInSpecifiedUnits", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValueInSpecifiedUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValueInSpecifiedUnits) },
-    { "valueAsString", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValueAsString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValueAsString) },
-    { "SVG_LENGTHTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "SVG_LENGTHTYPE_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(10), (intptr_t) (0) },
-    { "newValueSpecifiedUnits", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGLengthPrototypeFunctionNewValueSpecifiedUnits), (intptr_t) (2) },
-    { "convertToSpecifiedUnits", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGLengthPrototypeFunctionConvertToSpecifiedUnits), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "unitType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthUnitType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "valueInSpecifiedUnits", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValueInSpecifiedUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValueInSpecifiedUnits) } },
+    { "valueAsString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGLengthValueAsString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGLengthValueAsString) } },
+    { "SVG_LENGTHTYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_LENGTHTYPE_NUMBER", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_LENGTHTYPE_PERCENTAGE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_LENGTHTYPE_EMS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_LENGTHTYPE_EXS", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "SVG_LENGTHTYPE_PX", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "SVG_LENGTHTYPE_CM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "SVG_LENGTHTYPE_MM", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "SVG_LENGTHTYPE_IN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "SVG_LENGTHTYPE_PT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "SVG_LENGTHTYPE_PC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(10) } },
+    { "newValueSpecifiedUnits", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGLengthPrototypeFunctionNewValueSpecifiedUnits), (intptr_t) (2) } },
+    { "convertToSpecifiedUnits", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGLengthPrototypeFunctionConvertToSpecifiedUnits), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSVGLengthPrototype::s_info = { "SVGLengthPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGLengthPrototype) };
@@ -189,9 +163,8 @@ void JSSVGLengthPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGLength::s_info = { "SVGLength", &Base::s_info, &JSSVGLengthTable, CREATE_METHOD_TABLE(JSSVGLength) };
 
-JSSVGLength::JSSVGLength(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGLength>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGLength::JSSVGLength(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPropertyTearOff<SVGLength>>&& impl)
+    : JSDOMWrapper<SVGPropertyTearOff<SVGLength>>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -211,117 +184,114 @@ void JSSVGLength::destroy(JSC::JSCell* cell)
     thisObject->JSSVGLength::~JSSVGLength();
 }
 
-JSSVGLength::~JSSVGLength()
-{
-    releaseImpl();
-}
-
-bool JSSVGLength::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSSVGLength::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSVGLength*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSSVGLength, Base>(exec, JSSVGLengthTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSSVGLength, Base>(state, JSSVGLengthTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsSVGLengthUnitType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLengthUnitType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLengthPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLength", "unitType");
-        return throwGetterTypeError(*exec, "SVGLength", "unitType");
+            return reportDeprecatedGetterError(*state, "SVGLength", "unitType");
+        return throwGetterTypeError(*state, "SVGLength", "unitType");
     }
-    SVGLength& impl = castedThis->impl().propertyReference();
+    SVGLength& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.unitType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLengthValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLengthValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSVGLength*>(slotBase);
-    return JSValue::encode(castedThis->value(exec));
+    return JSValue::encode(castedThis->value(*state));
 }
 
 
-EncodedJSValue jsSVGLengthValueInSpecifiedUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLengthValueInSpecifiedUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLengthPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLength", "valueInSpecifiedUnits");
-        return throwGetterTypeError(*exec, "SVGLength", "valueInSpecifiedUnits");
+            return reportDeprecatedGetterError(*state, "SVGLength", "valueInSpecifiedUnits");
+        return throwGetterTypeError(*state, "SVGLength", "valueInSpecifiedUnits");
     }
-    SVGLength& impl = castedThis->impl().propertyReference();
+    SVGLength& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.valueInSpecifiedUnits());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLengthValueAsString(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGLengthValueAsString(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLengthPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGLength", "valueAsString");
-        return throwGetterTypeError(*exec, "SVGLength", "valueAsString");
+            return reportDeprecatedGetterError(*state, "SVGLength", "valueAsString");
+        return throwGetterTypeError(*state, "SVGLength", "valueAsString");
     }
-    SVGLength& impl = castedThis->impl().propertyReference();
-    JSValue result = jsStringWithCache(exec, impl.valueAsString());
+    SVGLength& impl = castedThis->wrapped().propertyReference();
+    JSValue result = jsStringWithCache(state, impl.valueAsString());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGLengthConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGLengthConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGLengthPrototype* domObject = jsDynamicCast<JSSVGLengthPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGLength::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGLength::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGLengthValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGLengthValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSVGLength*>(baseObject);
     UNUSED_PARAM(thisValue);
-    UNUSED_PARAM(exec);
-    castedThis->setValue(exec, value);
+    UNUSED_PARAM(state);
+    castedThis->setValue(*state, value);
 }
 
 
-void setJSSVGLengthValueInSpecifiedUnits(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGLengthValueInSpecifiedUnits(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLengthPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGLength", "valueInSpecifiedUnits");
+            reportDeprecatedSetterError(*state, "SVGLength", "valueInSpecifiedUnits");
         else
-            throwSetterTypeError(*exec, "SVGLength", "valueInSpecifiedUnits");
+            throwSetterTypeError(*state, "SVGLength", "valueInSpecifiedUnits");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGLength& podImpl = impl.propertyReference();
@@ -330,30 +300,30 @@ void setJSSVGLengthValueInSpecifiedUnits(ExecState* exec, JSObject* baseObject, 
 }
 
 
-void setJSSVGLengthValueAsString(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGLengthValueAsString(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGLengthPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGLength", "valueAsString");
+            reportDeprecatedSetterError(*state, "SVGLength", "valueAsString");
         else
-            throwSetterTypeError(*exec, "SVGLength", "valueAsString");
+            throwSetterTypeError(*state, "SVGLength", "valueAsString");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGLength& podImpl = impl.propertyReference();
     podImpl.setValueAsString(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     if (!ec)
         impl.commitChange();
 }
@@ -361,46 +331,46 @@ void setJSSVGLengthValueAsString(ExecState* exec, JSObject* baseObject, EncodedJ
 
 JSValue JSSVGLength::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGLengthConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGLengthConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGLengthPrototypeFunctionNewValueSpecifiedUnits(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGLengthPrototypeFunctionNewValueSpecifiedUnits(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGLength", "newValueSpecifiedUnits");
+        return throwThisTypeError(*state, "SVGLength", "newValueSpecifiedUnits");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGLength::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGLength& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    uint16_t unitType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t unitType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float valueInSpecifiedUnits = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float valueInSpecifiedUnits = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.newValueSpecifiedUnits(unitType, valueInSpecifiedUnits, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     if (!ec)
         impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGLengthPrototypeFunctionConvertToSpecifiedUnits(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGLengthPrototypeFunctionConvertToSpecifiedUnits(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGLength* castedThis = jsDynamicCast<JSSVGLength*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGLength", "convertToSpecifiedUnits");
+        return throwThisTypeError(*state, "SVGLength", "convertToSpecifiedUnits");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGLength::info());
-    return JSValue::encode(castedThis->convertToSpecifiedUnits(exec));
+    return JSValue::encode(castedThis->convertToSpecifiedUnits(*state));
 }
 
 bool JSSVGLengthOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -414,7 +384,14 @@ void JSSVGLengthOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsSVGLength = jsCast<JSSVGLength*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGLength->impl(), jsSVGLength);
+    uncacheWrapper(world, &jsSVGLength->wrapped(), jsSVGLength);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGLength>* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGLength, SVGPropertyTearOff<SVGLength>>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGLength>* impl)
@@ -429,7 +406,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyT
 SVGPropertyTearOff<SVGLength>* JSSVGLength::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGLength*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

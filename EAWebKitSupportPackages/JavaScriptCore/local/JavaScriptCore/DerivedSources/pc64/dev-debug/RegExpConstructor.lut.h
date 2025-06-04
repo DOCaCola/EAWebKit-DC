@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/RegExpConstructor.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/RegExpConstructor.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -74,31 +72,31 @@ static const struct CompactHashIndex regExpConstructorTableIndex[65] = {
     { 13, -1 },
 };
 
-
 static const struct HashTableValue regExpConstructorTableValues[21] = {
-   { "input", None, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorInput), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorInput) },
-   { "$_", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorInput), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorInput) },
-   { "multiline", None, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorMultiline), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorMultiline) },
-   { "$*", DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorMultiline), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorMultiline) },
-   { "lastMatch", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastMatch), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$&", DontDelete|ReadOnly|DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastMatch), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "lastParen", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastParen), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$+", DontDelete|ReadOnly|DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastParen), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "leftContext", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLeftContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$`", DontDelete|ReadOnly|DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLeftContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "rightContext", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorRightContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$'", DontDelete|ReadOnly|DontEnum, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorRightContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$1", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar1), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$2", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar2), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$3", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar3), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$4", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar4), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$5", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar5), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$6", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar6), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$7", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar7), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$8", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar8), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
-   { "$9", DontDelete|ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar9), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) },
+   { "input", None, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorInput), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorInput) } },
+   { "$_", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorInput), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorInput) } },
+   { "multiline", None, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorMultiline), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorMultiline) } },
+   { "$*", DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorMultiline), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(setRegExpConstructorMultiline) } },
+   { "lastMatch", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastMatch), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$&", DontDelete|ReadOnly|DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastMatch), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "lastParen", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastParen), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$+", DontDelete|ReadOnly|DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLastParen), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "leftContext", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLeftContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$`", DontDelete|ReadOnly|DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorLeftContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "rightContext", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorRightContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$'", DontDelete|ReadOnly|DontEnum, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorRightContext), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$1", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar1), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$2", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar2), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$3", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar3), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$4", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar4), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$5", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar5), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$6", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar6), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$7", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar7), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$8", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar8), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
+   { "$9", DontDelete|ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(regExpConstructorDollar9), (intptr_t)static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable regExpConstructorTable =
-    { 21, 63, true, regExpConstructorTableValues, 0, regExpConstructorTableIndex };
-} // namespace
+static const struct HashTable regExpConstructorTable =
+    { 21, 63, true, regExpConstructorTableValues, regExpConstructorTableIndex };
+
+} // namespace JSC

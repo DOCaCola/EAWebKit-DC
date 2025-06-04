@@ -80,7 +80,7 @@ private:
     virtual Scrollbar* verticalScrollbar() const override { return m_scrollBar.get(); }
 	virtual IntSize visibleSize() const override;
     virtual IntSize contentsSize() const override;
-    virtual IntRect scrollableAreaBoundingBox() const override;
+    virtual IntRect scrollableAreaBoundingBox(bool*) const override;
     virtual bool updatesScrollLayerPositionOnMainThread() const override { return true; }
 	virtual bool forceUpdateScrollbarsOnMainThreadForPerformanceTesting() const override { return false; }
 	virtual bool isScrollableOrRubberbandable() override { return false; }

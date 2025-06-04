@@ -27,7 +27,7 @@
 #include "TextureMapperAnimation.h"
 #include <wtf/CurrentTime.h>
 
-#if USE(TEXTURE_MAPPER)
+#if USE(TEXTURE_MAPPER) && !USE(COORDINATED_GRAPHICS)
 
 //+EAWebKitChange
 //2/10/2015
@@ -306,6 +306,7 @@ void GraphicsLayerTextureMapper::setContentsToImage(Image* image)
         if (!m_compositedImage)
             m_compositedImage = TextureMapperTiledBackingStore::create();
         m_compositedImage->setContentsToImage(image);
+        m_compositedImage->updateContentsScale(pageScaleFactor() * deviceScaleFactor());
     } else {
         m_compositedNativeImagePtr = nullptr;
         m_compositedImage = nullptr;
@@ -551,8 +552,10 @@ void GraphicsLayerTextureMapper::updateBackingStoreIfNeeded()
         return;
 
     TextureMapperTiledBackingStore* backingStore = static_cast<TextureMapperTiledBackingStore*>(m_backingStore.get());
+    backingStore->updateContentsScale(pageScaleFactor() * deviceScaleFactor());
 
-    backingStore->updateContents(textureMapper, this, m_size, dirtyRect, BitmapTexture::UpdateCanModifyOriginalImageData);
+    dirtyRect.scale(pageScaleFactor() * deviceScaleFactor());
+    backingStore->updateContents(*textureMapper, this, m_size, dirtyRect, BitmapTexture::UpdateCanModifyOriginalImageData);
 
     m_needsDisplay = false;
     m_needsDisplayRect = IntRect();
@@ -577,7 +580,7 @@ bool GraphicsLayerTextureMapper::addAnimation(const KeyframeValueList& valueList
         listsMatch = validateTransformOperations(valueList, hasBigRotation) >= 0;
 
     const double currentTime = monotonicallyIncreasingTime();
-    m_animations.add(TextureMapperAnimation(keyframesName, valueList, boxSize, anim, currentTime - timeOffset, listsMatch));
+    m_animations.add(TextureMapperAnimation(keyframesName, valueList, boxSize, *anim, listsMatch, currentTime - timeOffset, 0, TextureMapperAnimation::AnimationState::Playing));
     // m_animationStartTime is the time of the first real frame of animation, now or delayed by a negative offset.
     if (timeOffset > 0)
         m_animationStartTime = currentTime;

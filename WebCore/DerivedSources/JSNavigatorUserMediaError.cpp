@@ -25,7 +25,6 @@
 #include "JSNavigatorUserMediaError.h"
 
 #include "JSDOMBinding.h"
-#include "NavigatorUserMediaError.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -73,15 +72,15 @@ static const struct CompactHashIndex JSNavigatorUserMediaErrorTableIndex[2] = {
 
 static const HashTableValue JSNavigatorUserMediaErrorTableValues[] =
 {
-    { "constraintName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorUserMediaErrorConstraintName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constraintName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorUserMediaErrorConstraintName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSNavigatorUserMediaErrorTable = { 1, 1, true, JSNavigatorUserMediaErrorTableValues, 0, JSNavigatorUserMediaErrorTableIndex };
+static const HashTable JSNavigatorUserMediaErrorTable = { 1, 1, true, JSNavigatorUserMediaErrorTableValues, JSNavigatorUserMediaErrorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSNavigatorUserMediaErrorPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSNavigatorUserMediaErrorPrototype::s_info = { "NavigatorUserMediaErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNavigatorUserMediaErrorPrototype) };
@@ -94,7 +93,7 @@ void JSNavigatorUserMediaErrorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSNavigatorUserMediaError::s_info = { "NavigatorUserMediaError", &Base::s_info, &JSNavigatorUserMediaErrorTable, CREATE_METHOD_TABLE(JSNavigatorUserMediaError) };
 
-JSNavigatorUserMediaError::JSNavigatorUserMediaError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<NavigatorUserMediaError>&& impl)
+JSNavigatorUserMediaError::JSNavigatorUserMediaError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<NavigatorUserMediaError>&& impl)
     : JSDOMError(structure, globalObject, WTF::move(impl))
 {
 }
@@ -109,24 +108,26 @@ JSObject* JSNavigatorUserMediaError::getPrototype(VM& vm, JSGlobalObject* global
     return getDOMPrototype<JSNavigatorUserMediaError>(vm, globalObject);
 }
 
-bool JSNavigatorUserMediaError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSNavigatorUserMediaError::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSNavigatorUserMediaError*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSNavigatorUserMediaError, Base>(exec, JSNavigatorUserMediaErrorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSNavigatorUserMediaError, Base>(state, JSNavigatorUserMediaErrorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsNavigatorUserMediaErrorConstraintName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorUserMediaErrorConstraintName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigatorUserMediaError*>(slotBase);
     JSNavigatorUserMediaError* castedThisObject = jsDynamicCast<JSNavigatorUserMediaError*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "NavigatorUserMediaError", "constraintName");
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.constraintName());
+        reportDeprecatedGetterError(*state, "NavigatorUserMediaError", "constraintName");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.constraintName());
     return JSValue::encode(result);
 }
 
@@ -139,6 +140,14 @@ extern "C" { extern void (*const __identifier("??_7NavigatorUserMediaError@WebCo
 extern "C" { extern void* _ZTVN7WebCore23NavigatorUserMediaErrorE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, NavigatorUserMediaError* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSNavigatorUserMediaError>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, NavigatorUserMediaError* impl)
 {
     if (!impl)

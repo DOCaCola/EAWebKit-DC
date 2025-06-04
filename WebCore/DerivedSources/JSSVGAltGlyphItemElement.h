@@ -34,7 +34,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGAltGlyphItemElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAltGlyphItemElement>&& impl)
     {
-        JSSVGAltGlyphItemElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphItemElement>(globalObject->vm().heap)) JSSVGAltGlyphItemElement(structure, globalObject, WTF::move(impl));
+        JSSVGAltGlyphItemElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAltGlyphItemElement>(globalObject->vm().heap)) JSSVGAltGlyphItemElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAltGlyphItemElement& impl() const
+    SVGAltGlyphItemElement& wrapped() const
     {
-        return static_cast<SVGAltGlyphItemElement&>(Base::impl());
+        return static_cast<SVGAltGlyphItemElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAltGlyphItemElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAltGlyphItemElement>&&);
+    JSSVGAltGlyphItemElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAltGlyphItemElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

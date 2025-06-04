@@ -226,6 +226,8 @@ static const LChar mpathString8[] = "mpath";
 static const LChar nameString8[] = "name";
 static const LChar numOctavesString8[] = "numOctaves";
 static const LChar offsetString8[] = "offset";
+static const LChar onbeginString8[] = "onbegin";
+static const LChar onendString8[] = "onend";
 static const LChar onzoomString8[] = "onzoom";
 static const LChar opacityString8[] = "opacity";
 static const LChar operatorString8[] = "operator";
@@ -1441,6 +1443,18 @@ static StringImpl::StaticASCIILiteral offsetData = {
     offsetString8,
     StringImpl::StaticASCIILiteral::s_initialFlags | (1221606 << StringImpl::StaticASCIILiteral::s_hashShift)
 };
+static StringImpl::StaticASCIILiteral onbeginData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    7,
+    onbeginString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (12049348 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
+static StringImpl::StaticASCIILiteral onendData = {
+    StringImpl::StaticASCIILiteral::s_initialRefCount,
+    5,
+    onendString8,
+    StringImpl::StaticASCIILiteral::s_initialFlags | (811239 << StringImpl::StaticASCIILiteral::s_hashShift)
+};
 static StringImpl::StaticASCIILiteral onzoomData = {
     StringImpl::StaticASCIILiteral::s_initialRefCount,
     6,
@@ -2545,6 +2559,8 @@ WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, modeAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, nameAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, numOctavesAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, offsetAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onbeginAttr)
+WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onendAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, onzoomAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, opacityAttr)
 WEBCORE_EXPORT DEFINE_GLOBAL(QualifiedName, operatorAttr)
@@ -2792,6 +2808,8 @@ const WebCore::QualifiedName* const* getSVGAttrs()
         reinterpret_cast<const WebCore::QualifiedName*>(&nameAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&numOctavesAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&offsetAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&onbeginAttr),
+        reinterpret_cast<const WebCore::QualifiedName*>(&onendAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&onzoomAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&opacityAttr),
         reinterpret_cast<const WebCore::QualifiedName*>(&operatorAttr),
@@ -3108,6 +3126,8 @@ void init()
     reinterpret_cast<StringImpl*>(&nameData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&numOctavesData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&offsetData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&onbeginData)->assertHashIsCorrect();
+    reinterpret_cast<StringImpl*>(&onendData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&onzoomData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&opacityData)->assertHashIsCorrect();
     reinterpret_cast<StringImpl*>(&operatorData)->assertHashIsCorrect();
@@ -3469,6 +3489,8 @@ void init()
         { (void*)&nameAttr, *reinterpret_cast<StringImpl*>(&nameData) },
         { (void*)&numOctavesAttr, *reinterpret_cast<StringImpl*>(&numOctavesData) },
         { (void*)&offsetAttr, *reinterpret_cast<StringImpl*>(&offsetData) },
+        { (void*)&onbeginAttr, *reinterpret_cast<StringImpl*>(&onbeginData) },
+        { (void*)&onendAttr, *reinterpret_cast<StringImpl*>(&onendData) },
         { (void*)&onzoomAttr, *reinterpret_cast<StringImpl*>(&onzoomData) },
         { (void*)&opacityAttr, *reinterpret_cast<StringImpl*>(&opacityData) },
         { (void*)&operatorAttr, *reinterpret_cast<StringImpl*>(&operatorData) },

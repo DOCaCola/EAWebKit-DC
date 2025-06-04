@@ -24,7 +24,6 @@
 
 #include "JSEXTShaderTextureLOD.h"
 
-#include "EXTShaderTextureLOD.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSEXTShaderTextureLODPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSEXTShaderTextureLODPrototype::s_info = { "EXTShaderTextureLODPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTShaderTextureLODPrototype) };
@@ -74,9 +73,8 @@ void JSEXTShaderTextureLODPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSEXTShaderTextureLOD::s_info = { "EXTShaderTextureLOD", &Base::s_info, 0, CREATE_METHOD_TABLE(JSEXTShaderTextureLOD) };
 
-JSEXTShaderTextureLOD::JSEXTShaderTextureLOD(Structure* structure, JSDOMGlobalObject* globalObject, Ref<EXTShaderTextureLOD>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSEXTShaderTextureLOD::JSEXTShaderTextureLOD(Structure* structure, JSDOMGlobalObject& globalObject, Ref<EXTShaderTextureLOD>&& impl)
+    : JSDOMWrapper<EXTShaderTextureLOD>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSEXTShaderTextureLOD::destroy(JSC::JSCell* cell)
     thisObject->JSEXTShaderTextureLOD::~JSEXTShaderTextureLOD();
 }
 
-JSEXTShaderTextureLOD::~JSEXTShaderTextureLOD()
-{
-    releaseImpl();
-}
-
 bool JSEXTShaderTextureLODOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsEXTShaderTextureLOD = jsCast<JSEXTShaderTextureLOD*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTShaderTextureLOD->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsEXTShaderTextureLOD->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSEXTShaderTextureLODOwner::finalize(JSC::Handle<JSC::Unknown> handle, void
 {
     auto* jsEXTShaderTextureLOD = jsCast<JSEXTShaderTextureLOD*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsEXTShaderTextureLOD->impl(), jsEXTShaderTextureLOD);
+    uncacheWrapper(world, &jsEXTShaderTextureLOD->wrapped(), jsEXTShaderTextureLOD);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7EXTShaderTextureLOD@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19EXTShaderTextureLODE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSEXTShaderTextureLOD>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTextureLOD* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, EXTShaderTex
 EXTShaderTextureLOD* JSEXTShaderTextureLOD::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSEXTShaderTextureLOD*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

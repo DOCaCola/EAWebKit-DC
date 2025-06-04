@@ -33,7 +33,7 @@ public:
     typedef JSCanvasRenderingContext Base;
     static JSWebGLRenderingContextBase* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderingContextBase>&& impl)
     {
-        JSWebGLRenderingContextBase* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContextBase>(globalObject->vm().heap)) JSWebGLRenderingContextBase(structure, globalObject, WTF::move(impl));
+        JSWebGLRenderingContextBase* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContextBase>(globalObject->vm().heap)) JSWebGLRenderingContextBase(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -53,39 +53,39 @@ public:
 
 
     // Custom functions
-    JSC::JSValue getAttachedShaders(JSC::ExecState*);
-    JSC::JSValue getBufferParameter(JSC::ExecState*);
-    JSC::JSValue getExtension(JSC::ExecState*);
-    JSC::JSValue getFramebufferAttachmentParameter(JSC::ExecState*);
-    JSC::JSValue getParameter(JSC::ExecState*);
-    JSC::JSValue getProgramParameter(JSC::ExecState*);
-    JSC::JSValue getRenderbufferParameter(JSC::ExecState*);
-    JSC::JSValue getShaderParameter(JSC::ExecState*);
-    JSC::JSValue getSupportedExtensions(JSC::ExecState*);
-    JSC::JSValue getTexParameter(JSC::ExecState*);
-    JSC::JSValue getUniform(JSC::ExecState*);
-    JSC::JSValue getVertexAttrib(JSC::ExecState*);
-    JSC::JSValue uniform1fv(JSC::ExecState*);
-    JSC::JSValue uniform1iv(JSC::ExecState*);
-    JSC::JSValue uniform2fv(JSC::ExecState*);
-    JSC::JSValue uniform2iv(JSC::ExecState*);
-    JSC::JSValue uniform3fv(JSC::ExecState*);
-    JSC::JSValue uniform3iv(JSC::ExecState*);
-    JSC::JSValue uniform4fv(JSC::ExecState*);
-    JSC::JSValue uniform4iv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix2fv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix3fv(JSC::ExecState*);
-    JSC::JSValue uniformMatrix4fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib1fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib2fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib3fv(JSC::ExecState*);
-    JSC::JSValue vertexAttrib4fv(JSC::ExecState*);
-    WebGLRenderingContextBase& impl() const
+    JSC::JSValue getAttachedShaders(JSC::ExecState&);
+    JSC::JSValue getBufferParameter(JSC::ExecState&);
+    JSC::JSValue getExtension(JSC::ExecState&);
+    JSC::JSValue getFramebufferAttachmentParameter(JSC::ExecState&);
+    JSC::JSValue getParameter(JSC::ExecState&);
+    JSC::JSValue getProgramParameter(JSC::ExecState&);
+    JSC::JSValue getRenderbufferParameter(JSC::ExecState&);
+    JSC::JSValue getShaderParameter(JSC::ExecState&);
+    JSC::JSValue getSupportedExtensions(JSC::ExecState&);
+    JSC::JSValue getTexParameter(JSC::ExecState&);
+    JSC::JSValue getUniform(JSC::ExecState&);
+    JSC::JSValue getVertexAttrib(JSC::ExecState&);
+    JSC::JSValue uniform1fv(JSC::ExecState&);
+    JSC::JSValue uniform1iv(JSC::ExecState&);
+    JSC::JSValue uniform2fv(JSC::ExecState&);
+    JSC::JSValue uniform2iv(JSC::ExecState&);
+    JSC::JSValue uniform3fv(JSC::ExecState&);
+    JSC::JSValue uniform3iv(JSC::ExecState&);
+    JSC::JSValue uniform4fv(JSC::ExecState&);
+    JSC::JSValue uniform4iv(JSC::ExecState&);
+    JSC::JSValue uniformMatrix2fv(JSC::ExecState&);
+    JSC::JSValue uniformMatrix3fv(JSC::ExecState&);
+    JSC::JSValue uniformMatrix4fv(JSC::ExecState&);
+    JSC::JSValue vertexAttrib1fv(JSC::ExecState&);
+    JSC::JSValue vertexAttrib2fv(JSC::ExecState&);
+    JSC::JSValue vertexAttrib3fv(JSC::ExecState&);
+    JSC::JSValue vertexAttrib4fv(JSC::ExecState&);
+    WebGLRenderingContextBase& wrapped() const
     {
-        return static_cast<WebGLRenderingContextBase&>(Base::impl());
+        return static_cast<WebGLRenderingContextBase&>(Base::wrapped());
     }
 protected:
-    JSWebGLRenderingContextBase(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLRenderingContextBase>&&);
+    JSWebGLRenderingContextBase(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLRenderingContextBase>&&);
 
     void finishCreation(JSC::VM& vm)
     {

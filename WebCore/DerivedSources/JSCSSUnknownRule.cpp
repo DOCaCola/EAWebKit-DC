@@ -21,7 +21,6 @@
 #include "config.h"
 #include "JSCSSUnknownRule.h"
 
-#include "CSSUnknownRule.h"
 #include "JSDOMBinding.h"
 #include <wtf/GetPtr.h>
 
@@ -58,7 +57,7 @@ private:
 
 static const HashTableValue JSCSSUnknownRulePrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSCSSUnknownRulePrototype::s_info = { "CSSUnknownRulePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSUnknownRulePrototype) };
@@ -71,7 +70,7 @@ void JSCSSUnknownRulePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSUnknownRule::s_info = { "CSSUnknownRule", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSUnknownRule) };
 
-JSCSSUnknownRule::JSCSSUnknownRule(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSUnknownRule>&& impl)
+JSCSSUnknownRule::JSCSSUnknownRule(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSUnknownRule>&& impl)
     : JSCSSRule(structure, globalObject, WTF::move(impl))
 {
 }

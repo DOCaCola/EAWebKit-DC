@@ -35,6 +35,7 @@
 #include "Dictionary.h"
 #include "Document.h"
 #include "ExceptionCode.h"
+#include "Microtasks.h"
 #include "MutationCallback.h"
 #include "MutationObserverRegistration.h"
 #include "MutationRecord.h"
@@ -82,22 +83,28 @@ void MutationObserver::observe(Node* node, const Dictionary& optionsDictionary, 
         MutationObserverOptions value;
     } booleanOptions[] = {
         { "childList", ChildList },
-        { "attributes", Attributes },
-        { "characterData", CharacterData },
         { "subtree", Subtree },
         { "attributeOldValue", AttributeOldValue },
         { "characterDataOldValue", CharacterDataOldValue }
     };
     MutationObserverOptions options = 0;
-    for (unsigned i = 0; i < sizeof(booleanOptions) / sizeof(booleanOptions[0]); ++i) {
-        bool value = false;
-        if (optionsDictionary.get(booleanOptions[i].name, value) && value)
-            options |= booleanOptions[i].value;
+    bool value = false;
+    for (auto& booleanOption : booleanOptions) {
+        if (optionsDictionary.get(booleanOption.name, value) && value)
+            options |= booleanOption.value;
     }
 
     HashSet<AtomicString> attributeFilter;
     if (optionsDictionary.get("attributeFilter", attributeFilter))
         options |= AttributeFilter;
+
+    bool attributesOptionIsSet = optionsDictionary.get("attributes", value);
+    if ((attributesOptionIsSet && value) || (!attributesOptionIsSet && (options & (AttributeFilter | AttributeOldValue))))
+        options |= Attributes;
+
+    bool characterDataOptionIsSet = optionsDictionary.get("characterData", value);
+    if ((characterDataOptionIsSet && value) || (!characterDataOptionIsSet && (options & CharacterDataOldValue)))
+        options |= CharacterData;
 
     if (!validateOptions(options)) {
         ec = SYNTAX_ERR;
@@ -148,17 +155,54 @@ static MutationObserverSet& suspendedMutationObservers()
     return suspendedObservers;
 }
 
+static bool mutationObserverCompoundMicrotaskQueuedFlag;
+
+class MutationObserverMicrotask : public Microtask {
+public:
+    MutationObserverMicrotask()
+    {
+    }
+
+    virtual ~MutationObserverMicrotask()
+    {
+    }
+
+private:    
+    virtual Result run()
+    {
+        mutationObserverCompoundMicrotaskQueuedFlag = false;
+
+        MutationObserver::deliverAllMutations();
+
+        return Result::Done;
+    }
+};
+
+static void queueMutationObserverCompoundMicrotask()
+{
+    if (mutationObserverCompoundMicrotaskQueuedFlag)
+        return;
+    mutationObserverCompoundMicrotaskQueuedFlag = true;
+
+    auto microtask = std::make_unique<MutationObserverMicrotask>();
+    MicrotaskQueue::mainThreadQueue().append(WTF::move(microtask));
+}
+
 void MutationObserver::enqueueMutationRecord(PassRefPtr<MutationRecord> mutation)
 {
     ASSERT(isMainThread());
     m_records.append(mutation);
     activeMutationObservers().add(this);
+
+    queueMutationObserverCompoundMicrotask();
 }
 
 void MutationObserver::setHasTransientRegistration()
 {
     ASSERT(isMainThread());
     activeMutationObservers().add(this);
+
+    queueMutationObserverCompoundMicrotask();
 }
 
 HashSet<Node*> MutationObserver::getObservedNodes() const
@@ -185,8 +229,8 @@ void MutationObserver::deliver()
         if (registration->hasTransientRegistrations())
             transientRegistrations.append(registration);
     }
-    for (size_t i = 0; i < transientRegistrations.size(); ++i)
-        transientRegistrations[i]->clearTransientRegistrations();
+    for (auto& registration : transientRegistrations)
+        registration->clearTransientRegistrations();
 
     if (m_records.isEmpty())
         return;
@@ -208,12 +252,12 @@ void MutationObserver::deliverAllMutations()
     if (!suspendedMutationObservers().isEmpty()) {
         Vector<RefPtr<MutationObserver>> suspended;
         copyToVector(suspendedMutationObservers(), suspended);
-        for (size_t i = 0; i < suspended.size(); ++i) {
-            if (!suspended[i]->canDeliver())
+        for (auto& observer : suspended) {
+            if (!observer->canDeliver())
                 continue;
 
-            suspendedMutationObservers().remove(suspended[i]);
-            activeMutationObservers().add(suspended[i]);
+            suspendedMutationObservers().remove(observer);
+            activeMutationObservers().add(observer);
         }
     }
 
@@ -225,11 +269,11 @@ void MutationObserver::deliverAllMutations()
             return lhs->m_priority < rhs->m_priority;
         });
 
-        for (size_t i = 0; i < observers.size(); ++i) {
-            if (observers[i]->canDeliver())
-                observers[i]->deliver();
+        for (auto& observer : observers) {
+            if (observer->canDeliver())
+                observer->deliver();
             else
-                suspendedMutationObservers().add(observers[i]);
+                suspendedMutationObservers().add(observer);
         }
     }
 

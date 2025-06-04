@@ -25,7 +25,6 @@
 #include "JSPositionError.h"
 
 #include "JSDOMBinding.h"
-#include "PositionError.h"
 #include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -76,18 +75,18 @@ static const struct CompactHashIndex JSPositionErrorTableIndex[4] = {
 
 static const HashTableValue JSPositionErrorTableValues[] =
 {
-    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "code", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorCode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "message", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsPositionErrorMessage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSPositionErrorTable = { 2, 3, true, JSPositionErrorTableValues, 0, JSPositionErrorTableIndex };
+static const HashTable JSPositionErrorTable = { 2, 3, true, JSPositionErrorTableValues, JSPositionErrorTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSPositionErrorPrototypeTableValues[] =
 {
-    { "PERMISSION_DENIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "POSITION_UNAVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "PERMISSION_DENIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "POSITION_UNAVAILABLE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "TIMEOUT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSPositionErrorPrototype::s_info = { "PositionErrorPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSPositionErrorPrototype) };
@@ -100,9 +99,8 @@ void JSPositionErrorPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSPositionError::s_info = { "PositionError", &Base::s_info, &JSPositionErrorTable, CREATE_METHOD_TABLE(JSPositionError) };
 
-JSPositionError::JSPositionError(Structure* structure, JSDOMGlobalObject* globalObject, Ref<PositionError>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSPositionError::JSPositionError(Structure* structure, JSDOMGlobalObject& globalObject, Ref<PositionError>&& impl)
+    : JSDOMWrapper<PositionError>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -122,38 +120,35 @@ void JSPositionError::destroy(JSC::JSCell* cell)
     thisObject->JSPositionError::~JSPositionError();
 }
 
-JSPositionError::~JSPositionError()
-{
-    releaseImpl();
-}
-
-bool JSPositionError::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSPositionError::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSPositionError*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSPositionError, Base>(exec, JSPositionErrorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSPositionError, Base>(state, JSPositionErrorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsPositionErrorCode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsPositionErrorCode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSPositionError*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.code());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsPositionErrorMessage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsPositionErrorMessage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSPositionError*>(slotBase);
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.message());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.message());
     return JSValue::encode(result);
 }
 
@@ -169,7 +164,14 @@ void JSPositionErrorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsPositionError = jsCast<JSPositionError*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsPositionError->impl(), jsPositionError);
+    uncacheWrapper(world, &jsPositionError->wrapped(), jsPositionError);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, PositionError* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSPositionError>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PositionError* impl)
@@ -191,7 +193,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, PositionErro
 PositionError* JSPositionError::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSPositionError*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

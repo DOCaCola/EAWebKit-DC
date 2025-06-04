@@ -52,12 +52,12 @@ namespace JSC { namespace FTL {
     macro(JSArrayBufferView_length, JSArrayBufferView::offsetOfLength()) \
     macro(JSArrayBufferView_mode, JSArrayBufferView::offsetOfMode()) \
     macro(JSArrayBufferView_vector, JSArrayBufferView::offsetOfVector()) \
+    macro(JSCell_cellState, JSCell::cellStateOffset()) \
+    macro(JSCell_indexingType, JSCell::indexingTypeOffset()) \
     macro(JSCell_structureID, JSCell::structureIDOffset()) \
-    macro(JSCell_usefulBytes, JSCell::indexingTypeOffset()) \
     macro(JSCell_typeInfoFlags, JSCell::typeInfoFlagsOffset()) \
     macro(JSCell_typeInfoType, JSCell::typeInfoTypeOffset()) \
-    macro(JSCell_indexingType, JSCell::indexingTypeOffset()) \
-    macro(JSCell_gcData, JSCell::gcDataOffset()) \
+    macro(JSCell_usefulBytes, JSCell::indexingTypeOffset()) \
     macro(JSFunction_executable, JSFunction::offsetOfExecutable()) \
     macro(JSFunction_scope, JSFunction::offsetOfScopeChain()) \
     macro(JSFunction_rareData, JSFunction::offsetOfRareData()) \
@@ -75,7 +75,6 @@ namespace JSC { namespace FTL {
     macro(JSSymbolTableObject_symbolTable, JSSymbolTableObject::offsetOfSymbolTable()) \
     macro(JSWrapperObject_internalValue, JSWrapperObject::internalValueOffset()) \
     macro(MarkedAllocator_freeListHead, MarkedAllocator::offsetOfFreeListHead()) \
-    macro(MarkedBlock_markBits, MarkedBlock::offsetOfMarks()) \
     macro(ScopedArguments_overrodeThings, ScopedArguments::offsetOfOverrodeThings()) \
     macro(ScopedArguments_scope, ScopedArguments::offsetOfScope()) \
     macro(ScopedArguments_table, ScopedArguments::offsetOfTable()) \
@@ -88,7 +87,11 @@ namespace JSC { namespace FTL {
     macro(Structure_globalObject, Structure::globalObjectOffset()) \
     macro(Structure_prototype, Structure::prototypeOffset()) \
     macro(Structure_structureID, Structure::structureIDOffset()) \
-    macro(Symbol_privateName, Symbol::offsetOfPrivateName())
+    macro(Symbol_privateName, Symbol::offsetOfPrivateName()) \
+    macro(JSArrowFunction_executable, JSArrowFunction::offsetOfExecutable()) \
+    macro(JSArrowFunction_scope, JSArrowFunction::offsetOfScopeChain()) \
+    macro(JSArrowFunction_rareData, JSArrowFunction::offsetOfRareData()) \
+    macro(JSArrowFunction_this, JSArrowFunction::offsetOfThisValue())
 
 #define FOR_EACH_INDEXED_ABSTRACT_HEAP(macro) \
     macro(DirectArguments_storage, DirectArguments::storageOffset(), sizeof(EncodedJSValue)) \
@@ -191,7 +194,9 @@ private:
     friend class AbstractHeap;
     
     LContext m_context;
+#if !FTL_USES_B3
     unsigned m_tbaaKind;
+#endif
 };
 
 } } // namespace JSC::FTL

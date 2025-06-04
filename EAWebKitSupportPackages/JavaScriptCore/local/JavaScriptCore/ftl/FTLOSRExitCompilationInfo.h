@@ -26,28 +26,28 @@
 #ifndef FTLOSRExitCompilationInfo_h
 #define FTLOSRExitCompilationInfo_h
 
-#if ENABLE(FTL_JIT)
+#include "DFGCommon.h"
 
-#include "FTLAbbreviations.h"
+#if ENABLE(FTL_JIT) && !FTL_USES_B3
+
+#include "FTLAbbreviatedTypes.h"
 #include "MacroAssembler.h"
 
 namespace JSC { namespace FTL {
 
 struct OSRExitCompilationInfo {
     OSRExitCompilationInfo()
-        : m_isInvalidationPoint(false)
     {
     }
-    
+
     MacroAssembler::Label m_thunkLabel;
     MacroAssembler::PatchableJump m_thunkJump;
     CodeLocationLabel m_thunkAddress;
-    bool m_isInvalidationPoint;
 };
 
 } } // namespace JSC::FTL
 
-#endif // ENABLE(FTL_JIT)
+#endif // ENABLE(FTL_JIT) && !FTL_USES_B3
 
 #endif // FTLOSRExitCompilationInfo_h
 

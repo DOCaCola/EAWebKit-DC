@@ -122,7 +122,7 @@ static bool canCacheFrame(Frame& frame, DiagnosticLoggingClient& diagnosticLoggi
         logPageCacheFailureDiagnosticMessage(diagnosticLoggingClient, DiagnosticLoggingKeys::hasPluginsKey());
         isCacheable = false;
     }
-    if (frame.isMainFrame() && frame.document()->url().protocolIs("https") && documentLoader->response().cacheControlContainsNoStore()) {
+    if (frame.isMainFrame() && frame.document() && frame.document()->url().protocolIs("https") && documentLoader->response().cacheControlContainsNoStore()) {
         PCLOG("   -Frame is HTTPS, and cache control prohibits storing");
         logPageCacheFailureDiagnosticMessage(diagnosticLoggingClient, DiagnosticLoggingKeys::httpsNoStoreKey());
         isCacheable = false;
@@ -149,7 +149,7 @@ static bool canCacheFrame(Frame& frame, DiagnosticLoggingClient& diagnosticLoggi
     }
 
     Vector<ActiveDOMObject*> unsuspendableObjects;
-    if (!frame.document()->canSuspendActiveDOMObjectsForPageCache(&unsuspendableObjects)) {
+    if (frame.document() && !frame.document()->canSuspendActiveDOMObjectsForDocumentSuspension(&unsuspendableObjects)) {
         PCLOG("   -The document cannot suspend its active DOM Objects");
         for (auto* activeDOMObject : unsuspendableObjects) {
             PCLOG("    - Unsuspendable: ", activeDOMObject->activeDOMObjectName());
@@ -262,7 +262,7 @@ static bool canCachePage(Page& page)
     else
         PCLOG(" Page CANNOT be cached\n--------");
 
-    diagnosticLoggingClient.logDiagnosticMessageWithResult(DiagnosticLoggingKeys::pageCacheKey(), emptyString(), isCacheable ? DiagnosticLoggingResultPass : DiagnosticLoggingResultFail, ShouldSample::Yes);
+    diagnosticLoggingClient.logDiagnosticMessageWithResult(DiagnosticLoggingKeys::pageCacheKey(), DiagnosticLoggingKeys::canCacheKey(), isCacheable ? DiagnosticLoggingResultPass : DiagnosticLoggingResultFail, ShouldSample::Yes);
     return isCacheable;
 }
 
@@ -396,8 +396,8 @@ std::unique_ptr<CachedPage> PageCache::take(HistoryItem& item, Page* page)
         return nullptr;
     }
 
-    std::unique_ptr<CachedPage> cachedPage = WTF::move(item.m_cachedPage);
     m_items.remove(&item);
+    std::unique_ptr<CachedPage> cachedPage = WTF::move(item.m_cachedPage);
 
     if (cachedPage->hasExpired()) {
         LOG(PageCache, "Not restoring page for %s from back/forward cache because cache entry has expired", item.url().string().ascii().data());
@@ -432,17 +432,16 @@ void PageCache::remove(HistoryItem& item)
     if (!item.m_cachedPage)
         return;
 
-    item.m_cachedPage = nullptr;
     m_items.remove(&item);
+    item.m_cachedPage = nullptr;
 }
 
 void PageCache::prune(PruningReason pruningReason)
 {
     while (pageCount() > maxSize()) {
-        auto& oldestItem = m_items.first();
+        auto oldestItem = m_items.takeFirst();
         oldestItem->m_cachedPage = nullptr;
         oldestItem->m_pruningReason = pruningReason;
-        m_items.removeFirst();
     }
 }
 

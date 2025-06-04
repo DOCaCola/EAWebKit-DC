@@ -26,7 +26,9 @@
 #define StyleRareInheritedData_h
 
 #include "Color.h"
+#include "DataRef.h"
 #include "Length.h"
+#include "StyleCustomPropertyData.h"
 #include <wtf/RefCounted.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/AtomicString.h>
@@ -56,7 +58,6 @@ public:
     {
         return !(*this == o);
     }
-    bool shadowDataEquivalent(const StyleRareInheritedData&) const;
 
     RefPtr<StyleImage> listStyleImage;
 
@@ -76,6 +77,8 @@ public:
     float m_effectiveZoom;
     
     Length wordSpacing;
+
+    DataRef<StyleCustomPropertyData> m_customProperties;
 
     // Paged media properties.
     short widows;

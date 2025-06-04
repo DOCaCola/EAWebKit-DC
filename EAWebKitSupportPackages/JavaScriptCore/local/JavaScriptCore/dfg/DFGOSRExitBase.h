@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Apple Inc. All rights reserved.
+ * Copyright (C) 2013, 2015 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,6 +45,7 @@ struct OSRExitBase {
         , m_count(0)
         , m_codeOrigin(origin)
         , m_codeOriginForExitProfile(originForProfile)
+        , m_isExceptionHandler(false)
     {
         ASSERT(m_codeOrigin.isSet());
         ASSERT(m_codeOriginForExitProfile.isSet());
@@ -55,6 +56,9 @@ struct OSRExitBase {
     
     CodeOrigin m_codeOrigin;
     CodeOrigin m_codeOriginForExitProfile;
+    CallSiteIndex m_exceptionHandlerCallSiteIndex;
+
+    bool m_isExceptionHandler : 1;
 
 protected:
     void considerAddingAsFrequentExitSite(CodeBlock* profiledCodeBlock, ExitingJITType jitType)

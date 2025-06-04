@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLKeygenElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLKeygenElement>&& impl)
     {
-        JSHTMLKeygenElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLKeygenElement>(globalObject->vm().heap)) JSHTMLKeygenElement(structure, globalObject, WTF::move(impl));
+        JSHTMLKeygenElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLKeygenElement>(globalObject->vm().heap)) JSHTMLKeygenElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLKeygenElement& impl() const
+    HTMLKeygenElement& wrapped() const
     {
-        return static_cast<HTMLKeygenElement&>(Base::impl());
+        return static_cast<HTMLKeygenElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLKeygenElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLKeygenElement>&&);
+    JSHTMLKeygenElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLKeygenElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

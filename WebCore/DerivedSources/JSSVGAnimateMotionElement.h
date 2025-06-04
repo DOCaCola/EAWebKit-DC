@@ -32,7 +32,7 @@ public:
     typedef JSSVGAnimationElement Base;
     static JSSVGAnimateMotionElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimateMotionElement>&& impl)
     {
-        JSSVGAnimateMotionElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateMotionElement>(globalObject->vm().heap)) JSSVGAnimateMotionElement(structure, globalObject, WTF::move(impl));
+        JSSVGAnimateMotionElement* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimateMotionElement>(globalObject->vm().heap)) JSSVGAnimateMotionElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimateMotionElement& impl() const
+    SVGAnimateMotionElement& wrapped() const
     {
-        return static_cast<SVGAnimateMotionElement&>(Base::impl());
+        return static_cast<SVGAnimateMotionElement&>(Base::wrapped());
     }
 protected:
-    JSSVGAnimateMotionElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimateMotionElement>&&);
+    JSSVGAnimateMotionElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimateMotionElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

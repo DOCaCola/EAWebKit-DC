@@ -22,7 +22,7 @@
 #include "JSSVGRenderingIntent.h"
 
 #include "JSDOMBinding.h"
-#include "SVGRenderingIntent.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,37 +58,18 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGRenderingIntentConstructor : public DOMConstructorObject {
-private:
-    JSSVGRenderingIntentConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGRenderingIntentConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGRenderingIntentConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGRenderingIntentConstructor>(vm.heap)) JSSVGRenderingIntentConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGRenderingIntent> JSSVGRenderingIntentConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGRenderingIntentConstructorTableValues[] =
 {
-    { "RENDERING_INTENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "RENDERING_INTENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "RENDERING_INTENT_PERCEPTUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "RENDERING_INTENT_RELATIVE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "RENDERING_INTENT_SATURATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "RENDERING_INTENT_ABSOLUTE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
+    { "RENDERING_INTENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "RENDERING_INTENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "RENDERING_INTENT_PERCEPTUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "RENDERING_INTENT_RELATIVE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "RENDERING_INTENT_SATURATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "RENDERING_INTENT_ABSOLUTE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
 };
 
 
@@ -99,34 +80,27 @@ COMPILE_ASSERT(3 == SVGRenderingIntent::RENDERING_INTENT_RELATIVE_COLORIMETRIC, 
 COMPILE_ASSERT(4 == SVGRenderingIntent::RENDERING_INTENT_SATURATION, SVGRenderingIntentEnumRENDERING_INTENT_SATURATIONIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(5 == SVGRenderingIntent::RENDERING_INTENT_ABSOLUTE_COLORIMETRIC, SVGRenderingIntentEnumRENDERING_INTENT_ABSOLUTE_COLORIMETRICIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSSVGRenderingIntentConstructor::s_info = { "SVGRenderingIntentConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRenderingIntentConstructor) };
-
-JSSVGRenderingIntentConstructor::JSSVGRenderingIntentConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGRenderingIntentConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGRenderingIntentConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGRenderingIntent::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGRenderingIntent::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGRenderingIntent"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGRenderingIntentConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGRenderingIntentConstructor::s_info = { "SVGRenderingIntentConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRenderingIntentConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGRenderingIntentPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRenderingIntentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "RENDERING_INTENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "RENDERING_INTENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "RENDERING_INTENT_PERCEPTUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "RENDERING_INTENT_RELATIVE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "RENDERING_INTENT_SATURATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "RENDERING_INTENT_ABSOLUTE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGRenderingIntentConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "RENDERING_INTENT_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "RENDERING_INTENT_AUTO", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "RENDERING_INTENT_PERCEPTUAL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "RENDERING_INTENT_RELATIVE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "RENDERING_INTENT_SATURATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "RENDERING_INTENT_ABSOLUTE_COLORIMETRIC", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
 };
 
 const ClassInfo JSSVGRenderingIntentPrototype::s_info = { "SVGRenderingIntentPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRenderingIntentPrototype) };
@@ -139,9 +113,8 @@ void JSSVGRenderingIntentPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGRenderingIntent::s_info = { "SVGRenderingIntent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGRenderingIntent) };
 
-JSSVGRenderingIntent::JSSVGRenderingIntent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGRenderingIntent>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGRenderingIntent::JSSVGRenderingIntent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGRenderingIntent>&& impl)
+    : JSDOMWrapper<SVGRenderingIntent>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -161,22 +134,17 @@ void JSSVGRenderingIntent::destroy(JSC::JSCell* cell)
     thisObject->JSSVGRenderingIntent::~JSSVGRenderingIntent();
 }
 
-JSSVGRenderingIntent::~JSSVGRenderingIntent()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGRenderingIntentConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGRenderingIntentConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGRenderingIntentPrototype* domObject = jsDynamicCast<JSSVGRenderingIntentPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGRenderingIntent::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGRenderingIntent::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGRenderingIntent::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGRenderingIntentConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGRenderingIntentConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSSVGRenderingIntentOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -190,13 +158,13 @@ void JSSVGRenderingIntentOwner::finalize(JSC::Handle<JSC::Unknown> handle, void*
 {
     auto* jsSVGRenderingIntent = jsCast<JSSVGRenderingIntent*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGRenderingIntent->impl(), jsSVGRenderingIntent);
+    uncacheWrapper(world, &jsSVGRenderingIntent->wrapped(), jsSVGRenderingIntent);
 }
 
 SVGRenderingIntent* JSSVGRenderingIntent::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGRenderingIntent*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -25,7 +25,7 @@
 #include "JSWebGLSync.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLSync.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLSyncConstructor : public DOMConstructorObject {
-private:
-    JSWebGLSyncConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLSync> JSWebGLSyncConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLSyncConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLSyncConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLSyncConstructor>(vm.heap)) JSWebGLSyncConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLSyncConstructor::s_info = { "WebGLSyncConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSyncConstructor) };
-
-JSWebGLSyncConstructor::JSWebGLSyncConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLSyncConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLSyncConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLSync::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLSync::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLSync"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLSyncConstructor::s_info = { "WebGLSyncConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSyncConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLSyncPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLSyncConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLSyncPrototype::s_info = { "WebGLSyncPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSyncPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLSyncPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLSync::s_info = { "WebGLSync", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLSync) };
 
-JSWebGLSync::JSWebGLSync(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLSync>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLSync::JSWebGLSync(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLSync>&& impl)
+    : JSDOMWrapper<WebGLSync>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLSync::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLSync::~JSWebGLSync();
 }
 
-JSWebGLSync::~JSWebGLSync()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLSyncConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLSyncConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLSyncPrototype* domObject = jsDynamicCast<JSWebGLSyncPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLSync::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLSync::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLSync::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLSyncConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLSyncConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLSyncOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLSyncOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsWebGLSync = jsCast<JSWebGLSync*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLSync->impl(), jsWebGLSync);
+    uncacheWrapper(world, &jsWebGLSync->wrapped(), jsWebGLSync);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLSync@WebCore@@6B@")[])()
 extern "C" { extern void* _ZTVN7WebCore9WebGLSyncE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSync* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLSync>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSync* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLSync* i
 WebGLSync* JSWebGLSync::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLSync*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

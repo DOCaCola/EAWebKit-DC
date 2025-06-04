@@ -31,7 +31,7 @@ public:
     typedef JSDOMTokenList Base;
     static JSDOMSettableTokenList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DOMSettableTokenList>&& impl)
     {
-        JSDOMSettableTokenList* ptr = new (NotNull, JSC::allocateCell<JSDOMSettableTokenList>(globalObject->vm().heap)) JSDOMSettableTokenList(structure, globalObject, WTF::move(impl));
+        JSDOMSettableTokenList* ptr = new (NotNull, JSC::allocateCell<JSDOMSettableTokenList>(globalObject->vm().heap)) JSDOMSettableTokenList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,14 +50,14 @@ public:
 
     static void getOwnPropertyNames(JSC::JSObject*, JSC::ExecState*, JSC::PropertyNameArray&, JSC::EnumerationMode = JSC::EnumerationMode());
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    DOMSettableTokenList& impl() const
+    DOMSettableTokenList& wrapped() const
     {
-        return static_cast<DOMSettableTokenList&>(Base::impl());
+        return static_cast<DOMSettableTokenList&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSDOMSettableTokenList(JSC::Structure*, JSDOMGlobalObject*, Ref<DOMSettableTokenList>&&);
+    JSDOMSettableTokenList(JSC::Structure*, JSDOMGlobalObject&, Ref<DOMSettableTokenList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -68,7 +68,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DOMSettableTokenList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, DOMSettableTokenList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DOMSettableTokenList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DOMSettableTokenList*);
 
 
 } // namespace WebCore

@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSDocumentType* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<DocumentType>&& impl)
     {
-        JSDocumentType* ptr = new (NotNull, JSC::allocateCell<JSDocumentType>(globalObject->vm().heap)) JSDocumentType(structure, globalObject, WTF::move(impl));
+        JSDocumentType* ptr = new (NotNull, JSC::allocateCell<JSDocumentType>(globalObject->vm().heap)) JSDocumentType(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,15 +50,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom functions
-    JSC::JSValue before(JSC::ExecState*);
-    JSC::JSValue after(JSC::ExecState*);
-    JSC::JSValue replaceWith(JSC::ExecState*);
-    DocumentType& impl() const
+    JSC::JSValue before(JSC::ExecState&);
+    JSC::JSValue after(JSC::ExecState&);
+    JSC::JSValue replaceWith(JSC::ExecState&);
+    DocumentType& wrapped() const
     {
-        return static_cast<DocumentType&>(Base::impl());
+        return static_cast<DocumentType&>(Base::wrapped());
     }
 protected:
-    JSDocumentType(JSC::Structure*, JSDOMGlobalObject*, Ref<DocumentType>&&);
+    JSDocumentType(JSC::Structure*, JSDOMGlobalObject&, Ref<DocumentType>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -68,6 +68,9 @@ protected:
 
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, DocumentType*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, DocumentType& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, DocumentType*);
 
 
 } // namespace WebCore

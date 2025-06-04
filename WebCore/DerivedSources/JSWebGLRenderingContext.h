@@ -33,7 +33,7 @@ public:
     typedef JSWebGLRenderingContextBase Base;
     static JSWebGLRenderingContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLRenderingContext>&& impl)
     {
-        JSWebGLRenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContext>(globalObject->vm().heap)) JSWebGLRenderingContext(structure, globalObject, WTF::move(impl));
+        JSWebGLRenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLRenderingContext>(globalObject->vm().heap)) JSWebGLRenderingContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,12 +52,12 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    WebGLRenderingContext& impl() const
+    WebGLRenderingContext& wrapped() const
     {
-        return static_cast<WebGLRenderingContext&>(Base::impl());
+        return static_cast<WebGLRenderingContext&>(Base::wrapped());
     }
 protected:
-    JSWebGLRenderingContext(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLRenderingContext>&&);
+    JSWebGLRenderingContext(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLRenderingContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {

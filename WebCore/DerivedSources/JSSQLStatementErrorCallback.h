@@ -38,6 +38,7 @@ public:
     virtual ScriptExecutionContext* scriptExecutionContext() const { return ContextDestructionObserver::scriptExecutionContext(); }
 
     virtual ~JSSQLStatementErrorCallback();
+    JSCallbackDataStrong* callbackData() { return m_data; }
 
     // Functions
     virtual bool handleEvent(SQLTransaction* transaction, SQLError* error);
@@ -45,8 +46,11 @@ public:
 private:
     JSSQLStatementErrorCallback(JSC::JSObject* callback, JSDOMGlobalObject*);
 
-    JSCallbackData* m_data;
+    JSCallbackDataStrong* m_data;
 };
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SQLStatementErrorCallback*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SQLStatementErrorCallback& impl) { return toJS(state, globalObject, &impl); }
 
 } // namespace WebCore
 

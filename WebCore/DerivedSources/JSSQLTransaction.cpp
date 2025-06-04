@@ -22,7 +22,6 @@
 #include "JSSQLTransaction.h"
 
 #include "JSDOMBinding.h"
-#include "SQLTransaction.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -63,7 +62,7 @@ private:
 
 static const HashTableValue JSSQLTransactionPrototypeTableValues[] =
 {
-    { "executeSql", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSQLTransactionPrototypeFunctionExecuteSql), (intptr_t) (2) },
+    { "executeSql", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSQLTransactionPrototypeFunctionExecuteSql), (intptr_t) (2) } },
 };
 
 const ClassInfo JSSQLTransactionPrototype::s_info = { "SQLTransactionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLTransactionPrototype) };
@@ -76,9 +75,8 @@ void JSSQLTransactionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSQLTransaction::s_info = { "SQLTransaction", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSQLTransaction) };
 
-JSSQLTransaction::JSSQLTransaction(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SQLTransaction>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSQLTransaction::JSSQLTransaction(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SQLTransaction>&& impl)
+    : JSDOMWrapper<SQLTransaction>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -98,19 +96,14 @@ void JSSQLTransaction::destroy(JSC::JSCell* cell)
     thisObject->JSSQLTransaction::~JSSQLTransaction();
 }
 
-JSSQLTransaction::~JSSQLTransaction()
+EncodedJSValue JSC_HOST_CALL jsSQLTransactionPrototypeFunctionExecuteSql(ExecState* state)
 {
-    releaseImpl();
-}
-
-EncodedJSValue JSC_HOST_CALL jsSQLTransactionPrototypeFunctionExecuteSql(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSQLTransaction* castedThis = jsDynamicCast<JSSQLTransaction*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SQLTransaction", "executeSql");
+        return throwThisTypeError(*state, "SQLTransaction", "executeSql");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSQLTransaction::info());
-    return JSValue::encode(castedThis->executeSql(exec));
+    return JSValue::encode(castedThis->executeSql(*state));
 }
 
 bool JSSQLTransactionOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -124,7 +117,14 @@ void JSSQLTransactionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* con
 {
     auto* jsSQLTransaction = jsCast<JSSQLTransaction*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSQLTransaction->impl(), jsSQLTransaction);
+    uncacheWrapper(world, &jsSQLTransaction->wrapped(), jsSQLTransaction);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLTransaction* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSQLTransaction>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLTransaction* impl)
@@ -139,7 +139,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SQLTransacti
 SQLTransaction* JSSQLTransaction::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSQLTransaction*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

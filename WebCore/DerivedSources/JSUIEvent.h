@@ -33,7 +33,7 @@ public:
     typedef JSEvent Base;
     static JSUIEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<UIEvent>&& impl)
     {
-        JSUIEvent* ptr = new (NotNull, JSC::allocateCell<JSUIEvent>(globalObject->vm().heap)) JSUIEvent(structure, globalObject, WTF::move(impl));
+        JSUIEvent* ptr = new (NotNull, JSC::allocateCell<JSUIEvent>(globalObject->vm().heap)) JSUIEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    UIEvent& impl() const
+    UIEvent& wrapped() const
     {
-        return static_cast<UIEvent&>(Base::impl());
+        return static_cast<UIEvent&>(Base::wrapped());
     }
 protected:
-    JSUIEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<UIEvent>&&);
+    JSUIEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<UIEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -179,6 +179,7 @@ enum AccessibilityRole {
     RadioGroupRole,
     RowHeaderRole,
     RowRole,
+    RowGroupRole,
     RubyBaseRole,
     RubyBlockRole,
     RubyInlineRole,
@@ -279,6 +280,7 @@ struct AccessibilityTextUnderElementMode {
 enum AccessibilityOrientation {
     AccessibilityOrientationVertical,
     AccessibilityOrientationHorizontal,
+    AccessibilityOrientationUndefined,
 };
     
 enum AccessibilityObjectInclusion {
@@ -436,6 +438,8 @@ struct AccessibilitySelectTextCriteria {
 enum AccessibilityMathScriptObjectType { Subscript, Superscript };
 enum AccessibilityMathMultiscriptObjectType { PreSubscript, PreSuperscript, PostSubscript, PostSuperscript };
 
+enum AccessibilityARIACurrentState { ARIACurrentFalse, ARIACurrentTrue, ARIACurrentPage, ARIACurrentStep, ARIACurrentLocation, ARIACurrentDate, ARIACurrentTime };
+
 class AccessibilityObject : public RefCounted<AccessibilityObject> {
 protected:
     AccessibilityObject();
@@ -534,6 +538,8 @@ public:
     bool isColorWell() const { return roleValue() == ColorWellRole; }
     bool isRangeControl() const;
     bool isMeter() const;
+    bool isSplitter() const { return roleValue() == SplitterRole; }
+    bool isToolbar() const { return roleValue() == ToolbarRole; }
 
     virtual bool isChecked() const { return false; }
     virtual bool isEnabled() const { return false; }
@@ -623,6 +629,11 @@ public:
     String identifierAttribute() const;
     void classList(Vector<String>&) const;
     const AtomicString& roleDescription() const;
+    AccessibilityARIACurrentState ariaCurrentState() const;
+    
+    // This function checks if the object should be ignored when there's a modal dialog displayed.
+    bool ignoredFromARIAModalPresence() const;
+    bool isAriaModalDescendant(Node*) const;
     
     bool supportsARIASetSize() const;
     bool supportsARIAPosInSet() const;
@@ -657,8 +668,8 @@ public:
     virtual bool isDescendantOfBarrenParent() const { return false; }
     
     // Text selection
-    PassRefPtr<Range> rangeOfStringClosestToRangeInDirection(Range*, AccessibilitySearchDirection, Vector<String>&) const;
-    PassRefPtr<Range> selectionRange() const;
+    RefPtr<Range> rangeOfStringClosestToRangeInDirection(Range*, AccessibilitySearchDirection, Vector<String>&) const;
+    RefPtr<Range> selectionRange() const;
     String selectText(AccessibilitySelectTextCriteria*);
     
     virtual AccessibilityObject* observableObject() const { return nullptr; }

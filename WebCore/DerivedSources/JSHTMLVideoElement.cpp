@@ -26,8 +26,8 @@
 
 #include "ExceptionCode.h"
 #include "HTMLNames.h"
-#include "HTMLVideoElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -102,88 +102,62 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLVideoElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLVideoElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSHTMLVideoElement> JSHTMLVideoElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLVideoElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLVideoElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLVideoElementConstructor>(vm.heap)) JSHTMLVideoElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSHTMLVideoElementConstructor::s_info = { "HTMLVideoElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLVideoElementConstructor) };
-
-JSHTMLVideoElementConstructor::JSHTMLVideoElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLVideoElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLVideoElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLVideoElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLVideoElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLVideoElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHTMLVideoElementConstructor::s_info = { "HTMLVideoElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLVideoElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLVideoElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementWidth) },
-    { "height", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementHeight) },
-    { "videoWidth", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementVideoWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "videoHeight", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementVideoHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "poster", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementPoster), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementPoster) },
-    { "webkitSupportsFullscreen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitSupportsFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "webkitDisplayingFullscreen", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDisplayingFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementWidth) } },
+    { "height", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementHeight) } },
+    { "videoWidth", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementVideoWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "videoHeight", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementVideoHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "poster", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementPoster), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementPoster) } },
+    { "webkitSupportsFullscreen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitSupportsFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "webkitDisplayingFullscreen", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDisplayingFullscreen), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-    { "webkitWirelessVideoPlaybackDisabled", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitWirelessVideoPlaybackDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementWebkitWirelessVideoPlaybackDisabled) },
+    { "webkitWirelessVideoPlaybackDisabled", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitWirelessVideoPlaybackDisabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLVideoElementWebkitWirelessVideoPlaybackDisabled) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_STATISTICS)
-    { "webkitDecodedFrameCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDecodedFrameCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "webkitDecodedFrameCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDecodedFrameCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_STATISTICS)
-    { "webkitDroppedFrameCount", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDroppedFrameCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "webkitDroppedFrameCount", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitDroppedFrameCount), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-    { "webkitPresentationMode", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitPresentationMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "webkitPresentationMode", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLVideoElementWebkitPresentationMode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
-    { "webkitEnterFullscreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitEnterFullscreen), (intptr_t) (0) },
-    { "webkitExitFullscreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitExitFullscreen), (intptr_t) (0) },
-    { "webkitEnterFullScreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitEnterFullScreen), (intptr_t) (0) },
-    { "webkitExitFullScreen", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitExitFullScreen), (intptr_t) (0) },
+    { "webkitEnterFullscreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitEnterFullscreen), (intptr_t) (0) } },
+    { "webkitExitFullscreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitExitFullscreen), (intptr_t) (0) } },
+    { "webkitEnterFullScreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitEnterFullScreen), (intptr_t) (0) } },
+    { "webkitExitFullScreen", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitExitFullScreen), (intptr_t) (0) } },
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-    { "webkitSupportsPresentationMode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitSupportsPresentationMode), (intptr_t) (1) },
+    { "webkitSupportsPresentationMode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitSupportsPresentationMode), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-    { "webkitSetPresentationMode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitSetPresentationMode), (intptr_t) (1) },
+    { "webkitSetPresentationMode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHTMLVideoElementPrototypeFunctionWebkitSetPresentationMode), (intptr_t) (1) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
@@ -197,7 +171,7 @@ void JSHTMLVideoElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLVideoElement::s_info = { "HTMLVideoElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLVideoElement) };
 
-JSHTMLVideoElement::JSHTMLVideoElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLVideoElement>&& impl)
+JSHTMLVideoElement::JSHTMLVideoElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLVideoElement>&& impl)
     : JSHTMLMediaElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -212,138 +186,138 @@ JSObject* JSHTMLVideoElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLVideoElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLVideoElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "width");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "width");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "width");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::widthAttr)));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "height");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "height");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "height");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(std::max(0, impl.getIntegralAttribute(WebCore::HTMLNames::heightAttr)));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementVideoWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementVideoWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "videoWidth");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "videoWidth");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "videoWidth");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "videoWidth");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.videoWidth());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementVideoHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementVideoHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "videoHeight");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "videoHeight");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "videoHeight");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "videoHeight");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.videoHeight());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementPoster(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementPoster(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "poster");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "poster");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "poster");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "poster");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::posterAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getURLAttribute(WebCore::HTMLNames::posterAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementWebkitSupportsFullscreen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitSupportsFullscreen(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitSupportsFullscreen");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitSupportsFullscreen");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitSupportsFullscreen");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitSupportsFullscreen");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitSupportsFullscreen());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLVideoElementWebkitDisplayingFullscreen(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitDisplayingFullscreen(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitDisplayingFullscreen");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitDisplayingFullscreen");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitDisplayingFullscreen");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitDisplayingFullscreen");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitDisplayingFullscreen());
     return JSValue::encode(result);
 }
 
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-EncodedJSValue jsHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.webkitWirelessVideoPlaybackDisabled());
     return JSValue::encode(result);
 }
@@ -351,18 +325,18 @@ EncodedJSValue jsHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* 
 #endif
 
 #if ENABLE(MEDIA_STATISTICS)
-EncodedJSValue jsHTMLVideoElementWebkitDecodedFrameCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitDecodedFrameCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitDecodedFrameCount");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitDecodedFrameCount");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitDecodedFrameCount");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitDecodedFrameCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitDecodedFrameCount());
     return JSValue::encode(result);
 }
@@ -370,18 +344,18 @@ EncodedJSValue jsHTMLVideoElementWebkitDecodedFrameCount(ExecState* exec, JSObje
 #endif
 
 #if ENABLE(MEDIA_STATISTICS)
-EncodedJSValue jsHTMLVideoElementWebkitDroppedFrameCount(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitDroppedFrameCount(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitDroppedFrameCount");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitDroppedFrameCount");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitDroppedFrameCount");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitDroppedFrameCount");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.webkitDroppedFrameCount());
     return JSValue::encode(result);
 }
@@ -389,108 +363,108 @@ EncodedJSValue jsHTMLVideoElementWebkitDroppedFrameCount(ExecState* exec, JSObje
 #endif
 
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-EncodedJSValue jsHTMLVideoElementWebkitPresentationMode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementWebkitPresentationMode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLVideoElement", "webkitPresentationMode");
-        return throwGetterTypeError(*exec, "HTMLVideoElement", "webkitPresentationMode");
+            return reportDeprecatedGetterError(*state, "HTMLVideoElement", "webkitPresentationMode");
+        return throwGetterTypeError(*state, "HTMLVideoElement", "webkitPresentationMode");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.webkitPresentationMode());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.webkitPresentationMode());
     return JSValue::encode(result);
 }
 
 #endif
 
-EncodedJSValue jsHTMLVideoElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLVideoElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLVideoElementPrototype* domObject = jsDynamicCast<JSHTMLVideoElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLVideoElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLVideoElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLVideoElementWidth(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLVideoElementWidth(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLVideoElement", "width");
+            reportDeprecatedSetterError(*state, "HTMLVideoElement", "width");
         else
-            throwSetterTypeError(*exec, "HTMLVideoElement", "width");
+            throwSetterTypeError(*state, "HTMLVideoElement", "width");
         return;
     }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::widthAttr, nativeValue);
 }
 
 
-void setJSHTMLVideoElementHeight(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLVideoElementHeight(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLVideoElement", "height");
+            reportDeprecatedSetterError(*state, "HTMLVideoElement", "height");
         else
-            throwSetterTypeError(*exec, "HTMLVideoElement", "height");
+            throwSetterTypeError(*state, "HTMLVideoElement", "height");
         return;
     }
-    auto& impl = castedThis->impl();
-    unsigned nativeValue = toUInt32(exec, value, NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned nativeValue = toUInt32(state, value, NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setUnsignedIntegralAttribute(WebCore::HTMLNames::heightAttr, nativeValue);
 }
 
 
-void setJSHTMLVideoElementPoster(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLVideoElementPoster(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLVideoElement", "poster");
+            reportDeprecatedSetterError(*state, "HTMLVideoElement", "poster");
         else
-            throwSetterTypeError(*exec, "HTMLVideoElement", "poster");
+            throwSetterTypeError(*state, "HTMLVideoElement", "poster");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::posterAttr, nativeValue);
 }
 
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
-void setJSHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLVideoElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
+            reportDeprecatedSetterError(*state, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
         else
-            throwSetterTypeError(*exec, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
+            throwSetterTypeError(*state, "HTMLVideoElement", "webkitWirelessVideoPlaybackDisabled");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setWebkitWirelessVideoPlaybackDisabled(nativeValue);
 }
@@ -499,79 +473,79 @@ void setJSHTMLVideoElementWebkitWirelessVideoPlaybackDisabled(ExecState* exec, J
 
 JSValue JSHTMLVideoElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLVideoElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLVideoElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitEnterFullscreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitEnterFullscreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitEnterFullscreen");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitEnterFullscreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.webkitEnterFullscreen(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitExitFullscreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitExitFullscreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitExitFullscreen");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitExitFullscreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.webkitExitFullscreen();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitEnterFullScreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitEnterFullScreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitEnterFullScreen");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitEnterFullScreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     impl.webkitEnterFullScreen(ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitExitFullScreen(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitExitFullScreen(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitExitFullScreen");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitExitFullScreen");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.webkitExitFullScreen();
     return JSValue::encode(jsUndefined());
 }
 
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSupportsPresentationMode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSupportsPresentationMode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitSupportsPresentationMode");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitSupportsPresentationMode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* modeString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* modeString = state->argument(0).toString(state);
+    auto& mode = modeString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& mode = modeString->value(exec);
     if (mode != "fullscreen" && mode != "picture-in-picture" && mode != "inline")
-        return throwArgumentMustBeEnumError(*exec, 0, "mode", "HTMLVideoElement", "webkitSupportsPresentationMode", "\"fullscreen\", \"picture-in-picture\", \"inline\"");
+        return throwArgumentMustBeEnumError(*state, 0, "mode", "HTMLVideoElement", "webkitSupportsPresentationMode", "\"fullscreen\", \"picture-in-picture\", \"inline\"");
     JSValue result = jsBoolean(impl.webkitSupportsPresentationMode(mode));
     return JSValue::encode(result);
 }
@@ -579,23 +553,23 @@ EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSupportsPr
 #endif
 
 #if ENABLE(VIDEO_PRESENTATION_MODE)
-EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSetPresentationMode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSetPresentationMode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHTMLVideoElement* castedThis = jsDynamicCast<JSHTMLVideoElement*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "HTMLVideoElement", "webkitSetPresentationMode");
+        return throwThisTypeError(*state, "HTMLVideoElement", "webkitSetPresentationMode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHTMLVideoElement::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     // Keep pointer to the JSString in a local so we don't need to ref the String.
-    auto* modeString = exec->argument(0).toString(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto* modeString = state->argument(0).toString(state);
+    auto& mode = modeString->value(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    auto& mode = modeString->value(exec);
     if (mode != "fullscreen" && mode != "picture-in-picture" && mode != "inline")
-        return throwArgumentMustBeEnumError(*exec, 0, "mode", "HTMLVideoElement", "webkitSetPresentationMode", "\"fullscreen\", \"picture-in-picture\", \"inline\"");
+        return throwArgumentMustBeEnumError(*state, 0, "mode", "HTMLVideoElement", "webkitSetPresentationMode", "\"fullscreen\", \"picture-in-picture\", \"inline\"");
     impl.webkitSetPresentationMode(mode);
     return JSValue::encode(jsUndefined());
 }
@@ -605,9 +579,9 @@ EncodedJSValue JSC_HOST_CALL jsHTMLVideoElementPrototypeFunctionWebkitSetPresent
 bool JSHTMLVideoElementOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsHTMLVideoElement = jsCast<JSHTMLVideoElement*>(handle.slot()->asCell());
-    if (jsHTMLVideoElement->impl().hasPendingActivity())
+    if (jsHTMLVideoElement->wrapped().hasPendingActivity())
         return true;
-    if (jsHTMLVideoElement->impl().isFiringEventListeners())
+    if (jsHTMLVideoElement->wrapped().isFiringEventListeners())
         return true;
     if (JSNodeOwner::isReachableFromOpaqueRoots(handle, 0, visitor))
         return true;
@@ -619,13 +593,13 @@ void JSHTMLVideoElementOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsHTMLVideoElement = jsCast<JSHTMLVideoElement*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsHTMLVideoElement->impl(), jsHTMLVideoElement);
+    uncacheWrapper(world, &jsHTMLVideoElement->wrapped(), jsHTMLVideoElement);
 }
 
 HTMLVideoElement* JSHTMLVideoElement::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSHTMLVideoElement*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

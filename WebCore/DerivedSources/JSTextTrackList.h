@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTextTrackList : public JSDOMWrapper {
+class JSTextTrackList : public JSDOMWrapper<TextTrackList> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TextTrackList> Base;
     static JSTextTrackList* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrackList>&& impl)
     {
-        JSTextTrackList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackList>(globalObject->vm().heap)) JSTextTrackList(structure, globalObject, WTF::move(impl));
+        JSTextTrackList* ptr = new (NotNull, JSC::allocateCell<JSTextTrackList>(globalObject->vm().heap)) JSTextTrackList(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -45,7 +45,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTextTrackList();
 
     DECLARE_INFO;
 
@@ -59,15 +58,10 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    TextTrackList& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrackList* m_impl;
 public:
     static const unsigned StructureFlags = JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSTextTrackList(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrackList>&&);
+    JSTextTrackList(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrackList>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -90,7 +84,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrackList*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrackList*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrackList& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrackList& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TextTrackList*);
 
 
 } // namespace WebCore

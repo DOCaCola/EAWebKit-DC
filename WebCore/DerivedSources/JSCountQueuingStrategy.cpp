@@ -24,8 +24,9 @@
 
 #include "JSCountQueuingStrategy.h"
 
-#include "CountQueuingStrategy.h"
+#include "CountQueuingStrategyBuiltins.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -64,56 +65,28 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCountQueuingStrategyConstructor : public DOMConstructorObject {
-private:
-    JSCountQueuingStrategyConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSBuiltinConstructor<JSCountQueuingStrategy> JSCountQueuingStrategyConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSCountQueuingStrategyConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCountQueuingStrategyConstructor* ptr = new (NotNull, JSC::allocateCell<JSCountQueuingStrategyConstructor>(vm.heap)) JSCountQueuingStrategyConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-    static JSC::ConstructType getConstructData(JSC::JSCell*, JSC::ConstructData&);
-};
-
-const ClassInfo JSCountQueuingStrategyConstructor::s_info = { "CountQueuingStrategyConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCountQueuingStrategyConstructor) };
-
-JSCountQueuingStrategyConstructor::JSCountQueuingStrategyConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSCountQueuingStrategyConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCountQueuingStrategyConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCountQueuingStrategy::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCountQueuingStrategy::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CountQueuingStrategy"))), ReadOnly | DontEnum);
-    putDirect(vm, vm.propertyNames->length, jsNumber(1), ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
 
-ConstructType JSCountQueuingStrategyConstructor::getConstructData(JSCell*, ConstructData& constructData)
+template<> FunctionExecutable* JSCountQueuingStrategyConstructor::initializeExecutable(VM& vm)
 {
-    constructData.native.function = constructJSCountQueuingStrategy;
-    return ConstructTypeHost;
+    return countQueuingStrategyInitializeCountQueuingStrategyCodeGenerator(vm);
 }
+
+template<> const ClassInfo JSCountQueuingStrategyConstructor::s_info = { "CountQueuingStrategyConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCountQueuingStrategyConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCountQueuingStrategyPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCountQueuingStrategyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "size", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCountQueuingStrategyPrototypeFunctionSize), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCountQueuingStrategyConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "size", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(countQueuingStrategySizeCodeGenerator), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCountQueuingStrategyPrototype::s_info = { "CountQueuingStrategyPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCountQueuingStrategyPrototype) };
@@ -126,11 +99,8 @@ void JSCountQueuingStrategyPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCountQueuingStrategy::s_info = { "CountQueuingStrategy", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCountQueuingStrategy) };
 
-JSCountQueuingStrategy::JSCountQueuingStrategy(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CountQueuingStrategy>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
+JSCountQueuingStrategy::JSCountQueuingStrategy(Structure* structure, JSDOMGlobalObject& globalObject)
+    : JSDOMObject(structure, globalObject) { }
 
 JSObject* JSCountQueuingStrategy::createPrototype(VM& vm, JSGlobalObject* globalObject)
 {
@@ -148,80 +118,26 @@ void JSCountQueuingStrategy::destroy(JSC::JSCell* cell)
     thisObject->JSCountQueuingStrategy::~JSCountQueuingStrategy();
 }
 
-JSCountQueuingStrategy::~JSCountQueuingStrategy()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsCountQueuingStrategyConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsCountQueuingStrategyConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSCountQueuingStrategyPrototype* domObject = jsDynamicCast<JSCountQueuingStrategyPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCountQueuingStrategy::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCountQueuingStrategy::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSCountQueuingStrategy::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCountQueuingStrategyConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCountQueuingStrategyConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-bool JSCountQueuingStrategyOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
+void JSCountQueuingStrategy::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
+    auto* thisObject = jsCast<JSCountQueuingStrategy*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    Base::visitChildren(thisObject, visitor);
 }
 
-void JSCountQueuingStrategyOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsCountQueuingStrategy = jsCast<JSCountQueuingStrategy*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCountQueuingStrategy->impl(), jsCountQueuingStrategy);
-}
-
-#if ENABLE(BINDING_INTEGRITY)
-#if PLATFORM(WIN)
-#pragma warning(disable: 4483)
-extern "C" { extern void (*const __identifier("??_7CountQueuingStrategy@WebCore@@6B@")[])(); }
-#else
-extern "C" { extern void* _ZTVN7WebCore20CountQueuingStrategyE[]; }
-#endif
-#endif
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CountQueuingStrategy* impl)
-{
-    if (!impl)
-        return jsNull();
-    if (JSValue result = getExistingWrapper<JSCountQueuingStrategy>(globalObject, impl))
-        return result;
-
-#if ENABLE(BINDING_INTEGRITY)
-    void* actualVTablePointer = *(reinterpret_cast<void**>(impl));
-#if PLATFORM(WIN)
-    void* expectedVTablePointer = reinterpret_cast<void*>(__identifier("??_7CountQueuingStrategy@WebCore@@6B@"));
-#else
-    void* expectedVTablePointer = &_ZTVN7WebCore20CountQueuingStrategyE[2];
-#if COMPILER(CLANG)
-    // If this fails CountQueuingStrategy does not have a vtable, so you need to add the
-    // ImplementationLacksVTable attribute to the interface definition
-    COMPILE_ASSERT(__is_polymorphic(CountQueuingStrategy), CountQueuingStrategy_is_not_polymorphic);
-#endif
-#endif
-    // If you hit this assertion you either have a use after free bug, or
-    // CountQueuingStrategy has subclasses. If CountQueuingStrategy has subclasses that get passed
-    // to toJS() we currently require CountQueuingStrategy you to opt out of binding hardening
-    // by adding the SkipVTableValidation attribute to the interface IDL definition
-    RELEASE_ASSERT(actualVTablePointer == expectedVTablePointer);
-#endif
-    return createNewWrapper<JSCountQueuingStrategy>(globalObject, impl);
-}
-
-CountQueuingStrategy* JSCountQueuingStrategy::toWrapped(JSC::JSValue value)
-{
-    if (auto* wrapper = jsDynamicCast<JSCountQueuingStrategy*>(value))
-        return &wrapper->impl();
-    return nullptr;
-}
 
 }
 

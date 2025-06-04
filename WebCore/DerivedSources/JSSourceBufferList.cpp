@@ -28,7 +28,6 @@
 #include "JSDOMBinding.h"
 #include "JSSourceBuffer.h"
 #include "SourceBuffer.h"
-#include "SourceBufferList.h"
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
@@ -82,15 +81,15 @@ static const struct CompactHashIndex JSSourceBufferListTableIndex[4] = {
 
 static const HashTableValue JSSourceBufferListTableValues[] =
 {
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSourceBufferListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSSourceBufferListTable = { 1, 3, true, JSSourceBufferListTableValues, 0, JSSourceBufferListTableIndex };
+static const HashTable JSSourceBufferListTable = { 1, 3, true, JSSourceBufferListTableValues, JSSourceBufferListTableIndex };
 /* Hash table for prototype */
 
 static const HashTableValue JSSourceBufferListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSourceBufferListPrototypeFunctionItem), (intptr_t) (1) },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSourceBufferListPrototypeFunctionItem), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSourceBufferListPrototype::s_info = { "SourceBufferListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSourceBufferListPrototype) };
@@ -103,7 +102,7 @@ void JSSourceBufferListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSourceBufferList::s_info = { "SourceBufferList", &Base::s_info, &JSSourceBufferListTable, CREATE_METHOD_TABLE(JSSourceBufferList) };
 
-JSSourceBufferList::JSSourceBufferList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SourceBufferList>&& impl)
+JSSourceBufferList::JSSourceBufferList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SourceBufferList>&& impl)
     : JSEventTarget(structure, globalObject, WTF::move(impl))
 {
 }
@@ -118,72 +117,69 @@ JSObject* JSSourceBufferList::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSourceBufferList>(vm, globalObject);
 }
 
-bool JSSourceBufferList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSSourceBufferList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSourceBufferList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSSourceBufferList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return getStaticValueSlot<JSSourceBufferList, Base>(exec, JSSourceBufferListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSSourceBufferList, Base>(state, JSSourceBufferListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSSourceBufferList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSSourceBufferList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSSourceBufferList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsSourceBufferListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSourceBufferListLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSSourceBufferList*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-void JSSourceBufferList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSSourceBufferList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSSourceBufferList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
-EncodedJSValue JSC_HOST_CALL jsSourceBufferListPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSourceBufferListPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSourceBufferList* castedThis = jsDynamicCast<JSSourceBufferList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SourceBufferList", "item");
+        return throwThisTypeError(*state, "SourceBufferList", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSourceBufferList::info());
-    auto& impl = castedThis->impl();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
     return JSValue::encode(result);
 }
 
@@ -192,15 +188,15 @@ void JSSourceBufferList::visitChildren(JSCell* cell, SlotVisitor& visitor)
     auto* thisObject = jsCast<JSSourceBufferList*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     Base::visitChildren(thisObject, visitor);
-    thisObject->impl().visitJSEventListeners(visitor);
+    thisObject->wrapped().visitJSEventListeners(visitor);
 }
 
 bool JSSourceBufferListOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsSourceBufferList = jsCast<JSSourceBufferList*>(handle.slot()->asCell());
-    if (jsSourceBufferList->impl().isFiringEventListeners())
+    if (jsSourceBufferList->wrapped().isFiringEventListeners())
         return true;
-    SourceBufferList* root = &jsSourceBufferList->impl();
+    SourceBufferList* root = &jsSourceBufferList->wrapped();
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -208,7 +204,7 @@ void JSSourceBufferListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* c
 {
     auto* jsSourceBufferList = jsCast<JSSourceBufferList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSourceBufferList->impl(), jsSourceBufferList);
+    uncacheWrapper(world, &jsSourceBufferList->wrapped(), jsSourceBufferList);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -219,6 +215,14 @@ extern "C" { extern void (*const __identifier("??_7SourceBufferList@WebCore@@6B@
 extern "C" { extern void* _ZTVN7WebCore16SourceBufferListE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBufferList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSourceBufferList>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBufferList* impl)
 {
     if (!impl)
@@ -250,7 +254,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SourceBuffer
 SourceBufferList* JSSourceBufferList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSourceBufferList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

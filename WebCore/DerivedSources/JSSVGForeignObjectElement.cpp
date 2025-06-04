@@ -22,9 +22,9 @@
 #include "JSSVGForeignObjectElement.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
-#include "SVGForeignObjectElement.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -65,53 +65,27 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGForeignObjectElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGForeignObjectElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGForeignObjectElement> JSSVGForeignObjectElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGForeignObjectElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGForeignObjectElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGForeignObjectElementConstructor>(vm.heap)) JSSVGForeignObjectElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGForeignObjectElementConstructor::s_info = { "SVGForeignObjectElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGForeignObjectElementConstructor) };
-
-JSSVGForeignObjectElementConstructor::JSSVGForeignObjectElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGForeignObjectElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGForeignObjectElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGForeignObjectElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGForeignObjectElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGForeignObjectElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGForeignObjectElementConstructor::s_info = { "SVGForeignObjectElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGForeignObjectElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGForeignObjectElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "x", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "y", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "width", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "height", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "externalResourcesRequired", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "x", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementX), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "y", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementY), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "width", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementWidth), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "height", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementHeight), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "externalResourcesRequired", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGForeignObjectElementExternalResourcesRequired), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGForeignObjectElementPrototype::s_info = { "SVGForeignObjectElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGForeignObjectElementPrototype) };
@@ -124,7 +98,7 @@ void JSSVGForeignObjectElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGForeignObjectElement::s_info = { "SVGForeignObjectElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGForeignObjectElement) };
 
-JSSVGForeignObjectElement::JSSVGForeignObjectElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGForeignObjectElement>&& impl)
+JSSVGForeignObjectElement::JSSVGForeignObjectElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGForeignObjectElement>&& impl)
     : JSSVGGraphicsElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -139,107 +113,107 @@ JSObject* JSSVGForeignObjectElement::getPrototype(VM& vm, JSGlobalObject* global
     return getDOMPrototype<JSSVGForeignObjectElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGForeignObjectElementX(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementX(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGForeignObjectElement* castedThis = jsDynamicCast<JSSVGForeignObjectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGForeignObjectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGForeignObjectElement", "x");
-        return throwGetterTypeError(*exec, "SVGForeignObjectElement", "x");
+            return reportDeprecatedGetterError(*state, "SVGForeignObjectElement", "x");
+        return throwGetterTypeError(*state, "SVGForeignObjectElement", "x");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.xAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGForeignObjectElementY(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementY(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGForeignObjectElement* castedThis = jsDynamicCast<JSSVGForeignObjectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGForeignObjectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGForeignObjectElement", "y");
-        return throwGetterTypeError(*exec, "SVGForeignObjectElement", "y");
+            return reportDeprecatedGetterError(*state, "SVGForeignObjectElement", "y");
+        return throwGetterTypeError(*state, "SVGForeignObjectElement", "y");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.yAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGForeignObjectElementWidth(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementWidth(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGForeignObjectElement* castedThis = jsDynamicCast<JSSVGForeignObjectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGForeignObjectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGForeignObjectElement", "width");
-        return throwGetterTypeError(*exec, "SVGForeignObjectElement", "width");
+            return reportDeprecatedGetterError(*state, "SVGForeignObjectElement", "width");
+        return throwGetterTypeError(*state, "SVGForeignObjectElement", "width");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.widthAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGForeignObjectElementHeight(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementHeight(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGForeignObjectElement* castedThis = jsDynamicCast<JSSVGForeignObjectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGForeignObjectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGForeignObjectElement", "height");
-        return throwGetterTypeError(*exec, "SVGForeignObjectElement", "height");
+            return reportDeprecatedGetterError(*state, "SVGForeignObjectElement", "height");
+        return throwGetterTypeError(*state, "SVGForeignObjectElement", "height");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedLength> obj = impl.heightAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGForeignObjectElementExternalResourcesRequired(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementExternalResourcesRequired(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGForeignObjectElement* castedThis = jsDynamicCast<JSSVGForeignObjectElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGForeignObjectElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGForeignObjectElement", "externalResourcesRequired");
-        return throwGetterTypeError(*exec, "SVGForeignObjectElement", "externalResourcesRequired");
+            return reportDeprecatedGetterError(*state, "SVGForeignObjectElement", "externalResourcesRequired");
+        return throwGetterTypeError(*state, "SVGForeignObjectElement", "externalResourcesRequired");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     RefPtr<SVGAnimatedBoolean> obj = impl.externalResourcesRequiredAnimated();
-    JSValue result = toJS(exec, castedThis->globalObject(), obj.get());
+    JSValue result = toJS(state, castedThis->globalObject(), obj.get());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGForeignObjectElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGForeignObjectElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGForeignObjectElementPrototype* domObject = jsDynamicCast<JSSVGForeignObjectElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGForeignObjectElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGForeignObjectElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGForeignObjectElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGForeignObjectElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGForeignObjectElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

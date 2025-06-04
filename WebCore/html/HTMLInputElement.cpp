@@ -49,7 +49,6 @@
 #include "HTMLOptionElement.h"
 #include "HTMLParserIdioms.h"
 #include "IdTargetObserver.h"
-#include "InsertionPoint.h"
 #include "KeyboardEvent.h"
 #include "Language.h"
 #include "LocalizedStrings.h"
@@ -64,10 +63,6 @@
 #include "TextBreakIterator.h"
 #include <wtf/MathExtras.h>
 #include <wtf/Ref.h>
-
-#if ENABLE(INPUT_TYPE_COLOR)
-#include "ColorInputType.h"
-#endif
 
 #if ENABLE(TOUCH_EVENTS)
 #include "TouchEvent.h"
@@ -155,7 +150,7 @@ void HTMLInputElement::didAddUserAgentShadowRoot(ShadowRoot*)
 HTMLInputElement::~HTMLInputElement()
 {
     if (needsSuspensionCallback())
-        document().unregisterForPageCacheSuspensionCallbacks(this);
+        document().unregisterForDocumentSuspensionCallbacks(this);
 
     // Need to remove form association while this is still an HTMLInputElement
     // so that virtual functions are called correctly.
@@ -403,17 +398,17 @@ bool HTMLInputElement::isTextFormControlMouseFocusable() const
     return HTMLTextFormControlElement::isMouseFocusable();
 }
 
-void HTMLInputElement::updateFocusAppearance(bool restorePreviousSelection)
+void HTMLInputElement::updateFocusAppearance(SelectionRestorationMode restorationMode, SelectionRevealMode revealMode)
 {
     if (isTextField()) {
-        if (!restorePreviousSelection || !hasCachedSelection())
+        if (restorationMode == SelectionRestorationMode::SetDefault || !hasCachedSelection())
             select(Element::defaultFocusTextStateChangeIntent());
         else
             restoreCachedSelection();
-        if (document().frame())
+        if (document().frame() && revealMode == SelectionRevealMode::Reveal)
             document().frame()->selection().revealSelection();
     } else
-        HTMLTextFormControlElement::updateFocusAppearance(restorePreviousSelection);
+        HTMLTextFormControlElement::updateFocusAppearance(restorationMode, revealMode);
 }
 
 void HTMLInputElement::endEditing()
@@ -529,10 +524,7 @@ inline void HTMLInputElement::runPostTypeUpdateTasks()
         setNeedsStyleRecalc(ReconstructRenderTree);
 
     if (document().focusedElement() == this)
-        updateFocusAppearance(true);
-
-    if (ShadowRoot* shadowRoot = shadowRootOfParentForDistribution(this))
-        shadowRoot->invalidateDistribution();
+        updateFocusAppearance(SelectionRestorationMode::Restore, SelectionRevealMode::Reveal);
 
     setChangedSinceLastFormControlChangeEvent(false);
 
@@ -789,7 +781,7 @@ void HTMLInputElement::didAttachRenderers()
     m_inputType->attach();
 
     if (document().focusedElement() == this)
-        document().updateFocusAppearanceSoon(true /* restore selection */);
+        document().updateFocusAppearanceSoon(SelectionRestorationMode::Restore);
 }
 
 void HTMLInputElement::didDetachRenderers()
@@ -1046,10 +1038,14 @@ void HTMLInputElement::setValueFromRenderer(const String& value)
     ASSERT(!isFileUpload());
 
     // Renderer and our event handler are responsible for sanitizing values.
-    ASSERT(value == sanitizeValue(value) || sanitizeValue(value).isEmpty());
+    // Input types that support the selection API do *not* sanitize their
+    // user input in order to retain parity between what's in the model and
+    // what's on the screen.
+    ASSERT(m_inputType->supportsSelectionAPI() || value == sanitizeValue(value) || sanitizeValue(value).isEmpty());
 
     // Workaround for bug where trailing \n is included in the result of textContent.
-    // The assert macro above may also be simplified to: value == constrainValue(value)
+    // The assert macro above may also be simplified by removing the expression
+    // that calls isEmpty.
     // http://bugs.webkit.org/show_bug.cgi?id=9661
     m_valueIfDirty = value == "\n" ? emptyString() : value;
 
@@ -1227,8 +1223,8 @@ static Vector<String> parseAcceptAttribute(const String& acceptString, bool (*pr
 
     Vector<String> splitTypes;
     acceptString.split(',', false, splitTypes);
-    for (size_t i = 0; i < splitTypes.size(); ++i) {
-        String trimmedType = stripLeadingAndTrailingHTMLSpaces(splitTypes[i]);
+    for (auto& splitType : splitTypes) {
+        String trimmedType = stripLeadingAndTrailingHTMLSpaces(splitType);
         if (trimmedType.isEmpty())
             continue;
         if (!predicate(trimmedType))
@@ -1403,13 +1399,13 @@ bool HTMLInputElement::needsSuspensionCallback()
 void HTMLInputElement::registerForSuspensionCallbackIfNeeded()
 {
     if (needsSuspensionCallback())
-        document().registerForPageCacheSuspensionCallbacks(this);
+        document().registerForDocumentSuspensionCallbacks(this);
 }
 
 void HTMLInputElement::unregisterForSuspensionCallbackIfNeeded()
 {
     if (!needsSuspensionCallback())
-        document().unregisterForPageCacheSuspensionCallbacks(this);
+        document().unregisterForDocumentSuspensionCallbacks(this);
 }
 
 bool HTMLInputElement::isRequiredFormControl() const
@@ -1435,12 +1431,12 @@ void HTMLInputElement::onSearch()
     dispatchEvent(Event::create(eventNames().searchEvent, true, false));
 }
 
-void HTMLInputElement::documentDidResumeFromPageCache()
+void HTMLInputElement::resumeFromDocumentSuspension()
 {
     ASSERT(needsSuspensionCallback());
 
 #if ENABLE(INPUT_TYPE_COLOR)
-    // <input type=color> uses documentWillSuspendForPageCache to detach the color picker UI,
+    // <input type=color> uses prepareForDocumentSuspension to detach the color picker UI,
     // so it should not be reset when being loaded from page cache.
     if (isColorControl()) 
         return;
@@ -1449,7 +1445,7 @@ void HTMLInputElement::documentDidResumeFromPageCache()
 }
 
 #if ENABLE(INPUT_TYPE_COLOR)
-void HTMLInputElement::documentWillSuspendForPageCache()
+void HTMLInputElement::prepareForDocumentSuspension()
 {
     if (!isColorControl())
         return;
@@ -1473,19 +1469,17 @@ void HTMLInputElement::didChangeForm()
 Node::InsertionNotificationRequest HTMLInputElement::insertedInto(ContainerNode& insertionPoint)
 {
     HTMLTextFormControlElement::insertedInto(insertionPoint);
-
 #if ENABLE(DATALIST_ELEMENT)
     resetListAttributeTargetObserver();
 #endif
     return InsertionShouldCallFinishedInsertingSubtree;
-
 }
 
 void HTMLInputElement::finishedInsertingSubtree()
 {
-	HTMLTextFormControlElement::finishedInsertingSubtree();
-	if (inDocument() && !form())
-	    addToRadioButtonGroup();
+    HTMLTextFormControlElement::finishedInsertingSubtree();
+    if (inDocument() && !form())
+        addToRadioButtonGroup();
 }
 
 void HTMLInputElement::removedFrom(ContainerNode& insertionPoint)
@@ -1508,7 +1502,7 @@ void HTMLInputElement::didMoveToNewDocument(Document* oldDocument)
     if (oldDocument) {
         // Always unregister for cache callbacks when leaving a document, even if we would otherwise like to be registered
         if (needsSuspensionCallback)
-            oldDocument->unregisterForPageCacheSuspensionCallbacks(this);
+            oldDocument->unregisterForDocumentSuspensionCallbacks(this);
         if (isRadioButton())
             oldDocument->formController().checkedRadioButtons().removeButton(this);
 #if ENABLE(TOUCH_EVENTS)
@@ -1518,7 +1512,7 @@ void HTMLInputElement::didMoveToNewDocument(Document* oldDocument)
     }
 
     if (needsSuspensionCallback)
-        document().registerForPageCacheSuspensionCallbacks(this);
+        document().registerForDocumentSuspensionCallbacks(this);
 
 #if ENABLE(TOUCH_EVENTS)
     if (m_hasTouchEventHandler)
@@ -1548,15 +1542,16 @@ void HTMLInputElement::requiredAttributeChanged()
     m_inputType->requiredAttributeChanged();
 }
 
-#if ENABLE(INPUT_TYPE_COLOR)
-void HTMLInputElement::selectColorInColorChooser(const Color& color)
+Color HTMLInputElement::valueAsColor() const
 {
-    if (!m_inputType->isColorControl())
-        return;
-    static_cast<ColorInputType*>(m_inputType.get())->didChooseColor(color);
+    return m_inputType->valueAsColor();
 }
-#endif
-    
+
+void HTMLInputElement::selectColor(const Color& color)
+{
+    m_inputType->selectColor(color);
+}
+
 #if ENABLE(DATALIST_ELEMENT)
 HTMLElement* HTMLInputElement::list() const
 {

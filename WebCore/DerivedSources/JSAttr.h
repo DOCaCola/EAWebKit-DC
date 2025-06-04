@@ -31,7 +31,7 @@ public:
     typedef JSNode Base;
     static JSAttr* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Attr>&& impl)
     {
-        JSAttr* ptr = new (NotNull, JSC::allocateCell<JSAttr>(globalObject->vm().heap)) JSAttr(structure, globalObject, WTF::move(impl));
+        JSAttr* ptr = new (NotNull, JSC::allocateCell<JSAttr>(globalObject->vm().heap)) JSAttr(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    Attr& impl() const
+    Attr& wrapped() const
     {
-        return static_cast<Attr&>(Base::impl());
+        return static_cast<Attr&>(Base::wrapped());
     }
 protected:
-    JSAttr(JSC::Structure*, JSDOMGlobalObject*, Ref<Attr>&&);
+    JSAttr(JSC::Structure*, JSDOMGlobalObject&, Ref<Attr>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -66,6 +66,9 @@ protected:
 
 };
 
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Attr*);
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Attr& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Attr*);
 
 
 } // namespace WebCore

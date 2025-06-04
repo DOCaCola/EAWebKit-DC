@@ -33,7 +33,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLTrackElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTrackElement>&& impl)
     {
-        JSHTMLTrackElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTrackElement>(globalObject->vm().heap)) JSHTMLTrackElement(structure, globalObject, WTF::move(impl));
+        JSHTMLTrackElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLTrackElement>(globalObject->vm().heap)) JSHTMLTrackElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLTrackElement& impl() const
+    HTMLTrackElement& wrapped() const
     {
-        return static_cast<HTMLTrackElement&>(Base::impl());
+        return static_cast<HTMLTrackElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLTrackElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLTrackElement>&&);
+    JSHTMLTrackElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLTrackElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

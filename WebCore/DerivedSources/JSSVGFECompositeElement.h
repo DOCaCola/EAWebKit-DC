@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGFECompositeElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGFECompositeElement>&& impl)
     {
-        JSSVGFECompositeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFECompositeElement>(globalObject->vm().heap)) JSSVGFECompositeElement(structure, globalObject, WTF::move(impl));
+        JSSVGFECompositeElement* ptr = new (NotNull, JSC::allocateCell<JSSVGFECompositeElement>(globalObject->vm().heap)) JSSVGFECompositeElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGFECompositeElement& impl() const
+    SVGFECompositeElement& wrapped() const
     {
-        return static_cast<SVGFECompositeElement&>(Base::impl());
+        return static_cast<SVGFECompositeElement&>(Base::wrapped());
     }
 protected:
-    JSSVGFECompositeElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGFECompositeElement>&&);
+    JSSVGFECompositeElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGFECompositeElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

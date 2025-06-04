@@ -50,6 +50,7 @@
 #if ENABLE(MEDIA_STREAM)
 #include "JSMediaStream.h"
 #include "JSMediaStreamTrack.h"
+#include "JSRTCRtpReceiver.h"
 #endif
 
 #if ENABLE(GAMEPAD)
@@ -176,7 +177,7 @@ void JSDictionary::convertValue(ExecState*, JSValue value, RefPtr<Storage>& resu
 void JSDictionary::convertValue(ExecState* exec, JSValue value, MessagePortArray& result)
 {
     ArrayBufferArray arrayBuffers;
-    fillMessagePortArray(exec, value, result, arrayBuffers);
+    fillMessagePortArray(*exec, value, result, arrayBuffers);
 }
 
 #if ENABLE(VIDEO_TRACK)
@@ -235,6 +236,11 @@ void JSDictionary::convertValue(JSC::ExecState*, JSC::JSValue value, RefPtr<Medi
 void JSDictionary::convertValue(JSC::ExecState*, JSC::JSValue value, RefPtr<MediaStreamTrack>& result)
 {
     result = JSMediaStreamTrack::toWrapped(value);
+}
+
+void JSDictionary::convertValue(JSC::ExecState*, JSC::JSValue value, RefPtr<RTCRtpReceiver>& result)
+{
+    result = JSRTCRtpReceiver::toWrapped(value);
 }
 #endif
 

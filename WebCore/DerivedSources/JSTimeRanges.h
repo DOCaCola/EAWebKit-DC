@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class WEBCORE_EXPORT JSTimeRanges : public JSDOMWrapper {
+class WEBCORE_EXPORT JSTimeRanges : public JSDOMWrapper<TimeRanges> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TimeRanges> Base;
     static JSTimeRanges* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TimeRanges>&& impl)
     {
-        JSTimeRanges* ptr = new (NotNull, JSC::allocateCell<JSTimeRanges>(globalObject->vm().heap)) JSTimeRanges(structure, globalObject, WTF::move(impl));
+        JSTimeRanges* ptr = new (NotNull, JSC::allocateCell<JSTimeRanges>(globalObject->vm().heap)) JSTimeRanges(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static TimeRanges* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTimeRanges();
 
     DECLARE_INFO;
 
@@ -54,15 +53,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    TimeRanges& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TimeRanges* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTimeRanges(JSC::Structure*, JSDOMGlobalObject*, Ref<TimeRanges>&&);
+    JSTimeRanges(JSC::Structure*, JSDOMGlobalObject&, Ref<TimeRanges>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -85,7 +79,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TimeRanges*)
 }
 
 WEBCORE_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TimeRanges*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TimeRanges& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TimeRanges& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TimeRanges*);
 
 
 } // namespace WebCore

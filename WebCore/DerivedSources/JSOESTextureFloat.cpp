@@ -25,7 +25,6 @@
 #include "JSOESTextureFloat.h"
 
 #include "JSDOMBinding.h"
-#include "OESTextureFloat.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSOESTextureFloatPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSOESTextureFloatPrototype::s_info = { "OESTextureFloatPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureFloatPrototype) };
@@ -74,9 +73,8 @@ void JSOESTextureFloatPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSOESTextureFloat::s_info = { "OESTextureFloat", &Base::s_info, 0, CREATE_METHOD_TABLE(JSOESTextureFloat) };
 
-JSOESTextureFloat::JSOESTextureFloat(Structure* structure, JSDOMGlobalObject* globalObject, Ref<OESTextureFloat>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSOESTextureFloat::JSOESTextureFloat(Structure* structure, JSDOMGlobalObject& globalObject, Ref<OESTextureFloat>&& impl)
+    : JSDOMWrapper<OESTextureFloat>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,15 +94,10 @@ void JSOESTextureFloat::destroy(JSC::JSCell* cell)
     thisObject->JSOESTextureFloat::~JSOESTextureFloat();
 }
 
-JSOESTextureFloat::~JSOESTextureFloat()
-{
-    releaseImpl();
-}
-
 bool JSOESTextureFloatOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsOESTextureFloat = jsCast<JSOESTextureFloat*>(handle.slot()->asCell());
-    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureFloat->impl().context());
+    WebGLRenderingContextBase* root = WTF::getPtr(jsOESTextureFloat->wrapped().context());
     return visitor.containsOpaqueRoot(root);
 }
 
@@ -112,7 +105,7 @@ void JSOESTextureFloatOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsOESTextureFloat = jsCast<JSOESTextureFloat*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsOESTextureFloat->impl(), jsOESTextureFloat);
+    uncacheWrapper(world, &jsOESTextureFloat->wrapped(), jsOESTextureFloat);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7OESTextureFloat@WebCore@@6B@"
 extern "C" { extern void* _ZTVN7WebCore15OESTextureFloatE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFloat* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSOESTextureFloat>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFloat* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, OESTextureFl
 OESTextureFloat* JSOESTextureFloat::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSOESTextureFloat*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

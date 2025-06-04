@@ -34,8 +34,8 @@ EXTERN slow_path_unsigned : near
 EXTERN slow_path_bitand : near
 EXTERN slow_path_bitxor : near
 EXTERN slow_path_bitor : near
-EXTERN llint_slow_path_check_has_instance : near
 EXTERN llint_slow_path_instanceof : near
+EXTERN llint_slow_path_instanceof_custom : near
 EXTERN llint_slow_path_get_by_id : near
 EXTERN llint_write_barrier_slow : near
 EXTERN llint_slow_path_put_by_id : near
@@ -46,15 +46,18 @@ EXTERN llint_slow_path_switch_imm : near
 EXTERN llint_slow_path_switch_char : near
 EXTERN llint_replace : near
 EXTERN slow_path_to_primitive : near
+EXTERN llint_slow_path_check_if_exception_is_uncatchable_and_notify_profiler : near
 EXTERN llint_slow_path_handle_exception : near
-EXTERN llint_slow_path_resolve_scope : near
+EXTERN slow_path_resolve_scope : near
 EXTERN llint_slow_path_get_from_scope : near
+EXTERN slow_path_throw_strict_mode_readonly_property_write_error : near
 EXTERN llint_slow_path_put_to_scope : near
 EXTERN slow_path_profile_type_clear_log : near
 EXTERN slow_path_create_direct_arguments : near
 EXTERN slow_path_create_scoped_arguments : near
 EXTERN slow_path_create_out_of_band_arguments : near
 EXTERN llint_slow_path_new_func : near
+EXTERN llint_slow_path_new_generator_func : near
 EXTERN llint_slow_path_new_array : near
 EXTERN llint_slow_path_new_array_with_size : near
 EXTERN llint_slow_path_new_array_buffer : near
@@ -73,7 +76,9 @@ EXTERN llint_slow_path_del_by_val : near
 EXTERN llint_slow_path_put_by_index : near
 EXTERN llint_slow_path_put_getter_by_id : near
 EXTERN llint_slow_path_put_setter_by_id : near
-EXTERN llint_slow_path_put_getter_setter : near
+EXTERN llint_slow_path_put_getter_setter_by_id : near
+EXTERN llint_slow_path_put_getter_by_val : near
+EXTERN llint_slow_path_put_setter_by_val : near
 EXTERN llint_slow_path_jtrue : near
 EXTERN llint_slow_path_jfalse : near
 EXTERN llint_slow_path_jless : near
@@ -88,6 +93,8 @@ EXTERN llint_loop_osr : near
 EXTERN llint_slow_path_handle_watchdog_timer : near
 EXTERN llint_slow_path_switch_string : near
 EXTERN llint_slow_path_new_func_exp : near
+EXTERN llint_slow_path_new_generator_func_exp : near
+EXTERN llint_slow_path_new_arrow_func_exp : near
 EXTERN llint_slow_path_call : near
 EXTERN llint_slow_path_construct : near
 EXTERN llint_slow_path_size_frame_for_varargs : near
@@ -96,6 +103,9 @@ EXTERN llint_slow_path_construct_varargs : near
 EXTERN llint_slow_path_call_eval : near
 EXTERN slow_path_strcat : near
 EXTERN slow_path_push_with_scope : near
+EXTERN slow_path_assert : near
+EXTERN slow_path_save : near
+EXTERN slow_path_resume : near
 EXTERN slow_path_create_lexical_environment : near
 EXTERN llint_slow_path_throw : near
 EXTERN llint_slow_path_throw_static_error : near
@@ -111,3 +121,4 @@ EXTERN slow_path_get_property_enumerator : near
 EXTERN slow_path_next_structure_enumerator_pname : near
 EXTERN slow_path_next_generic_enumerator_pname : near
 EXTERN slow_path_to_index_string : near
+EXTERN slow_path_copy_rest : near

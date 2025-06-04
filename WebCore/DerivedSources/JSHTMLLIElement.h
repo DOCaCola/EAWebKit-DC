@@ -31,7 +31,7 @@ public:
     typedef JSHTMLElement Base;
     static JSHTMLLIElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLLIElement>&& impl)
     {
-        JSHTMLLIElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLIElement>(globalObject->vm().heap)) JSHTMLLIElement(structure, globalObject, WTF::move(impl));
+        JSHTMLLIElement* ptr = new (NotNull, JSC::allocateCell<JSHTMLLIElement>(globalObject->vm().heap)) JSHTMLLIElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -47,12 +47,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    HTMLLIElement& impl() const
+    HTMLLIElement& wrapped() const
     {
-        return static_cast<HTMLLIElement&>(Base::impl());
+        return static_cast<HTMLLIElement&>(Base::wrapped());
     }
 protected:
-    JSHTMLLIElement(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLLIElement>&&);
+    JSHTMLLIElement(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLLIElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

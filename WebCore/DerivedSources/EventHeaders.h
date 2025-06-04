@@ -74,7 +74,7 @@
 #include "GamepadEvent.h"
 #include "JSGamepadEvent.h"
 #endif
-#if ENABLE(IOS_GESTURE_EVENTS)
+#if ENABLE(IOS_GESTURE_EVENTS) || ENABLE(MAC_GESTURE_EVENTS)
 #include "GestureEvent.h"
 #include "JSGestureEvent.h"
 #endif
@@ -135,6 +135,10 @@
 #if ENABLE(MEDIA_STREAM)
 #include "RTCIceCandidateEvent.h"
 #include "JSRTCIceCandidateEvent.h"
+#endif
+#if ENABLE(MEDIA_STREAM)
+#include "RTCTrackEvent.h"
+#include "JSRTCTrackEvent.h"
 #endif
 #include "SVGZoomEvent.h"
 #include "JSSVGZoomEvent.h"

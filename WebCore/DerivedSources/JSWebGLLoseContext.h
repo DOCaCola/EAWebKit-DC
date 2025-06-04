@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSWebGLLoseContext : public JSDOMWrapper {
+class JSWebGLLoseContext : public JSDOMWrapper<WebGLLoseContext> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<WebGLLoseContext> Base;
     static JSWebGLLoseContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLLoseContext>&& impl)
     {
-        JSWebGLLoseContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLLoseContext>(globalObject->vm().heap)) JSWebGLLoseContext(structure, globalObject, WTF::move(impl));
+        JSWebGLLoseContext* ptr = new (NotNull, JSC::allocateCell<JSWebGLLoseContext>(globalObject->vm().heap)) JSWebGLLoseContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static WebGLLoseContext* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSWebGLLoseContext();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    WebGLLoseContext& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    WebGLLoseContext* m_impl;
 protected:
-    JSWebGLLoseContext(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGLLoseContext>&&);
+    JSWebGLLoseContext(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGLLoseContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, WebGLLoseContext*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, WebGLLoseContext*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, WebGLLoseContext& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, WebGLLoseContext& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, WebGLLoseContext*);
 
 
 } // namespace WebCore

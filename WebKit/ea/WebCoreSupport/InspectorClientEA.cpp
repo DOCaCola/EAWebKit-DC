@@ -57,24 +57,23 @@ namespace WebCore {
 
 InspectorClientEA::InspectorClientEA(EA::WebKit::WebPage* page)
     : mInspectedPage(page)
-    , mInspectorPage(0)
-    , mInspectorPageClient(0)
+    , mInspectorPage(nullptr)
+    , mInspectorPageClient(nullptr)
 {
 
 	WebCore::InspectorSettingsEA::sharedInstance(); //This implicitly reads the inspector settings.
 
 }
 
-void InspectorClientEA::inspectorDestroyed(void)
+void InspectorClientEA::inspectedPageDestroyed()
 {
     closeInspectorFrontend();
     delete this;
 }
 
-    
-WebCore::InspectorFrontendChannel*  InspectorClientEA::openInspectorFrontend(WebCore::InspectorController* inspectorController)
+Inspector::FrontendChannel* InspectorClientEA::openLocalFrontend(WebCore::InspectorController* inspectorController)
 {
-    WebCore::InspectorFrontendChannel* frontendChannel = 0;
+    Inspector::FrontendChannel* frontendChannel = 0;
     
 	// Create the view and page for the inspector.
     if(EA::WebKit::EAWebKitClient* const pClient = EA::WebKit::GetEAWebKitClient(mInspectedPage->view()))
@@ -246,11 +245,6 @@ void InspectorFrontendClientEA::setAttachedWindowWidth(unsigned)
     notImplemented();
 }
 
-void InspectorFrontendClientEA::setToolbarHeight(unsigned)
-{
-    notImplemented();
-}
-
 void InspectorFrontendClientEA::inspectedURLChanged(const String& newURL)
 {
     //mInspectedURL.assign = newURL;
@@ -278,7 +272,7 @@ void InspectorFrontendClientEA::destroyInspectorView(bool notifyInspectorControl
     }
 
     if (notifyInspectorController && (mInspectedWebPage))
-		mInspectedWebPage->d->page->inspectorController().disconnectFrontend(Inspector::DisconnectReason::InspectorDestroyed);
+		mInspectedWebPage->d->page->inspectorController().disconnectFrontend(mInspectorClient);
 
     if (mInspectorClient)
         mInspectorClient->releaseFrontendPage();

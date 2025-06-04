@@ -25,7 +25,7 @@
 #include "JSSVGMissingGlyphElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGMissingGlyphElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGMissingGlyphElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGMissingGlyphElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGMissingGlyphElement> JSSVGMissingGlyphElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGMissingGlyphElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGMissingGlyphElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGMissingGlyphElementConstructor>(vm.heap)) JSSVGMissingGlyphElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGMissingGlyphElementConstructor::s_info = { "SVGMissingGlyphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMissingGlyphElementConstructor) };
-
-JSSVGMissingGlyphElementConstructor::JSSVGMissingGlyphElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGMissingGlyphElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGMissingGlyphElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGMissingGlyphElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGMissingGlyphElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGMissingGlyphElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGMissingGlyphElementConstructor::s_info = { "SVGMissingGlyphElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMissingGlyphElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGMissingGlyphElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMissingGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGMissingGlyphElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGMissingGlyphElementPrototype::s_info = { "SVGMissingGlyphElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMissingGlyphElementPrototype) };
@@ -115,7 +89,7 @@ void JSSVGMissingGlyphElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGMissingGlyphElement::s_info = { "SVGMissingGlyphElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGMissingGlyphElement) };
 
-JSSVGMissingGlyphElement::JSSVGMissingGlyphElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGMissingGlyphElement>&& impl)
+JSSVGMissingGlyphElement::JSSVGMissingGlyphElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGMissingGlyphElement>&& impl)
     : JSSVGElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -130,17 +104,17 @@ JSObject* JSSVGMissingGlyphElement::getPrototype(VM& vm, JSGlobalObject* globalO
     return getDOMPrototype<JSSVGMissingGlyphElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGMissingGlyphElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGMissingGlyphElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGMissingGlyphElementPrototype* domObject = jsDynamicCast<JSSVGMissingGlyphElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGMissingGlyphElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGMissingGlyphElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGMissingGlyphElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGMissingGlyphElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGMissingGlyphElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

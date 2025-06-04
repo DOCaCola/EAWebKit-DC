@@ -58,8 +58,8 @@
 #include "WebGLLoseContext.h"
 #include "WebGLVertexArrayObjectOES.h"
 #include <JavaScriptCore/GenericTypedArrayViewInlines.h>
-#include <JavaScriptCore/JSCJSValueInlines.h> 
-#include <JavaScriptCore/JSCellInlines.h> 
+#include <JavaScriptCore/JSCJSValueInlines.h>
+#include <JavaScriptCore/JSCellInlines.h>
 #include <JavaScriptCore/JSGenericTypedArrayViewInlines.h>
 
 namespace WebCore {
@@ -121,7 +121,7 @@ WebGLExtension* WebGLRenderingContext::getExtension(const String& name)
         }
         return m_extShaderTextureLOD.get();
     }
-    if (equalIgnoringCase(name, "WEBKIT_EXT_texture_filter_anisotropic")
+    if ((equalIgnoringCase(name, "EXT_texture_filter_anisotropic") || equalIgnoringCase(name, "WEBKIT_EXT_texture_filter_anisotropic"))
         && m_context->getExtensions()->supports("GL_EXT_texture_filter_anisotropic")) {
         if (!m_extTextureFilterAnisotropic) {
             m_context->getExtensions()->ensureEnabled("GL_EXT_texture_filter_anisotropic");
@@ -230,20 +230,18 @@ WebGLExtension* WebGLRenderingContext::getExtension(const String& name)
         }
         return m_angleInstancedArrays.get();
     }
-    if (allowPrivilegedExtensions()) {
-        if (equalIgnoringCase(name, "WEBGL_debug_renderer_info")) {
-            if (!m_webglDebugRendererInfo)
-                m_webglDebugRendererInfo = std::make_unique<WebGLDebugRendererInfo>(this);
-            return m_webglDebugRendererInfo.get();
-        }
-        if (equalIgnoringCase(name, "WEBGL_debug_shaders")
-            && m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source")) {
-            if (!m_webglDebugShaders)
-                m_webglDebugShaders = std::make_unique<WebGLDebugShaders>(this);
-            return m_webglDebugShaders.get();
-        }
+    if (equalIgnoringCase(name, "WEBGL_debug_renderer_info")) {
+        if (!m_webglDebugRendererInfo)
+            m_webglDebugRendererInfo = std::make_unique<WebGLDebugRendererInfo>(this);
+        return m_webglDebugRendererInfo.get();
     }
-    
+    if (equalIgnoringCase(name, "WEBGL_debug_shaders")
+        && m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source")) {
+        if (!m_webglDebugShaders)
+            m_webglDebugShaders = std::make_unique<WebGLDebugShaders>(this);
+        return m_webglDebugShaders.get();
+    }
+
     return nullptr;
 }
 
@@ -273,7 +271,7 @@ Vector<String> WebGLRenderingContext::getSupportedExtensions()
     if (m_context->getExtensions()->supports("GL_EXT_shader_texture_lod") || m_context->getExtensions()->supports("GL_ARB_shader_texture_lod"))
         result.append("EXT_shader_texture_lod");
     if (m_context->getExtensions()->supports("GL_EXT_texture_filter_anisotropic"))
-        result.append("WEBKIT_EXT_texture_filter_anisotropic");
+        result.append("EXT_texture_filter_anisotropic");
     if (m_context->getExtensions()->supports("GL_OES_vertex_array_object"))
         result.append("OES_vertex_array_object");
     if (m_context->getExtensions()->supports("GL_OES_element_index_uint"))
@@ -291,13 +289,10 @@ Vector<String> WebGLRenderingContext::getSupportedExtensions()
         result.append("WEBGL_draw_buffers");
     if (ANGLEInstancedArrays::supported(this))
         result.append("ANGLE_instanced_arrays");
-    
-    if (allowPrivilegedExtensions()) {
-        if (m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source"))
-            result.append("WEBGL_debug_shaders");
-        result.append("WEBGL_debug_renderer_info");
-    }
-    
+    if (m_context->getExtensions()->supports("GL_ANGLE_translated_shader_source"))
+        result.append("WEBGL_debug_shaders");
+    result.append("WEBGL_debug_renderer_info");
+
     return result;
 }
 
@@ -628,8 +623,11 @@ void WebGLRenderingContext::texSubImage2D(GC3Denum target, GC3Dint level, GC3Din
         return;
     
     RefPtr<Image> imageForRender = image->cachedImage()->imageForRenderer(image->renderer());
+    if (!imageForRender)
+        return;
+
     if (imageForRender->isSVGImage())
-        imageForRender = drawImageIntoBuffer(imageForRender.get(), image->width(), image->height(), 1);
+        imageForRender = drawImageIntoBuffer(*imageForRender, image->width(), image->height(), 1);
     
     if (!imageForRender || !validateTexFunc("texSubImage2D", TexSubImage, SourceHTMLImageElement, target, level, format, imageForRender->width(), imageForRender->height(), 0, format, type, xoffset, yoffset))
         return;

@@ -37,7 +37,7 @@
 #include "HTMLAppletElement.h"
 #include "HTMLAreaElement.h"
 #include "HTMLBaseElement.h"
-#include "HTMLBaseFontElement.h"
+#include "HTMLUnknownElement.h"
 #include "HTMLBDIElement.h"
 #include "HTMLQuoteElement.h"
 #include "HTMLBodyElement.h"
@@ -61,7 +61,6 @@
 #include "HTMLHRElement.h"
 #include "HTMLHtmlElement.h"
 #include "HTMLIFrameElement.h"
-#include "HTMLUnknownElement.h"
 #include "HTMLImageElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLKeygenElement.h"
@@ -81,17 +80,21 @@
 #include "HTMLOutputElement.h"
 #include "HTMLParagraphElement.h"
 #include "HTMLParamElement.h"
+#include "HTMLPictureElement.h"
 #include "HTMLProgressElement.h"
 #include "RubyTextElement.h"
 #include "RubyElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLSelectElement.h"
+#include "HTMLSourceElement.h"
 #include "HTMLSpanElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTableElement.h"
 #include "HTMLTableSectionElement.h"
-#include "HTMLTableCellElement.h"
+#include "HTMLTableDataCellElement.h"
 #include "HTMLTextAreaElement.h"
+#include "HTMLTableHeaderCellElement.h"
+#include "HTMLTimeElement.h"
 #include "HTMLTitleElement.h"
 #include "HTMLTableRowElement.h"
 #include "HTMLUListElement.h"
@@ -115,13 +118,16 @@
 #include "HTMLMeterElement.h"
 #endif
 
+#if ENABLE(SHADOW_DOM)
+#include "HTMLSlotElement.h"
+#endif
+
 #if ENABLE(TEMPLATE_ELEMENT)
 #include "HTMLTemplateElement.h"
 #endif
 
 #if ENABLE(VIDEO)
 #include "HTMLAudioElement.h"
-#include "HTMLSourceElement.h"
 #include "HTMLVideoElement.h"
 #endif
 
@@ -187,9 +193,9 @@ static Ref<HTMLElement> baseConstructor(const QualifiedName& tagName, Document& 
     return HTMLBaseElement::create(tagName, document);
 }
 
-static Ref<HTMLElement> basefontConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+static Ref<HTMLElement> unknownConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
-    return HTMLBaseFontElement::create(tagName, document);
+    return HTMLUnknownElement::create(tagName, document);
 }
 
 static Ref<HTMLElement> bdiConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
@@ -321,11 +327,6 @@ static Ref<HTMLElement> iframeConstructor(const QualifiedName& tagName, Document
     return HTMLIFrameElement::create(tagName, document);
 }
 
-static Ref<HTMLElement> unknownConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
-{
-    return HTMLUnknownElement::create(tagName, document);
-}
-
 static Ref<HTMLElement> imageConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement* formElement, bool)
 {
     return HTMLImageElement::create(tagName, document, formElement);
@@ -428,6 +429,11 @@ static Ref<HTMLElement> paramConstructor(const QualifiedName& tagName, Document&
     return HTMLParamElement::create(tagName, document);
 }
 
+static Ref<HTMLElement> pictureConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLPictureElement::create(tagName, document);
+}
+
 static Ref<HTMLElement> progressConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
     return HTMLProgressElement::create(tagName, document);
@@ -453,16 +459,17 @@ static Ref<HTMLElement> selectConstructor(const QualifiedName& tagName, Document
     return HTMLSelectElement::create(tagName, document, formElement);
 }
 
-#if ENABLE(VIDEO)
-static Ref<HTMLElement> sourceConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+#if ENABLE(SHADOW_DOM)
+static Ref<HTMLElement> slotConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
-    Settings* settings = document.settings();
-    if (!MediaPlayer::isAvailable() || (settings && !settings->mediaEnabled()))
-        return HTMLUnknownElement::create(tagName, document);
-    
-    return HTMLSourceElement::create(tagName, document);
+    return HTMLSlotElement::create(tagName, document);
 }
 #endif
+
+static Ref<HTMLElement> sourceConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLSourceElement::create(tagName, document);
+}
 
 static Ref<HTMLElement> spanConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
@@ -491,9 +498,9 @@ static Ref<HTMLElement> tablesectionConstructor(const QualifiedName& tagName, Do
     return HTMLTableSectionElement::create(tagName, document);
 }
 
-static Ref<HTMLElement> tablecellConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+static Ref<HTMLElement> tabledatacellConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
 {
-    return HTMLTableCellElement::create(tagName, document);
+    return HTMLTableDataCellElement::create(tagName, document);
 }
 
 #if ENABLE(TEMPLATE_ELEMENT)
@@ -506,6 +513,16 @@ static Ref<HTMLElement> templateConstructor(const QualifiedName& tagName, Docume
 static Ref<HTMLElement> textareaConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement* formElement, bool)
 {
     return HTMLTextAreaElement::create(tagName, document, formElement);
+}
+
+static Ref<HTMLElement> tableheadercellConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLTableHeaderCellElement::create(tagName, document);
+}
+
+static Ref<HTMLElement> timeConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
+{
+    return HTMLTimeElement::create(tagName, document);
 }
 
 static Ref<HTMLElement> titleConstructor(const QualifiedName& tagName, Document& document, HTMLFormElement*, bool)
@@ -574,10 +591,10 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
 #endif
         { bTag, Constructor },
         { baseTag, baseConstructor },
-        { basefontTag, basefontConstructor },
+        { basefontTag, unknownConstructor },
         { bdiTag, bdiConstructor },
         { bdoTag, Constructor },
-        { bgsoundTag, Constructor },
+        { bgsoundTag, unknownConstructor },
         { bigTag, Constructor },
         { blockquoteTag, quoteConstructor },
         { bodyTag, bodyConstructor },
@@ -662,6 +679,7 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { outputTag, outputConstructor },
         { pTag, paragraphConstructor },
         { paramTag, paramConstructor },
+        { pictureTag, pictureConstructor },
         { plaintextTag, Constructor },
         { preTag, preConstructor },
         { progressTag, progressConstructor },
@@ -676,10 +694,11 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { scriptTag, scriptConstructor },
         { sectionTag, Constructor },
         { selectTag, selectConstructor },
-        { smallTag, Constructor },
-#if ENABLE(VIDEO)
-        { sourceTag, sourceConstructor },
+#if ENABLE(SHADOW_DOM)
+        { slotTag, slotConstructor },
 #endif
+        { smallTag, Constructor },
+        { sourceTag, sourceConstructor },
         { spanTag, spanConstructor },
         { strikeTag, Constructor },
         { strongTag, Constructor },
@@ -691,15 +710,15 @@ static NEVER_INLINE void populateHTMLFactoryMap(HashMap<AtomicStringImpl*, HTMLC
         { supTag, Constructor },
         { tableTag, tableConstructor },
         { tbodyTag, tablesectionConstructor },
-        { tdTag, tablecellConstructor },
+        { tdTag, tabledatacellConstructor },
 #if ENABLE(TEMPLATE_ELEMENT)
         { templateTag, templateConstructor },
 #endif
         { textareaTag, textareaConstructor },
         { tfootTag, tablesectionConstructor },
-        { thTag, tablecellConstructor },
+        { thTag, tableheadercellConstructor },
         { theadTag, tablesectionConstructor },
-        { timeTag, Constructor },
+        { timeTag, timeConstructor },
         { titleTag, titleConstructor },
         { trTag, tablerowConstructor },
 #if ENABLE(VIDEO_TRACK)

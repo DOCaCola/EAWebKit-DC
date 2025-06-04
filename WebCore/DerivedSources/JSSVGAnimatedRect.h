@@ -28,12 +28,12 @@
 
 namespace WebCore {
 
-class JSSVGAnimatedRect : public JSDOMWrapper {
+class JSSVGAnimatedRect : public JSDOMWrapper<SVGAnimatedRect> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGAnimatedRect> Base;
     static JSSVGAnimatedRect* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGAnimatedRect>&& impl)
     {
-        JSSVGAnimatedRect* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedRect>(globalObject->vm().heap)) JSSVGAnimatedRect(structure, globalObject, WTF::move(impl));
+        JSSVGAnimatedRect* ptr = new (NotNull, JSC::allocateCell<JSSVGAnimatedRect>(globalObject->vm().heap)) JSSVGAnimatedRect(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGAnimatedRect* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAnimatedRect();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGAnimatedRect& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGAnimatedRect* m_impl;
 protected:
-    JSSVGAnimatedRect(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGAnimatedRect>&&);
+    JSSVGAnimatedRect(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGAnimatedRect>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGAnimatedRect*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedRect*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGAnimatedRect& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGAnimatedRect& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGAnimatedRect*);
 
 
 } // namespace WebCore

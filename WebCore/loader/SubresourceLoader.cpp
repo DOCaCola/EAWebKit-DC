@@ -207,13 +207,7 @@ void SubresourceLoader::didReceiveResponse(const ResourceResponse& response)
     // Reference the object in this method since the additional processing can do
     // anything including removing the last reference to this object; one example of this is 3266216.
     Ref<SubresourceLoader> protect(*this);
-    
-    //+EAWebKitChange
-    // 11/03/2015 - integrate change from open source https://trac.webkit.org/changeset/188531/trunk/Source/WebCore/loader/SubresourceLoader.cpp
-    // Ensure that callingDidReceiveResponse is destroyed while the SubresourceLoader is still alive by declaring it after protect.
-    TemporaryChange<bool> callingDidReceiveResponse(m_callingDidReceiveResponse, true);
-    //-EAWebKitChange
-    
+
     if (shouldIncludeCertificateInfo())
         response.includeCertificateInfo();
 
@@ -473,7 +467,7 @@ void SubresourceLoader::releaseResources()
     if (m_state != Uninitialized)
 #endif
         m_resource->clearLoader();
-    m_resource = 0;
+    m_resource = nullptr;
     ResourceLoader::releaseResources();
 }
 

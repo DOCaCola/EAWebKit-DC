@@ -24,24 +24,25 @@
 #include "DOMMimeTypeArray.h"
 #include "DOMPluginArray.h"
 #include "ExceptionCode.h"
-#include "Gamepad.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSDOMMimeTypeArray.h"
 #include "JSDOMPluginArray.h"
-#include "JSGamepad.h"
-#include "Navigator.h"
+#include "NavigatorBattery.h"
 #include "NavigatorGeolocation.h"
 #include "NavigatorMediaDevices.h"
-#include "NavigatorStorageQuota.h"
-#include "RuntimeEnabledFeatures.h"
 #include "URL.h"
 #include <runtime/Error.h>
-#include <runtime/JSArray.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 
-#if ENABLE(GAMEPAD)
-#include "NavigatorGamepad.h"
+#if (ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)) || ENABLE(NAVIGATOR_CONTENT_UTILS)
+#include "NavigatorContentUtils.h"
+#endif
+
+#if ENABLE(BATTERY_STATUS)
+#include "BatteryManager.h"
+#include "JSBatteryManager.h"
 #endif
 
 #if ENABLE(GEOLOCATION)
@@ -52,11 +53,11 @@
 #if ENABLE(MEDIA_STREAM)
 #include "JSMediaDevices.h"
 #include "MediaDevices.h"
+#include "NavigatorUserMediaBuiltins.h"
 #endif
 
-#if ENABLE(QUOTA)
-#include "JSStorageQuota.h"
-#include "StorageQuota.h"
+#if ENABLE(VIBRATION)
+#include "NavigatorVibration.h"
 #endif
 
 #if ENABLE(WEB_REPLAY)
@@ -73,11 +74,17 @@ namespace WebCore {
 
 JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionJavaEnabled(JSC::ExecState*);
 JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionGetStorageUpdates(JSC::ExecState*);
-#if ENABLE(GAMEPAD)
-JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionGetGamepads(JSC::ExecState*);
+#if ENABLE(NAVIGATOR_CONTENT_UTILS)
+JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionRegisterProtocolHandler(JSC::ExecState*);
 #endif
-#if ENABLE(MEDIA_STREAM)
-JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionWebkitGetUserMedia(JSC::ExecState*);
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionIsProtocolHandlerRegistered(JSC::ExecState*);
+#endif
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionUnregisterProtocolHandler(JSC::ExecState*);
+#endif
+#if ENABLE(VIBRATION)
+JSC::EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionVibrate(JSC::ExecState*);
 #endif
 
 // Attributes
@@ -96,18 +103,16 @@ JSC::EncodedJSValue jsNavigatorVendor(JSC::ExecState*, JSC::JSObject*, JSC::Enco
 JSC::EncodedJSValue jsNavigatorVendorSub(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsNavigatorCookieEnabled(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsNavigatorOnLine(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+JSC::EncodedJSValue jsNavigatorHardwareConcurrency(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+#if ENABLE(BATTERY_STATUS)
+JSC::EncodedJSValue jsNavigatorWebkitBattery(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+#endif
 #if ENABLE(GEOLOCATION)
 JSC::EncodedJSValue jsNavigatorGeolocation(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSNavigatorGeolocation(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 #endif
 #if ENABLE(MEDIA_STREAM)
 JSC::EncodedJSValue jsNavigatorMediaDevices(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
-#if ENABLE(QUOTA)
-JSC::EncodedJSValue jsNavigatorWebkitTemporaryStorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-#endif
-#if ENABLE(QUOTA)
-JSC::EncodedJSValue jsNavigatorWebkitPersistentStorage(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 #endif
 JSC::EncodedJSValue jsNavigatorConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 
@@ -136,31 +141,12 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSNavigatorConstructor : public DOMConstructorObject {
-private:
-    JSNavigatorConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSNavigatorConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSNavigatorConstructor* ptr = new (NotNull, JSC::allocateCell<JSNavigatorConstructor>(vm.heap)) JSNavigatorConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSNavigator> JSNavigatorConstructor;
 
 /* Hash table */
 
-static const struct CompactHashIndex JSNavigatorTableIndex[69] = {
-    { 14, -1 },
+static const struct CompactHashIndex JSNavigatorTableIndex[70] = {
+    { 14, 68 },
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
@@ -176,7 +162,7 @@ static const struct CompactHashIndex JSNavigatorTableIndex[69] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 17, -1 },
+    { -1, -1 },
     { 7, -1 },
     { -1, -1 },
     { -1, -1 },
@@ -201,7 +187,7 @@ static const struct CompactHashIndex JSNavigatorTableIndex[69] = {
     { -1, -1 },
     { -1, -1 },
     { -1, -1 },
-    { 16, -1 },
+    { -1, -1 },
     { -1, -1 },
     { 8, -1 },
     { -1, -1 },
@@ -216,10 +202,10 @@ static const struct CompactHashIndex JSNavigatorTableIndex[69] = {
     { -1, -1 },
     { 11, -1 },
     { -1, -1 },
-    { 10, 68 },
+    { 10, 69 },
     { -1, -1 },
     { 5, 67 },
-    { -1, -1 },
+    { 15, -1 },
     { -1, -1 },
     { 1, 65 },
     { -1, -1 },
@@ -228,81 +214,86 @@ static const struct CompactHashIndex JSNavigatorTableIndex[69] = {
     { 4, -1 },
     { 6, -1 },
     { 13, -1 },
-    { 15, -1 },
+    { 16, -1 },
+    { 17, -1 },
 };
 
 
 static const HashTableValue JSNavigatorTableValues[] =
 {
-    { "appCodeName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppCodeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "appName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "appVersion", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "language", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "userAgent", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorUserAgent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "platform", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorPlatform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "plugins", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorPlugins), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "mimeTypes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorMimeTypes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "product", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorProduct), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "productSub", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorProductSub), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "vendor", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorVendor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "vendorSub", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorVendorSub), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "cookieEnabled", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorCookieEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onLine", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorOnLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#if ENABLE(GEOLOCATION)
-    { "geolocation", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorGeolocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNavigatorGeolocation) },
+    { "appCodeName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppCodeName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "appName", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppName), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "appVersion", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorAppVersion), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "language", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorLanguage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "userAgent", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorUserAgent), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "platform", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorPlatform), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "plugins", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorPlugins), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "mimeTypes", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorMimeTypes), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "product", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorProduct), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "productSub", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorProductSub), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "vendor", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorVendor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "vendorSub", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorVendorSub), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "cookieEnabled", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorCookieEnabled), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onLine", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorOnLine), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "hardwareConcurrency", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorHardwareConcurrency), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+#if ENABLE(BATTERY_STATUS)
+    { "webkitBattery", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorWebkitBattery), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(GEOLOCATION)
+    { "geolocation", DontDelete | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorGeolocation), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSNavigatorGeolocation) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 #if ENABLE(MEDIA_STREAM)
-    { "mediaDevices", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorMediaDevices), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "mediaDevices", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorMediaDevices), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(QUOTA)
-    { "webkitTemporaryStorage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorWebkitTemporaryStorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
-#if ENABLE(QUOTA)
-    { "webkitPersistentStorage", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorWebkitPersistentStorage), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
-static const HashTable JSNavigatorTable = { 18, 63, true, JSNavigatorTableValues, 0, JSNavigatorTableIndex };
-const ClassInfo JSNavigatorConstructor::s_info = { "NavigatorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNavigatorConstructor) };
-
-JSNavigatorConstructor::JSNavigatorConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSNavigatorTable = { 18, 63, true, JSNavigatorTableValues, JSNavigatorTableIndex };
+template<> void JSNavigatorConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSNavigatorConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSNavigator::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSNavigator::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Navigator"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSNavigatorConstructor::s_info = { "NavigatorConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNavigatorConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSNavigatorPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "javaEnabled", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionJavaEnabled), (intptr_t) (0) },
-    { "getStorageUpdates", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionGetStorageUpdates), (intptr_t) (0) },
-#if ENABLE(GAMEPAD)
-    { "getGamepads", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionGetGamepads), (intptr_t) (0) },
-#else
-    { 0, 0, NoIntrinsic, 0, 0 },
-#endif
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNavigatorConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "javaEnabled", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionJavaEnabled), (intptr_t) (0) } },
+    { "getStorageUpdates", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionGetStorageUpdates), (intptr_t) (0) } },
 #if ENABLE(MEDIA_STREAM)
-    { "webkitGetUserMedia", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionWebkitGetUserMedia), (intptr_t) (2) },
+    { "webkitGetUserMedia", JSC::Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(navigatorUserMediaWebkitGetUserMediaCodeGenerator), (intptr_t) (3) } },
 #else
-    { 0, 0, NoIntrinsic, 0, 0 },
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(NAVIGATOR_CONTENT_UTILS)
+    { "registerProtocolHandler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionRegisterProtocolHandler), (intptr_t) (3) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+    { "isProtocolHandlerRegistered", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionIsProtocolHandlerRegistered), (intptr_t) (2) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+    { "unregisterProtocolHandler", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionUnregisterProtocolHandler), (intptr_t) (2) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
+#endif
+#if ENABLE(VIBRATION)
+    { "vibrate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsNavigatorPrototypeFunctionVibrate), (intptr_t) (1) } },
+#else
+    { 0, 0, NoIntrinsic, { 0, 0 } },
 #endif
 };
 
@@ -312,19 +303,12 @@ void JSNavigatorPrototype::finishCreation(VM& vm)
 {
     Base::finishCreation(vm);
     reifyStaticProperties(vm, JSNavigatorPrototypeTableValues, *this);
-#if ENABLE(GAMEPAD)
-    if (!RuntimeEnabledFeatures::sharedFeatures().gamepadsEnabled()) {
-        Identifier propertyName = Identifier::fromString(&vm, reinterpret_cast<const LChar*>("getGamepads"), strlen("getGamepads"));
-        removeDirect(vm, propertyName);
-    }
-#endif
 }
 
 const ClassInfo JSNavigator::s_info = { "Navigator", &Base::s_info, &JSNavigatorTable, CREATE_METHOD_TABLE(JSNavigator) };
 
-JSNavigator::JSNavigator(Structure* structure, JSDOMGlobalObject* globalObject, Ref<Navigator>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSNavigator::JSNavigator(Structure* structure, JSDOMGlobalObject& globalObject, Ref<Navigator>&& impl)
+    : JSDOMWrapper<Navigator>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -344,35 +328,32 @@ void JSNavigator::destroy(JSC::JSCell* cell)
     thisObject->JSNavigator::~JSNavigator();
 }
 
-JSNavigator::~JSNavigator()
-{
-    releaseImpl();
-}
-
-bool JSNavigator::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSNavigator::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSNavigator*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueSlot<JSNavigator, Base>(exec, JSNavigatorTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSNavigator, Base>(state, JSNavigatorTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-EncodedJSValue jsNavigatorAppCodeName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorAppCodeName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "appCodeName");
+        reportDeprecatedGetterError(*state, "Navigator", "appCodeName");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.appCodeName", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().appCodeName();
+        String memoizedResult = castedThis->wrapped().appCodeName();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -380,34 +361,34 @@ EncodedJSValue jsNavigatorAppCodeName(ExecState* exec, JSObject* slotBase, Encod
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.appCodeName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.appCodeName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorAppName(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorAppName(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "appName");
+        reportDeprecatedGetterError(*state, "Navigator", "appName");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.appName", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().appName();
+        String memoizedResult = castedThis->wrapped().appName();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -415,34 +396,34 @@ EncodedJSValue jsNavigatorAppName(ExecState* exec, JSObject* slotBase, EncodedJS
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.appName());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.appName());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorAppVersion(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorAppVersion(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "appVersion");
+        reportDeprecatedGetterError(*state, "Navigator", "appVersion");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.appVersion", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().appVersion();
+        String memoizedResult = castedThis->wrapped().appVersion();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -450,34 +431,34 @@ EncodedJSValue jsNavigatorAppVersion(ExecState* exec, JSObject* slotBase, Encode
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.appVersion());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.appVersion());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorLanguage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorLanguage(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "language");
+        reportDeprecatedGetterError(*state, "Navigator", "language");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.language", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().language();
+        String memoizedResult = castedThis->wrapped().language();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -485,34 +466,34 @@ EncodedJSValue jsNavigatorLanguage(ExecState* exec, JSObject* slotBase, EncodedJ
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.language());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.language());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorUserAgent(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorUserAgent(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "userAgent");
+        reportDeprecatedGetterError(*state, "Navigator", "userAgent");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.userAgent", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().userAgent();
+        String memoizedResult = castedThis->wrapped().userAgent();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -520,34 +501,34 @@ EncodedJSValue jsNavigatorUserAgent(ExecState* exec, JSObject* slotBase, Encoded
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.userAgent());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.userAgent());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorPlatform(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorPlatform(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "platform");
+        reportDeprecatedGetterError(*state, "Navigator", "platform");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.platform", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().platform();
+        String memoizedResult = castedThis->wrapped().platform();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -555,64 +536,64 @@ EncodedJSValue jsNavigatorPlatform(ExecState* exec, JSObject* slotBase, EncodedJ
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.platform());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.platform());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorPlugins(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorPlugins(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "plugins");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.plugins()));
+        reportDeprecatedGetterError(*state, "Navigator", "plugins");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.plugins()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorMimeTypes(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorMimeTypes(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "mimeTypes");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.mimeTypes()));
+        reportDeprecatedGetterError(*state, "Navigator", "mimeTypes");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.mimeTypes()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorProduct(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorProduct(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "product");
+        reportDeprecatedGetterError(*state, "Navigator", "product");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.product", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().product();
+        String memoizedResult = castedThis->wrapped().product();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -620,34 +601,34 @@ EncodedJSValue jsNavigatorProduct(ExecState* exec, JSObject* slotBase, EncodedJS
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.product());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.product());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorProductSub(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorProductSub(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "productSub");
+        reportDeprecatedGetterError(*state, "Navigator", "productSub");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.productSub", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().productSub();
+        String memoizedResult = castedThis->wrapped().productSub();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -655,34 +636,34 @@ EncodedJSValue jsNavigatorProductSub(ExecState* exec, JSObject* slotBase, Encode
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.productSub());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.productSub());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorVendor(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorVendor(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "vendor");
+        reportDeprecatedGetterError(*state, "Navigator", "vendor");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.vendor", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().vendor();
+        String memoizedResult = castedThis->wrapped().vendor();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -690,34 +671,34 @@ EncodedJSValue jsNavigatorVendor(ExecState* exec, JSObject* slotBase, EncodedJSV
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.vendor());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.vendor());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorVendorSub(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorVendorSub(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "vendorSub");
+        reportDeprecatedGetterError(*state, "Navigator", "vendorSub");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.vendorSub", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        String memoizedResult = castedThis->impl().vendorSub();
+        String memoizedResult = castedThis->wrapped().vendorSub();
         cursor.appendInput<MemoizedDOMResult<String>>(bindingName.get().string(), memoizedResult, 0);
-        JSValue result = jsStringWithCache(exec, memoizedResult);
+        JSValue result = jsStringWithCache(state, memoizedResult);
         return JSValue::encode(result);
     }
 
@@ -725,32 +706,32 @@ EncodedJSValue jsNavigatorVendorSub(ExecState* exec, JSObject* slotBase, Encoded
         String memoizedResult;
         MemoizedDOMResultBase* input = cursor.fetchInput<MemoizedDOMResultBase>();
         if (input && input->convertTo<String>(memoizedResult)) {
-            JSValue result = jsStringWithCache(exec, memoizedResult);
+            JSValue result = jsStringWithCache(state, memoizedResult);
             return JSValue::encode(result);
         }
     }
 #endif
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.vendorSub());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.vendorSub());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorCookieEnabled(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorCookieEnabled(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "cookieEnabled");
+        reportDeprecatedGetterError(*state, "Navigator", "cookieEnabled");
 #if ENABLE(WEB_REPLAY)
-    JSGlobalObject* globalObject = exec->lexicalGlobalObject();
+    JSGlobalObject* globalObject = state->lexicalGlobalObject();
     InputCursor& cursor = globalObject->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.cookieEnabled", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
-        bool memoizedResult = castedThis->impl().cookieEnabled();
+        bool memoizedResult = castedThis->wrapped().cookieEnabled();
         cursor.appendInput<MemoizedDOMResult<bool>>(bindingName.get().string(), memoizedResult, 0);
         JSValue result = jsBoolean(memoizedResult);
         return JSValue::encode(result);
@@ -765,105 +746,103 @@ EncodedJSValue jsNavigatorCookieEnabled(ExecState* exec, JSObject* slotBase, Enc
         }
     }
 #endif
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.cookieEnabled());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsNavigatorOnLine(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorOnLine(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "onLine");
-    auto& impl = castedThis->impl();
+        reportDeprecatedGetterError(*state, "Navigator", "onLine");
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.onLine());
     return JSValue::encode(result);
 }
 
 
-#if ENABLE(GEOLOCATION)
-EncodedJSValue jsNavigatorGeolocation(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorHardwareConcurrency(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "geolocation");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(NavigatorGeolocation::geolocation(&impl)));
+        reportDeprecatedGetterError(*state, "Navigator", "hardwareConcurrency");
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsNumber(impl.hardwareConcurrency());
+    return JSValue::encode(result);
+}
+
+
+#if ENABLE(BATTERY_STATUS)
+EncodedJSValue jsNavigatorWebkitBattery(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = jsCast<JSNavigator*>(slotBase);
+    JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThisObject))
+        reportDeprecatedGetterError(*state, "Navigator", "webkitBattery");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(WebCore::NavigatorBattery::webkitBattery(impl)));
+    return JSValue::encode(result);
+}
+
+#endif
+
+#if ENABLE(GEOLOCATION)
+EncodedJSValue jsNavigatorGeolocation(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+{
+    UNUSED_PARAM(state);
+    UNUSED_PARAM(slotBase);
+    UNUSED_PARAM(thisValue);
+    auto* castedThis = jsCast<JSNavigator*>(slotBase);
+    JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
+    if (UNLIKELY(!castedThisObject))
+        reportDeprecatedGetterError(*state, "Navigator", "geolocation");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(WebCore::NavigatorGeolocation::geolocation(impl)));
     return JSValue::encode(result);
 }
 
 #endif
 
 #if ENABLE(MEDIA_STREAM)
-EncodedJSValue jsNavigatorMediaDevices(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsNavigatorMediaDevices(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSNavigator*>(slotBase);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "mediaDevices");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(NavigatorMediaDevices::mediaDevices(&impl)));
+        reportDeprecatedGetterError(*state, "Navigator", "mediaDevices");
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(WebCore::NavigatorMediaDevices::mediaDevices(impl)));
     return JSValue::encode(result);
 }
 
 #endif
 
-#if ENABLE(QUOTA)
-EncodedJSValue jsNavigatorWebkitTemporaryStorage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSNavigator*>(slotBase);
-    JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "webkitTemporaryStorage");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(NavigatorStorageQuota::webkitTemporaryStorage(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-#if ENABLE(QUOTA)
-EncodedJSValue jsNavigatorWebkitPersistentStorage(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    auto* castedThis = jsCast<JSNavigator*>(slotBase);
-    JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThisObject))
-        reportDeprecatedGetterError(*exec, "Navigator", "webkitPersistentStorage");
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(NavigatorStorageQuota::webkitPersistentStorage(&impl)));
-    return JSValue::encode(result);
-}
-
-#endif
-
-EncodedJSValue jsNavigatorConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsNavigatorConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSNavigatorPrototype* domObject = jsDynamicCast<JSNavigatorPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSNavigator::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSNavigator::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 #if ENABLE(GEOLOCATION)
-void setJSNavigatorGeolocation(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSNavigatorGeolocation(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
@@ -871,29 +850,29 @@ void setJSNavigatorGeolocation(ExecState* exec, JSObject* baseObject, EncodedJSV
     auto* castedThis = jsCast<JSNavigator*>(baseObject);
     JSNavigator* castedThisObject = jsDynamicCast<JSNavigator*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThisObject))
-        reportDeprecatedSetterError(*exec, "Navigator", "geolocation");
+        reportDeprecatedSetterError(*state, "Navigator", "geolocation");
     // Shadowing a built-in object.
-    castedThis->putDirect(exec->vm(), Identifier::fromString(exec, "geolocation"), value);
+    castedThis->putDirect(state->vm(), Identifier::fromString(state, "geolocation"), value);
 }
 
 #endif
 
 JSValue JSNavigator::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSNavigatorConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSNavigatorConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionJavaEnabled(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionJavaEnabled(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Navigator", "javaEnabled");
+        return throwThisTypeError(*state, "Navigator", "javaEnabled");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result;
 #if ENABLE(WEB_REPLAY)
-    InputCursor& cursor = exec->lexicalGlobalObject()->inputCursor();
+    InputCursor& cursor = state->lexicalGlobalObject()->inputCursor();
     static NeverDestroyed<const AtomicString> bindingName("Navigator.javaEnabled", AtomicString::ConstructFromLiteral);
     if (cursor.isCapturing()) {
         bool memoizedResult = impl.javaEnabled();
@@ -914,50 +893,160 @@ EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionJavaEnabled(ExecState* 
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionGetStorageUpdates(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionGetStorageUpdates(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Navigator", "getStorageUpdates");
+        return throwThisTypeError(*state, "Navigator", "getStorageUpdates");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     impl.getStorageUpdates();
     return JSValue::encode(jsUndefined());
 }
 
-#if ENABLE(GAMEPAD)
-EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionGetGamepads(ExecState* exec)
+#if ENABLE(NAVIGATOR_CONTENT_UTILS)
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionRegisterProtocolHandler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Navigator", "getGamepads");
+        return throwThisTypeError(*state, "Navigator", "registerProtocolHandler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
-    auto& impl = castedThis->impl();
-    JSValue result = jsArray(exec, castedThis->globalObject(), NavigatorGamepad::getGamepads(&impl));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 3))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String scheme = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String url = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String title = state->argument(2).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    WebCore::NavigatorContentUtils::registerProtocolHandler(impl, scheme, url, title, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
+}
+
+#endif
+
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionIsProtocolHandlerRegistered(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Navigator", "isProtocolHandlerRegistered");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String scheme = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String url = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsStringWithCache(state, WebCore::NavigatorContentUtils::isProtocolHandlerRegistered(impl, scheme, url, ec));
+
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 #endif
 
-#if ENABLE(MEDIA_STREAM)
-EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionWebkitGetUserMedia(ExecState* exec)
+#if ENABLE(CUSTOM_SCHEME_HANDLER) && ENABLE(NAVIGATOR_CONTENT_UTILS)
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionUnregisterProtocolHandler(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "Navigator", "webkitGetUserMedia");
+        return throwThisTypeError(*state, "Navigator", "unregisterProtocolHandler");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
-    return JSValue::encode(castedThis->webkitGetUserMedia(exec));
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    ExceptionCode ec = 0;
+    String scheme = state->argument(0).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    String url = state->argument(1).toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    WebCore::NavigatorContentUtils::unregisterProtocolHandler(impl, scheme, url, ec);
+    setDOMException(state, ec);
+    return JSValue::encode(jsUndefined());
 }
 
 #endif
 
+#if ENABLE(VIBRATION)
+static EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionVibrate1(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Navigator", "vibrate");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    Vector<unsigned> pattern = toNativeArray<unsigned>(state, state->argument(0));
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsBoolean(WebCore::NavigatorVibration::vibrate(impl, pattern));
+    return JSValue::encode(result);
+}
+
+#endif
+
+#if ENABLE(VIBRATION)
+static EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionVibrate2(ExecState* state)
+{
+    JSValue thisValue = state->thisValue();
+    JSNavigator* castedThis = jsDynamicCast<JSNavigator*>(thisValue);
+    if (UNLIKELY(!castedThis))
+        return throwThisTypeError(*state, "Navigator", "vibrate");
+    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNavigator::info());
+    auto& impl = castedThis->wrapped();
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    unsigned time = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
+        return JSValue::encode(jsUndefined());
+    JSValue result = jsBoolean(WebCore::NavigatorVibration::vibrate(impl, time));
+    return JSValue::encode(result);
+}
+
+#endif
+
+EncodedJSValue JSC_HOST_CALL jsNavigatorPrototypeFunctionVibrate(ExecState* state)
+{
+    size_t argsCount = std::min<size_t>(1, state->argumentCount());
+    JSValue arg0(state->argument(0));
+#if ENABLE(VIBRATION)
+    if ((argsCount == 1 && ((arg0.isObject() && isJSArray(arg0)))))
+        return jsNavigatorPrototypeFunctionVibrate1(state);
+#endif
+
+#if ENABLE(VIBRATION)
+    if (argsCount == 1)
+        return jsNavigatorPrototypeFunctionVibrate2(state);
+#endif
+
+    if (argsCount < 1)
+        return throwVMError(state, createNotEnoughArgumentsError(state));
+    return throwVMTypeError(state);
+}
+
 bool JSNavigatorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsNavigator = jsCast<JSNavigator*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsNavigator->impl().frame());
+    Frame* root = WTF::getPtr(jsNavigator->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -967,7 +1056,7 @@ void JSNavigatorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsNavigator = jsCast<JSNavigator*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNavigator->impl(), jsNavigator);
+    uncacheWrapper(world, &jsNavigator->wrapped(), jsNavigator);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -978,6 +1067,14 @@ extern "C" { extern void (*const __identifier("??_7Navigator@WebCore@@6B@")[])()
 extern "C" { extern void* _ZTVN7WebCore9NavigatorE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, Navigator* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSNavigator>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Navigator* impl)
 {
     if (!impl)
@@ -1009,7 +1106,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, Navigator* i
 Navigator* JSNavigator::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSNavigator*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

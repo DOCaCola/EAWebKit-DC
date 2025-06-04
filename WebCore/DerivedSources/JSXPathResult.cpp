@@ -23,10 +23,10 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "Node.h"
 #include "URL.h"
-#include "XPathResult.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
@@ -76,41 +76,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXPathResultConstructor : public DOMConstructorObject {
-private:
-    JSXPathResultConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSXPathResultConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXPathResultConstructor* ptr = new (NotNull, JSC::allocateCell<JSXPathResultConstructor>(vm.heap)) JSXPathResultConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSXPathResult> JSXPathResultConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSXPathResultConstructorTableValues[] =
 {
-    { "ANY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "NUMBER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "STRING_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "BOOLEAN_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "UNORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "UNORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "ORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "ANY_UNORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "FIRST_ORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
+    { "ANY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "NUMBER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "STRING_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "BOOLEAN_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "UNORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "UNORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "ORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "ANY_UNORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "FIRST_ORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
 };
 
 
@@ -125,47 +106,40 @@ COMPILE_ASSERT(7 == XPathResult::ORDERED_NODE_SNAPSHOT_TYPE, XPathResultEnumORDE
 COMPILE_ASSERT(8 == XPathResult::ANY_UNORDERED_NODE_TYPE, XPathResultEnumANY_UNORDERED_NODE_TYPEIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(9 == XPathResult::FIRST_ORDERED_NODE_TYPE, XPathResultEnumFIRST_ORDERED_NODE_TYPEIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSXPathResultConstructor::s_info = { "XPathResultConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathResultConstructor) };
-
-JSXPathResultConstructor::JSXPathResultConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXPathResultConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXPathResultConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXPathResult::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXPathResult::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XPathResult"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSXPathResultConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSXPathResultConstructor::s_info = { "XPathResultConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathResultConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSXPathResultPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "resultType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultResultType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "numberValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultNumberValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "stringValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultStringValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "booleanValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultBooleanValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "singleNodeValue", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultSingleNodeValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "invalidIteratorState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultInvalidIteratorState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "snapshotLength", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultSnapshotLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "ANY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "NUMBER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "STRING_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "BOOLEAN_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "UNORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "ORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(5), (intptr_t) (0) },
-    { "UNORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(6), (intptr_t) (0) },
-    { "ORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(7), (intptr_t) (0) },
-    { "ANY_UNORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(8), (intptr_t) (0) },
-    { "FIRST_ORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(9), (intptr_t) (0) },
-    { "iterateNext", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathResultPrototypeFunctionIterateNext), (intptr_t) (0) },
-    { "snapshotItem", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathResultPrototypeFunctionSnapshotItem), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "resultType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultResultType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "numberValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultNumberValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "stringValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultStringValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "booleanValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultBooleanValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "singleNodeValue", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultSingleNodeValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "invalidIteratorState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultInvalidIteratorState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "snapshotLength", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathResultSnapshotLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "ANY_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "NUMBER_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "STRING_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "BOOLEAN_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "UNORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "ORDERED_NODE_ITERATOR_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(5) } },
+    { "UNORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(6) } },
+    { "ORDERED_NODE_SNAPSHOT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(7) } },
+    { "ANY_UNORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(8) } },
+    { "FIRST_ORDERED_NODE_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(9) } },
+    { "iterateNext", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathResultPrototypeFunctionIterateNext), (intptr_t) (0) } },
+    { "snapshotItem", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathResultPrototypeFunctionSnapshotItem), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathResultPrototype::s_info = { "XPathResultPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathResultPrototype) };
@@ -178,9 +152,8 @@ void JSXPathResultPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathResult::s_info = { "XPathResult", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathResult) };
 
-JSXPathResult::JSXPathResult(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathResult>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathResult::JSXPathResult(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathResult>&& impl)
+    : JSDOMWrapper<XPathResult>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -200,183 +173,178 @@ void JSXPathResult::destroy(JSC::JSCell* cell)
     thisObject->JSXPathResult::~JSXPathResult();
 }
 
-JSXPathResult::~JSXPathResult()
+EncodedJSValue jsXPathResultResultType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsXPathResultResultType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "resultType");
-        return throwGetterTypeError(*exec, "XPathResult", "resultType");
+            return reportDeprecatedGetterError(*state, "XPathResult", "resultType");
+        return throwGetterTypeError(*state, "XPathResult", "resultType");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.resultType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultNumberValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultNumberValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "numberValue");
-        return throwGetterTypeError(*exec, "XPathResult", "numberValue");
+            return reportDeprecatedGetterError(*state, "XPathResult", "numberValue");
+        return throwGetterTypeError(*state, "XPathResult", "numberValue");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.numberValue(ec));
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultStringValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultStringValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "stringValue");
-        return throwGetterTypeError(*exec, "XPathResult", "stringValue");
+            return reportDeprecatedGetterError(*state, "XPathResult", "stringValue");
+        return throwGetterTypeError(*state, "XPathResult", "stringValue");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.stringValue(ec));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.stringValue(ec));
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultBooleanValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultBooleanValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "booleanValue");
-        return throwGetterTypeError(*exec, "XPathResult", "booleanValue");
+            return reportDeprecatedGetterError(*state, "XPathResult", "booleanValue");
+        return throwGetterTypeError(*state, "XPathResult", "booleanValue");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.booleanValue(ec));
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultSingleNodeValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultSingleNodeValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "singleNodeValue");
-        return throwGetterTypeError(*exec, "XPathResult", "singleNodeValue");
+            return reportDeprecatedGetterError(*state, "XPathResult", "singleNodeValue");
+        return throwGetterTypeError(*state, "XPathResult", "singleNodeValue");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.singleNodeValue(ec)));
-    setDOMException(exec, ec);
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.singleNodeValue(ec)));
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultInvalidIteratorState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultInvalidIteratorState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "invalidIteratorState");
-        return throwGetterTypeError(*exec, "XPathResult", "invalidIteratorState");
+            return reportDeprecatedGetterError(*state, "XPathResult", "invalidIteratorState");
+        return throwGetterTypeError(*state, "XPathResult", "invalidIteratorState");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.invalidIteratorState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultSnapshotLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsXPathResultSnapshotLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSXPathResultPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "XPathResult", "snapshotLength");
-        return throwGetterTypeError(*exec, "XPathResult", "snapshotLength");
+            return reportDeprecatedGetterError(*state, "XPathResult", "snapshotLength");
+        return throwGetterTypeError(*state, "XPathResult", "snapshotLength");
     }
     ExceptionCode ec = 0;
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.snapshotLength(ec));
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsXPathResultConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXPathResultConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXPathResultPrototype* domObject = jsDynamicCast<JSXPathResultPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXPathResult::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXPathResult::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSXPathResult::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXPathResultConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXPathResultConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathResultPrototypeFunctionIterateNext(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathResultPrototypeFunctionIterateNext(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathResult", "iterateNext");
+        return throwThisTypeError(*state, "XPathResult", "iterateNext");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathResult::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.iterateNext(ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.iterateNext(ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathResultPrototypeFunctionSnapshotItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathResultPrototypeFunctionSnapshotItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathResult* castedThis = jsDynamicCast<JSXPathResult*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathResult", "snapshotItem");
+        return throwThisTypeError(*state, "XPathResult", "snapshotItem");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathResult::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.snapshotItem(index, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.snapshotItem(index, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -399,7 +367,14 @@ void JSXPathResultOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsXPathResult = jsCast<JSXPathResult*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathResult->impl(), jsXPathResult);
+    uncacheWrapper(world, &jsXPathResult->wrapped(), jsXPathResult);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathResult* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXPathResult>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathResult* impl)
@@ -421,7 +396,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathResult*
 XPathResult* JSXPathResult::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXPathResult*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

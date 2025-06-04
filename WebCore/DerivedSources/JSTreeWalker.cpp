@@ -23,11 +23,11 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "JSNodeFilter.h"
 #include "Node.h"
 #include "NodeFilter.h"
-#include "TreeWalker.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -50,7 +50,6 @@ JSC::EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionNextNode(JSC::Exe
 JSC::EncodedJSValue jsTreeWalkerRoot(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsTreeWalkerWhatToShow(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsTreeWalkerFilter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-JSC::EncodedJSValue jsTreeWalkerExpandEntityReferences(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 JSC::EncodedJSValue jsTreeWalkerCurrentNode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
 void setJSTreeWalkerCurrentNode(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::EncodedJSValue);
 JSC::EncodedJSValue jsTreeWalkerConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
@@ -80,60 +79,33 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSTreeWalkerConstructor : public DOMConstructorObject {
-private:
-    JSTreeWalkerConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSTreeWalker> JSTreeWalkerConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSTreeWalkerConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSTreeWalkerConstructor* ptr = new (NotNull, JSC::allocateCell<JSTreeWalkerConstructor>(vm.heap)) JSTreeWalkerConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSTreeWalkerConstructor::s_info = { "TreeWalkerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTreeWalkerConstructor) };
-
-JSTreeWalkerConstructor::JSTreeWalkerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSTreeWalkerConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSTreeWalkerConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSTreeWalker::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSTreeWalker::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("TreeWalker"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSTreeWalkerConstructor::s_info = { "TreeWalkerConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTreeWalkerConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSTreeWalkerPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "root", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerRoot), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "whatToShow", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerWhatToShow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "filter", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerFilter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "expandEntityReferences", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerExpandEntityReferences), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "currentNode", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerCurrentNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTreeWalkerCurrentNode) },
-    { "parentNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionParentNode), (intptr_t) (0) },
-    { "firstChild", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionFirstChild), (intptr_t) (0) },
-    { "lastChild", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionLastChild), (intptr_t) (0) },
-    { "previousSibling", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionPreviousSibling), (intptr_t) (0) },
-    { "nextSibling", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionNextSibling), (intptr_t) (0) },
-    { "previousNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionPreviousNode), (intptr_t) (0) },
-    { "nextNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionNextNode), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "root", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerRoot), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "whatToShow", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerWhatToShow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "filter", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerFilter), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "currentNode", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsTreeWalkerCurrentNode), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSTreeWalkerCurrentNode) } },
+    { "parentNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionParentNode), (intptr_t) (0) } },
+    { "firstChild", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionFirstChild), (intptr_t) (0) } },
+    { "lastChild", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionLastChild), (intptr_t) (0) } },
+    { "previousSibling", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionPreviousSibling), (intptr_t) (0) } },
+    { "nextSibling", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionNextSibling), (intptr_t) (0) } },
+    { "previousNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionPreviousNode), (intptr_t) (0) } },
+    { "nextNode", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsTreeWalkerPrototypeFunctionNextNode), (intptr_t) (0) } },
 };
 
 const ClassInfo JSTreeWalkerPrototype::s_info = { "TreeWalkerPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTreeWalkerPrototype) };
@@ -146,9 +118,8 @@ void JSTreeWalkerPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSTreeWalker::s_info = { "TreeWalker", &Base::s_info, 0, CREATE_METHOD_TABLE(JSTreeWalker) };
 
-JSTreeWalker::JSTreeWalker(Structure* structure, JSDOMGlobalObject* globalObject, Ref<TreeWalker>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSTreeWalker::JSTreeWalker(Structure* structure, JSDOMGlobalObject& globalObject, Ref<TreeWalker>&& impl)
+    : JSDOMWrapper<TreeWalker>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -168,226 +139,190 @@ void JSTreeWalker::destroy(JSC::JSCell* cell)
     thisObject->JSTreeWalker::~JSTreeWalker();
 }
 
-JSTreeWalker::~JSTreeWalker()
+EncodedJSValue jsTreeWalkerRoot(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsTreeWalkerRoot(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTreeWalkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TreeWalker", "root");
-        return throwGetterTypeError(*exec, "TreeWalker", "root");
+            return reportDeprecatedGetterError(*state, "TreeWalker", "root");
+        return throwGetterTypeError(*state, "TreeWalker", "root");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.root()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.root()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTreeWalkerWhatToShow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTreeWalkerWhatToShow(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTreeWalkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TreeWalker", "whatToShow");
-        return throwGetterTypeError(*exec, "TreeWalker", "whatToShow");
+            return reportDeprecatedGetterError(*state, "TreeWalker", "whatToShow");
+        return throwGetterTypeError(*state, "TreeWalker", "whatToShow");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.whatToShow());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTreeWalkerFilter(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTreeWalkerFilter(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTreeWalkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TreeWalker", "filter");
-        return throwGetterTypeError(*exec, "TreeWalker", "filter");
+            return reportDeprecatedGetterError(*state, "TreeWalker", "filter");
+        return throwGetterTypeError(*state, "TreeWalker", "filter");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.filter()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.filter()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTreeWalkerExpandEntityReferences(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsTreeWalkerCurrentNode(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTreeWalkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TreeWalker", "expandEntityReferences");
-        return throwGetterTypeError(*exec, "TreeWalker", "expandEntityReferences");
+            return reportDeprecatedGetterError(*state, "TreeWalker", "currentNode");
+        return throwGetterTypeError(*state, "TreeWalker", "currentNode");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsBoolean(impl.expandEntityReferences());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.currentNode()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsTreeWalkerCurrentNode(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slotBase);
-    UNUSED_PARAM(thisValue);
-    JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
-    if (UNLIKELY(!castedThis)) {
-        if (jsDynamicCast<JSTreeWalkerPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "TreeWalker", "currentNode");
-        return throwGetterTypeError(*exec, "TreeWalker", "currentNode");
-    }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.currentNode()));
-    return JSValue::encode(result);
-}
-
-
-EncodedJSValue jsTreeWalkerConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsTreeWalkerConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSTreeWalkerPrototype* domObject = jsDynamicCast<JSTreeWalkerPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSTreeWalker::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSTreeWalker::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSTreeWalkerCurrentNode(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSTreeWalkerCurrentNode(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSTreeWalkerPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "TreeWalker", "currentNode");
+            reportDeprecatedSetterError(*state, "TreeWalker", "currentNode");
         else
-            throwSetterTypeError(*exec, "TreeWalker", "currentNode");
+            throwSetterTypeError(*state, "TreeWalker", "currentNode");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
     Node* nativeValue = JSNode::toWrapped(value);
-    if (UNLIKELY(exec->hadException()))
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setCurrentNode(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
 }
 
 
 JSValue JSTreeWalker::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTreeWalkerConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTreeWalkerConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionParentNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionParentNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "parentNode");
+        return throwThisTypeError(*state, "TreeWalker", "parentNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.parentNode(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.parentNode()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionFirstChild(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionFirstChild(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "firstChild");
+        return throwThisTypeError(*state, "TreeWalker", "firstChild");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.firstChild(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.firstChild()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionLastChild(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionLastChild(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "lastChild");
+        return throwThisTypeError(*state, "TreeWalker", "lastChild");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.lastChild(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.lastChild()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionPreviousSibling(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionPreviousSibling(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "previousSibling");
+        return throwThisTypeError(*state, "TreeWalker", "previousSibling");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.previousSibling(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.previousSibling()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionNextSibling(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionNextSibling(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "nextSibling");
+        return throwThisTypeError(*state, "TreeWalker", "nextSibling");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nextSibling(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.nextSibling()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionPreviousNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionPreviousNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "previousNode");
+        return throwThisTypeError(*state, "TreeWalker", "previousNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.previousNode(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.previousNode()));
     return JSValue::encode(result);
 }
 
-EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionNextNode(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsTreeWalkerPrototypeFunctionNextNode(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSTreeWalker* castedThis = jsDynamicCast<JSTreeWalker*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "TreeWalker", "nextNode");
+        return throwThisTypeError(*state, "TreeWalker", "nextNode");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSTreeWalker::info());
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.nextNode(exec)));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.nextNode()));
     return JSValue::encode(result);
 }
 
@@ -410,7 +345,14 @@ void JSTreeWalkerOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context
 {
     auto* jsTreeWalker = jsCast<JSTreeWalker*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsTreeWalker->impl(), jsTreeWalker);
+    uncacheWrapper(world, &jsTreeWalker->wrapped(), jsTreeWalker);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, TreeWalker* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSTreeWalker>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TreeWalker* impl)
@@ -432,7 +374,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, TreeWalker* 
 TreeWalker* JSTreeWalker::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSTreeWalker*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

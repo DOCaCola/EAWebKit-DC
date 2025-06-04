@@ -21,91 +21,57 @@
 #include "config.h"
 #include "JSNodeFilter.h"
 
-#include "ExceptionCode.h"
-#include "JSDOMBinding.h"
-#include "JSNode.h"
-#include "NodeFilter.h"
-#include <runtime/Error.h>
-#include <wtf/GetPtr.h>
+#include "JSDOMConstructor.h"
+#include "ScriptExecutionContext.h"
+#include <runtime/JSLock.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-// Functions
+JSNodeFilter::JSNodeFilter(JSObject* callback, JSDOMGlobalObject* globalObject)
+    : NodeFilter()
+    , ActiveDOMCallback(globalObject->scriptExecutionContext())
+    , m_data(new JSCallbackDataWeak(callback, this))
+{
+}
 
-JSC::EncodedJSValue JSC_HOST_CALL jsNodeFilterPrototypeFunctionAcceptNode(JSC::ExecState*);
+JSNodeFilter::~JSNodeFilter()
+{
+    ScriptExecutionContext* context = scriptExecutionContext();
+    // When the context is destroyed, all tasks with a reference to a callback
+    // should be deleted. So if the context is 0, we are on the context thread.
+    if (!context || context->isContextThread())
+        delete m_data;
+    else
+        context->postTask(DeleteCallbackDataTask(m_data));
+#ifndef NDEBUG
+    m_data = nullptr;
+#endif
+}
 
-// Attributes
-
-JSC::EncodedJSValue jsNodeFilterConstructor(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
-
-class JSNodeFilterPrototype : public JSC::JSNonFinalObject {
-public:
-    typedef JSC::JSNonFinalObject Base;
-    static JSNodeFilterPrototype* create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
-    {
-        JSNodeFilterPrototype* ptr = new (NotNull, JSC::allocateCell<JSNodeFilterPrototype>(vm.heap)) JSNodeFilterPrototype(vm, globalObject, structure);
-        ptr->finishCreation(vm);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-
-private:
-    JSNodeFilterPrototype(JSC::VM& vm, JSC::JSGlobalObject*, JSC::Structure* structure)
-        : JSC::JSNonFinalObject(vm, structure)
-    {
-    }
-
-    void finishCreation(JSC::VM&);
-};
-
-class JSNodeFilterConstructor : public DOMConstructorObject {
-private:
-    JSNodeFilterConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSNodeFilterConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSNodeFilterConstructor* ptr = new (NotNull, JSC::allocateCell<JSNodeFilterConstructor>(vm.heap)) JSNodeFilterConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSNodeFilter> JSNodeFilterConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSNodeFilterConstructorTableValues[] =
 {
-    { "FILTER_ACCEPT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "FILTER_REJECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "FILTER_SKIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SHOW_ALL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFF), (intptr_t) (0) },
-    { "SHOW_ELEMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000001), (intptr_t) (0) },
-    { "SHOW_ATTRIBUTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000002), (intptr_t) (0) },
-    { "SHOW_TEXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000004), (intptr_t) (0) },
-    { "SHOW_CDATA_SECTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000008), (intptr_t) (0) },
-    { "SHOW_ENTITY_REFERENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000010), (intptr_t) (0) },
-    { "SHOW_ENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000020), (intptr_t) (0) },
-    { "SHOW_PROCESSING_INSTRUCTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000040), (intptr_t) (0) },
-    { "SHOW_COMMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000080), (intptr_t) (0) },
-    { "SHOW_DOCUMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000100), (intptr_t) (0) },
-    { "SHOW_DOCUMENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000200), (intptr_t) (0) },
-    { "SHOW_DOCUMENT_FRAGMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000400), (intptr_t) (0) },
-    { "SHOW_NOTATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000800), (intptr_t) (0) },
+    { "FILTER_ACCEPT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "FILTER_REJECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "FILTER_SKIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SHOW_ALL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0xFFFFFFFF) } },
+    { "SHOW_ELEMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000001) } },
+    { "SHOW_ATTRIBUTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000002) } },
+    { "SHOW_TEXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000004) } },
+    { "SHOW_CDATA_SECTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000008) } },
+    { "SHOW_ENTITY_REFERENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000010) } },
+    { "SHOW_ENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000020) } },
+    { "SHOW_PROCESSING_INSTRUCTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000040) } },
+    { "SHOW_COMMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000080) } },
+    { "SHOW_DOCUMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000100) } },
+    { "SHOW_DOCUMENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000200) } },
+    { "SHOW_DOCUMENT_FRAGMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000400) } },
+    { "SHOW_NOTATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0x00000800) } },
 };
 
 
@@ -126,151 +92,31 @@ COMPILE_ASSERT(0x00000200 == NodeFilter::SHOW_DOCUMENT_TYPE, NodeFilterEnumSHOW_
 COMPILE_ASSERT(0x00000400 == NodeFilter::SHOW_DOCUMENT_FRAGMENT, NodeFilterEnumSHOW_DOCUMENT_FRAGMENTIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(0x00000800 == NodeFilter::SHOW_NOTATION, NodeFilterEnumSHOW_NOTATIONIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSNodeFilterConstructor::s_info = { "NodeFilterConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeFilterConstructor) };
-
-JSNodeFilterConstructor::JSNodeFilterConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSNodeFilterConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSNodeFilterConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSNodeFilter::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    UNUSED_PARAM(globalObject);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("NodeFilter"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSNodeFilterConstructorTableValues, *this);
 }
 
-/* Hash table for prototype */
-
-static const HashTableValue JSNodeFilterPrototypeTableValues[] =
-{
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsNodeFilterConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "FILTER_ACCEPT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "FILTER_REJECT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "FILTER_SKIP", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SHOW_ALL", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0xFFFFFFFF), (intptr_t) (0) },
-    { "SHOW_ELEMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000001), (intptr_t) (0) },
-    { "SHOW_ATTRIBUTE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000002), (intptr_t) (0) },
-    { "SHOW_TEXT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000004), (intptr_t) (0) },
-    { "SHOW_CDATA_SECTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000008), (intptr_t) (0) },
-    { "SHOW_ENTITY_REFERENCE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000010), (intptr_t) (0) },
-    { "SHOW_ENTITY", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000020), (intptr_t) (0) },
-    { "SHOW_PROCESSING_INSTRUCTION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000040), (intptr_t) (0) },
-    { "SHOW_COMMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000080), (intptr_t) (0) },
-    { "SHOW_DOCUMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000100), (intptr_t) (0) },
-    { "SHOW_DOCUMENT_TYPE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000200), (intptr_t) (0) },
-    { "SHOW_DOCUMENT_FRAGMENT", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000400), (intptr_t) (0) },
-    { "SHOW_NOTATION", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0x00000800), (intptr_t) (0) },
-    { "acceptNode", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsNodeFilterPrototypeFunctionAcceptNode), (intptr_t) (0) },
-};
-
-const ClassInfo JSNodeFilterPrototype::s_info = { "NodeFilterPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeFilterPrototype) };
-
-void JSNodeFilterPrototype::finishCreation(VM& vm)
-{
-    Base::finishCreation(vm);
-    reifyStaticProperties(vm, JSNodeFilterPrototypeTableValues, *this);
-}
-
-const ClassInfo JSNodeFilter::s_info = { "NodeFilter", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeFilter) };
-
-JSNodeFilter::JSNodeFilter(Structure* structure, JSDOMGlobalObject* globalObject, Ref<NodeFilter>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
-{
-}
-
-JSObject* JSNodeFilter::createPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return JSNodeFilterPrototype::create(vm, globalObject, JSNodeFilterPrototype::createStructure(vm, globalObject, globalObject->objectPrototype()));
-}
-
-JSObject* JSNodeFilter::getPrototype(VM& vm, JSGlobalObject* globalObject)
-{
-    return getDOMPrototype<JSNodeFilter>(vm, globalObject);
-}
-
-void JSNodeFilter::destroy(JSC::JSCell* cell)
-{
-    JSNodeFilter* thisObject = static_cast<JSNodeFilter*>(cell);
-    thisObject->JSNodeFilter::~JSNodeFilter();
-}
-
-JSNodeFilter::~JSNodeFilter()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsNodeFilterConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
-{
-    JSNodeFilterPrototype* domObject = jsDynamicCast<JSNodeFilterPrototype*>(baseValue);
-    if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSNodeFilter::getConstructor(exec->vm(), domObject->globalObject()));
-}
+template<> const ClassInfo JSNodeFilterConstructor::s_info = { "NodeFilterConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSNodeFilterConstructor) };
 
 JSValue JSNodeFilter::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSNodeFilterConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSNodeFilterConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsNodeFilterPrototypeFunctionAcceptNode(ExecState* exec)
-{
-    JSValue thisValue = exec->thisValue();
-    JSNodeFilter* castedThis = jsDynamicCast<JSNodeFilter*>(thisValue);
-    if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "NodeFilter", "acceptNode");
-    ASSERT_GC_OBJECT_INHERITS(castedThis, JSNodeFilter::info());
-    auto& impl = castedThis->impl();
-    Node* n = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    JSValue result = jsNumber(impl.acceptNode(exec, n));
-    if (UNLIKELY(exec->hadException()))
-        return JSValue::encode(jsUndefined());
-    return JSValue::encode(result);
-}
 
-void JSNodeFilter::visitChildren(JSCell* cell, SlotVisitor& visitor)
-{
-    auto* thisObject = jsCast<JSNodeFilter*>(cell);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Base::visitChildren(thisObject, visitor);
-    thisObject->visitAdditionalChildren(visitor);
-}
+// Functions
 
-bool JSNodeFilterOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeFilter* impl)
 {
-    UNUSED_PARAM(handle);
-    UNUSED_PARAM(visitor);
-    return false;
-}
-
-void JSNodeFilterOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
-{
-    auto* jsNodeFilter = jsCast<JSNodeFilter*>(handle.slot()->asCell());
-    auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsNodeFilter->impl(), jsNodeFilter);
-}
-
-JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, NodeFilter* impl)
-{
-    if (!impl)
+    if (!impl || !static_cast<JSNodeFilter&>(*impl).callbackData())
         return jsNull();
-    if (JSValue result = getExistingWrapper<JSNodeFilter>(globalObject, impl))
-        return result;
-#if COMPILER(CLANG)
-    // If you hit this failure the interface definition has the ImplementationLacksVTable
-    // attribute. You should remove that attribute. If the class has subclasses
-    // that may be passed through this toJS() function you should use the SkipVTableValidation
-    // attribute to NodeFilter.
-    COMPILE_ASSERT(!__is_polymorphic(NodeFilter), NodeFilter_is_polymorphic_but_idl_claims_not_to_be);
-#endif
-    return createNewWrapper<JSNodeFilter>(globalObject, impl);
-}
 
+    return static_cast<JSNodeFilter&>(*impl).callbackData()->callback();
+
+}
 
 }

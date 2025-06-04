@@ -22,8 +22,8 @@
 #include "JSHistory.h"
 
 #include "ExceptionCode.h"
-#include "History.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
 
@@ -67,26 +67,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHistoryConstructor : public DOMConstructorObject {
-private:
-    JSHistoryConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHistoryConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHistoryConstructor* ptr = new (NotNull, JSC::allocateCell<JSHistoryConstructor>(vm.heap)) JSHistoryConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHistory> JSHistoryConstructor;
 
 /* Hash table */
 
@@ -105,37 +86,30 @@ static const struct CompactHashIndex JSHistoryTableIndex[9] = {
 
 static const HashTableValue JSHistoryTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "state", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "state", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHistoryState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSHistoryTable = { 3, 7, true, JSHistoryTableValues, 0, JSHistoryTableIndex };
-const ClassInfo JSHistoryConstructor::s_info = { "HistoryConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHistoryConstructor) };
-
-JSHistoryConstructor::JSHistoryConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSHistoryTable = { 3, 7, true, JSHistoryTableValues, JSHistoryTableIndex };
+template<> void JSHistoryConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHistoryConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHistory::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHistory::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("History"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSHistoryConstructor::s_info = { "HistoryConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHistoryConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSHistoryPrototypeTableValues[] =
 {
-    { "back", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionBack), (intptr_t) (0) },
-    { "forward", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionForward), (intptr_t) (0) },
-    { "go", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionGo), (intptr_t) (0) },
-    { "pushState", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionPushState), (intptr_t) (2) },
-    { "replaceState", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionReplaceState), (intptr_t) (2) },
+    { "back", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionBack), (intptr_t) (0) } },
+    { "forward", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionForward), (intptr_t) (0) } },
+    { "go", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionGo), (intptr_t) (0) } },
+    { "pushState", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionPushState), (intptr_t) (2) } },
+    { "replaceState", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsHistoryPrototypeFunctionReplaceState), (intptr_t) (2) } },
 };
 
 const ClassInfo JSHistoryPrototype::s_info = { "HistoryPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHistoryPrototype) };
@@ -148,9 +122,8 @@ void JSHistoryPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHistory::s_info = { "History", &Base::s_info, &JSHistoryTable, CREATE_METHOD_TABLE(JSHistory) };
 
-JSHistory::JSHistory(Structure* structure, JSDOMGlobalObject* globalObject, Ref<History>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSHistory::JSHistory(Structure* structure, JSDOMGlobalObject& globalObject, Ref<History>&& impl)
+    : JSDOMWrapper<History>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -170,151 +143,148 @@ void JSHistory::destroy(JSC::JSCell* cell)
     thisObject->JSHistory::~JSHistory();
 }
 
-JSHistory::~JSHistory()
-{
-    releaseImpl();
-}
-
-bool JSHistory::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSHistory::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHistory*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSHistory, Base>(exec, JSHistoryTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSHistory, Base>(state, JSHistoryTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSHistory::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSHistory::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHistory*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
-    if (thisObject->getOwnPropertySlotDelegate(exec, propertyName, slot))
+    Identifier propertyName = Identifier::from(state, index);
+    if (thisObject->getOwnPropertySlotDelegate(state, propertyName, slot))
         return true;
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsHistoryLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHistoryLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHistory*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHistoryState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHistoryState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSHistory*>(slotBase);
-    return JSValue::encode(castedThis->state(exec));
+    return JSValue::encode(castedThis->state(*state));
 }
 
 
-EncodedJSValue jsHistoryConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHistoryConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSHistory* domObject = jsDynamicCast<JSHistory*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHistory::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHistory::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSHistory::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
+void JSHistory::put(JSCell* cell, ExecState* state, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     auto* thisObject = jsCast<JSHistory*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::put(thisObject, exec, propertyName, value, slot);
+    Base::put(thisObject, state, propertyName, value, slot);
 }
 
-void JSHistory::putByIndex(JSCell* cell, ExecState* exec, unsigned index, JSValue value, bool shouldThrow)
+void JSHistory::putByIndex(JSCell* cell, ExecState* state, unsigned index, JSValue value, bool shouldThrow)
 {
     auto* thisObject = jsCast<JSHistory*>(cell);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    Identifier propertyName = Identifier::from(exec, index);
+    Identifier propertyName = Identifier::from(state, index);
     PutPropertySlot slot(thisObject, shouldThrow);
-    if (thisObject->putDelegate(exec, propertyName, value, slot))
+    if (thisObject->putDelegate(state, propertyName, value, slot))
         return;
-    Base::putByIndex(cell, exec, index, value, shouldThrow);
+    Base::putByIndex(cell, state, index, value, shouldThrow);
 }
 
 JSValue JSHistory::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHistoryConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHistoryConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionBack(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionBack(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHistory* castedThis = jsDynamicCast<JSHistory*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "History", "back");
+        return throwThisTypeError(*state, "History", "back");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHistory::info());
-    auto& impl = castedThis->impl();
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
     impl.back(scriptContext);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionForward(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionForward(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHistory* castedThis = jsDynamicCast<JSHistory*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "History", "forward");
+        return throwThisTypeError(*state, "History", "forward");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHistory::info());
-    auto& impl = castedThis->impl();
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
     impl.forward(scriptContext);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionGo(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionGo(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHistory* castedThis = jsDynamicCast<JSHistory*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "History", "go");
+        return throwThisTypeError(*state, "History", "go");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHistory::info());
-    auto& impl = castedThis->impl();
-    auto* scriptContext = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject())->scriptExecutionContext();
+    auto& impl = castedThis->wrapped();
+    auto* scriptContext = jsCast<JSDOMGlobalObject*>(state->lexicalGlobalObject())->scriptExecutionContext();
     if (!scriptContext)
         return JSValue::encode(jsUndefined());
-    int distance = toInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    int distance = toInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     impl.go(scriptContext, distance);
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionPushState(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionPushState(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHistory* castedThis = jsDynamicCast<JSHistory*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "History", "pushState");
+        return throwThisTypeError(*state, "History", "pushState");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHistory::info());
-    return JSValue::encode(castedThis->pushState(exec));
+    return JSValue::encode(castedThis->pushState(*state));
 }
 
-EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionReplaceState(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsHistoryPrototypeFunctionReplaceState(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSHistory* castedThis = jsDynamicCast<JSHistory*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "History", "replaceState");
+        return throwThisTypeError(*state, "History", "replaceState");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSHistory::info());
-    return JSValue::encode(castedThis->replaceState(exec));
+    return JSValue::encode(castedThis->replaceState(*state));
 }
 
 void JSHistory::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -328,7 +298,7 @@ void JSHistory::visitChildren(JSCell* cell, SlotVisitor& visitor)
 bool JSHistoryOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     auto* jsHistory = jsCast<JSHistory*>(handle.slot()->asCell());
-    Frame* root = WTF::getPtr(jsHistory->impl().frame());
+    Frame* root = WTF::getPtr(jsHistory->wrapped().frame());
     if (!root)
         return false;
     return visitor.containsOpaqueRoot(root);
@@ -338,7 +308,7 @@ void JSHistoryOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsHistory = jsCast<JSHistory*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsHistory->impl(), jsHistory);
+    uncacheWrapper(world, &jsHistory->wrapped(), jsHistory);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -349,6 +319,14 @@ extern "C" { extern void (*const __identifier("??_7History@WebCore@@6B@")[])(); 
 extern "C" { extern void* _ZTVN7WebCore7HistoryE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, History* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSHistory>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, History* impl)
 {
     if (!impl)
@@ -380,7 +358,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, History* imp
 History* JSHistory::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSHistory*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

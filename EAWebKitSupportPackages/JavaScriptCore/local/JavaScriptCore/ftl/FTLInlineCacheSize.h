@@ -40,10 +40,25 @@ size_t sizeOfGetById();
 size_t sizeOfPutById();
 size_t sizeOfCall();
 size_t sizeOfCallVarargs();
+size_t sizeOfTailCallVarargs();
 size_t sizeOfCallForwardVarargs();
+size_t sizeOfTailCallForwardVarargs();
 size_t sizeOfConstructVarargs();
 size_t sizeOfConstructForwardVarargs();
 size_t sizeOfIn();
+size_t sizeOfBitAnd();
+size_t sizeOfBitOr();
+size_t sizeOfBitXor();
+size_t sizeOfBitLShift();
+size_t sizeOfBitRShift();
+size_t sizeOfBitURShift();
+size_t sizeOfArithDiv();
+size_t sizeOfArithMul();
+size_t sizeOfArithSub();
+size_t sizeOfValueAdd();
+#if ENABLE(MASM_PROBE)
+size_t sizeOfProbe();
+#endif
 
 size_t sizeOfICFor(DFG::Node*);
 

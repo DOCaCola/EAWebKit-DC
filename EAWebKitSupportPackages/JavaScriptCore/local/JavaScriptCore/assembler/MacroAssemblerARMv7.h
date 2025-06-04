@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010, 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2009-2010, 2014-2015 Apple Inc. All rights reserved.
  * Copyright (C) 2010 University of Szeged
  *
  * Redistribution and use in source and binary forms, with or without
@@ -168,6 +168,11 @@ public:
 
     void add32(TrustedImm32 imm, RegisterID src, RegisterID dest)
     {
+        if (!imm.m_value) {
+            move(src, dest);
+            return;
+        }
+
         ARMThumbImmediate armImm = ARMThumbImmediate::makeUInt12OrEncodedImm(imm.m_value);
 
         // For adds with stack pointer destination, moving the src first to sp is
@@ -187,6 +192,9 @@ public:
 
     void add32(TrustedImm32 imm, Address address)
     {
+        if (!imm.m_value)
+            return;
+
         load32(address, dataTempRegister);
 
         ARMThumbImmediate armImm = ARMThumbImmediate::makeUInt12OrEncodedImm(imm.m_value);
@@ -210,6 +218,9 @@ public:
 
     void add32(TrustedImm32 imm, AbsoluteAddress address)
     {
+        if (!imm.m_value)
+            return;
+
         load32(address.m_ptr, dataTempRegister);
 
         ARMThumbImmediate armImm = ARMThumbImmediate::makeUInt12OrEncodedImm(imm.m_value);
@@ -845,6 +856,7 @@ public:
     static bool supportsFloatingPointTruncate() { return true; }
     static bool supportsFloatingPointSqrt() { return true; }
     static bool supportsFloatingPointAbs() { return true; }
+    static bool supportsFloatingPointCeil() { return false; }
 
     void loadDouble(ImplicitAddress address, FPRegisterID dest)
     {
@@ -1033,6 +1045,12 @@ public:
     void negateDouble(FPRegisterID src, FPRegisterID dest)
     {
         m_assembler.vneg(dest, src);
+    }
+
+    NO_RETURN_DUE_TO_CRASH void ceilDouble(FPRegisterID, FPRegisterID)
+    {
+        ASSERT(!supportsFloatingPointCeil());
+        CRASH();
     }
 
     void convertInt32ToDouble(RegisterID src, FPRegisterID dest)
@@ -1604,7 +1622,7 @@ public:
         return branchMul32(cond, src, dest, dest);
     }
 
-    Jump branchMul32(ResultCondition cond, TrustedImm32 imm, RegisterID src, RegisterID dest)
+    Jump branchMul32(ResultCondition cond, RegisterID src, TrustedImm32 imm, RegisterID dest)
     {
         move(imm, dataTempRegister);
         return branchMul32(cond, dataTempRegister, src, dest);
@@ -1675,6 +1693,12 @@ public:
     {
         moveFixedWidthEncoding(TrustedImm32(0), dataTempRegister);
         return Call(m_assembler.blx(dataTempRegister), Call::LinkableNear);
+    }
+
+    ALWAYS_INLINE Call nearTailCall()
+    {
+        moveFixedWidthEncoding(TrustedImm32(0), dataTempRegister);
+        return Call(m_assembler.bx(dataTempRegister), Call::LinkableNearTail);
     }
 
     ALWAYS_INLINE Call call()
@@ -1901,13 +1925,18 @@ public:
         UNREACHABLE_FOR_PLATFORM();
     }
 
+    static void repatchCall(CodeLocationCall call, CodeLocationLabel destination)
+    {
+        ARMv7Assembler::relinkCall(call.dataLocation(), destination.executableAddress());
+    }
+
+    static void repatchCall(CodeLocationCall call, FunctionPtr destination)
+    {
+        ARMv7Assembler::relinkCall(call.dataLocation(), destination.executableAddress());
+    }
+
 #if ENABLE(MASM_PROBE)
-    // Methods required by the MASM_PROBE mechanism as defined in
-    // AbstractMacroAssembler.h. 
-    static void printCPURegisters(CPUState&, int indentation = 0);
-    static void printRegister(CPUState&, RegisterID);
-    static void printRegister(CPUState&, FPRegisterID);
-    void probe(ProbeFunction, void* arg1 = 0, void* arg2 = 0);
+    void probe(ProbeFunction, void* arg1, void* arg2);
 #endif // ENABLE(MASM_PROBE)
 
 protected:
@@ -2003,21 +2032,13 @@ protected:
     
 private:
     friend class LinkBuffer;
-    friend class RepatchBuffer;
 
     static void linkCall(void* code, Call call, FunctionPtr function)
     {
-        ARMv7Assembler::linkCall(code, call.m_label, function.value());
-    }
-
-    static void repatchCall(CodeLocationCall call, CodeLocationLabel destination)
-    {
-        ARMv7Assembler::relinkCall(call.dataLocation(), destination.executableAddress());
-    }
-
-    static void repatchCall(CodeLocationCall call, FunctionPtr destination)
-    {
-        ARMv7Assembler::relinkCall(call.dataLocation(), destination.executableAddress());
+        if (call.isFlagSet(Call::Tail))
+            ARMv7Assembler::linkJump(code, call.m_label, function.value());
+        else
+            ARMv7Assembler::linkCall(code, call.m_label, function.value());
     }
 
 #if ENABLE(MASM_PROBE)

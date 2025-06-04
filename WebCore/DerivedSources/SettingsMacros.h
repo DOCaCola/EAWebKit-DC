@@ -373,8 +373,6 @@
      void setAntialiased2dCanvasEnabled(bool antialiased2dCanvasEnabled) { m_antialiased2dCanvasEnabled = antialiased2dCanvasEnabled; } \
     bool appleMailPaginationQuirkEnabled() const { return m_appleMailPaginationQuirkEnabled; } \
      void setAppleMailPaginationQuirkEnabled(bool appleMailPaginationQuirkEnabled) { m_appleMailPaginationQuirkEnabled = appleMailPaginationQuirkEnabled; } \
-    bool applyDeviceScaleFactorInCompositor() const { return m_applyDeviceScaleFactorInCompositor; } \
-     void setApplyDeviceScaleFactorInCompositor(bool applyDeviceScaleFactorInCompositor) { m_applyDeviceScaleFactorInCompositor = applyDeviceScaleFactorInCompositor; } \
     bool asynchronousSpellCheckingEnabled() const { return m_asynchronousSpellCheckingEnabled; } \
      void setAsynchronousSpellCheckingEnabled(bool asynchronousSpellCheckingEnabled) { m_asynchronousSpellCheckingEnabled = asynchronousSpellCheckingEnabled; } \
     bool audioPlaybackRequiresUserGesture() const { return m_audioPlaybackRequiresUserGesture; } \
@@ -453,14 +451,16 @@
      void setHttpEquivEnabled(bool httpEquivEnabled) { m_httpEquivEnabled = httpEquivEnabled; } \
     bool hyperlinkAuditingEnabled() const { return m_hyperlinkAuditingEnabled; } \
      void setHyperlinkAuditingEnabled(bool hyperlinkAuditingEnabled) { m_hyperlinkAuditingEnabled = hyperlinkAuditingEnabled; } \
-    bool ignoreViewportScalingConstraints() const { return m_ignoreViewportScalingConstraints; } \
-     void setIgnoreViewportScalingConstraints(bool ignoreViewportScalingConstraints) { m_ignoreViewportScalingConstraints = ignoreViewportScalingConstraints; } \
     bool imageSubsamplingEnabled() const { return m_imageSubsamplingEnabled; } \
      void setImageSubsamplingEnabled(bool imageSubsamplingEnabled) { m_imageSubsamplingEnabled = imageSubsamplingEnabled; } \
     double incrementalRenderingSuppressionTimeoutInSeconds() const { return m_incrementalRenderingSuppressionTimeoutInSeconds; } \
      void setIncrementalRenderingSuppressionTimeoutInSeconds(double incrementalRenderingSuppressionTimeoutInSeconds) { m_incrementalRenderingSuppressionTimeoutInSeconds = incrementalRenderingSuppressionTimeoutInSeconds; } \
+    bool inlineMediaPlaybackRequiresPlaysInlineAttribute() const { return m_inlineMediaPlaybackRequiresPlaysInlineAttribute; } \
+     void setInlineMediaPlaybackRequiresPlaysInlineAttribute(bool inlineMediaPlaybackRequiresPlaysInlineAttribute) { m_inlineMediaPlaybackRequiresPlaysInlineAttribute = inlineMediaPlaybackRequiresPlaysInlineAttribute; } \
     bool interactiveFormValidationEnabled() const { return m_interactiveFormValidationEnabled; } \
      void setInteractiveFormValidationEnabled(bool interactiveFormValidationEnabled) { m_interactiveFormValidationEnabled = interactiveFormValidationEnabled; } \
+    bool invisibleAutoplayNotPermitted() const { return m_invisibleAutoplayNotPermitted; } \
+     void setInvisibleAutoplayNotPermitted(bool invisibleAutoplayNotPermitted) { m_invisibleAutoplayNotPermitted = invisibleAutoplayNotPermitted; } \
     bool javaScriptCanAccessClipboard() const { return m_javaScriptCanAccessClipboard; } \
      void setJavaScriptCanAccessClipboard(bool javaScriptCanAccessClipboard) { m_javaScriptCanAccessClipboard = javaScriptCanAccessClipboard; } \
     bool javaScriptCanOpenWindowsAutomatically() const { return m_javaScriptCanOpenWindowsAutomatically; } \
@@ -481,8 +481,6 @@
      void setLocalStorageEnabled(bool localStorageEnabled) { m_localStorageEnabled = localStorageEnabled; } \
     bool logsPageMessagesToSystemConsoleEnabled() const { return m_logsPageMessagesToSystemConsoleEnabled; } \
      void setLogsPageMessagesToSystemConsoleEnabled(bool logsPageMessagesToSystemConsoleEnabled) { m_logsPageMessagesToSystemConsoleEnabled = logsPageMessagesToSystemConsoleEnabled; } \
-    bool longMousePressEnabled() const { return m_longMousePressEnabled; } \
-     void setLongMousePressEnabled(bool longMousePressEnabled) { m_longMousePressEnabled = longMousePressEnabled; } \
     double maxParseDuration() const { return m_maxParseDuration; } \
      void setMaxParseDuration(double maxParseDuration) { m_maxParseDuration = maxParseDuration; } \
     unsigned maximumHTMLParserDOMTreeDepth() const { return m_maximumHTMLParserDOMTreeDepth; } \
@@ -531,8 +529,6 @@
      void setPreventKeyboardDOMEventDispatch(bool preventKeyboardDOMEventDispatch) { m_preventKeyboardDOMEventDispatch = preventKeyboardDOMEventDispatch; } \
     bool primaryPlugInSnapshotDetectionEnabled() const { return m_primaryPlugInSnapshotDetectionEnabled; } \
      void setPrimaryPlugInSnapshotDetectionEnabled(bool primaryPlugInSnapshotDetectionEnabled) { m_primaryPlugInSnapshotDetectionEnabled = primaryPlugInSnapshotDetectionEnabled; } \
-    bool privilegedWebGLExtensionsEnabled() const { return m_privilegedWebGLExtensionsEnabled; } \
-     void setPrivilegedWebGLExtensionsEnabled(bool privilegedWebGLExtensionsEnabled) { m_privilegedWebGLExtensionsEnabled = privilegedWebGLExtensionsEnabled; } \
     bool requestAnimationFrameEnabled() const { return m_requestAnimationFrameEnabled; } \
      void setRequestAnimationFrameEnabled(bool requestAnimationFrameEnabled) { m_requestAnimationFrameEnabled = requestAnimationFrameEnabled; } \
     bool requiresUserGestureForMediaPlayback() const { return m_requiresUserGestureForMediaPlayback; } \
@@ -603,6 +599,8 @@
      void setUnifiedTextCheckerEnabled(bool unifiedTextCheckerEnabled) { m_unifiedTextCheckerEnabled = unifiedTextCheckerEnabled; } \
     bool unsafePluginPastingEnabled() const { return m_unsafePluginPastingEnabled; } \
      void setUnsafePluginPastingEnabled(bool unsafePluginPastingEnabled) { m_unsafePluginPastingEnabled = unsafePluginPastingEnabled; } \
+    bool useGiantTiles() const { return m_useGiantTiles; } \
+     void setUseGiantTiles(bool useGiantTiles) { m_useGiantTiles = useGiantTiles; } \
     bool useImageDocumentForSubframePDF() const { return m_useImageDocumentForSubframePDF; } \
      void setUseImageDocumentForSubframePDF(bool useImageDocumentForSubframePDF) { m_useImageDocumentForSubframePDF = useImageDocumentForSubframePDF; } \
     bool useLegacyBackgroundSizeShorthandBehavior() const { return m_useLegacyBackgroundSizeShorthandBehavior; } \
@@ -702,7 +700,6 @@
     bool m_alwaysUseAcceleratedOverflowScroll : 1; \
     bool m_antialiased2dCanvasEnabled : 1; \
     bool m_appleMailPaginationQuirkEnabled : 1; \
-    bool m_applyDeviceScaleFactorInCompositor : 1; \
     bool m_asynchronousSpellCheckingEnabled : 1; \
     bool m_audioPlaybackRequiresUserGesture : 1; \
     bool m_authorAndUserStylesEnabled : 1; \
@@ -732,9 +729,10 @@
     bool m_frameFlatteningEnabled : 1; \
     bool m_httpEquivEnabled : 1; \
     bool m_hyperlinkAuditingEnabled : 1; \
-    bool m_ignoreViewportScalingConstraints : 1; \
     bool m_imageSubsamplingEnabled : 1; \
+    bool m_inlineMediaPlaybackRequiresPlaysInlineAttribute : 1; \
     bool m_interactiveFormValidationEnabled : 1; \
+    bool m_invisibleAutoplayNotPermitted : 1; \
     bool m_javaScriptCanAccessClipboard : 1; \
     bool m_javaScriptCanOpenWindowsAutomatically : 1; \
     bool m_loadDeferringEnabled : 1; \
@@ -742,7 +740,6 @@
     bool m_localFileContentSniffingEnabled : 1; \
     bool m_localStorageEnabled : 1; \
     bool m_logsPageMessagesToSystemConsoleEnabled : 1; \
-    bool m_longMousePressEnabled : 1; \
     bool m_mediaControlsScaleWithPageZoom : 1; \
     bool m_mediaDataLoadsAutomatically : 1; \
     bool m_mediaEnabled : 1; \
@@ -760,7 +757,6 @@
     bool m_plugInSnapshottingEnabled : 1; \
     bool m_preventKeyboardDOMEventDispatch : 1; \
     bool m_primaryPlugInSnapshotDetectionEnabled : 1; \
-    bool m_privilegedWebGLExtensionsEnabled : 1; \
     bool m_requestAnimationFrameEnabled : 1; \
     bool m_requiresUserGestureForMediaPlayback : 1; \
     bool m_scriptMarkupEnabled : 1; \
@@ -794,6 +790,7 @@
     bool m_treatsAnyTextCSSLinkAsStylesheet : 1; \
     bool m_unifiedTextCheckerEnabled : 1; \
     bool m_unsafePluginPastingEnabled : 1; \
+    bool m_useGiantTiles : 1; \
     bool m_useImageDocumentForSubframePDF : 1; \
     bool m_useLegacyBackgroundSizeShorthandBehavior : 1; \
     bool m_useLegacyTextAlignPositionedElementBehavior : 1; \
@@ -872,7 +869,6 @@
     , m_alwaysUseAcceleratedOverflowScroll(false) \
     , m_antialiased2dCanvasEnabled(true) \
     , m_appleMailPaginationQuirkEnabled(false) \
-    , m_applyDeviceScaleFactorInCompositor(true) \
     , m_asynchronousSpellCheckingEnabled(false) \
     , m_audioPlaybackRequiresUserGesture(defaultAudioPlaybackRequiresUserGesture) \
     , m_authorAndUserStylesEnabled(true) \
@@ -902,9 +898,10 @@
     , m_frameFlatteningEnabled(false) \
     , m_httpEquivEnabled(true) \
     , m_hyperlinkAuditingEnabled(false) \
-    , m_ignoreViewportScalingConstraints(false) \
     , m_imageSubsamplingEnabled(defaultImageSubsamplingEnabled) \
+    , m_inlineMediaPlaybackRequiresPlaysInlineAttribute(defaultInlineMediaPlaybackRequiresPlaysInlineAttribute) \
     , m_interactiveFormValidationEnabled(false) \
+    , m_invisibleAutoplayNotPermitted(false) \
     , m_javaScriptCanAccessClipboard(false) \
     , m_javaScriptCanOpenWindowsAutomatically(false) \
     , m_loadDeferringEnabled(true) \
@@ -912,9 +909,8 @@
     , m_localFileContentSniffingEnabled(false) \
     , m_localStorageEnabled(false) \
     , m_logsPageMessagesToSystemConsoleEnabled(false) \
-    , m_longMousePressEnabled(false) \
     , m_mediaControlsScaleWithPageZoom(defaultMediaControlsScaleWithPageZoom) \
-    , m_mediaDataLoadsAutomatically(false) \
+    , m_mediaDataLoadsAutomatically(defaultMediaDataLoadsAutomatically) \
     , m_mediaEnabled(true) \
     , m_mediaStreamEnabled(false) \
     , m_needsIsLoadingInAPISenseQuirk(false) \
@@ -930,7 +926,6 @@
     , m_plugInSnapshottingEnabled(false) \
     , m_preventKeyboardDOMEventDispatch(false) \
     , m_primaryPlugInSnapshotDetectionEnabled(true) \
-    , m_privilegedWebGLExtensionsEnabled(false) \
     , m_requestAnimationFrameEnabled(true) \
     , m_requiresUserGestureForMediaPlayback(defaultRequiresUserGestureForMediaPlayback) \
     , m_scriptMarkupEnabled(true) \
@@ -964,6 +959,7 @@
     , m_treatsAnyTextCSSLinkAsStylesheet(false) \
     , m_unifiedTextCheckerEnabled(defaultUnifiedTextCheckerEnabled) \
     , m_unsafePluginPastingEnabled(true) \
+    , m_useGiantTiles(false) \
     , m_useImageDocumentForSubframePDF(false) \
     , m_useLegacyBackgroundSizeShorthandBehavior(false) \
     , m_useLegacyTextAlignPositionedElementBehavior(false) \

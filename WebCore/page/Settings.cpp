@@ -49,6 +49,10 @@
 #include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 
+#if ENABLE(MEDIA_STREAM)
+#include "MockRealtimeMediaSourceCenter.h"
+#endif
+
 namespace WebCore {
 
 static void setImageLoadingSettings(Page* page)
@@ -80,10 +84,15 @@ bool Settings::gQTKitEnabled = false;
 bool Settings::gMockScrollbarsEnabled = false;
 bool Settings::gUsesOverlayScrollbars = false;
 
+#if ENABLE(MEDIA_STREAM)
+bool Settings::gMockCaptureDevicesEnabled = false;
+#endif
+
 #if PLATFORM(WIN)
 bool Settings::gShouldUseHighResolutionTimers = true;
 #endif
     
+bool Settings::gShouldRewriteConstAsVar = false;
 bool Settings::gShouldRespectPriorityInCSSAttributeSetters = false;
 bool Settings::gLowPowerVideoAudioBufferSizeEnabled = false;
 
@@ -122,8 +131,10 @@ static const bool defaultFixedPositionCreatesStackingContext = true;
 static const bool defaultFixedBackgroundsPaintRelativeToDocument = true;
 static const bool defaultAcceleratedCompositingForFixedPositionEnabled = true;
 static const bool defaultAllowsInlineMediaPlayback = false;
+static const bool defaultInlineMediaPlaybackRequiresPlaysInlineAttribute = true;
 static const bool defaultRequiresUserGestureForMediaPlayback = true;
 static const bool defaultAudioPlaybackRequiresUserGesture = true;
+static const bool defaultMediaDataLoadsAutomatically = false;
 static const bool defaultShouldRespectImageOrientation = true;
 static const bool defaultImageSubsamplingEnabled = true;
 static const bool defaultScrollingTreeIncludesFrames = true;
@@ -133,8 +144,10 @@ static const bool defaultFixedPositionCreatesStackingContext = false;
 static const bool defaultFixedBackgroundsPaintRelativeToDocument = false;
 static const bool defaultAcceleratedCompositingForFixedPositionEnabled = false;
 static const bool defaultAllowsInlineMediaPlayback = true;
+static const bool defaultInlineMediaPlaybackRequiresPlaysInlineAttribute = false;
 static const bool defaultRequiresUserGestureForMediaPlayback = false;
 static const bool defaultAudioPlaybackRequiresUserGesture = false;
+static const bool defaultMediaDataLoadsAutomatically = true;
 static const bool defaultShouldRespectImageOrientation = false;
 static const bool defaultImageSubsamplingEnabled = false;
 static const bool defaultScrollingTreeIncludesFrames = false;
@@ -499,7 +512,7 @@ void Settings::setFontRenderingMode(FontRenderingMode mode)
 {
     if (fontRenderingMode() == mode)
         return;
-    m_fontRenderingMode = mode;
+    m_fontRenderingMode = static_cast<int>(mode);
     if (m_page)
         m_page->setNeedsRecalcStyleInAllFrames();
 }
@@ -526,6 +539,18 @@ void Settings::setShowTiledScrollingIndicator(bool enabled)
         
     m_showTiledScrollingIndicator = enabled;
 }
+
+#if ENABLE(RESOURCE_USAGE_OVERLAY)
+void Settings::setResourceUsageOverlayVisible(bool visible)
+{
+    if (m_resourceUsageOverlayVisible == visible)
+        return;
+
+    m_resourceUsageOverlayVisible = visible;
+    if (m_page)
+        m_page->setResourceUsageOverlayVisible(visible);
+}
+#endif
 
 #if PLATFORM(WIN)
 void Settings::setShouldUseHighResolutionTimers(bool shouldUseHighResolutionTimers)
@@ -574,6 +599,19 @@ void Settings::setQTKitEnabled(bool enabled)
 
     gQTKitEnabled = enabled;
     HTMLMediaElement::resetMediaEngines();
+}
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+bool Settings::mockCaptureDevicesEnabled()
+{
+    return gMockCaptureDevicesEnabled;
+}
+
+void Settings::setMockCaptureDevicesEnabled(bool enabled)
+{
+    gMockCaptureDevicesEnabled = enabled;
+    MockRealtimeMediaSourceCenter::setMockRealtimeMediaSourceCenterEnabled(enabled);
 }
 #endif
 

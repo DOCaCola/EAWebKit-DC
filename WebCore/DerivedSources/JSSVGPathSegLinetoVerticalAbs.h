@@ -32,7 +32,7 @@ public:
     typedef JSSVGPathSeg Base;
     static JSSVGPathSegLinetoVerticalAbs* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPathSegLinetoVerticalAbs>&& impl)
     {
-        JSSVGPathSegLinetoVerticalAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoVerticalAbs>(globalObject->vm().heap)) JSSVGPathSegLinetoVerticalAbs(structure, globalObject, WTF::move(impl));
+        JSSVGPathSegLinetoVerticalAbs* ptr = new (NotNull, JSC::allocateCell<JSSVGPathSegLinetoVerticalAbs>(globalObject->vm().heap)) JSSVGPathSegLinetoVerticalAbs(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPathSegLinetoVerticalAbs& impl() const
+    SVGPathSegLinetoVerticalAbs& wrapped() const
     {
-        return static_cast<SVGPathSegLinetoVerticalAbs&>(Base::impl());
+        return static_cast<SVGPathSegLinetoVerticalAbs&>(Base::wrapped());
     }
 protected:
-    JSSVGPathSegLinetoVerticalAbs(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPathSegLinetoVerticalAbs>&&);
+    JSSVGPathSegLinetoVerticalAbs(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPathSegLinetoVerticalAbs>&&);
 
     void finishCreation(JSC::VM& vm)
     {

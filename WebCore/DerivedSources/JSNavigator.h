@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSNavigator : public JSDOMWrapper {
+class JSNavigator : public JSDOMWrapper<Navigator> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Navigator> Base;
     static JSNavigator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Navigator>&& impl)
     {
-        JSNavigator* ptr = new (NotNull, JSC::allocateCell<JSNavigator>(globalObject->vm().heap)) JSNavigator(structure, globalObject, WTF::move(impl));
+        JSNavigator* ptr = new (NotNull, JSC::allocateCell<JSNavigator>(globalObject->vm().heap)) JSNavigator(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -42,7 +42,6 @@ public:
     static Navigator* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSNavigator();
 
     DECLARE_INFO;
 
@@ -52,20 +51,10 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-
-    // Custom functions
-#if ENABLE(MEDIA_STREAM)
-    JSC::JSValue webkitGetUserMedia(JSC::ExecState*);
-#endif
-    Navigator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Navigator* m_impl;
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSNavigator(JSC::Structure*, JSDOMGlobalObject*, Ref<Navigator>&&);
+    JSNavigator(JSC::Structure*, JSDOMGlobalObject&, Ref<Navigator>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -88,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Navigator*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Navigator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Navigator& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Navigator& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Navigator*);
 
 
 } // namespace WebCore

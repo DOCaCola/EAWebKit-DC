@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSAudioBufferSourceNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AudioBufferSourceNode>&& impl)
     {
-        JSAudioBufferSourceNode* ptr = new (NotNull, JSC::allocateCell<JSAudioBufferSourceNode>(globalObject->vm().heap)) JSAudioBufferSourceNode(structure, globalObject, WTF::move(impl));
+        JSAudioBufferSourceNode* ptr = new (NotNull, JSC::allocateCell<JSAudioBufferSourceNode>(globalObject->vm().heap)) JSAudioBufferSourceNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -52,15 +52,15 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
 
     // Custom attributes
-    void setBuffer(JSC::ExecState*, JSC::JSValue);
-    AudioBufferSourceNode& impl() const
+    void setBuffer(JSC::ExecState&, JSC::JSValue);
+    AudioBufferSourceNode& wrapped() const
     {
-        return static_cast<AudioBufferSourceNode&>(Base::impl());
+        return static_cast<AudioBufferSourceNode&>(Base::wrapped());
     }
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSAudioBufferSourceNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AudioBufferSourceNode>&&);
+    JSAudioBufferSourceNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AudioBufferSourceNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -71,7 +71,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AudioBufferSourceNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AudioBufferSourceNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AudioBufferSourceNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AudioBufferSourceNode*);
 
 
 } // namespace WebCore

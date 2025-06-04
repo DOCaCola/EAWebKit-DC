@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSNodeIterator : public JSDOMWrapper {
+class JSNodeIterator : public JSDOMWrapper<NodeIterator> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<NodeIterator> Base;
     static JSNodeIterator* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<NodeIterator>&& impl)
     {
-        JSNodeIterator* ptr = new (NotNull, JSC::allocateCell<JSNodeIterator>(globalObject->vm().heap)) JSNodeIterator(structure, globalObject, WTF::move(impl));
+        JSNodeIterator* ptr = new (NotNull, JSC::allocateCell<JSNodeIterator>(globalObject->vm().heap)) JSNodeIterator(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static NodeIterator* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSNodeIterator();
 
     DECLARE_INFO;
 
@@ -54,13 +53,8 @@ public:
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
     void visitAdditionalChildren(JSC::SlotVisitor&);
 
-    NodeIterator& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    NodeIterator* m_impl;
 protected:
-    JSNodeIterator(JSC::Structure*, JSDOMGlobalObject*, Ref<NodeIterator>&&);
+    JSNodeIterator(JSC::Structure*, JSDOMGlobalObject&, Ref<NodeIterator>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -83,7 +77,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, NodeIterator*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, NodeIterator*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, NodeIterator& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, NodeIterator& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, NodeIterator*);
 
 
 } // namespace WebCore

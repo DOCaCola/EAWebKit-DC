@@ -25,7 +25,6 @@
 #include "JSWebGLVertexArrayObjectOES.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLVertexArrayObjectOES.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,7 +60,7 @@ private:
 
 static const HashTableValue JSWebGLVertexArrayObjectOESPrototypeTableValues[] =
 {
-    { 0, 0, NoIntrinsic, 0, 0 }
+    { 0, 0, NoIntrinsic, { 0, 0 } }
 };
 
 const ClassInfo JSWebGLVertexArrayObjectOESPrototype::s_info = { "WebGLVertexArrayObjectOESPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObjectOESPrototype) };
@@ -74,9 +73,8 @@ void JSWebGLVertexArrayObjectOESPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLVertexArrayObjectOES::s_info = { "WebGLVertexArrayObjectOES", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLVertexArrayObjectOES) };
 
-JSWebGLVertexArrayObjectOES::JSWebGLVertexArrayObjectOES(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLVertexArrayObjectOES>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLVertexArrayObjectOES::JSWebGLVertexArrayObjectOES(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLVertexArrayObjectOES>&& impl)
+    : JSDOMWrapper<WebGLVertexArrayObjectOES>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -96,11 +94,6 @@ void JSWebGLVertexArrayObjectOES::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLVertexArrayObjectOES::~JSWebGLVertexArrayObjectOES();
 }
 
-JSWebGLVertexArrayObjectOES::~JSWebGLVertexArrayObjectOES()
-{
-    releaseImpl();
-}
-
 bool JSWebGLVertexArrayObjectOESOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
     UNUSED_PARAM(handle);
@@ -112,7 +105,7 @@ void JSWebGLVertexArrayObjectOESOwner::finalize(JSC::Handle<JSC::Unknown> handle
 {
     auto* jsWebGLVertexArrayObjectOES = jsCast<JSWebGLVertexArrayObjectOES*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLVertexArrayObjectOES->impl(), jsWebGLVertexArrayObjectOES);
+    uncacheWrapper(world, &jsWebGLVertexArrayObjectOES->wrapped(), jsWebGLVertexArrayObjectOES);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -123,6 +116,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLVertexArrayObjectOES@Web
 extern "C" { extern void* _ZTVN7WebCore25WebGLVertexArrayObjectOESE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexArrayObjectOES* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLVertexArrayObjectOES>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexArrayObjectOES* impl)
 {
     if (!impl)
@@ -154,7 +155,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLVertexA
 WebGLVertexArrayObjectOES* JSWebGLVertexArrayObjectOES::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLVertexArrayObjectOES*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

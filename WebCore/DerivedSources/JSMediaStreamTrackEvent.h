@@ -35,7 +35,7 @@ public:
     typedef JSEvent Base;
     static JSMediaStreamTrackEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MediaStreamTrackEvent>&& impl)
     {
-        JSMediaStreamTrackEvent* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrackEvent>(globalObject->vm().heap)) JSMediaStreamTrackEvent(structure, globalObject, WTF::move(impl));
+        JSMediaStreamTrackEvent* ptr = new (NotNull, JSC::allocateCell<JSMediaStreamTrackEvent>(globalObject->vm().heap)) JSMediaStreamTrackEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -51,12 +51,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    MediaStreamTrackEvent& impl() const
+    MediaStreamTrackEvent& wrapped() const
     {
-        return static_cast<MediaStreamTrackEvent&>(Base::impl());
+        return static_cast<MediaStreamTrackEvent&>(Base::wrapped());
     }
 protected:
-    JSMediaStreamTrackEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<MediaStreamTrackEvent>&&);
+    JSMediaStreamTrackEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<MediaStreamTrackEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

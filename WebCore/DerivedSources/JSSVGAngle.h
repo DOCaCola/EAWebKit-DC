@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSSVGAngle : public JSDOMWrapper {
+class JSSVGAngle : public JSDOMWrapper<SVGPropertyTearOff<SVGAngle>> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<SVGPropertyTearOff<SVGAngle>> Base;
     static JSSVGAngle* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGAngle>>&& impl)
     {
-        JSSVGAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAngle>(globalObject->vm().heap)) JSSVGAngle(structure, globalObject, WTF::move(impl));
+        JSSVGAngle* ptr = new (NotNull, JSC::allocateCell<JSSVGAngle>(globalObject->vm().heap)) JSSVGAngle(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static SVGPropertyTearOff<SVGAngle>* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSSVGAngle();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPropertyTearOff<SVGAngle>& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    SVGPropertyTearOff<SVGAngle>* m_impl;
 protected:
-    JSSVGAngle(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPropertyTearOff<SVGAngle>>&&);
+    JSSVGAngle(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPropertyTearOff<SVGAngle>>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, SVGPropertyTearOff<S
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGAngle>*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGAngle>& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGAngle>& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, SVGPropertyTearOff<SVGAngle>*);
 
 
 } // namespace WebCore

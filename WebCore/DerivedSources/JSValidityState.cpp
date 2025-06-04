@@ -22,7 +22,6 @@
 #include "JSValidityState.h"
 
 #include "JSDOMBinding.h"
-#include "ValidityState.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -71,16 +70,16 @@ private:
 
 static const HashTableValue JSValidityStatePrototypeTableValues[] =
 {
-    { "valueMissing", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateValueMissing), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "typeMismatch", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateTypeMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "patternMismatch", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStatePatternMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "tooLong", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateTooLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rangeUnderflow", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateRangeUnderflow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "rangeOverflow", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateRangeOverflow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "stepMismatch", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateStepMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "badInput", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateBadInput), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "customError", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateCustomError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "valid", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateValid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "valueMissing", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateValueMissing), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "typeMismatch", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateTypeMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "patternMismatch", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStatePatternMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "tooLong", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateTooLong), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rangeUnderflow", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateRangeUnderflow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "rangeOverflow", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateRangeOverflow), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "stepMismatch", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateStepMismatch), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "badInput", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateBadInput), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "customError", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateCustomError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "valid", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsValidityStateValid), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSValidityStatePrototype::s_info = { "ValidityStatePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSValidityStatePrototype) };
@@ -93,9 +92,8 @@ void JSValidityStatePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSValidityState::s_info = { "ValidityState", &Base::s_info, 0, CREATE_METHOD_TABLE(JSValidityState) };
 
-JSValidityState::JSValidityState(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ValidityState>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSValidityState::JSValidityState(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ValidityState>&& impl)
+    : JSDOMWrapper<ValidityState>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -115,176 +113,171 @@ void JSValidityState::destroy(JSC::JSCell* cell)
     thisObject->JSValidityState::~JSValidityState();
 }
 
-JSValidityState::~JSValidityState()
+EncodedJSValue jsValidityStateValueMissing(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsValidityStateValueMissing(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "valueMissing");
-        return throwGetterTypeError(*exec, "ValidityState", "valueMissing");
+            return reportDeprecatedGetterError(*state, "ValidityState", "valueMissing");
+        return throwGetterTypeError(*state, "ValidityState", "valueMissing");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.valueMissing());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateTypeMismatch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateTypeMismatch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "typeMismatch");
-        return throwGetterTypeError(*exec, "ValidityState", "typeMismatch");
+            return reportDeprecatedGetterError(*state, "ValidityState", "typeMismatch");
+        return throwGetterTypeError(*state, "ValidityState", "typeMismatch");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.typeMismatch());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStatePatternMismatch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStatePatternMismatch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "patternMismatch");
-        return throwGetterTypeError(*exec, "ValidityState", "patternMismatch");
+            return reportDeprecatedGetterError(*state, "ValidityState", "patternMismatch");
+        return throwGetterTypeError(*state, "ValidityState", "patternMismatch");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.patternMismatch());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateTooLong(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateTooLong(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "tooLong");
-        return throwGetterTypeError(*exec, "ValidityState", "tooLong");
+            return reportDeprecatedGetterError(*state, "ValidityState", "tooLong");
+        return throwGetterTypeError(*state, "ValidityState", "tooLong");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.tooLong());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateRangeUnderflow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateRangeUnderflow(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "rangeUnderflow");
-        return throwGetterTypeError(*exec, "ValidityState", "rangeUnderflow");
+            return reportDeprecatedGetterError(*state, "ValidityState", "rangeUnderflow");
+        return throwGetterTypeError(*state, "ValidityState", "rangeUnderflow");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.rangeUnderflow());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateRangeOverflow(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateRangeOverflow(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "rangeOverflow");
-        return throwGetterTypeError(*exec, "ValidityState", "rangeOverflow");
+            return reportDeprecatedGetterError(*state, "ValidityState", "rangeOverflow");
+        return throwGetterTypeError(*state, "ValidityState", "rangeOverflow");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.rangeOverflow());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateStepMismatch(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateStepMismatch(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "stepMismatch");
-        return throwGetterTypeError(*exec, "ValidityState", "stepMismatch");
+            return reportDeprecatedGetterError(*state, "ValidityState", "stepMismatch");
+        return throwGetterTypeError(*state, "ValidityState", "stepMismatch");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.stepMismatch());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateBadInput(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateBadInput(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "badInput");
-        return throwGetterTypeError(*exec, "ValidityState", "badInput");
+            return reportDeprecatedGetterError(*state, "ValidityState", "badInput");
+        return throwGetterTypeError(*state, "ValidityState", "badInput");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.badInput());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateCustomError(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateCustomError(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "customError");
-        return throwGetterTypeError(*exec, "ValidityState", "customError");
+            return reportDeprecatedGetterError(*state, "ValidityState", "customError");
+        return throwGetterTypeError(*state, "ValidityState", "customError");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.customError());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsValidityStateValid(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsValidityStateValid(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSValidityState* castedThis = jsDynamicCast<JSValidityState*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSValidityStatePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ValidityState", "valid");
-        return throwGetterTypeError(*exec, "ValidityState", "valid");
+            return reportDeprecatedGetterError(*state, "ValidityState", "valid");
+        return throwGetterTypeError(*state, "ValidityState", "valid");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.valid());
     return JSValue::encode(result);
 }
@@ -301,7 +294,14 @@ void JSValidityStateOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* cont
 {
     auto* jsValidityState = jsCast<JSValidityState*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsValidityState->impl(), jsValidityState);
+    uncacheWrapper(world, &jsValidityState->wrapped(), jsValidityState);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ValidityState* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSValidityState>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ValidityState* impl)
@@ -316,7 +316,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ValidityStat
 ValidityState* JSValidityState::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSValidityState*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

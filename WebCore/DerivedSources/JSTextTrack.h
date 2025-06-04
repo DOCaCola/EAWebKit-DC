@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSTextTrack : public JSDOMWrapper {
+class JSTextTrack : public JSDOMWrapper<TextTrack> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<TextTrack> Base;
     static JSTextTrack* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<TextTrack>&& impl)
     {
-        JSTextTrack* ptr = new (NotNull, JSC::allocateCell<JSTextTrack>(globalObject->vm().heap)) JSTextTrack(structure, globalObject, WTF::move(impl));
+        JSTextTrack* ptr = new (NotNull, JSC::allocateCell<JSTextTrack>(globalObject->vm().heap)) JSTextTrack(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static TextTrack* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSTextTrack();
 
     DECLARE_INFO;
 
@@ -59,17 +58,12 @@ public:
 
 
     // Custom attributes
-    void setKind(JSC::ExecState*, JSC::JSValue);
-    void setLanguage(JSC::ExecState*, JSC::JSValue);
-    TextTrack& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    TextTrack* m_impl;
+    void setKind(JSC::ExecState&, JSC::JSValue);
+    void setLanguage(JSC::ExecState&, JSC::JSValue);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSTextTrack(JSC::Structure*, JSDOMGlobalObject*, Ref<TextTrack>&&);
+    JSTextTrack(JSC::Structure*, JSDOMGlobalObject&, Ref<TextTrack>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -92,7 +86,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, TextTrack*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, TextTrack*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TextTrack& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, TextTrack& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, TextTrack*);
 
 
 } // namespace WebCore

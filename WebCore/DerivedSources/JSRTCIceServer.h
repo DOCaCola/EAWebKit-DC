@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSRTCIceServer : public JSDOMWrapper {
+class JSRTCIceServer : public JSDOMWrapper<RTCIceServer> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<RTCIceServer> Base;
     static JSRTCIceServer* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<RTCIceServer>&& impl)
     {
-        JSRTCIceServer* ptr = new (NotNull, JSC::allocateCell<JSRTCIceServer>(globalObject->vm().heap)) JSRTCIceServer(structure, globalObject, WTF::move(impl));
+        JSRTCIceServer* ptr = new (NotNull, JSC::allocateCell<JSRTCIceServer>(globalObject->vm().heap)) JSRTCIceServer(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static RTCIceServer* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSRTCIceServer();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    RTCIceServer& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    RTCIceServer* m_impl;
 protected:
-    JSRTCIceServer(JSC::Structure*, JSDOMGlobalObject*, Ref<RTCIceServer>&&);
+    JSRTCIceServer(JSC::Structure*, JSDOMGlobalObject&, Ref<RTCIceServer>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, RTCIceServer*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, RTCIceServer*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, RTCIceServer& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, RTCIceServer& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, RTCIceServer*);
 
 
 } // namespace WebCore

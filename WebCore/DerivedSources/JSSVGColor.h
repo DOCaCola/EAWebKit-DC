@@ -32,7 +32,7 @@ public:
     typedef JSCSSValue Base;
     static JSSVGColor* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGColor>&& impl)
     {
-        JSSVGColor* ptr = new (NotNull, JSC::allocateCell<JSSVGColor>(globalObject->vm().heap)) JSSVGColor(structure, globalObject, WTF::move(impl));
+        JSSVGColor* ptr = new (NotNull, JSC::allocateCell<JSSVGColor>(globalObject->vm().heap)) JSSVGColor(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGColor& impl() const
+    SVGColor& wrapped() const
     {
-        return static_cast<SVGColor&>(Base::impl());
+        return static_cast<SVGColor&>(Base::wrapped());
     }
 protected:
-    JSSVGColor(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGColor>&&);
+    JSSVGColor(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGColor>&&);
 
     void finishCreation(JSC::VM& vm)
     {

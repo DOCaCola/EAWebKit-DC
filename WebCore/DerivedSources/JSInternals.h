@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class WEBCORE_TESTSUPPORT_EXPORT JSInternals : public JSDOMWrapper {
+class WEBCORE_TESTSUPPORT_EXPORT JSInternals : public JSDOMWrapper<Internals> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<Internals> Base;
     static JSInternals* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<Internals>&& impl)
     {
-        JSInternals* ptr = new (NotNull, JSC::allocateCell<JSInternals>(globalObject->vm().heap)) JSInternals(structure, globalObject, WTF::move(impl));
+        JSInternals* ptr = new (NotNull, JSC::allocateCell<JSInternals>(globalObject->vm().heap)) JSInternals(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static Internals* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSInternals();
 
     DECLARE_INFO;
 
@@ -50,13 +49,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    Internals& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    Internals* m_impl;
 protected:
-    JSInternals(JSC::Structure*, JSDOMGlobalObject*, Ref<Internals>&&);
+    JSInternals(JSC::Structure*, JSDOMGlobalObject&, Ref<Internals>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -79,7 +73,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, Internals*)
 }
 
 WEBCORE_TESTSUPPORT_EXPORT JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, Internals*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, Internals& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, Internals& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, Internals*);
 
 
 } // namespace WebCore

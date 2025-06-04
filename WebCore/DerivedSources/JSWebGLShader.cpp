@@ -25,7 +25,7 @@
 #include "JSWebGLShader.h"
 
 #include "JSDOMBinding.h"
-#include "WebGLShader.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -61,48 +61,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSWebGLShaderConstructor : public DOMConstructorObject {
-private:
-    JSWebGLShaderConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSWebGLShader> JSWebGLShaderConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSWebGLShaderConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSWebGLShaderConstructor* ptr = new (NotNull, JSC::allocateCell<JSWebGLShaderConstructor>(vm.heap)) JSWebGLShaderConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSWebGLShaderConstructor::s_info = { "WebGLShaderConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLShaderConstructor) };
-
-JSWebGLShaderConstructor::JSWebGLShaderConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSWebGLShaderConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSWebGLShaderConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSWebGLShader::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSWebGLShader::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("WebGLShader"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSWebGLShaderConstructor::s_info = { "WebGLShaderConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLShaderConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSWebGLShaderPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLShaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsWebGLShaderConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSWebGLShaderPrototype::s_info = { "WebGLShaderPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLShaderPrototype) };
@@ -115,9 +89,8 @@ void JSWebGLShaderPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSWebGLShader::s_info = { "WebGLShader", &Base::s_info, 0, CREATE_METHOD_TABLE(JSWebGLShader) };
 
-JSWebGLShader::JSWebGLShader(Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGLShader>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSWebGLShader::JSWebGLShader(Structure* structure, JSDOMGlobalObject& globalObject, Ref<WebGLShader>&& impl)
+    : JSDOMWrapper<WebGLShader>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -137,22 +110,17 @@ void JSWebGLShader::destroy(JSC::JSCell* cell)
     thisObject->JSWebGLShader::~JSWebGLShader();
 }
 
-JSWebGLShader::~JSWebGLShader()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsWebGLShaderConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsWebGLShaderConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSWebGLShaderPrototype* domObject = jsDynamicCast<JSWebGLShaderPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSWebGLShader::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSWebGLShader::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSWebGLShader::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSWebGLShaderConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSWebGLShaderConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 bool JSWebGLShaderOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
@@ -166,7 +134,7 @@ void JSWebGLShaderOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsWebGLShader = jsCast<JSWebGLShader*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsWebGLShader->impl(), jsWebGLShader);
+    uncacheWrapper(world, &jsWebGLShader->wrapped(), jsWebGLShader);
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -177,6 +145,14 @@ extern "C" { extern void (*const __identifier("??_7WebGLShader@WebCore@@6B@")[])
 extern "C" { extern void* _ZTVN7WebCore11WebGLShaderE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLShader* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSWebGLShader>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLShader* impl)
 {
     if (!impl)
@@ -208,7 +184,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, WebGLShader*
 WebGLShader* JSWebGLShader::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSWebGLShader*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

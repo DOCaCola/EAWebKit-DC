@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSHTMLCollection : public JSDOMWrapper {
+class JSHTMLCollection : public JSDOMWrapper<HTMLCollection> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<HTMLCollection> Base;
     static JSHTMLCollection* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLCollection>&& impl)
     {
-        JSHTMLCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLCollection>(globalObject->vm().heap)) JSHTMLCollection(structure, globalObject, WTF::move(impl));
+        JSHTMLCollection* ptr = new (NotNull, JSC::allocateCell<JSHTMLCollection>(globalObject->vm().heap)) JSHTMLCollection(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSC::JSObject*, JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSHTMLCollection();
 
     DECLARE_INFO;
 
@@ -56,15 +55,10 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    HTMLCollection& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    HTMLCollection* m_impl;
 public:
-    static const unsigned StructureFlags = JSC::HasImpureGetOwnPropertySlot | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
+    static const unsigned StructureFlags = JSC::GetOwnPropertySlotIsImpureForPropertyAbsence | JSC::InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | JSC::OverridesGetOwnPropertySlot | JSC::OverridesGetPropertyNames | Base::StructureFlags;
 protected:
-    JSHTMLCollection(JSC::Structure*, JSDOMGlobalObject*, Ref<HTMLCollection>&&);
+    JSHTMLCollection(JSC::Structure*, JSDOMGlobalObject&, Ref<HTMLCollection>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -73,8 +67,7 @@ protected:
     }
 
 private:
-    static bool canGetItemsForName(JSC::ExecState*, HTMLCollection*, JSC::PropertyName);
-    static JSC::EncodedJSValue nameGetter(JSC::ExecState*, JSC::JSObject*, JSC::EncodedJSValue, JSC::PropertyName);
+    bool nameGetter(JSC::ExecState*, JSC::PropertyName, JSC::JSValue&);
 };
 
 class JSHTMLCollectionOwner : public JSC::WeakHandleOwner {
@@ -90,7 +83,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, HTMLCollection*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, HTMLCollection*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, HTMLCollection& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, HTMLCollection& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, HTMLCollection*);
 
 
 } // namespace WebCore

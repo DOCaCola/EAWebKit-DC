@@ -31,7 +31,7 @@ namespace WebCore {
 JSVoidCallback::JSVoidCallback(JSObject* callback, JSDOMGlobalObject* globalObject)
     : VoidCallback()
     , ActiveDOMCallback(globalObject->scriptExecutionContext())
-    , m_data(new JSCallbackData(callback, globalObject))
+    , m_data(new JSCallbackDataStrong(callback, this))
 {
 }
 
@@ -45,7 +45,7 @@ JSVoidCallback::~JSVoidCallback()
     else
         context->postTask(DeleteCallbackDataTask(m_data));
 #ifndef NDEBUG
-    m_data = 0;
+    m_data = nullptr;
 #endif
 }
 
@@ -61,11 +61,24 @@ bool JSVoidCallback::handleEvent()
 
     JSLockHolder lock(m_data->globalObject()->vm());
 
+    ExecState* state = m_data->globalObject()->globalExec();
     MarkedArgumentBuffer args;
 
-    bool raisedException = false;
-    m_data->invokeCallback(args, &raisedException);
-    return !raisedException;
+    NakedPtr<Exception> returnedException;
+    UNUSED_PARAM(state);
+    m_data->invokeCallback(args, JSCallbackData::CallbackType::Function, Identifier(), returnedException);
+    if (returnedException)
+        reportException(state, returnedException);
+    return !returnedException;
+}
+
+JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VoidCallback* impl)
+{
+    if (!impl || !static_cast<JSVoidCallback&>(*impl).callbackData())
+        return jsNull();
+
+    return static_cast<JSVoidCallback&>(*impl).callbackData()->callback();
+
 }
 
 }

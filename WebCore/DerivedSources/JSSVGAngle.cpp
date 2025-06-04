@@ -23,7 +23,7 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "SVGAngle.h"
+#include "JSDOMConstructor.h"
 #include "URL.h"
 #include <runtime/Error.h>
 #include <runtime/JSString.h>
@@ -74,36 +74,17 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGAngleConstructor : public DOMConstructorObject {
-private:
-    JSSVGAngleConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGAngleConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGAngleConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGAngleConstructor>(vm.heap)) JSSVGAngleConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSSVGAngle> JSSVGAngleConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSSVGAngleConstructorTableValues[] =
 {
-    { "SVG_ANGLETYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_UNSPECIFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
+    { "SVG_ANGLETYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ANGLETYPE_UNSPECIFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ANGLETYPE_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_ANGLETYPE_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_ANGLETYPE_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
 };
 
 
@@ -113,39 +94,32 @@ COMPILE_ASSERT(2 == SVGAngle::SVG_ANGLETYPE_DEG, SVGAngleEnumSVG_ANGLETYPE_DEGIs
 COMPILE_ASSERT(3 == SVGAngle::SVG_ANGLETYPE_RAD, SVGAngleEnumSVG_ANGLETYPE_RADIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(4 == SVGAngle::SVG_ANGLETYPE_GRAD, SVGAngleEnumSVG_ANGLETYPE_GRADIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSSVGAngleConstructor::s_info = { "SVGAngleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAngleConstructor) };
-
-JSSVGAngleConstructor::JSSVGAngleConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGAngleConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGAngleConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGAngle::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGAngle::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGAngle"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSSVGAngleConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSSVGAngleConstructor::s_info = { "SVGAngleConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAngleConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGAnglePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "unitType", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleUnitType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "value", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValue) },
-    { "valueInSpecifiedUnits", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValueInSpecifiedUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValueInSpecifiedUnits) },
-    { "valueAsString", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValueAsString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValueAsString) },
-    { "SVG_ANGLETYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_UNSPECIFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
-    { "SVG_ANGLETYPE_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(4), (intptr_t) (0) },
-    { "newValueSpecifiedUnits", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGAnglePrototypeFunctionNewValueSpecifiedUnits), (intptr_t) (2) },
-    { "convertToSpecifiedUnits", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsSVGAnglePrototypeFunctionConvertToSpecifiedUnits), (intptr_t) (1) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "unitType", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleUnitType), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "value", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValue), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValue) } },
+    { "valueInSpecifiedUnits", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValueInSpecifiedUnits), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValueInSpecifiedUnits) } },
+    { "valueAsString", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGAngleValueAsString), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSSVGAngleValueAsString) } },
+    { "SVG_ANGLETYPE_UNKNOWN", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "SVG_ANGLETYPE_UNSPECIFIED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "SVG_ANGLETYPE_DEG", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "SVG_ANGLETYPE_RAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
+    { "SVG_ANGLETYPE_GRAD", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(4) } },
+    { "newValueSpecifiedUnits", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGAnglePrototypeFunctionNewValueSpecifiedUnits), (intptr_t) (2) } },
+    { "convertToSpecifiedUnits", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsSVGAnglePrototypeFunctionConvertToSpecifiedUnits), (intptr_t) (1) } },
 };
 
 const ClassInfo JSSVGAnglePrototype::s_info = { "SVGAnglePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAnglePrototype) };
@@ -158,9 +132,8 @@ void JSSVGAnglePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGAngle::s_info = { "SVGAngle", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGAngle) };
 
-JSSVGAngle::JSSVGAngle(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPropertyTearOff<SVGAngle>>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSSVGAngle::JSSVGAngle(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGPropertyTearOff<SVGAngle>>&& impl)
+    : JSDOMWrapper<SVGPropertyTearOff<SVGAngle>>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -180,105 +153,100 @@ void JSSVGAngle::destroy(JSC::JSCell* cell)
     thisObject->JSSVGAngle::~JSSVGAngle();
 }
 
-JSSVGAngle::~JSSVGAngle()
+EncodedJSValue jsSVGAngleUnitType(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    releaseImpl();
-}
-
-EncodedJSValue jsSVGAngleUnitType(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
-{
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAngle", "unitType");
-        return throwGetterTypeError(*exec, "SVGAngle", "unitType");
+            return reportDeprecatedGetterError(*state, "SVGAngle", "unitType");
+        return throwGetterTypeError(*state, "SVGAngle", "unitType");
     }
-    SVGAngle& impl = castedThis->impl().propertyReference();
+    SVGAngle& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.unitType());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAngleValue(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAngleValue(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAngle", "value");
-        return throwGetterTypeError(*exec, "SVGAngle", "value");
+            return reportDeprecatedGetterError(*state, "SVGAngle", "value");
+        return throwGetterTypeError(*state, "SVGAngle", "value");
     }
-    SVGAngle& impl = castedThis->impl().propertyReference();
+    SVGAngle& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.value());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAngleValueInSpecifiedUnits(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAngleValueInSpecifiedUnits(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAngle", "valueInSpecifiedUnits");
-        return throwGetterTypeError(*exec, "SVGAngle", "valueInSpecifiedUnits");
+            return reportDeprecatedGetterError(*state, "SVGAngle", "valueInSpecifiedUnits");
+        return throwGetterTypeError(*state, "SVGAngle", "valueInSpecifiedUnits");
     }
-    SVGAngle& impl = castedThis->impl().propertyReference();
+    SVGAngle& impl = castedThis->wrapped().propertyReference();
     JSValue result = jsNumber(impl.valueInSpecifiedUnits());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAngleValueAsString(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsSVGAngleValueAsString(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "SVGAngle", "valueAsString");
-        return throwGetterTypeError(*exec, "SVGAngle", "valueAsString");
+            return reportDeprecatedGetterError(*state, "SVGAngle", "valueAsString");
+        return throwGetterTypeError(*state, "SVGAngle", "valueAsString");
     }
-    SVGAngle& impl = castedThis->impl().propertyReference();
-    JSValue result = jsStringWithCache(exec, impl.valueAsString());
+    SVGAngle& impl = castedThis->wrapped().propertyReference();
+    JSValue result = jsStringWithCache(state, impl.valueAsString());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsSVGAngleConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGAngleConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGAnglePrototype* domObject = jsDynamicCast<JSSVGAnglePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGAngle::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGAngle::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSSVGAngleValue(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGAngleValue(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGAngle", "value");
+            reportDeprecatedSetterError(*state, "SVGAngle", "value");
         else
-            throwSetterTypeError(*exec, "SVGAngle", "value");
+            throwSetterTypeError(*state, "SVGAngle", "value");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGAngle& podImpl = impl.propertyReference();
@@ -287,24 +255,24 @@ void setJSSVGAngleValue(ExecState* exec, JSObject* baseObject, EncodedJSValue th
 }
 
 
-void setJSSVGAngleValueInSpecifiedUnits(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGAngleValueInSpecifiedUnits(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGAngle", "valueInSpecifiedUnits");
+            reportDeprecatedSetterError(*state, "SVGAngle", "valueInSpecifiedUnits");
         else
-            throwSetterTypeError(*exec, "SVGAngle", "valueInSpecifiedUnits");
+            throwSetterTypeError(*state, "SVGAngle", "valueInSpecifiedUnits");
         return;
     }
-    auto& impl = castedThis->impl();
-    float nativeValue = value.toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    float nativeValue = value.toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGAngle& podImpl = impl.propertyReference();
@@ -313,30 +281,30 @@ void setJSSVGAngleValueInSpecifiedUnits(ExecState* exec, JSObject* baseObject, E
 }
 
 
-void setJSSVGAngleValueAsString(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSSVGAngleValueAsString(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSSVGAnglePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "SVGAngle", "valueAsString");
+            reportDeprecatedSetterError(*state, "SVGAngle", "valueAsString");
         else
-            throwSetterTypeError(*exec, "SVGAngle", "valueAsString");
+            throwSetterTypeError(*state, "SVGAngle", "valueAsString");
         return;
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return;
     }
     SVGAngle& podImpl = impl.propertyReference();
     podImpl.setValueAsString(nativeValue, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     if (!ec)
         impl.commitChange();
 }
@@ -344,59 +312,59 @@ void setJSSVGAngleValueAsString(ExecState* exec, JSObject* baseObject, EncodedJS
 
 JSValue JSSVGAngle::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGAngleConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGAngleConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGAnglePrototypeFunctionNewValueSpecifiedUnits(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGAnglePrototypeFunctionNewValueSpecifiedUnits(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGAngle", "newValueSpecifiedUnits");
+        return throwThisTypeError(*state, "SVGAngle", "newValueSpecifiedUnits");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGAngle::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGAngle& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 2))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 2))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    uint16_t unitType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t unitType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    float valueInSpecifiedUnits = exec->argument(1).toFloat(exec);
-    if (UNLIKELY(exec->hadException()))
+    float valueInSpecifiedUnits = state->argument(1).toFloat(state);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.newValueSpecifiedUnits(unitType, valueInSpecifiedUnits, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     if (!ec)
         impl.commitChange();
     return JSValue::encode(jsUndefined());
 }
 
-EncodedJSValue JSC_HOST_CALL jsSVGAnglePrototypeFunctionConvertToSpecifiedUnits(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsSVGAnglePrototypeFunctionConvertToSpecifiedUnits(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSSVGAngle* castedThis = jsDynamicCast<JSSVGAngle*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "SVGAngle", "convertToSpecifiedUnits");
+        return throwThisTypeError(*state, "SVGAngle", "convertToSpecifiedUnits");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSSVGAngle::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     if (impl.isReadOnly()) {
-        setDOMException(exec, NO_MODIFICATION_ALLOWED_ERR);
+        setDOMException(state, NO_MODIFICATION_ALLOWED_ERR);
         return JSValue::encode(jsUndefined());
     }
     SVGAngle& podImpl = impl.propertyReference();
-    if (UNLIKELY(exec->argumentCount() < 1))
-        return throwVMError(exec, createNotEnoughArgumentsError(exec));
+    if (UNLIKELY(state->argumentCount() < 1))
+        return throwVMError(state, createNotEnoughArgumentsError(state));
     ExceptionCode ec = 0;
-    uint16_t unitType = toUInt16(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t unitType = toUInt16(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
     podImpl.convertToSpecifiedUnits(unitType, ec);
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     if (!ec)
         impl.commitChange();
     return JSValue::encode(jsUndefined());
@@ -413,7 +381,14 @@ void JSSVGAngleOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
     auto* jsSVGAngle = jsCast<JSSVGAngle*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsSVGAngle->impl(), jsSVGAngle);
+    uncacheWrapper(world, &jsSVGAngle->wrapped(), jsSVGAngle);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGAngle>* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSSVGAngle, SVGPropertyTearOff<SVGAngle>>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyTearOff<SVGAngle>* impl)
@@ -428,7 +403,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, SVGPropertyT
 SVGPropertyTearOff<SVGAngle>* JSSVGAngle::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSSVGAngle*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

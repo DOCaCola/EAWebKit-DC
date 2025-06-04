@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSMockContentFilterSettings : public JSDOMWrapper {
+class JSMockContentFilterSettings : public JSDOMWrapper<MockContentFilterSettings> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<MockContentFilterSettings> Base;
     static JSMockContentFilterSettings* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<MockContentFilterSettings>&& impl)
     {
-        JSMockContentFilterSettings* ptr = new (NotNull, JSC::allocateCell<JSMockContentFilterSettings>(globalObject->vm().heap)) JSMockContentFilterSettings(structure, globalObject, WTF::move(impl));
+        JSMockContentFilterSettings* ptr = new (NotNull, JSC::allocateCell<JSMockContentFilterSettings>(globalObject->vm().heap)) JSMockContentFilterSettings(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -44,7 +44,6 @@ public:
     static MockContentFilterSettings* toWrapped(JSC::JSValue);
     static bool getOwnPropertySlot(JSC::JSObject*, JSC::ExecState*, JSC::PropertyName, JSC::PropertySlot&);
     static void destroy(JSC::JSCell*);
-    ~JSMockContentFilterSettings();
 
     DECLARE_INFO;
 
@@ -55,21 +54,16 @@ public:
 
 
     // Custom attributes
-    JSC::JSValue decisionPoint(JSC::ExecState*) const;
-    void setDecisionPoint(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue decision(JSC::ExecState*) const;
-    void setDecision(JSC::ExecState*, JSC::JSValue);
-    JSC::JSValue unblockRequestDecision(JSC::ExecState*) const;
-    void setUnblockRequestDecision(JSC::ExecState*, JSC::JSValue);
-    MockContentFilterSettings& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    MockContentFilterSettings* m_impl;
+    JSC::JSValue decisionPoint(JSC::ExecState&) const;
+    void setDecisionPoint(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue decision(JSC::ExecState&) const;
+    void setDecision(JSC::ExecState&, JSC::JSValue);
+    JSC::JSValue unblockRequestDecision(JSC::ExecState&) const;
+    void setUnblockRequestDecision(JSC::ExecState&, JSC::JSValue);
 public:
     static const unsigned StructureFlags = JSC::OverridesGetOwnPropertySlot | Base::StructureFlags;
 protected:
-    JSMockContentFilterSettings(JSC::Structure*, JSDOMGlobalObject*, Ref<MockContentFilterSettings>&&);
+    JSMockContentFilterSettings(JSC::Structure*, JSDOMGlobalObject&, Ref<MockContentFilterSettings>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -92,7 +86,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, MockContentFilterSet
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, MockContentFilterSettings*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, MockContentFilterSettings& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, MockContentFilterSettings& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, MockContentFilterSettings*);
 
 
 } // namespace WebCore

@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSIDBAny : public JSDOMWrapper {
+class JSIDBAny : public JSDOMWrapper<IDBAny> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<IDBAny> Base;
     static JSIDBAny* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBAny>&& impl)
     {
-        JSIDBAny* ptr = new (NotNull, JSC::allocateCell<JSIDBAny>(globalObject->vm().heap)) JSIDBAny(structure, globalObject, WTF::move(impl));
+        JSIDBAny* ptr = new (NotNull, JSC::allocateCell<JSIDBAny>(globalObject->vm().heap)) JSIDBAny(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBAny* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBAny();
 
     DECLARE_INFO;
 
@@ -52,13 +51,8 @@ public:
         return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
     }
 
-    IDBAny& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBAny* m_impl;
 protected:
-    JSIDBAny(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBAny>&&);
+    JSIDBAny(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBAny>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -81,7 +75,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBAny*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBAny*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBAny& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBAny& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBAny*);
 
 
 } // namespace WebCore

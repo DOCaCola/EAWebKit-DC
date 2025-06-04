@@ -33,7 +33,7 @@ public:
     typedef JSUIEvent Base;
     static JSCompositionEvent* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<CompositionEvent>&& impl)
     {
-        JSCompositionEvent* ptr = new (NotNull, JSC::allocateCell<JSCompositionEvent>(globalObject->vm().heap)) JSCompositionEvent(structure, globalObject, WTF::move(impl));
+        JSCompositionEvent* ptr = new (NotNull, JSC::allocateCell<JSCompositionEvent>(globalObject->vm().heap)) JSCompositionEvent(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    CompositionEvent& impl() const
+    CompositionEvent& wrapped() const
     {
-        return static_cast<CompositionEvent&>(Base::impl());
+        return static_cast<CompositionEvent&>(Base::wrapped());
     }
 protected:
-    JSCompositionEvent(JSC::Structure*, JSDOMGlobalObject*, Ref<CompositionEvent>&&);
+    JSCompositionEvent(JSC::Structure*, JSDOMGlobalObject&, Ref<CompositionEvent>&&);
 
     void finishCreation(JSC::VM& vm)
     {

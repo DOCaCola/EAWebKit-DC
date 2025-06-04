@@ -27,12 +27,12 @@
 
 namespace WebCore {
 
-class JSEventSource : public JSDOMWrapper {
+class JSEventSource : public JSDOMWrapper<EventSource> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<EventSource> Base;
     static JSEventSource* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<EventSource>&& impl)
     {
-        JSEventSource* ptr = new (NotNull, JSC::allocateCell<JSEventSource>(globalObject->vm().heap)) JSEventSource(structure, globalObject, WTF::move(impl));
+        JSEventSource* ptr = new (NotNull, JSC::allocateCell<JSEventSource>(globalObject->vm().heap)) JSEventSource(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -41,7 +41,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static EventSource* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSEventSource();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
     static void visitChildren(JSCell*, JSC::SlotVisitor&);
 
-    EventSource& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    EventSource* m_impl;
 protected:
-    JSEventSource(JSC::Structure*, JSDOMGlobalObject*, Ref<EventSource>&&);
+    JSEventSource(JSC::Structure*, JSDOMGlobalObject&, Ref<EventSource>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, EventSource*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, EventSource*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, EventSource& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, EventSource& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, EventSource*);
 
 
 } // namespace WebCore

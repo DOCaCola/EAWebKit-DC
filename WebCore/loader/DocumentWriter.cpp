@@ -73,6 +73,11 @@ void DocumentWriter::replaceDocument(const String& source, Document* ownerDocume
     m_frame->loader().stopAllLoaders();
     begin(m_frame->document()->url(), true, ownerDocument);
 
+    // begin() might fire an unload event, which will result in a situation where no new document has been attached,
+    // and the old document has been detached. Therefore, bail out if no document is attached.
+    if (!m_frame->document())
+        return;
+
     if (!source.isNull()) {
         if (!m_hasReceivedSomeData) {
             m_hasReceivedSomeData = true;
@@ -141,6 +146,11 @@ void DocumentWriter::begin(const URL& urlReference, bool dispatch, Document* own
     m_frame->loader().clear(document.ptr(), !shouldReuseDefaultView, !shouldReuseDefaultView);
     clear();
 
+    // m_frame->loader().clear() might fire unload event which could remove the view of the document.
+    // Bail out if document has no view.
+    if (!document->view())
+        return;
+
     if (!shouldReuseDefaultView)
         m_frame->script().updatePlatformScriptObjects();
 
@@ -189,7 +199,7 @@ TextResourceDecoder* DocumentWriter::createDecoderIfNeeded()
             m_decoder->setHintEncoding(parentFrame->document()->decoder());
         if (m_encoding.isEmpty()) {
             if (canReferToParentFrameEncoding(m_frame, parentFrame))
-                m_decoder->setEncoding(parentFrame->document()->inputEncoding(), TextResourceDecoder::EncodingFromParentFrame);
+                m_decoder->setEncoding(parentFrame->document()->textEncoding(), TextResourceDecoder::EncodingFromParentFrame);
         } else {
             m_decoder->setEncoding(m_encoding,
                 m_encodingWasChosenByUser ? TextResourceDecoder::UserChosenEncoding : TextResourceDecoder::EncodingFromHTTPHeader);

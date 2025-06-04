@@ -33,7 +33,7 @@ public:
     typedef JSWebGLRenderingContextBase Base;
     static JSWebGL2RenderingContext* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<WebGL2RenderingContext>&& impl)
     {
-        JSWebGL2RenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGL2RenderingContext>(globalObject->vm().heap)) JSWebGL2RenderingContext(structure, globalObject, WTF::move(impl));
+        JSWebGL2RenderingContext* ptr = new (NotNull, JSC::allocateCell<JSWebGL2RenderingContext>(globalObject->vm().heap)) JSWebGL2RenderingContext(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -54,19 +54,19 @@ public:
 
 
     // Custom functions
-    JSC::JSValue getInternalformatParameter(JSC::ExecState*);
-    JSC::JSValue getQueryParameter(JSC::ExecState*);
-    JSC::JSValue getSamplerParameter(JSC::ExecState*);
-    JSC::JSValue getSyncParameter(JSC::ExecState*);
-    JSC::JSValue getIndexedParameter(JSC::ExecState*);
-    JSC::JSValue getActiveUniformBlockParameter(JSC::ExecState*);
-    JSC::JSValue getActiveUniformBlockName(JSC::ExecState*);
-    WebGL2RenderingContext& impl() const
+    JSC::JSValue getInternalformatParameter(JSC::ExecState&);
+    JSC::JSValue getQueryParameter(JSC::ExecState&);
+    JSC::JSValue getSamplerParameter(JSC::ExecState&);
+    JSC::JSValue getSyncParameter(JSC::ExecState&);
+    JSC::JSValue getIndexedParameter(JSC::ExecState&);
+    JSC::JSValue getActiveUniformBlockParameter(JSC::ExecState&);
+    JSC::JSValue getActiveUniformBlockName(JSC::ExecState&);
+    WebGL2RenderingContext& wrapped() const
     {
-        return static_cast<WebGL2RenderingContext&>(Base::impl());
+        return static_cast<WebGL2RenderingContext&>(Base::wrapped());
     }
 protected:
-    JSWebGL2RenderingContext(JSC::Structure*, JSDOMGlobalObject*, Ref<WebGL2RenderingContext>&&);
+    JSWebGL2RenderingContext(JSC::Structure*, JSDOMGlobalObject&, Ref<WebGL2RenderingContext>&&);
 
     void finishCreation(JSC::VM& vm)
     {

@@ -30,8 +30,14 @@
 
 namespace WebCore {
 
-FontFeature::FontFeature(const AtomicString& tag, int value)
+FontFeature::FontFeature(const FontFeatureTag& tag, int value)
     : m_tag(tag)
+    , m_value(value)
+{
+}
+
+FontFeature::FontFeature(FontFeatureTag&& tag, int value)
+    : m_tag(WTF::move(tag))
     , m_value(value)
 {
 }
@@ -43,17 +49,7 @@ bool FontFeature::operator==(const FontFeature& other) const
 
 bool FontFeature::operator<(const FontFeature& other) const
 {
-    return (m_tag.impl() < other.m_tag.impl()) || (m_tag.impl() == other.m_tag.impl() && m_value < other.m_value);
-}
-
-unsigned FontFeature::hash() const
-{
-    return WTF::PairHash<AtomicString, unsigned>::hash(std::make_pair(m_tag, m_value));
-}
-
-Ref<FontFeatureSettings> FontFeatureSettings::create()
-{
-    return adoptRef(*new FontFeatureSettings);
+    return (m_tag < other.m_tag) || (m_tag == other.m_tag && m_value < other.m_value);
 }
 
 void FontFeatureSettings::insert(FontFeature&& feature)
@@ -69,10 +65,12 @@ void FontFeatureSettings::insert(FontFeature&& feature)
 
 unsigned FontFeatureSettings::hash() const
 {
-    unsigned result = 0;
-    for (size_t i = 0; i < size(); ++i)
-        result = WTF::pairIntHash(result, at(i).hash());
-    return result;
+    IntegerHasher hasher;
+    for (auto& feature : m_list) {
+        hasher.add(FontFeatureTagHash::hash(feature.tag()));
+        hasher.add(feature.value());
+    }
+    return hasher.hash();
 }
 
 }

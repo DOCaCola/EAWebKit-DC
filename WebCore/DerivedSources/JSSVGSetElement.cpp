@@ -22,7 +22,7 @@
 #include "JSSVGSetElement.h"
 
 #include "JSDOMBinding.h"
-#include "SVGSetElement.h"
+#include "JSDOMConstructor.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -58,48 +58,22 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSSVGSetElementConstructor : public DOMConstructorObject {
-private:
-    JSSVGSetElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSSVGSetElement> JSSVGSetElementConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSSVGSetElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSSVGSetElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSSVGSetElementConstructor>(vm.heap)) JSSVGSetElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSSVGSetElementConstructor::s_info = { "SVGSetElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSetElementConstructor) };
-
-JSSVGSetElementConstructor::JSSVGSetElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSSVGSetElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSSVGSetElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSSVGSetElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSSVGSetElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("SVGSetElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSSVGSetElementConstructor::s_info = { "SVGSetElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSetElementConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSSVGSetElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsSVGSetElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSSVGSetElementPrototype::s_info = { "SVGSetElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSetElementPrototype) };
@@ -112,7 +86,7 @@ void JSSVGSetElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSSVGSetElement::s_info = { "SVGSetElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSSVGSetElement) };
 
-JSSVGSetElement::JSSVGSetElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGSetElement>&& impl)
+JSSVGSetElement::JSSVGSetElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<SVGSetElement>&& impl)
     : JSSVGAnimationElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -127,17 +101,17 @@ JSObject* JSSVGSetElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSSVGSetElement>(vm, globalObject);
 }
 
-EncodedJSValue jsSVGSetElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsSVGSetElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSSVGSetElementPrototype* domObject = jsDynamicCast<JSSVGSetElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSSVGSetElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSSVGSetElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSSVGSetElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSSVGSetElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSSVGSetElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

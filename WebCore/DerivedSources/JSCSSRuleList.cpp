@@ -22,10 +22,10 @@
 #include "JSCSSRuleList.h"
 
 #include "CSSRule.h"
-#include "CSSRuleList.h"
 #include "ExceptionCode.h"
 #include "JSCSSRule.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include <runtime/Error.h>
 #include <runtime/PropertyNameArray.h>
 #include <wtf/GetPtr.h>
@@ -68,26 +68,7 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSCSSRuleListConstructor : public DOMConstructorObject {
-private:
-    JSCSSRuleListConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSCSSRuleListConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSCSSRuleListConstructor* ptr = new (NotNull, JSC::allocateCell<JSCSSRuleListConstructor>(vm.heap)) JSCSSRuleListConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSCSSRuleList> JSCSSRuleListConstructor;
 
 /* Hash table */
 
@@ -102,32 +83,25 @@ static const struct CompactHashIndex JSCSSRuleListTableIndex[5] = {
 
 static const HashTableValue JSCSSRuleListTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleListConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "length", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSRuleListLength), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
-static const HashTable JSCSSRuleListTable = { 2, 3, true, JSCSSRuleListTableValues, 0, JSCSSRuleListTableIndex };
-const ClassInfo JSCSSRuleListConstructor::s_info = { "CSSRuleListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRuleListConstructor) };
-
-JSCSSRuleListConstructor::JSCSSRuleListConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+static const HashTable JSCSSRuleListTable = { 2, 3, true, JSCSSRuleListTableValues, JSCSSRuleListTableIndex };
+template<> void JSCSSRuleListConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSCSSRuleListConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSCSSRuleList::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSCSSRuleList::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("CSSRuleList"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSCSSRuleListConstructor::s_info = { "CSSRuleListConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRuleListConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSCSSRuleListPrototypeTableValues[] =
 {
-    { "item", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsCSSRuleListPrototypeFunctionItem), (intptr_t) (0) },
+    { "item", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsCSSRuleListPrototypeFunctionItem), (intptr_t) (0) } },
 };
 
 const ClassInfo JSCSSRuleListPrototype::s_info = { "CSSRuleListPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSRuleListPrototype) };
@@ -140,9 +114,8 @@ void JSCSSRuleListPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSRuleList::s_info = { "CSSRuleList", &Base::s_info, &JSCSSRuleListTable, CREATE_METHOD_TABLE(JSCSSRuleList) };
 
-JSCSSRuleList::JSCSSRuleList(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSRuleList>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSCSSRuleList::JSCSSRuleList(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSRuleList>&& impl)
+    : JSDOMWrapper<CSSRuleList>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -162,88 +135,80 @@ void JSCSSRuleList::destroy(JSC::JSCell* cell)
     thisObject->JSCSSRuleList::~JSCSSRuleList();
 }
 
-JSCSSRuleList::~JSCSSRuleList()
-{
-    releaseImpl();
-}
-
-bool JSCSSRuleList::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSCSSRuleList::getOwnPropertySlot(JSObject* object, ExecState* state, PropertyName propertyName, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSRuleList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    const HashTableValue* entry = getStaticValueSlotEntryWithoutCaching<JSCSSRuleList>(exec, propertyName);
-    if (entry) {
-        slot.setCacheableCustom(thisObject, entry->attributes(), entry->propertyGetter());
-        return true;
-    }
     Optional<uint32_t> optionalIndex = parseIndex(propertyName);
-    if (optionalIndex && optionalIndex.value() < thisObject->impl().length()) {
+    if (optionalIndex && optionalIndex.value() < thisObject->wrapped().length()) {
         unsigned index = optionalIndex.value();
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return getStaticValueSlot<JSCSSRuleList, Base>(exec, JSCSSRuleListTable, thisObject, propertyName, slot);
+    if (getStaticValueSlot<JSCSSRuleList, Base>(state, JSCSSRuleListTable, thisObject, propertyName, slot))
+        return true;
+    return false;
 }
 
-bool JSCSSRuleList::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned index, PropertySlot& slot)
+bool JSCSSRuleList::getOwnPropertySlotByIndex(JSObject* object, ExecState* state, unsigned index, PropertySlot& slot)
 {
     auto* thisObject = jsCast<JSCSSRuleList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (index < thisObject->impl().length()) {
+    if (index < thisObject->wrapped().length()) {
         unsigned attributes = DontDelete | ReadOnly;
-        slot.setValue(thisObject, attributes, toJS(exec, thisObject->globalObject(), thisObject->impl().item(index)));
+        slot.setValue(thisObject, attributes, toJS(state, thisObject->globalObject(), thisObject->wrapped().item(index)));
         return true;
     }
-    return Base::getOwnPropertySlotByIndex(thisObject, exec, index, slot);
+    return Base::getOwnPropertySlotByIndex(thisObject, state, index, slot);
 }
 
-EncodedJSValue jsCSSRuleListLength(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSRuleListLength(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     auto* castedThis = jsCast<JSCSSRuleList*>(slotBase);
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.length());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSRuleListConstructor(ExecState* exec, JSObject*, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSRuleListConstructor(ExecState* state, JSObject*, EncodedJSValue thisValue, PropertyName)
 {
     JSCSSRuleList* domObject = jsDynamicCast<JSCSSRuleList*>(JSValue::decode(thisValue));
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSCSSRuleList::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSCSSRuleList::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void JSCSSRuleList::getOwnPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
+void JSCSSRuleList::getOwnPropertyNames(JSObject* object, ExecState* state, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     auto* thisObject = jsCast<JSCSSRuleList*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    for (unsigned i = 0, count = thisObject->impl().length(); i < count; ++i)
-        propertyNames.add(Identifier::from(exec, i));
-    Base::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
+    for (unsigned i = 0, count = thisObject->wrapped().length(); i < count; ++i)
+        propertyNames.add(Identifier::from(state, i));
+    Base::getOwnPropertyNames(thisObject, state, propertyNames, mode);
 }
 
 JSValue JSCSSRuleList::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSCSSRuleListConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSCSSRuleListConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsCSSRuleListPrototypeFunctionItem(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsCSSRuleListPrototypeFunctionItem(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSCSSRuleList* castedThis = jsDynamicCast<JSCSSRuleList*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "CSSRuleList", "item");
+        return throwThisTypeError(*state, "CSSRuleList", "item");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSCSSRuleList::info());
-    auto& impl = castedThis->impl();
-    unsigned index = toUInt32(exec, exec->argument(0), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    unsigned index = toUInt32(state, state->argument(0), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.item(index)));
     return JSValue::encode(result);
 }
 
@@ -251,7 +216,14 @@ void JSCSSRuleListOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* contex
 {
     auto* jsCSSRuleList = jsCast<JSCSSRuleList*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsCSSRuleList->impl(), jsCSSRuleList);
+    uncacheWrapper(world, &jsCSSRuleList->wrapped(), jsCSSRuleList);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSRuleList* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSCSSRuleList>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSRuleList* impl)
@@ -266,7 +238,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, CSSRuleList*
 CSSRuleList* JSCSSRuleList::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSCSSRuleList*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

@@ -33,7 +33,7 @@ public:
     typedef JSAudioNode Base;
     static JSAnalyserNode* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<AnalyserNode>&& impl)
     {
-        JSAnalyserNode* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNode>(globalObject->vm().heap)) JSAnalyserNode(structure, globalObject, WTF::move(impl));
+        JSAnalyserNode* ptr = new (NotNull, JSC::allocateCell<JSAnalyserNode>(globalObject->vm().heap)) JSAnalyserNode(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -49,12 +49,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    AnalyserNode& impl() const
+    AnalyserNode& wrapped() const
     {
-        return static_cast<AnalyserNode&>(Base::impl());
+        return static_cast<AnalyserNode&>(Base::wrapped());
     }
 protected:
-    JSAnalyserNode(JSC::Structure*, JSDOMGlobalObject*, Ref<AnalyserNode>&&);
+    JSAnalyserNode(JSC::Structure*, JSDOMGlobalObject&, Ref<AnalyserNode>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -65,7 +65,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, AnalyserNode*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, AnalyserNode& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, AnalyserNode& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, AnalyserNode*);
 
 
 } // namespace WebCore

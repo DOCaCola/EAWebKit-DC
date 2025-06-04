@@ -25,8 +25,8 @@
 #include "JSHTMLTrackElement.h"
 
 #include "HTMLNames.h"
-#include "HTMLTrackElement.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSTextTrack.h"
 #include "TextTrack.h"
 #include "URL.h"
@@ -78,35 +78,16 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSHTMLTrackElementConstructor : public DOMConstructorObject {
-private:
-    JSHTMLTrackElementConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
-
-public:
-    typedef DOMConstructorObject Base;
-    static JSHTMLTrackElementConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSHTMLTrackElementConstructor* ptr = new (NotNull, JSC::allocateCell<JSHTMLTrackElementConstructor>(vm.heap)) JSHTMLTrackElementConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
+typedef JSDOMConstructorNotConstructable<JSHTMLTrackElement> JSHTMLTrackElementConstructor;
 
 /* Hash table for constructor */
 
 static const HashTableValue JSHTMLTrackElementConstructorTableValues[] =
 {
-    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "LOADED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "LOADED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 
@@ -115,39 +96,32 @@ COMPILE_ASSERT(1 == HTMLTrackElement::LOADING, HTMLTrackElementEnumLOADINGIsWron
 COMPILE_ASSERT(2 == HTMLTrackElement::LOADED, HTMLTrackElementEnumLOADEDIsWrongUseDoNotCheckConstants);
 COMPILE_ASSERT(3 == HTMLTrackElement::TRACK_ERROR, HTMLTrackElementEnumTRACK_ERRORIsWrongUseDoNotCheckConstants);
 
-const ClassInfo JSHTMLTrackElementConstructor::s_info = { "HTMLTrackElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTrackElementConstructor) };
-
-JSHTMLTrackElementConstructor::JSHTMLTrackElementConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSHTMLTrackElementConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSHTMLTrackElementConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSHTMLTrackElement::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSHTMLTrackElement::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("HTMLTrackElement"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
     reifyStaticProperties(vm, JSHTMLTrackElementConstructorTableValues, *this);
 }
 
+template<> const ClassInfo JSHTMLTrackElementConstructor::s_info = { "HTMLTrackElementConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTrackElementConstructor) };
+
 /* Hash table for prototype */
 
 static const HashTableValue JSHTMLTrackElementPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "kind", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementKind) },
-    { "src", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementSrc) },
-    { "srclang", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementSrclang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementSrclang) },
-    { "label", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementLabel) },
-    { "default", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementDefault), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementDefault) },
-    { "readyState", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "track", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(0), (intptr_t) (0) },
-    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(1), (intptr_t) (0) },
-    { "LOADED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(2), (intptr_t) (0) },
-    { "ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, (intptr_t)(3), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "kind", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementKind), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementKind) } },
+    { "src", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementSrc), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementSrc) } },
+    { "srclang", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementSrclang), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementSrclang) } },
+    { "label", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementLabel), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementLabel) } },
+    { "default", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementDefault), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSHTMLTrackElementDefault) } },
+    { "readyState", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementReadyState), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "track", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsHTMLTrackElementTrack), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "NONE", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(0) } },
+    { "LOADING", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(1) } },
+    { "LOADED", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(2) } },
+    { "ERROR", DontDelete | ReadOnly | ConstantInteger, NoIntrinsic, { (long long)(3) } },
 };
 
 const ClassInfo JSHTMLTrackElementPrototype::s_info = { "HTMLTrackElementPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTrackElementPrototype) };
@@ -160,7 +134,7 @@ void JSHTMLTrackElementPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSHTMLTrackElement::s_info = { "HTMLTrackElement", &Base::s_info, 0, CREATE_METHOD_TABLE(JSHTMLTrackElement) };
 
-JSHTMLTrackElement::JSHTMLTrackElement(Structure* structure, JSDOMGlobalObject* globalObject, Ref<HTMLTrackElement>&& impl)
+JSHTMLTrackElement::JSHTMLTrackElement(Structure* structure, JSDOMGlobalObject& globalObject, Ref<HTMLTrackElement>&& impl)
     : JSHTMLElement(structure, globalObject, WTF::move(impl))
 {
 }
@@ -175,228 +149,228 @@ JSObject* JSHTMLTrackElement::getPrototype(VM& vm, JSGlobalObject* globalObject)
     return getDOMPrototype<JSHTMLTrackElement>(vm, globalObject);
 }
 
-EncodedJSValue jsHTMLTrackElementKind(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementKind(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "kind");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "kind");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "kind");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "kind");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.kind());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.kind());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementSrc(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementSrc(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "src");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "src");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "src");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "src");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.getURLAttribute(WebCore::HTMLNames::srcAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementSrclang(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementSrclang(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "srclang");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "srclang");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "srclang");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "srclang");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.srclang());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.srclang());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementLabel(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementLabel(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "label");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "label");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "label");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "label");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = jsStringWithCache(exec, impl.label());
+    auto& impl = castedThis->wrapped();
+    JSValue result = jsStringWithCache(state, impl.label());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementDefault(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementDefault(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "default");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "default");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "default");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "default");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsBoolean(impl.fastHasAttribute(WebCore::HTMLNames::defaultAttr));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementReadyState(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementReadyState(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "readyState");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "readyState");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "readyState");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "readyState");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.readyState());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementTrack(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementTrack(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "HTMLTrackElement", "track");
-        return throwGetterTypeError(*exec, "HTMLTrackElement", "track");
+            return reportDeprecatedGetterError(*state, "HTMLTrackElement", "track");
+        return throwGetterTypeError(*state, "HTMLTrackElement", "track");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.track()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.track()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsHTMLTrackElementConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsHTMLTrackElementConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSHTMLTrackElementPrototype* domObject = jsDynamicCast<JSHTMLTrackElementPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSHTMLTrackElement::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSHTMLTrackElement::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSHTMLTrackElementKind(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTrackElementKind(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTrackElement", "kind");
+            reportDeprecatedSetterError(*state, "HTMLTrackElement", "kind");
         else
-            throwSetterTypeError(*exec, "HTMLTrackElement", "kind");
+            throwSetterTypeError(*state, "HTMLTrackElement", "kind");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setKind(nativeValue);
 }
 
 
-void setJSHTMLTrackElementSrc(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTrackElementSrc(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTrackElement", "src");
+            reportDeprecatedSetterError(*state, "HTMLTrackElement", "src");
         else
-            throwSetterTypeError(*exec, "HTMLTrackElement", "src");
+            throwSetterTypeError(*state, "HTMLTrackElement", "src");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = valueToStringWithNullCheck(exec, value);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = valueToStringWithNullCheck(state, value);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setAttributeWithoutSynchronization(WebCore::HTMLNames::srcAttr, nativeValue);
 }
 
 
-void setJSHTMLTrackElementSrclang(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTrackElementSrclang(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTrackElement", "srclang");
+            reportDeprecatedSetterError(*state, "HTMLTrackElement", "srclang");
         else
-            throwSetterTypeError(*exec, "HTMLTrackElement", "srclang");
+            throwSetterTypeError(*state, "HTMLTrackElement", "srclang");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setSrclang(nativeValue);
 }
 
 
-void setJSHTMLTrackElementLabel(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTrackElementLabel(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTrackElement", "label");
+            reportDeprecatedSetterError(*state, "HTMLTrackElement", "label");
         else
-            throwSetterTypeError(*exec, "HTMLTrackElement", "label");
+            throwSetterTypeError(*state, "HTMLTrackElement", "label");
         return;
     }
-    auto& impl = castedThis->impl();
-    String nativeValue = value.toString(exec)->value(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    String nativeValue = value.toString(state)->value(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setLabel(nativeValue);
 }
 
 
-void setJSHTMLTrackElementDefault(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSHTMLTrackElementDefault(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSHTMLTrackElement* castedThis = jsDynamicCast<JSHTMLTrackElement*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSHTMLTrackElementPrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "HTMLTrackElement", "default");
+            reportDeprecatedSetterError(*state, "HTMLTrackElement", "default");
         else
-            throwSetterTypeError(*exec, "HTMLTrackElement", "default");
+            throwSetterTypeError(*state, "HTMLTrackElement", "default");
         return;
     }
-    auto& impl = castedThis->impl();
-    bool nativeValue = value.toBoolean(exec);
-    if (UNLIKELY(exec->hadException()))
+    auto& impl = castedThis->wrapped();
+    bool nativeValue = value.toBoolean(state);
+    if (UNLIKELY(state->hadException()))
         return;
     impl.setBooleanAttribute(WebCore::HTMLNames::defaultAttr, nativeValue);
 }
@@ -404,7 +378,7 @@ void setJSHTMLTrackElementDefault(ExecState* exec, JSObject* baseObject, Encoded
 
 JSValue JSHTMLTrackElement::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSHTMLTrackElementConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSHTMLTrackElementConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 

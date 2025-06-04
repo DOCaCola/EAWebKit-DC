@@ -33,7 +33,7 @@ public:
     typedef JSTextTrackCue Base;
     static JSVTTCue* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<VTTCue>&& impl)
     {
-        JSVTTCue* ptr = new (NotNull, JSC::allocateCell<JSVTTCue>(globalObject->vm().heap)) JSVTTCue(structure, globalObject, WTF::move(impl));
+        JSVTTCue* ptr = new (NotNull, JSC::allocateCell<JSVTTCue>(globalObject->vm().heap)) JSVTTCue(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -50,12 +50,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    VTTCue& impl() const
+    VTTCue& wrapped() const
     {
-        return static_cast<VTTCue&>(Base::impl());
+        return static_cast<VTTCue&>(Base::wrapped());
     }
 protected:
-    JSVTTCue(JSC::Structure*, JSDOMGlobalObject*, Ref<VTTCue>&&);
+    JSVTTCue(JSC::Structure*, JSDOMGlobalObject&, Ref<VTTCue>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -66,7 +66,8 @@ protected:
 };
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, VTTCue*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, VTTCue& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, VTTCue& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, VTTCue*);
 
 
 } // namespace WebCore

@@ -96,7 +96,7 @@ void RenderInline::willBeDestroyed()
             // not have a parent that means they are either already disconnected or
             // root lines that can just be destroyed without disconnecting.
             if (firstLineBox()->parent()) {
-                for (auto box = firstLineBox(); box; box = box->nextLineBox())
+                for (auto* box = firstLineBox(); box; box = box->nextLineBox())
                     box->removeFromParent();
             }
         } else if (parent())
@@ -136,7 +136,7 @@ static RenderElement* inFlowPositionedInlineAncestor(RenderElement* p)
             return p;
         p = p->parent();
     }
-    return 0;
+    return nullptr;
 }
 
 static void updateStyleOfAnonymousBlockContinuations(const RenderBlock& block, const RenderStyle* newStyle, const RenderStyle* oldStyle)
@@ -161,6 +161,19 @@ static void updateStyleOfAnonymousBlockContinuations(const RenderBlock& block, c
         auto blockStyle = RenderStyle::createAnonymousStyleWithDisplay(&block.style(), BLOCK);
         blockStyle.get().setPosition(newStyle->position());
         block.setStyle(WTF::move(blockStyle));
+    }
+}
+
+void RenderInline::styleWillChange(StyleDifference diff, const RenderStyle& newStyle)
+{
+    RenderBoxModelObject::styleWillChange(diff, newStyle);
+
+    // Check if this inline can hold absolute positioned elmements even after the style change.
+    if (canContainAbsolutelyPositionedObjects() && newStyle.position() == StaticPosition) {
+        // RenderInlines forward their absolute positioned descendants to their (non-anonymous) containing block.
+        auto* container = containingBlockForAbsolutePosition();
+        if (container && !container->canContainAbsolutelyPositionedObjects())
+            container->removePositionedObjects(nullptr, NewContainingBlock);
     }
 }
 
@@ -219,7 +232,7 @@ void RenderInline::updateAlwaysCreateLineBoxes(bool fullLayout)
         || parentStyle->lineHeight() != style().lineHeight()))
         || (flowThread && flowThread->isRenderNamedFlowThread()); // FIXME: Enable the optimization once we make overflow computation for culled inlines in regions.
 
-    if (!alwaysCreateLineBoxes && checkFonts && document().styleSheetCollection().usesFirstLineRules()) {
+    if (!alwaysCreateLineBoxes && checkFonts && view().usesFirstLineRules()) {
         // Have to check the first line style as well.
         parentStyle = &parent()->firstLineStyle();
         RenderStyle& childStyle = firstLineStyle();
@@ -298,6 +311,12 @@ RenderBoxModelObject* RenderInline::continuationBefore(RenderObject* beforeChild
     return last;
 }
 
+static bool newChildIsInline(const RenderObject& newChild, const RenderInline& parent)
+{
+    // inline parent generates inline-table.
+    return newChild.isInline() | (parent.childRequiresTable(newChild) && parent.style().display() == INLINE);
+}
+
 void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild)
 {
     // Make sure we don't append things after :after-generated content if we have it.
@@ -305,9 +324,9 @@ void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderOb
         beforeChild = lastChild();
     
     bool useNewBlockInsideInlineModel = document().settings()->newBlockInsideInlineModelEnabled();
-    
+    bool childInline = newChildIsInline(*newChild, *this);
     // This code is for the old block-inside-inline model that uses continuations.
-    if (!useNewBlockInsideInlineModel && !newChild->isInline() && !newChild->isFloatingOrOutOfFlowPositioned()) {
+    if (!useNewBlockInsideInlineModel && !childInline && !newChild->isFloatingOrOutOfFlowPositioned()) {
         // We are placing a block inside an inline. We have to perform a split of this
         // inline into continuations.  This involves creating an anonymous block box to hold
         // |newChild|.  We then make that block box a continuation of this inline.  We take all of
@@ -345,14 +364,14 @@ void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderOb
         ASSERT(beforeChild->parent());
         ASSERT(beforeChild->parent()->isAnonymousInlineBlock() || beforeChild->parent()->isAnonymousBlock());
         if (beforeChild->parent()->isAnonymousInlineBlock()) {
-            if (!newChild->isInline() || (newChild->isInline() && beforeChild->parent()->firstChild() != beforeChild))
+            if (!childInline || (childInline && beforeChild->parent()->firstChild() != beforeChild))
                 beforeChild->parent()->addChild(newChild, beforeChild);
             else
                 addChild(newChild, beforeChild->parent());
         } else if (beforeChild->parent()->isAnonymousBlock()) {
             ASSERT(!beforeChild->parent()->parent() || beforeChild->parent()->parent()->isAnonymousInlineBlock());
-            ASSERT(beforeChild->isInline());
-            if (newChild->isInline() || (!newChild->isInline() && beforeChild->parent()->firstChild() != beforeChild))
+            ASSERT(childInline);
+            if (childInline || (!childInline && beforeChild->parent()->firstChild() != beforeChild))
                 beforeChild->parent()->addChild(newChild, beforeChild);
             else
                 addChild(newChild, beforeChild->parent());
@@ -360,7 +379,7 @@ void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderOb
         return;
     }
 
-    if (!newChild->isInline()) {
+    if (!childInline) {
         // We are placing a block inside an inline. We have to place the block inside an anonymous inline-block.
         // This inline-block can house a sequence of contiguous block-level children, and they will all sit on the
         // same "line" together. We try to reuse an existing inline-block if possible.
@@ -406,8 +425,6 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
 {
     // Create a clone of this inline.
     RenderPtr<RenderInline> cloneInline = clone();
-    cloneInline->setContinuation(oldCont);
-
 #if ENABLE(FULLSCREEN_API)
     // If we're splitting the inline containing the fullscreened element,
     // |beforeChild| may be the renderer for the fullscreened element. However,
@@ -418,18 +435,43 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
     if (fullScreenElement && beforeChild && beforeChild->node() == fullScreenElement)
         beforeChild = document().fullScreenRenderer();
 #endif
-
     // Now take all of the children from beforeChild to the end and remove
     // them from |this| and place them in the clone.
-    RenderObject* renderer = beforeChild;
-    while (renderer) {
-        RenderObject* tmp = renderer;
-        renderer = tmp->nextSibling();
-        removeChildInternal(*tmp, NotifyChildren);
-        cloneInline->addChildIgnoringContinuation(tmp);
-        tmp->setNeedsLayoutAndPrefWidthsRecalc();
+    for (RenderObject* rendererToMove = beforeChild; rendererToMove;) {
+        RenderObject* nextSibling = rendererToMove->nextSibling();
+        // When anonymous wrapper is present, we might need to move the whole subtree instead.
+        if (rendererToMove->parent() != this) {
+            auto* anonymousParent = rendererToMove->parent();
+            while (anonymousParent && anonymousParent->parent() != this) {
+                ASSERT(anonymousParent->isAnonymous());
+                anonymousParent = anonymousParent->parent();
+            }
+            if (!anonymousParent) {
+                ASSERT_NOT_REACHED();
+                break;
+            }
+            // If beforeChild is the first child in the subtree, we could just move the whole subtree.
+            if (!rendererToMove->previousSibling()) {
+                // Reparent the whole anonymous wrapper tree.
+                rendererToMove = anonymousParent;
+                // Skip to the next sibling that is not in this subtree.
+                nextSibling = anonymousParent->nextSibling();
+            } else if (!rendererToMove->nextSibling()) {
+                // This is the last renderer in the subtree. We need to jump out of the wrapper subtree, so that
+                // the siblings are getting reparented too.
+                nextSibling = anonymousParent->nextSibling();
+            }
+            // Otherwise just move the renderer to the inline clone. Should the renderer need an anon
+            // wrapper, the addChild() will generate one for it.
+            // FIXME: When the anonymous wrapper has multiple children, we end up traversing up to the topmost wrapper
+            // every time, which is a bit wasteful.
+        }
+        rendererToMove->parent()->removeChildInternal(*rendererToMove, NotifyChildren);
+        cloneInline->addChildIgnoringContinuation(rendererToMove);
+        rendererToMove->setNeedsLayoutAndPrefWidthsRecalc();
+        rendererToMove = nextSibling;
     }
-
+    cloneInline->setContinuation(oldCont);
     // Hook |clone| up as the continuation of the middle block.
     middleBlock->setContinuation(cloneInline.get());
 
@@ -462,13 +504,12 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
 
             // Now we need to take all of the children starting from the first child
             // *after* currentChild and append them all to the clone.
-            renderer = currentChild->nextSibling();
-            while (renderer) {
-                RenderObject* tmp = renderer;
-                renderer = tmp->nextSibling();
-                currentInline.removeChildInternal(*tmp, NotifyChildren);
-                cloneInline->addChildIgnoringContinuation(tmp);
-                tmp->setNeedsLayoutAndPrefWidthsRecalc();
+            for (auto* current = currentChild->nextSibling(); current;) {
+                auto* next = current->nextSibling();
+                currentInline.removeChildInternal(*current, NotifyChildren);
+                cloneInline->addChildIgnoringContinuation(current);
+                current->setNeedsLayoutAndPrefWidthsRecalc();
+                current = next;
             }
         }
         
@@ -486,12 +527,11 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
 
     // Now take all the children after currentChild and remove them from the fromBlock
     // and put them in the toBlock.
-    renderer = currentChild->nextSibling();
-    while (renderer) {
-        RenderObject* tmp = renderer;
-        renderer = tmp->nextSibling();
-        fromBlock->removeChildInternal(*tmp, NotifyChildren);
-        toBlock->insertChildInternal(tmp, nullptr, NotifyChildren);
+    for (auto* current = currentChild->nextSibling(); current;) {
+        auto* next = current->nextSibling();
+        fromBlock->removeChildInternal(*current, NotifyChildren);
+        toBlock->insertChildInternal(current, nullptr, NotifyChildren);
+        current = next;
     }
 }
 
@@ -563,38 +603,43 @@ void RenderInline::splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox
 void RenderInline::addChildToContinuation(RenderObject* newChild, RenderObject* beforeChild)
 {
     RenderBoxModelObject* flow = continuationBefore(beforeChild);
-    ASSERT(!beforeChild || is<RenderBlock>(*beforeChild->parent()) || is<RenderInline>(*beforeChild->parent()));
-    RenderBoxModelObject* beforeChildParent = nullptr;
-    if (beforeChild)
-        beforeChildParent = downcast<RenderBoxModelObject>(beforeChild->parent());
-    else {
-        if (RenderBoxModelObject* continuation = nextContinuation(flow))
-            beforeChildParent = continuation;
-        else
-            beforeChildParent = flow;
+    // It may or may not be the direct parent of the beforeChild.
+    RenderBoxModelObject* beforeChildAncestor = nullptr;
+    // In case of anonymous wrappers, the parent of the beforeChild is mostly irrelevant. What we need is
+    // the topmost wrapper.
+    if (beforeChild && !is<RenderBlock>(beforeChild->parent()) && beforeChild->parent()->isAnonymous()) {
+        RenderElement* anonymousParent = beforeChild->parent();
+        while (anonymousParent && anonymousParent->parent() && anonymousParent->parent()->isAnonymous())
+            anonymousParent = anonymousParent->parent();
+        ASSERT(anonymousParent && anonymousParent->parent());
+        beforeChildAncestor = downcast<RenderBoxModelObject>(anonymousParent->parent());
+    } else {
+        ASSERT(!beforeChild || is<RenderBlock>(*beforeChild->parent()) || is<RenderInline>(*beforeChild->parent()));
+        if (beforeChild)
+            beforeChildAncestor = downcast<RenderBoxModelObject>(beforeChild->parent());
+        else {
+            if (RenderBoxModelObject* continuation = nextContinuation(flow))
+                beforeChildAncestor = continuation;
+            else
+                beforeChildAncestor = flow;
+        }
     }
 
     if (newChild->isFloatingOrOutOfFlowPositioned())
-        return beforeChildParent->addChildIgnoringContinuation(newChild, beforeChild);
+        return beforeChildAncestor->addChildIgnoringContinuation(newChild, beforeChild);
 
+    if (flow == beforeChildAncestor)
+        return flow->addChildIgnoringContinuation(newChild, beforeChild);
     // A continuation always consists of two potential candidates: an inline or an anonymous
     // block box holding block children.
-    bool childInline = newChild->isInline();
-    bool bcpInline = beforeChildParent->isInline();
-    bool flowInline = flow->isInline();
-
-    if (flow == beforeChildParent)
-        return flow->addChildIgnoringContinuation(newChild, beforeChild);
-    else {
-        // The goal here is to match up if we can, so that we can coalesce and create the
-        // minimal # of continuations needed for the inline.
-        if (childInline == bcpInline)
-            return beforeChildParent->addChildIgnoringContinuation(newChild, beforeChild);
-        else if (flowInline == childInline)
-            return flow->addChildIgnoringContinuation(newChild); // Just treat like an append.
-        else
-            return beforeChildParent->addChildIgnoringContinuation(newChild, beforeChild);
-    }
+    bool childInline = newChildIsInline(*newChild, *this);
+    // The goal here is to match up if we can, so that we can coalesce and create the
+    // minimal # of continuations needed for the inline.
+    if (childInline == beforeChildAncestor->isInline())
+        return beforeChildAncestor->addChildIgnoringContinuation(newChild, beforeChild);
+    if (flow->isInline() == childInline)
+        return flow->addChildIgnoringContinuation(newChild); // Just treat like an append.
+    return beforeChildAncestor->addChildIgnoringContinuation(newChild, beforeChild);
 }
 
 void RenderInline::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
@@ -1187,7 +1232,7 @@ LayoutRect RenderInline::clippedOverflowRectForRepaint(const RenderLayerModelObj
     if (containingBlock->hasOverflowClip())
         containingBlock->applyCachedClipAndScrollOffsetForRepaint(repaintRect);
 
-    containingBlock->computeRectForRepaint(repaintContainer, repaintRect);
+    repaintRect = containingBlock->computeRectForRepaint(repaintRect, repaintContainer);
 
     if (outlineSize) {
         for (auto& child : childrenOfType<RenderElement>(*this))
@@ -1210,28 +1255,29 @@ LayoutRect RenderInline::rectWithOutlineForRepaint(const RenderLayerModelObject*
     return r;
 }
 
-void RenderInline::computeRectForRepaint(const RenderLayerModelObject* repaintContainer, LayoutRect& rect, bool fixed) const
+LayoutRect RenderInline::computeRectForRepaint(const LayoutRect& rect, const RenderLayerModelObject* repaintContainer, bool fixed) const
 {
     // LayoutState is only valid for root-relative repainting
+    LayoutRect adjustedRect = rect;
     if (view().layoutStateEnabled() && !repaintContainer) {
         LayoutState* layoutState = view().layoutState();
         if (style().hasInFlowPosition() && layer())
-            rect.move(layer()->offsetForInFlowPosition());
-        rect.move(layoutState->m_paintOffset);
+            adjustedRect.move(layer()->offsetForInFlowPosition());
+        adjustedRect.move(layoutState->m_paintOffset);
         if (layoutState->m_clipped)
-            rect.intersect(layoutState->m_clipRect);
-        return;
+            adjustedRect.intersect(layoutState->m_clipRect);
+        return adjustedRect;
     }
 
     if (repaintContainer == this)
-        return;
+        return adjustedRect;
 
     bool containerSkipped;
     RenderElement* container = this->container(repaintContainer, &containerSkipped);
     if (!container)
-        return;
+        return adjustedRect;
 
-    LayoutPoint topLeft = rect.location();
+    LayoutPoint topLeft = adjustedRect.location();
 
     if (style().hasInFlowPosition() && layer()) {
         // Apply the in-flow position offset when invalidating a rectangle. The layer
@@ -1243,21 +1289,20 @@ void RenderInline::computeRectForRepaint(const RenderLayerModelObject* repaintCo
     
     // FIXME: We ignore the lightweight clipping rect that controls use, since if |o| is in mid-layout,
     // its controlClipRect will be wrong. For overflow clip we use the values cached by the layer.
-    rect.setLocation(topLeft);
+    adjustedRect.setLocation(topLeft);
     if (container->hasOverflowClip()) {
-        downcast<RenderBox>(*container).applyCachedClipAndScrollOffsetForRepaint(rect);
-        if (rect.isEmpty())
-            return;
+        downcast<RenderBox>(*container).applyCachedClipAndScrollOffsetForRepaint(adjustedRect);
+        if (adjustedRect.isEmpty())
+            return adjustedRect;
     }
 
     if (containerSkipped) {
         // If the repaintContainer is below o, then we need to map the rect into repaintContainer's coordinates.
         LayoutSize containerOffset = repaintContainer->offsetFromAncestorContainer(*container);
-        rect.move(-containerOffset);
-        return;
+        adjustedRect.move(-containerOffset);
+        return adjustedRect;
     }
-    
-    container->computeRectForRepaint(repaintContainer, rect, fixed);
+    return container->computeRectForRepaint(adjustedRect, repaintContainer, fixed);
 }
 
 LayoutSize RenderInline::offsetFromContainer(RenderElement& container, const LayoutPoint&, bool* offsetDependsOnPoint) const
@@ -1457,7 +1502,7 @@ InlineFlowBox* RenderInline::createAndAppendInlineFlowBox()
 
 LayoutUnit RenderInline::lineHeight(bool firstLine, LineDirectionMode /*direction*/, LinePositionMode /*linePositionMode*/) const
 {
-    if (firstLine && document().styleSheetCollection().usesFirstLineRules()) {
+    if (firstLine && view().usesFirstLineRules()) {
         const RenderStyle& firstLineStyle = this->firstLineStyle();
         if (&firstLineStyle != &style())
             return firstLineStyle.computedLineHeight();
@@ -1560,8 +1605,8 @@ void RenderInline::paintOutline(PaintInfo& paintInfo, const LayoutPoint& paintOf
     if (hasOutlineAnnotation() && !styleToUse.outlineStyleIsAuto() && !theme().supportsFocusRing(styleToUse))
         addPDFURLRect(paintInfo, paintOffset);
 
-    GraphicsContext* graphicsContext = paintInfo.context;
-    if (graphicsContext->paintingDisabled())
+    GraphicsContext& graphicsContext = paintInfo.context();
+    if (graphicsContext.paintingDisabled())
         return;
 
     if (styleToUse.outlineStyleIsAuto() || styleToUse.outlineStyle() == BNONE)
@@ -1581,7 +1626,7 @@ void RenderInline::paintOutline(PaintInfo& paintInfo, const LayoutPoint& paintOf
     Color outlineColor = styleToUse.visitedDependentColor(CSSPropertyOutlineColor);
     bool useTransparencyLayer = outlineColor.hasAlpha();
     if (useTransparencyLayer) {
-        graphicsContext->beginTransparencyLayer(static_cast<float>(outlineColor.alpha()) / 255);
+        graphicsContext.beginTransparencyLayer(static_cast<float>(outlineColor.alpha()) / 255);
         outlineColor = Color(outlineColor.red(), outlineColor.green(), outlineColor.blue());
     }
 
@@ -1589,20 +1634,20 @@ void RenderInline::paintOutline(PaintInfo& paintInfo, const LayoutPoint& paintOf
         paintOutlineForLine(graphicsContext, paintOffset, rects.at(i - 1), rects.at(i), rects.at(i + 1), outlineColor);
 
     if (useTransparencyLayer)
-        graphicsContext->endTransparencyLayer();
+        graphicsContext.endTransparencyLayer();
 }
 
-void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const LayoutPoint& paintOffset,
+void RenderInline::paintOutlineForLine(GraphicsContext& graphicsContext, const LayoutPoint& paintOffset,
                                        const LayoutRect& lastline, const LayoutRect& thisline, const LayoutRect& nextline,
                                        const Color outlineColor)
 {
     const RenderStyle& styleToUse = style();
-    int outlineWidth = styleToUse.outlineWidth();
+    float outlineWidth = styleToUse.outlineWidth();
     EBorderStyle outlineStyle = styleToUse.outlineStyle();
 
     bool antialias = shouldAntialiasLines(graphicsContext);
 
-    int offset = style().outlineOffset();
+    float offset = style().outlineOffset();
 
     LayoutRect box(LayoutPoint(paintOffset.x() + thisline.x() - offset, paintOffset.y() + thisline.y() - offset),
         LayoutSize(thisline.width() + offset, thisline.height() + offset));
@@ -1614,7 +1659,7 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
     IntRect pixelSnappedNextLine = snappedIntRect(paintOffset.x() + nextline.x(), 0, nextline.width(), 0);
     
     // left edge
-    drawLineForBoxSide(*graphicsContext,
+    drawLineForBoxSide(graphicsContext,
         FloatRect(FloatPoint(pixelSnappedBox.x() - outlineWidth,
         pixelSnappedBox.y() - (lastline.isEmpty() || thisline.x() < lastline.x() || (lastline.maxX() - 1) <= thisline.x() ? outlineWidth : 0)),
         FloatPoint(pixelSnappedBox.x(),
@@ -1626,7 +1671,7 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
         antialias);
     
     // right edge
-    drawLineForBoxSide(*graphicsContext,
+    drawLineForBoxSide(graphicsContext,
         FloatRect(FloatPoint(pixelSnappedBox.maxX(),
         pixelSnappedBox.y() - (lastline.isEmpty() || lastline.maxX() < thisline.maxX() || (thisline.maxX() - 1) <= lastline.x() ? outlineWidth : 0)),
         FloatPoint(pixelSnappedBox.maxX() + outlineWidth,
@@ -1638,10 +1683,10 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
         antialias);
     // upper edge
     if (thisline.x() < lastline.x())
-        drawLineForBoxSide(*graphicsContext,
+        drawLineForBoxSide(graphicsContext,
             FloatRect(FloatPoint(pixelSnappedBox.x() - outlineWidth,
             pixelSnappedBox.y() - outlineWidth),
-            FloatPoint(std::min(pixelSnappedBox.maxX() + outlineWidth, (lastline.isEmpty() ? 1000000 : pixelSnappedLastLine.x())),
+            FloatPoint(std::min<float>(pixelSnappedBox.maxX() + outlineWidth, (lastline.isEmpty() ? 1000000 : pixelSnappedLastLine.x())),
             pixelSnappedBox.y())),
             BSTop, outlineColor, outlineStyle,
             outlineWidth,
@@ -1649,8 +1694,8 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
             antialias);
     
     if (lastline.maxX() < thisline.maxX())
-        drawLineForBoxSide(*graphicsContext,
-            FloatRect(FloatPoint(std::max(lastline.isEmpty() ? -1000000 : pixelSnappedLastLine.maxX(), pixelSnappedBox.x() - outlineWidth),
+        drawLineForBoxSide(graphicsContext,
+            FloatRect(FloatPoint(std::max<float>(lastline.isEmpty() ? -1000000 : pixelSnappedLastLine.maxX(), pixelSnappedBox.x() - outlineWidth),
             pixelSnappedBox.y() - outlineWidth),
             FloatPoint(pixelSnappedBox.maxX() + outlineWidth,
             pixelSnappedBox.y())),
@@ -1659,7 +1704,7 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
             outlineWidth, antialias);
 
     if (thisline.x() == thisline.maxX())
-        drawLineForBoxSide(*graphicsContext,
+        drawLineForBoxSide(graphicsContext,
             FloatRect(FloatPoint(pixelSnappedBox.x() - outlineWidth,
             pixelSnappedBox.y() - outlineWidth),
             FloatPoint(pixelSnappedBox.maxX() + outlineWidth,
@@ -1671,10 +1716,10 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
 
     // lower edge
     if (thisline.x() < nextline.x())
-        drawLineForBoxSide(*graphicsContext,
+        drawLineForBoxSide(graphicsContext,
             FloatRect(FloatPoint(pixelSnappedBox.x() - outlineWidth,
             pixelSnappedBox.maxY()),
-            FloatPoint(std::min(pixelSnappedBox.maxX() + outlineWidth, !nextline.isEmpty() ? pixelSnappedNextLine.x() + 1 : 1000000),
+            FloatPoint(std::min<float>(pixelSnappedBox.maxX() + outlineWidth, !nextline.isEmpty() ? pixelSnappedNextLine.x() + 1 : 1000000),
             pixelSnappedBox.maxY() + outlineWidth)),
             BSBottom, outlineColor, outlineStyle,
             outlineWidth,
@@ -1682,8 +1727,8 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
             antialias);
     
     if (nextline.maxX() < thisline.maxX())
-        drawLineForBoxSide(*graphicsContext,
-            FloatRect(FloatPoint(std::max(!nextline.isEmpty() ? pixelSnappedNextLine.maxX() : -1000000, pixelSnappedBox.x() - outlineWidth),
+        drawLineForBoxSide(graphicsContext,
+            FloatRect(FloatPoint(std::max<float>(!nextline.isEmpty() ? pixelSnappedNextLine.maxX() : -1000000, pixelSnappedBox.x() - outlineWidth),
             pixelSnappedBox.maxY()),
             FloatPoint(pixelSnappedBox.maxX() + outlineWidth,
             pixelSnappedBox.maxY() + outlineWidth)),
@@ -1692,7 +1737,7 @@ void RenderInline::paintOutlineForLine(GraphicsContext* graphicsContext, const L
             outlineWidth, antialias);
 
     if (thisline.x() == thisline.maxX())
-        drawLineForBoxSide(*graphicsContext,
+        drawLineForBoxSide(graphicsContext,
             FloatRect(FloatPoint(pixelSnappedBox.x() - outlineWidth,
             pixelSnappedBox.maxY()),
             FloatPoint(pixelSnappedBox.maxX() + outlineWidth,

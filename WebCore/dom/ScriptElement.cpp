@@ -57,7 +57,6 @@ namespace WebCore {
 
 ScriptElement::ScriptElement(Element& element, bool parserInserted, bool alreadyStarted)
     : m_element(element)
-    , m_cachedScript(0)
     , m_startLineNumber(WTF::OrdinalNumber::beforeFirst())
     , m_parserInserted(parserInserted)
     , m_isExternalScript(false)
@@ -273,11 +272,13 @@ bool ScriptElement::requestScript(const String& sourceUrl)
         m_isExternalScript = true;
     }
 
-    if (m_cachedScript) {
+    if (m_cachedScript)
         return true;
-    }
 
-    dispatchErrorEvent();
+    RefPtr<Element> element = &m_element;
+    callOnMainThread([this, element] {
+        dispatchErrorEvent();
+    });
     return false;
 }
 
@@ -315,7 +316,7 @@ void ScriptElement::stopLoadRequest()
     if (m_cachedScript) {
         if (!m_willBeParserExecuted)
             m_cachedScript->removeClient(this);
-        m_cachedScript = 0;
+        m_cachedScript = nullptr;
     }
 }
 
@@ -356,7 +357,7 @@ void ScriptElement::notifyFinished(CachedResource* resource)
     else
         m_element.document().scriptRunner()->notifyScriptReady(this, ScriptRunner::ASYNC_EXECUTION);
 
-    m_cachedScript = 0;
+    m_cachedScript = nullptr;
 }
 
 bool ScriptElement::ignoresLoadRequest() const
@@ -368,12 +369,12 @@ bool ScriptElement::isScriptForEventSupported() const
 {
     String eventAttribute = eventAttributeValue();
     String forAttribute = forAttributeValue();
-    if (!eventAttribute.isEmpty() && !forAttribute.isEmpty()) {
-        forAttribute = forAttribute.stripWhiteSpace();
+    if (!eventAttribute.isNull() && !forAttribute.isNull()) {
+        forAttribute = stripLeadingAndTrailingHTMLSpaces(forAttribute);
         if (!equalIgnoringCase(forAttribute, "window"))
             return false;
 
-        eventAttribute = eventAttribute.stripWhiteSpace();
+        eventAttribute = stripLeadingAndTrailingHTMLSpaces(eventAttribute);
         if (!equalIgnoringCase(eventAttribute, "onload") && !equalIgnoringCase(eventAttribute, "onload()"))
             return false;
     }
@@ -382,7 +383,10 @@ bool ScriptElement::isScriptForEventSupported() const
 
 String ScriptElement::scriptContent() const
 {
-    return TextNodeTraversal::contentsAsString(m_element);
+    StringBuilder result;
+    for (auto* text = TextNodeTraversal::firstChild(m_element); text; text = TextNodeTraversal::nextSibling(*text))
+        result.append(text->data());
+    return result.toString();
 }
 
 ScriptElement* toScriptElementIfPossible(Element* element)

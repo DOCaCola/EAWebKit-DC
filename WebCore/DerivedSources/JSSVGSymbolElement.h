@@ -32,7 +32,7 @@ public:
     typedef JSSVGElement Base;
     static JSSVGSymbolElement* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGSymbolElement>&& impl)
     {
-        JSSVGSymbolElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSymbolElement>(globalObject->vm().heap)) JSSVGSymbolElement(structure, globalObject, WTF::move(impl));
+        JSSVGSymbolElement* ptr = new (NotNull, JSC::allocateCell<JSSVGSymbolElement>(globalObject->vm().heap)) JSSVGSymbolElement(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGSymbolElement& impl() const
+    SVGSymbolElement& wrapped() const
     {
-        return static_cast<SVGSymbolElement&>(Base::impl());
+        return static_cast<SVGSymbolElement&>(Base::wrapped());
     }
 protected:
-    JSSVGSymbolElement(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGSymbolElement>&&);
+    JSSVGSymbolElement(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGSymbolElement>&&);
 
     void finishCreation(JSC::VM& vm)
     {

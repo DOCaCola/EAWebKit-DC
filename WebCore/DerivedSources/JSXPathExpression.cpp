@@ -23,9 +23,9 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSNode.h"
 #include "JSXPathResult.h"
-#include "XPathExpression.h"
 #include "XPathResult.h"
 #include <runtime/Error.h>
 #include <wtf/GetPtr.h>
@@ -67,49 +67,23 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSXPathExpressionConstructor : public DOMConstructorObject {
-private:
-    JSXPathExpressionConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSXPathExpression> JSXPathExpressionConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSXPathExpressionConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSXPathExpressionConstructor* ptr = new (NotNull, JSC::allocateCell<JSXPathExpressionConstructor>(vm.heap)) JSXPathExpressionConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSXPathExpressionConstructor::s_info = { "XPathExpressionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionConstructor) };
-
-JSXPathExpressionConstructor::JSXPathExpressionConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSXPathExpressionConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSXPathExpressionConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSXPathExpression::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSXPathExpression::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("XPathExpression"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSXPathExpressionConstructor::s_info = { "XPathExpressionConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSXPathExpressionPrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExpressionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "evaluate", JSC::Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(jsXPathExpressionPrototypeFunctionEvaluate), (intptr_t) (0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsXPathExpressionConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "evaluate", JSC::Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(jsXPathExpressionPrototypeFunctionEvaluate), (intptr_t) (0) } },
 };
 
 const ClassInfo JSXPathExpressionPrototype::s_info = { "XPathExpressionPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpressionPrototype) };
@@ -122,9 +96,8 @@ void JSXPathExpressionPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSXPathExpression::s_info = { "XPathExpression", &Base::s_info, 0, CREATE_METHOD_TABLE(JSXPathExpression) };
 
-JSXPathExpression::JSXPathExpression(Structure* structure, JSDOMGlobalObject* globalObject, Ref<XPathExpression>&& impl)
-    : JSDOMWrapper(structure, globalObject)
-    , m_impl(&impl.leakRef())
+JSXPathExpression::JSXPathExpression(Structure* structure, JSDOMGlobalObject& globalObject, Ref<XPathExpression>&& impl)
+    : JSDOMWrapper<XPathExpression>(structure, globalObject, WTF::move(impl))
 {
 }
 
@@ -144,45 +117,40 @@ void JSXPathExpression::destroy(JSC::JSCell* cell)
     thisObject->JSXPathExpression::~JSXPathExpression();
 }
 
-JSXPathExpression::~JSXPathExpression()
-{
-    releaseImpl();
-}
-
-EncodedJSValue jsXPathExpressionConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsXPathExpressionConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSXPathExpressionPrototype* domObject = jsDynamicCast<JSXPathExpressionPrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSXPathExpression::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSXPathExpression::getConstructor(state->vm(), domObject->globalObject()));
 }
 
 JSValue JSXPathExpression::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSXPathExpressionConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSXPathExpressionConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
-EncodedJSValue JSC_HOST_CALL jsXPathExpressionPrototypeFunctionEvaluate(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL jsXPathExpressionPrototypeFunctionEvaluate(ExecState* state)
 {
-    JSValue thisValue = exec->thisValue();
+    JSValue thisValue = state->thisValue();
     JSXPathExpression* castedThis = jsDynamicCast<JSXPathExpression*>(thisValue);
     if (UNLIKELY(!castedThis))
-        return throwThisTypeError(*exec, "XPathExpression", "evaluate");
+        return throwThisTypeError(*state, "XPathExpression", "evaluate");
     ASSERT_GC_OBJECT_INHERITS(castedThis, JSXPathExpression::info());
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     ExceptionCode ec = 0;
-    Node* contextNode = JSNode::toWrapped(exec->argument(0));
-    if (UNLIKELY(exec->hadException()))
+    Node* contextNode = JSNode::toWrapped(state->argument(0));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    uint16_t type = toUInt16(exec, exec->argument(1), NormalConversion);
-    if (UNLIKELY(exec->hadException()))
+    uint16_t type = toUInt16(state, state->argument(1), NormalConversion);
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    XPathResult* inResult = JSXPathResult::toWrapped(exec->argument(2));
-    if (UNLIKELY(exec->hadException()))
+    XPathResult* inResult = JSXPathResult::toWrapped(state->argument(2));
+    if (UNLIKELY(state->hadException()))
         return JSValue::encode(jsUndefined());
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.evaluate(contextNode, type, inResult, ec)));
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.evaluate(contextNode, type, inResult, ec)));
 
-    setDOMException(exec, ec);
+    setDOMException(state, ec);
     return JSValue::encode(result);
 }
 
@@ -197,7 +165,14 @@ void JSXPathExpressionOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* co
 {
     auto* jsXPathExpression = jsCast<JSXPathExpression*>(handle.slot()->asCell());
     auto& world = *static_cast<DOMWrapperWorld*>(context);
-    uncacheWrapper(world, &jsXPathExpression->impl(), jsXPathExpression);
+    uncacheWrapper(world, &jsXPathExpression->wrapped(), jsXPathExpression);
+}
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathExpression* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSXPathExpression>(globalObject, impl);
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathExpression* impl)
@@ -219,7 +194,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, XPathExpress
 XPathExpression* JSXPathExpression::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSXPathExpression*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 

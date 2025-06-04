@@ -29,12 +29,12 @@
 
 namespace WebCore {
 
-class JSIDBCursor : public JSDOMWrapper {
+class JSIDBCursor : public JSDOMWrapper<IDBCursor> {
 public:
-    typedef JSDOMWrapper Base;
+    typedef JSDOMWrapper<IDBCursor> Base;
     static JSIDBCursor* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<IDBCursor>&& impl)
     {
-        JSIDBCursor* ptr = new (NotNull, JSC::allocateCell<JSIDBCursor>(globalObject->vm().heap)) JSIDBCursor(structure, globalObject, WTF::move(impl));
+        JSIDBCursor* ptr = new (NotNull, JSC::allocateCell<JSIDBCursor>(globalObject->vm().heap)) JSIDBCursor(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -43,7 +43,6 @@ public:
     static JSC::JSObject* getPrototype(JSC::VM&, JSC::JSGlobalObject*);
     static IDBCursor* toWrapped(JSC::JSValue);
     static void destroy(JSC::JSCell*);
-    ~JSIDBCursor();
 
     DECLARE_INFO;
 
@@ -53,13 +52,8 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    IDBCursor& impl() const { return *m_impl; }
-    void releaseImpl() { std::exchange(m_impl, nullptr)->deref(); }
-
-private:
-    IDBCursor* m_impl;
 protected:
-    JSIDBCursor(JSC::Structure*, JSDOMGlobalObject*, Ref<IDBCursor>&&);
+    JSIDBCursor(JSC::Structure*, JSDOMGlobalObject&, Ref<IDBCursor>&&);
 
     void finishCreation(JSC::VM& vm)
     {
@@ -82,7 +76,8 @@ inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld&, IDBCursor*)
 }
 
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject*, IDBCursor*);
-inline JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, IDBCursor& impl) { return toJS(exec, globalObject, &impl); }
+inline JSC::JSValue toJS(JSC::ExecState* state, JSDOMGlobalObject* globalObject, IDBCursor& impl) { return toJS(state, globalObject, &impl); }
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject*, IDBCursor*);
 
 
 } // namespace WebCore

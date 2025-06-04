@@ -24,7 +24,6 @@
 
 #include "JSCSSFontFaceLoadEvent.h"
 
-#include "CSSFontFaceLoadEvent.h"
 #include "CSSFontFaceRule.h"
 #include "DOMError.h"
 #include "JSCSSFontFaceRule.h"
@@ -70,8 +69,8 @@ private:
 
 static const HashTableValue JSCSSFontFaceLoadEventPrototypeTableValues[] =
 {
-    { "fontface", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventFontface), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "error", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "fontface", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventFontface), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "error", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsCSSFontFaceLoadEventError), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSCSSFontFaceLoadEventPrototype::s_info = { "CSSFontFaceLoadEventPrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceLoadEventPrototype) };
@@ -84,7 +83,7 @@ void JSCSSFontFaceLoadEventPrototype::finishCreation(VM& vm)
 
 const ClassInfo JSCSSFontFaceLoadEvent::s_info = { "CSSFontFaceLoadEvent", &Base::s_info, 0, CREATE_METHOD_TABLE(JSCSSFontFaceLoadEvent) };
 
-JSCSSFontFaceLoadEvent::JSCSSFontFaceLoadEvent(Structure* structure, JSDOMGlobalObject* globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
+JSCSSFontFaceLoadEvent::JSCSSFontFaceLoadEvent(Structure* structure, JSDOMGlobalObject& globalObject, Ref<CSSFontFaceLoadEvent>&& impl)
     : JSEvent(structure, globalObject, WTF::move(impl))
 {
 }
@@ -99,36 +98,36 @@ JSObject* JSCSSFontFaceLoadEvent::getPrototype(VM& vm, JSGlobalObject* globalObj
     return getDOMPrototype<JSCSSFontFaceLoadEvent>(vm, globalObject);
 }
 
-EncodedJSValue jsCSSFontFaceLoadEventFontface(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSFontFaceLoadEventFontface(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSFontFaceLoadEvent* castedThis = jsDynamicCast<JSCSSFontFaceLoadEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSFontFaceLoadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSFontFaceLoadEvent", "fontface");
-        return throwGetterTypeError(*exec, "CSSFontFaceLoadEvent", "fontface");
+            return reportDeprecatedGetterError(*state, "CSSFontFaceLoadEvent", "fontface");
+        return throwGetterTypeError(*state, "CSSFontFaceLoadEvent", "fontface");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.fontface()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.fontface()));
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsCSSFontFaceLoadEventError(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsCSSFontFaceLoadEventError(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSCSSFontFaceLoadEvent* castedThis = jsDynamicCast<JSCSSFontFaceLoadEvent*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSCSSFontFaceLoadEventPrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "CSSFontFaceLoadEvent", "error");
-        return throwGetterTypeError(*exec, "CSSFontFaceLoadEvent", "error");
+            return reportDeprecatedGetterError(*state, "CSSFontFaceLoadEvent", "error");
+        return throwGetterTypeError(*state, "CSSFontFaceLoadEvent", "error");
     }
-    auto& impl = castedThis->impl();
-    JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl.error()));
+    auto& impl = castedThis->wrapped();
+    JSValue result = toJS(state, castedThis->globalObject(), WTF::getPtr(impl.error()));
     return JSValue::encode(result);
 }
 

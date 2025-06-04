@@ -32,7 +32,7 @@ public:
     typedef JSSVGColor Base;
     static JSSVGPaint* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, Ref<SVGPaint>&& impl)
     {
-        JSSVGPaint* ptr = new (NotNull, JSC::allocateCell<JSSVGPaint>(globalObject->vm().heap)) JSSVGPaint(structure, globalObject, WTF::move(impl));
+        JSSVGPaint* ptr = new (NotNull, JSC::allocateCell<JSSVGPaint>(globalObject->vm().heap)) JSSVGPaint(structure, *globalObject, WTF::move(impl));
         ptr->finishCreation(globalObject->vm());
         return ptr;
     }
@@ -48,12 +48,12 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::VM&, JSC::JSGlobalObject*);
-    SVGPaint& impl() const
+    SVGPaint& wrapped() const
     {
-        return static_cast<SVGPaint&>(Base::impl());
+        return static_cast<SVGPaint&>(Base::wrapped());
     }
 protected:
-    JSSVGPaint(JSC::Structure*, JSDOMGlobalObject*, Ref<SVGPaint>&&);
+    JSSVGPaint(JSC::Structure*, JSDOMGlobalObject&, Ref<SVGPaint>&&);
 
     void finishCreation(JSC::VM& vm)
     {

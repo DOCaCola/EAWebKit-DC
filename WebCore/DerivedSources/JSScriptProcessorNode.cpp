@@ -25,8 +25,8 @@
 #include "JSScriptProcessorNode.h"
 
 #include "JSDOMBinding.h"
+#include "JSDOMConstructor.h"
 #include "JSEventListener.h"
-#include "ScriptProcessorNode.h"
 #include <wtf/GetPtr.h>
 
 using namespace JSC;
@@ -65,50 +65,24 @@ private:
     void finishCreation(JSC::VM&);
 };
 
-class JSScriptProcessorNodeConstructor : public DOMConstructorObject {
-private:
-    JSScriptProcessorNodeConstructor(JSC::Structure*, JSDOMGlobalObject*);
-    void finishCreation(JSC::VM&, JSDOMGlobalObject*);
+typedef JSDOMConstructorNotConstructable<JSScriptProcessorNode> JSScriptProcessorNodeConstructor;
 
-public:
-    typedef DOMConstructorObject Base;
-    static JSScriptProcessorNodeConstructor* create(JSC::VM& vm, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
-    {
-        JSScriptProcessorNodeConstructor* ptr = new (NotNull, JSC::allocateCell<JSScriptProcessorNodeConstructor>(vm.heap)) JSScriptProcessorNodeConstructor(structure, globalObject);
-        ptr->finishCreation(vm, globalObject);
-        return ptr;
-    }
-
-    DECLARE_INFO;
-    static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
-    {
-        return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::ObjectType, StructureFlags), info());
-    }
-};
-
-const ClassInfo JSScriptProcessorNodeConstructor::s_info = { "ScriptProcessorNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProcessorNodeConstructor) };
-
-JSScriptProcessorNodeConstructor::JSScriptProcessorNodeConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-    : DOMConstructorObject(structure, globalObject)
+template<> void JSScriptProcessorNodeConstructor::initializeProperties(VM& vm, JSDOMGlobalObject& globalObject)
 {
-}
-
-void JSScriptProcessorNodeConstructor::finishCreation(VM& vm, JSDOMGlobalObject* globalObject)
-{
-    Base::finishCreation(vm);
-    ASSERT(inherits(info()));
-    putDirect(vm, vm.propertyNames->prototype, JSScriptProcessorNode::getPrototype(vm, globalObject), DontDelete | ReadOnly | DontEnum);
+    putDirect(vm, vm.propertyNames->prototype, JSScriptProcessorNode::getPrototype(vm, &globalObject), DontDelete | ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("ScriptProcessorNode"))), ReadOnly | DontEnum);
     putDirect(vm, vm.propertyNames->length, jsNumber(0), ReadOnly | DontEnum);
 }
+
+template<> const ClassInfo JSScriptProcessorNodeConstructor::s_info = { "ScriptProcessorNodeConstructor", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProcessorNodeConstructor) };
 
 /* Hash table for prototype */
 
 static const HashTableValue JSScriptProcessorNodePrototypeTableValues[] =
 {
-    { "constructor", DontEnum | ReadOnly, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
-    { "onaudioprocess", DontDelete | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeOnaudioprocess), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSScriptProcessorNodeOnaudioprocess) },
-    { "bufferSize", DontDelete | ReadOnly | CustomAccessor, NoIntrinsic, (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeBufferSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) },
+    { "constructor", DontEnum | ReadOnly, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeConstructor), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
+    { "onaudioprocess", CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeOnaudioprocess), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(setJSScriptProcessorNodeOnaudioprocess) } },
+    { "bufferSize", ReadOnly | CustomAccessor, NoIntrinsic, { (intptr_t)static_cast<PropertySlot::GetValueFunc>(jsScriptProcessorNodeBufferSize), (intptr_t) static_cast<PutPropertySlot::PutValueFunc>(0) } },
 };
 
 const ClassInfo JSScriptProcessorNodePrototype::s_info = { "ScriptProcessorNodePrototype", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProcessorNodePrototype) };
@@ -121,7 +95,7 @@ void JSScriptProcessorNodePrototype::finishCreation(VM& vm)
 
 const ClassInfo JSScriptProcessorNode::s_info = { "ScriptProcessorNode", &Base::s_info, 0, CREATE_METHOD_TABLE(JSScriptProcessorNode) };
 
-JSScriptProcessorNode::JSScriptProcessorNode(Structure* structure, JSDOMGlobalObject* globalObject, Ref<ScriptProcessorNode>&& impl)
+JSScriptProcessorNode::JSScriptProcessorNode(Structure* structure, JSDOMGlobalObject& globalObject, Ref<ScriptProcessorNode>&& impl)
     : JSAudioNode(structure, globalObject, WTF::move(impl))
 {
 }
@@ -136,66 +110,66 @@ JSObject* JSScriptProcessorNode::getPrototype(VM& vm, JSGlobalObject* globalObje
     return getDOMPrototype<JSScriptProcessorNode>(vm, globalObject);
 }
 
-EncodedJSValue jsScriptProcessorNodeOnaudioprocess(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProcessorNodeOnaudioprocess(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProcessorNode* castedThis = jsDynamicCast<JSScriptProcessorNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProcessorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProcessorNode", "onaudioprocess");
-        return throwGetterTypeError(*exec, "ScriptProcessorNode", "onaudioprocess");
+            return reportDeprecatedGetterError(*state, "ScriptProcessorNode", "onaudioprocess");
+        return throwGetterTypeError(*state, "ScriptProcessorNode", "onaudioprocess");
     }
-    UNUSED_PARAM(exec);
-    return JSValue::encode(eventHandlerAttribute(castedThis->impl(), eventNames().audioprocessEvent));
+    UNUSED_PARAM(state);
+    return JSValue::encode(eventHandlerAttribute(castedThis->wrapped(), eventNames().audioprocessEvent));
 }
 
 
-EncodedJSValue jsScriptProcessorNodeBufferSize(ExecState* exec, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
+EncodedJSValue jsScriptProcessorNodeBufferSize(ExecState* state, JSObject* slotBase, EncodedJSValue thisValue, PropertyName)
 {
-    UNUSED_PARAM(exec);
+    UNUSED_PARAM(state);
     UNUSED_PARAM(slotBase);
     UNUSED_PARAM(thisValue);
     JSScriptProcessorNode* castedThis = jsDynamicCast<JSScriptProcessorNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProcessorNodePrototype*>(slotBase))
-            return reportDeprecatedGetterError(*exec, "ScriptProcessorNode", "bufferSize");
-        return throwGetterTypeError(*exec, "ScriptProcessorNode", "bufferSize");
+            return reportDeprecatedGetterError(*state, "ScriptProcessorNode", "bufferSize");
+        return throwGetterTypeError(*state, "ScriptProcessorNode", "bufferSize");
     }
-    auto& impl = castedThis->impl();
+    auto& impl = castedThis->wrapped();
     JSValue result = jsNumber(impl.bufferSize());
     return JSValue::encode(result);
 }
 
 
-EncodedJSValue jsScriptProcessorNodeConstructor(ExecState* exec, JSObject* baseValue, EncodedJSValue, PropertyName)
+EncodedJSValue jsScriptProcessorNodeConstructor(ExecState* state, JSObject* baseValue, EncodedJSValue, PropertyName)
 {
     JSScriptProcessorNodePrototype* domObject = jsDynamicCast<JSScriptProcessorNodePrototype*>(baseValue);
     if (!domObject)
-        return throwVMTypeError(exec);
-    return JSValue::encode(JSScriptProcessorNode::getConstructor(exec->vm(), domObject->globalObject()));
+        return throwVMTypeError(state);
+    return JSValue::encode(JSScriptProcessorNode::getConstructor(state->vm(), domObject->globalObject()));
 }
 
-void setJSScriptProcessorNodeOnaudioprocess(ExecState* exec, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
+void setJSScriptProcessorNodeOnaudioprocess(ExecState* state, JSObject* baseObject, EncodedJSValue thisValue, EncodedJSValue encodedValue)
 {
     JSValue value = JSValue::decode(encodedValue);
     UNUSED_PARAM(baseObject);
     JSScriptProcessorNode* castedThis = jsDynamicCast<JSScriptProcessorNode*>(JSValue::decode(thisValue));
     if (UNLIKELY(!castedThis)) {
         if (jsDynamicCast<JSScriptProcessorNodePrototype*>(JSValue::decode(thisValue)))
-            reportDeprecatedSetterError(*exec, "ScriptProcessorNode", "onaudioprocess");
+            reportDeprecatedSetterError(*state, "ScriptProcessorNode", "onaudioprocess");
         else
-            throwSetterTypeError(*exec, "ScriptProcessorNode", "onaudioprocess");
+            throwSetterTypeError(*state, "ScriptProcessorNode", "onaudioprocess");
         return;
     }
-    setEventHandlerAttribute(*exec, *castedThis, castedThis->impl(), eventNames().audioprocessEvent, value);
+    setEventHandlerAttribute(*state, *castedThis, castedThis->wrapped(), eventNames().audioprocessEvent, value);
 }
 
 
 JSValue JSScriptProcessorNode::getConstructor(VM& vm, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSScriptProcessorNodeConstructor>(vm, jsCast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSScriptProcessorNodeConstructor>(vm, *jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 #if ENABLE(BINDING_INTEGRITY)
@@ -206,6 +180,14 @@ extern "C" { extern void (*const __identifier("??_7ScriptProcessorNode@WebCore@@
 extern "C" { extern void* _ZTVN7WebCore19ScriptProcessorNodeE[]; }
 #endif
 #endif
+
+JSC::JSValue toJSNewlyCreated(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProcessorNode* impl)
+{
+    if (!impl)
+        return jsNull();
+    return createNewWrapper<JSScriptProcessorNode>(globalObject, impl);
+}
+
 JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProcessorNode* impl)
 {
     if (!impl)
@@ -237,7 +219,7 @@ JSC::JSValue toJS(JSC::ExecState*, JSDOMGlobalObject* globalObject, ScriptProces
 ScriptProcessorNode* JSScriptProcessorNode::toWrapped(JSC::JSValue value)
 {
     if (auto* wrapper = jsDynamicCast<JSScriptProcessorNode*>(value))
-        return &wrapper->impl();
+        return &wrapper->wrapped();
     return nullptr;
 }
 
