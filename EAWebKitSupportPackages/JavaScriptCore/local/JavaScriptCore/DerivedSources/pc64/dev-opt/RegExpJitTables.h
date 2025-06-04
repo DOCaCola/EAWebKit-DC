@@ -2631,7 +2631,7 @@ std::unique_ptr<CharacterClass> digitsCreate()
 {
     auto characterClass = std::make_unique<CharacterClass>();
     characterClass->m_ranges.append(CharacterRange(0x30, 0x39));
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> nondigitsCreate()
@@ -2640,7 +2640,7 @@ std::unique_ptr<CharacterClass> nondigitsCreate()
     characterClass->m_ranges.append(CharacterRange(0x00, 0x2f));
     characterClass->m_ranges.append(CharacterRange(0x3a, 0x7f));
     characterClass->m_rangesUnicode.append(CharacterRange(0x0080, 0xffff));
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> newlineCreate()
@@ -2650,7 +2650,7 @@ std::unique_ptr<CharacterClass> newlineCreate()
     characterClass->m_matches.append(0x0d);
     characterClass->m_matchesUnicode.append(0x2028);
     characterClass->m_matchesUnicode.append(0x2029);
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> spacesCreate()
@@ -2668,7 +2668,7 @@ std::unique_ptr<CharacterClass> spacesCreate()
     characterClass->m_matchesUnicode.append(0x205f);
     characterClass->m_matchesUnicode.append(0x3000);
     characterClass->m_matchesUnicode.append(0xfeff);
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> nonspacesCreate()
@@ -2687,7 +2687,7 @@ std::unique_ptr<CharacterClass> nonspacesCreate()
     characterClass->m_rangesUnicode.append(CharacterRange(0x2060, 0x2fff));
     characterClass->m_rangesUnicode.append(CharacterRange(0x3001, 0xfefe));
     characterClass->m_rangesUnicode.append(CharacterRange(0xff00, 0xffff));
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> nonwordcharCreate()
@@ -2699,7 +2699,7 @@ std::unique_ptr<CharacterClass> nonwordcharCreate()
     characterClass->m_matches.append(0x60);
     characterClass->m_ranges.append(CharacterRange(0x7b, 0x7f));
     characterClass->m_rangesUnicode.append(CharacterRange(0x0080, 0xffff));
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 std::unique_ptr<CharacterClass> wordcharCreate()
@@ -2709,7 +2709,7 @@ std::unique_ptr<CharacterClass> wordcharCreate()
     characterClass->m_ranges.append(CharacterRange(0x41, 0x5a));
     characterClass->m_matches.append(0x5f);
     characterClass->m_ranges.append(CharacterRange(0x61, 0x7a));
-    return WTF::move(characterClass);
+    return characterClass;
 }
 
 

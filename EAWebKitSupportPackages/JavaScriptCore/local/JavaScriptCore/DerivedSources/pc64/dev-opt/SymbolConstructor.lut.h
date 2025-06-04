@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/SymbolConstructor.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/SymbolConstructor.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -13,20 +11,12 @@ static const struct CompactHashIndex symbolConstructorTableIndex[4] = {
     { 1, -1 },
 };
 
-
 static const struct HashTableValue symbolConstructorTableValues[2] = {
- #if JSC_BUILTIN_EXISTS(SYMBOLCONSTRUCTORFOR)
-   { "for", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(symbolConstructorForCodeGenerator), (intptr_t)1 },
- #else
-   { "for", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(symbolConstructorFor), (intptr_t)(1) },
- #endif
- #if JSC_BUILTIN_EXISTS(SYMBOLCONSTRUCTORKEYFOR)
-   { "keyFor", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(symbolConstructorKeyForCodeGenerator), (intptr_t)1 },
- #else
-   { "keyFor", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(symbolConstructorKeyFor), (intptr_t)(1) },
- #endif
+   { "for", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(symbolConstructorFor), (intptr_t)(1) } },
+   { "keyFor", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(symbolConstructorKeyFor), (intptr_t)(1) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable symbolConstructorTable =
-    { 2, 3, false, symbolConstructorTableValues, 0, symbolConstructorTableIndex };
-} // namespace
+static const struct HashTable symbolConstructorTable =
+    { 2, 3, false, symbolConstructorTableValues, symbolConstructorTableIndex };
+
+} // namespace JSC

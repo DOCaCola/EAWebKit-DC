@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/IntlDateTimeFormatPrototype.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/IntlDateTimeFormatPrototype.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -13,16 +11,12 @@ static const struct CompactHashIndex dateTimeFormatPrototypeTableIndex[4] = {
     { 1, -1 },
 };
 
-
 static const struct HashTableValue dateTimeFormatPrototypeTableValues[2] = {
-   { "format", DontEnum|Accessor, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatPrototypeGetterFormat), (intptr_t)static_cast<NativeFunction>(nullptr) },
- #if JSC_BUILTIN_EXISTS(DATETIMEFORMATPROTOTYPERESOLVEDOPTIONS)
-   { "resolvedOptions", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(dateTimeFormatPrototypeResolvedOptionsCodeGenerator), (intptr_t)0 },
- #else
-   { "resolvedOptions", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatPrototypeFuncResolvedOptions), (intptr_t)(0) },
- #endif
+   { "format", DontEnum|Accessor, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatPrototypeGetterFormat), (intptr_t)static_cast<NativeFunction>(nullptr) } },
+   { "resolvedOptions", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatPrototypeFuncResolvedOptions), (intptr_t)(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable dateTimeFormatPrototypeTable =
-    { 2, 3, true, dateTimeFormatPrototypeTableValues, 0, dateTimeFormatPrototypeTableIndex };
-} // namespace
+static const struct HashTable dateTimeFormatPrototypeTable =
+    { 2, 3, true, dateTimeFormatPrototypeTableValues, dateTimeFormatPrototypeTableIndex };
+
+} // namespace JSC

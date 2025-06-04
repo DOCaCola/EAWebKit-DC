@@ -1,7 +1,6 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/InspectorInstrumentationObject.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/InspectorInstrumentationObject.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "JSCBuiltins.h"
-
 #include "Lookup.h"
 
 namespace JSC {
@@ -18,25 +17,13 @@ static const struct CompactHashIndex inspectorInstrumentationObjectTableIndex[9]
     { 2, -1 },
 };
 
-
 static const struct HashTableValue inspectorInstrumentationObjectTableValues[3] = {
- #if JSC_BUILTIN_EXISTS(INSPECTORINSTRUMENTATIONOBJECTLOG)
-   { "log", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(inspectorInstrumentationObjectLogCodeGenerator), (intptr_t)1 },
- #else
-   { "log", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(inspectorInstrumentationObjectLog), (intptr_t)(1) },
- #endif
- #if JSC_BUILTIN_EXISTS(INSPECTORINSTRUMENTATIONOBJECTPROMISEFULFILLED)
-   { "promiseFulfilled", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(inspectorInstrumentationObjectPromiseFulfilledCodeGenerator), (intptr_t)3 },
- #else
-   { "promiseFulfilled", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(inspectorInstrumentationObjectPromiseFulfilled), (intptr_t)(3) },
- #endif
- #if JSC_BUILTIN_EXISTS(INSPECTORINSTRUMENTATIONOBJECTPROMISEREJECTED)
-   { "promiseRejected", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(inspectorInstrumentationObjectPromiseRejectedCodeGenerator), (intptr_t)3 },
- #else
-   { "promiseRejected", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(inspectorInstrumentationObjectPromiseRejected), (intptr_t)(3) },
- #endif
+   { "log", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(inspectorInstrumentationObjectLog), (intptr_t)(1) } },
+   { "promiseFulfilled", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(inspectorInstrumentationObjectPromiseFulfilledCodeGenerator), (intptr_t)3 } },
+   { "promiseRejected", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, { (intptr_t)static_cast<BuiltinGenerator>(inspectorInstrumentationObjectPromiseRejectedCodeGenerator), (intptr_t)3 } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable inspectorInstrumentationObjectTable =
-    { 3, 7, false, inspectorInstrumentationObjectTableValues, 0, inspectorInstrumentationObjectTableIndex };
-} // namespace
+static const struct HashTable inspectorInstrumentationObjectTable =
+    { 3, 7, false, inspectorInstrumentationObjectTableValues, inspectorInstrumentationObjectTableIndex };
+
+} // namespace JSC

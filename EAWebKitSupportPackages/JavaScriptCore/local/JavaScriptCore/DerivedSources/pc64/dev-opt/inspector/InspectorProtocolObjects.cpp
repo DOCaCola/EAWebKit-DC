@@ -89,6 +89,11 @@ static const char* const enum_constant_values[] = {
     "true",
     "false",
     "mixed",
+    "page",
+    "step",
+    "location",
+    "date",
+    "time",
     "grammar",
     "spelling",
     "assertive",
@@ -101,11 +106,14 @@ static const char* const enum_constant_values[] = {
     "sound",
     "probe",
     "global",
-    "local",
     "with",
     "closure",
     "catch",
     "functionName",
+    "globalLexicalEnvironment",
+    "nestedLexical",
+    "full",
+    "partial",
     "Document",
     "Stylesheet",
     "Image",
@@ -129,7 +137,6 @@ static const char* const enum_constant_values[] = {
     "null",
     "node",
     "regexp",
-    "date",
     "map",
     "set",
     "weakmap",
@@ -141,6 +148,8 @@ static const char* const enum_constant_values[] = {
     "irrecoverable",
     "unterminated-literal",
     "recoverable",
+    "API",
+    "Microtask",
     "EventDispatch",
     "ScheduleStyleRecalculation",
     "RecalculateStyles",
@@ -149,30 +158,19 @@ static const char* const enum_constant_values[] = {
     "Paint",
     "Composite",
     "RenderingFrame",
-    "ScrollLayer",
-    "ParseHTML",
     "TimerInstall",
     "TimerRemove",
     "TimerFire",
     "EvaluateScript",
-    "MarkLoad",
-    "MarkDOMContent",
     "TimeStamp",
     "Time",
     "TimeEnd",
-    "XHRReadyStateChange",
-    "XHRLoad",
     "FunctionCall",
     "ProbeSample",
     "ConsoleProfile",
-    "GCEvent",
     "RequestAnimationFrame",
     "CancelAnimationFrame",
     "FireAnimationFrame",
-    "WebSocketCreate",
-    "WebSocketSendHandshakeRequest",
-    "WebSocketReceiveHandshakeResponse",
-    "WebSocketDestroy",
     "DOM",
     "EventListener",
     "exception",
@@ -362,7 +360,7 @@ void BindingTraits<Inspector::Protocol::Debugger::Scope::Type>::assertValueHasEx
     String result;
     bool castSucceeded = value->asString(result);
     ASSERT(castSucceeded);
-    ASSERT(result == "global" || result == "local" || result == "with" || result == "closure" || result == "catch" || result == "functionName");
+    ASSERT(result == "global" || result == "with" || result == "closure" || result == "catch" || result == "functionName" || result == "globalLexicalEnvironment" || result == "nestedLexical");
 }
 #endif // !ASSERT_DISABLED
 
@@ -871,7 +869,7 @@ void BindingTraits<Inspector::Protocol::Timeline::EventType>::assertValueHasExpe
     String result;
     bool castSucceeded = value->asString(result);
     ASSERT(castSucceeded);
-    ASSERT(result == "EventDispatch" || result == "ScheduleStyleRecalculation" || result == "RecalculateStyles" || result == "InvalidateLayout" || result == "Layout" || result == "Paint" || result == "Composite" || result == "RenderingFrame" || result == "ScrollLayer" || result == "ParseHTML" || result == "TimerInstall" || result == "TimerRemove" || result == "TimerFire" || result == "EvaluateScript" || result == "MarkLoad" || result == "MarkDOMContent" || result == "TimeStamp" || result == "Time" || result == "TimeEnd" || result == "XHRReadyStateChange" || result == "XHRLoad" || result == "FunctionCall" || result == "ProbeSample" || result == "ConsoleProfile" || result == "GCEvent" || result == "RequestAnimationFrame" || result == "CancelAnimationFrame" || result == "FireAnimationFrame" || result == "WebSocketCreate" || result == "WebSocketSendHandshakeRequest" || result == "WebSocketReceiveHandshakeResponse" || result == "WebSocketDestroy");
+    ASSERT(result == "EventDispatch" || result == "ScheduleStyleRecalculation" || result == "RecalculateStyles" || result == "InvalidateLayout" || result == "Layout" || result == "Paint" || result == "Composite" || result == "RenderingFrame" || result == "TimerInstall" || result == "TimerRemove" || result == "TimerFire" || result == "EvaluateScript" || result == "TimeStamp" || result == "Time" || result == "TimeEnd" || result == "FunctionCall" || result == "ProbeSample" || result == "ConsoleProfile" || result == "RequestAnimationFrame" || result == "CancelAnimationFrame" || result == "FireAnimationFrame");
 }
 #endif // !ASSERT_DISABLED
 

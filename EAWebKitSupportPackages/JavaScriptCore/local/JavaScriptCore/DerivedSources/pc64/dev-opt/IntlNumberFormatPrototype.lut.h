@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/IntlNumberFormatPrototype.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/IntlNumberFormatPrototype.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -13,16 +11,12 @@ static const struct CompactHashIndex numberFormatPrototypeTableIndex[4] = {
     { 1, -1 },
 };
 
-
 static const struct HashTableValue numberFormatPrototypeTableValues[2] = {
-   { "format", DontEnum|Accessor, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(IntlNumberFormatPrototypeGetterFormat), (intptr_t)static_cast<NativeFunction>(nullptr) },
- #if JSC_BUILTIN_EXISTS(NUMBERFORMATPROTOTYPERESOLVEDOPTIONS)
-   { "resolvedOptions", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(numberFormatPrototypeResolvedOptionsCodeGenerator), (intptr_t)0 },
- #else
-   { "resolvedOptions", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(IntlNumberFormatPrototypeFuncResolvedOptions), (intptr_t)(0) },
- #endif
+   { "format", DontEnum|Accessor, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(IntlNumberFormatPrototypeGetterFormat), (intptr_t)static_cast<NativeFunction>(nullptr) } },
+   { "resolvedOptions", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(IntlNumberFormatPrototypeFuncResolvedOptions), (intptr_t)(0) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable numberFormatPrototypeTable =
-    { 2, 3, true, numberFormatPrototypeTableValues, 0, numberFormatPrototypeTableIndex };
-} // namespace
+static const struct HashTable numberFormatPrototypeTable =
+    { 2, 3, true, numberFormatPrototypeTableValues, numberFormatPrototypeTableIndex };
+
+} // namespace JSC

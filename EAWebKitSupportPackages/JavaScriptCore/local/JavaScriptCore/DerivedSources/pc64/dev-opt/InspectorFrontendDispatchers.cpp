@@ -31,6 +31,7 @@
 #include "config.h"
 #include "InspectorFrontendDispatchers.h"
 
+#include "InspectorFrontendRouter.h"
 #include <wtf/text/CString.h>
 
 namespace Inspector {
@@ -45,7 +46,7 @@ void ApplicationCacheFrontendDispatcher::applicationCacheStatusUpdated(const Ins
     paramsObject->setInteger(ASCIILiteral("status"), status);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void ApplicationCacheFrontendDispatcher::networkStateUpdated(bool isNowOnline)
@@ -56,7 +57,7 @@ void ApplicationCacheFrontendDispatcher::networkStateUpdated(bool isNowOnline)
     paramsObject->setBoolean(ASCIILiteral("isNowOnline"), isNowOnline);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::mediaQueryResultChanged()
@@ -64,7 +65,7 @@ void CSSFrontendDispatcher::mediaQueryResultChanged()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("CSS.mediaQueryResultChanged"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::styleSheetChanged(const Inspector::Protocol::CSS::StyleSheetId& styleSheetId)
@@ -75,7 +76,29 @@ void CSSFrontendDispatcher::styleSheetChanged(const Inspector::Protocol::CSS::St
     paramsObject->setString(ASCIILiteral("styleSheetId"), styleSheetId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void CSSFrontendDispatcher::styleSheetAdded(RefPtr<Inspector::Protocol::CSS::CSSStyleSheetHeader> header)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("CSS.styleSheetAdded"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    paramsObject->setObject(ASCIILiteral("header"), header);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void CSSFrontendDispatcher::styleSheetRemoved(const Inspector::Protocol::CSS::StyleSheetId& styleSheetId)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("CSS.styleSheetRemoved"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    paramsObject->setString(ASCIILiteral("styleSheetId"), styleSheetId);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::namedFlowCreated(RefPtr<Inspector::Protocol::CSS::NamedFlow> namedFlow)
@@ -86,7 +109,7 @@ void CSSFrontendDispatcher::namedFlowCreated(RefPtr<Inspector::Protocol::CSS::Na
     paramsObject->setObject(ASCIILiteral("namedFlow"), namedFlow);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::namedFlowRemoved(int documentNodeId, const String& flowName)
@@ -98,7 +121,7 @@ void CSSFrontendDispatcher::namedFlowRemoved(int documentNodeId, const String& f
     paramsObject->setString(ASCIILiteral("flowName"), flowName);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::regionOversetChanged(RefPtr<Inspector::Protocol::CSS::NamedFlow> namedFlow)
@@ -109,7 +132,7 @@ void CSSFrontendDispatcher::regionOversetChanged(RefPtr<Inspector::Protocol::CSS
     paramsObject->setObject(ASCIILiteral("namedFlow"), namedFlow);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::registeredNamedFlowContentElement(int documentNodeId, const String& flowName, int contentNodeId, int nextContentNodeId)
@@ -123,7 +146,7 @@ void CSSFrontendDispatcher::registeredNamedFlowContentElement(int documentNodeId
     paramsObject->setInteger(ASCIILiteral("nextContentNodeId"), nextContentNodeId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void CSSFrontendDispatcher::unregisteredNamedFlowContentElement(int documentNodeId, const String& flowName, int contentNodeId)
@@ -136,7 +159,7 @@ void CSSFrontendDispatcher::unregisteredNamedFlowContentElement(int documentNode
     paramsObject->setInteger(ASCIILiteral("contentNodeId"), contentNodeId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void ConsoleFrontendDispatcher::messageAdded(RefPtr<Inspector::Protocol::Console::ConsoleMessage> message)
@@ -147,7 +170,7 @@ void ConsoleFrontendDispatcher::messageAdded(RefPtr<Inspector::Protocol::Console
     paramsObject->setObject(ASCIILiteral("message"), message);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void ConsoleFrontendDispatcher::messageRepeatCountUpdated(int count)
@@ -158,7 +181,7 @@ void ConsoleFrontendDispatcher::messageRepeatCountUpdated(int count)
     paramsObject->setInteger(ASCIILiteral("count"), count);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void ConsoleFrontendDispatcher::messagesCleared()
@@ -166,7 +189,7 @@ void ConsoleFrontendDispatcher::messagesCleared()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Console.messagesCleared"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::documentUpdated()
@@ -174,7 +197,7 @@ void DOMFrontendDispatcher::documentUpdated()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("DOM.documentUpdated"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::setChildNodes(int parentId, RefPtr<Inspector::Protocol::Array<Inspector::Protocol::DOM::Node>> nodes)
@@ -186,7 +209,7 @@ void DOMFrontendDispatcher::setChildNodes(int parentId, RefPtr<Inspector::Protoc
     paramsObject->setArray(ASCIILiteral("nodes"), nodes);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::attributeModified(int nodeId, const String& name, const String& value)
@@ -199,7 +222,7 @@ void DOMFrontendDispatcher::attributeModified(int nodeId, const String& name, co
     paramsObject->setString(ASCIILiteral("value"), value);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::attributeRemoved(int nodeId, const String& name)
@@ -211,7 +234,7 @@ void DOMFrontendDispatcher::attributeRemoved(int nodeId, const String& name)
     paramsObject->setString(ASCIILiteral("name"), name);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::inlineStyleInvalidated(RefPtr<Inspector::Protocol::Array<Inspector::Protocol::DOM::NodeId>> nodeIds)
@@ -222,7 +245,7 @@ void DOMFrontendDispatcher::inlineStyleInvalidated(RefPtr<Inspector::Protocol::A
     paramsObject->setArray(ASCIILiteral("nodeIds"), nodeIds);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::characterDataModified(int nodeId, const String& characterData)
@@ -234,7 +257,7 @@ void DOMFrontendDispatcher::characterDataModified(int nodeId, const String& char
     paramsObject->setString(ASCIILiteral("characterData"), characterData);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::childNodeCountUpdated(int nodeId, int childNodeCount)
@@ -246,7 +269,7 @@ void DOMFrontendDispatcher::childNodeCountUpdated(int nodeId, int childNodeCount
     paramsObject->setInteger(ASCIILiteral("childNodeCount"), childNodeCount);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::childNodeInserted(int parentNodeId, int previousNodeId, RefPtr<Inspector::Protocol::DOM::Node> node)
@@ -259,7 +282,7 @@ void DOMFrontendDispatcher::childNodeInserted(int parentNodeId, int previousNode
     paramsObject->setObject(ASCIILiteral("node"), node);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::childNodeRemoved(int parentNodeId, int nodeId)
@@ -271,7 +294,7 @@ void DOMFrontendDispatcher::childNodeRemoved(int parentNodeId, int nodeId)
     paramsObject->setInteger(ASCIILiteral("nodeId"), nodeId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::shadowRootPushed(int hostId, RefPtr<Inspector::Protocol::DOM::Node> root)
@@ -283,7 +306,7 @@ void DOMFrontendDispatcher::shadowRootPushed(int hostId, RefPtr<Inspector::Proto
     paramsObject->setObject(ASCIILiteral("root"), root);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::shadowRootPopped(int hostId, int rootId)
@@ -295,7 +318,7 @@ void DOMFrontendDispatcher::shadowRootPopped(int hostId, int rootId)
     paramsObject->setInteger(ASCIILiteral("rootId"), rootId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::pseudoElementAdded(int parentId, RefPtr<Inspector::Protocol::DOM::Node> pseudoElement)
@@ -307,7 +330,7 @@ void DOMFrontendDispatcher::pseudoElementAdded(int parentId, RefPtr<Inspector::P
     paramsObject->setObject(ASCIILiteral("pseudoElement"), pseudoElement);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMFrontendDispatcher::pseudoElementRemoved(int parentId, int pseudoElementId)
@@ -319,7 +342,7 @@ void DOMFrontendDispatcher::pseudoElementRemoved(int parentId, int pseudoElement
     paramsObject->setInteger(ASCIILiteral("pseudoElementId"), pseudoElementId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMStorageFrontendDispatcher::domStorageItemsCleared(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId)
@@ -330,7 +353,7 @@ void DOMStorageFrontendDispatcher::domStorageItemsCleared(RefPtr<Inspector::Prot
     paramsObject->setObject(ASCIILiteral("storageId"), storageId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMStorageFrontendDispatcher::domStorageItemRemoved(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key)
@@ -342,7 +365,7 @@ void DOMStorageFrontendDispatcher::domStorageItemRemoved(RefPtr<Inspector::Proto
     paramsObject->setString(ASCIILiteral("key"), key);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMStorageFrontendDispatcher::domStorageItemAdded(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key, const String& newValue)
@@ -355,7 +378,7 @@ void DOMStorageFrontendDispatcher::domStorageItemAdded(RefPtr<Inspector::Protoco
     paramsObject->setString(ASCIILiteral("newValue"), newValue);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DOMStorageFrontendDispatcher::domStorageItemUpdated(RefPtr<Inspector::Protocol::DOMStorage::StorageId> storageId, const String& key, const String& oldValue, const String& newValue)
@@ -369,7 +392,7 @@ void DOMStorageFrontendDispatcher::domStorageItemUpdated(RefPtr<Inspector::Proto
     paramsObject->setString(ASCIILiteral("newValue"), newValue);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DatabaseFrontendDispatcher::addDatabase(RefPtr<Inspector::Protocol::Database::Database> database)
@@ -380,7 +403,7 @@ void DatabaseFrontendDispatcher::addDatabase(RefPtr<Inspector::Protocol::Databas
     paramsObject->setObject(ASCIILiteral("database"), database);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::globalObjectCleared()
@@ -388,7 +411,7 @@ void DebuggerFrontendDispatcher::globalObjectCleared()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Debugger.globalObjectCleared"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::scriptParsed(const Inspector::Protocol::Debugger::ScriptId& scriptId, const String& url, int startLine, int startColumn, int endLine, int endColumn, const bool* const isContentScript, const String* const sourceMapURL, const bool* const hasSourceURL)
@@ -410,7 +433,7 @@ void DebuggerFrontendDispatcher::scriptParsed(const Inspector::Protocol::Debugge
         paramsObject->setBoolean(ASCIILiteral("hasSourceURL"), *hasSourceURL);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::scriptFailedToParse(const String& url, const String& scriptSource, int startLine, int errorLine, const String& errorMessage)
@@ -425,7 +448,7 @@ void DebuggerFrontendDispatcher::scriptFailedToParse(const String& url, const St
     paramsObject->setString(ASCIILiteral("errorMessage"), errorMessage);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::breakpointResolved(const Inspector::Protocol::Debugger::BreakpointId& breakpointId, RefPtr<Inspector::Protocol::Debugger::Location> location)
@@ -437,7 +460,7 @@ void DebuggerFrontendDispatcher::breakpointResolved(const Inspector::Protocol::D
     paramsObject->setObject(ASCIILiteral("location"), location);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::paused(RefPtr<Inspector::Protocol::Array<Inspector::Protocol::Debugger::CallFrame>> callFrames, Reason reason, RefPtr<Inspector::InspectorObject> data)
@@ -451,7 +474,7 @@ void DebuggerFrontendDispatcher::paused(RefPtr<Inspector::Protocol::Array<Inspec
         paramsObject->setObject(ASCIILiteral("data"), data);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::resumed()
@@ -459,7 +482,7 @@ void DebuggerFrontendDispatcher::resumed()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Debugger.resumed"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::didSampleProbe(RefPtr<Inspector::Protocol::Debugger::ProbeSample> sample)
@@ -470,7 +493,7 @@ void DebuggerFrontendDispatcher::didSampleProbe(RefPtr<Inspector::Protocol::Debu
     paramsObject->setObject(ASCIILiteral("sample"), sample);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void DebuggerFrontendDispatcher::playBreakpointActionSound(int breakpointActionId)
@@ -481,7 +504,18 @@ void DebuggerFrontendDispatcher::playBreakpointActionSound(int breakpointActionI
     paramsObject->setInteger(ASCIILiteral("breakpointActionId"), breakpointActionId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void HeapFrontendDispatcher::garbageCollected(RefPtr<Inspector::Protocol::Heap::GarbageCollection> collection)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Heap.garbageCollected"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    paramsObject->setObject(ASCIILiteral("collection"), collection);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void InspectorFrontendDispatcher::evaluateForTestInFrontend(const String& script)
@@ -492,7 +526,7 @@ void InspectorFrontendDispatcher::evaluateForTestInFrontend(const String& script
     paramsObject->setString(ASCIILiteral("script"), script);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void InspectorFrontendDispatcher::inspect(RefPtr<Inspector::Protocol::Runtime::RemoteObject> object, RefPtr<Inspector::InspectorObject> hints)
@@ -504,7 +538,7 @@ void InspectorFrontendDispatcher::inspect(RefPtr<Inspector::Protocol::Runtime::R
     paramsObject->setObject(ASCIILiteral("hints"), hints);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void InspectorFrontendDispatcher::detached(const String& reason)
@@ -515,7 +549,7 @@ void InspectorFrontendDispatcher::detached(const String& reason)
     paramsObject->setString(ASCIILiteral("reason"), reason);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void InspectorFrontendDispatcher::activateExtraDomains(RefPtr<Inspector::Protocol::Array<String>> domains)
@@ -526,7 +560,7 @@ void InspectorFrontendDispatcher::activateExtraDomains(RefPtr<Inspector::Protoco
     paramsObject->setArray(ASCIILiteral("domains"), domains);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void InspectorFrontendDispatcher::targetCrashed()
@@ -534,7 +568,7 @@ void InspectorFrontendDispatcher::targetCrashed()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Inspector.targetCrashed"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void LayerTreeFrontendDispatcher::layerTreeDidChange()
@@ -542,7 +576,7 @@ void LayerTreeFrontendDispatcher::layerTreeDidChange()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("LayerTree.layerTreeDidChange"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::requestWillBeSent(const Inspector::Protocol::Network::RequestId& requestId, const Inspector::Protocol::Network::FrameId& frameId, const Inspector::Protocol::Network::LoaderId& loaderId, const String& documentURL, RefPtr<Inspector::Protocol::Network::Request> request, double timestamp, RefPtr<Inspector::Protocol::Network::Initiator> initiator, RefPtr<Inspector::Protocol::Network::Response> redirectResponse, Inspector::Protocol::Page::ResourceType* type)
@@ -563,7 +597,7 @@ void NetworkFrontendDispatcher::requestWillBeSent(const Inspector::Protocol::Net
         paramsObject->setString(ASCIILiteral("type"), Inspector::Protocol::getEnumConstantValue(*type));
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::requestServedFromCache(const Inspector::Protocol::Network::RequestId& requestId)
@@ -574,7 +608,7 @@ void NetworkFrontendDispatcher::requestServedFromCache(const Inspector::Protocol
     paramsObject->setString(ASCIILiteral("requestId"), requestId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::responseReceived(const Inspector::Protocol::Network::RequestId& requestId, const Inspector::Protocol::Network::FrameId& frameId, const Inspector::Protocol::Network::LoaderId& loaderId, double timestamp, Inspector::Protocol::Page::ResourceType type, RefPtr<Inspector::Protocol::Network::Response> response)
@@ -590,7 +624,7 @@ void NetworkFrontendDispatcher::responseReceived(const Inspector::Protocol::Netw
     paramsObject->setObject(ASCIILiteral("response"), response);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::dataReceived(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, int dataLength, int encodedDataLength)
@@ -604,7 +638,7 @@ void NetworkFrontendDispatcher::dataReceived(const Inspector::Protocol::Network:
     paramsObject->setInteger(ASCIILiteral("encodedDataLength"), encodedDataLength);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::loadingFinished(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, const String* const sourceMapURL)
@@ -618,7 +652,7 @@ void NetworkFrontendDispatcher::loadingFinished(const Inspector::Protocol::Netwo
         paramsObject->setString(ASCIILiteral("sourceMapURL"), *sourceMapURL);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::loadingFailed(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, const String& errorText, const bool* const canceled)
@@ -633,7 +667,7 @@ void NetworkFrontendDispatcher::loadingFailed(const Inspector::Protocol::Network
         paramsObject->setBoolean(ASCIILiteral("canceled"), *canceled);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::requestServedFromMemoryCache(const Inspector::Protocol::Network::RequestId& requestId, const Inspector::Protocol::Network::FrameId& frameId, const Inspector::Protocol::Network::LoaderId& loaderId, const String& documentURL, double timestamp, RefPtr<Inspector::Protocol::Network::Initiator> initiator, RefPtr<Inspector::Protocol::Network::CachedResource> resource)
@@ -650,7 +684,7 @@ void NetworkFrontendDispatcher::requestServedFromMemoryCache(const Inspector::Pr
     paramsObject->setObject(ASCIILiteral("resource"), resource);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketWillSendHandshakeRequest(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, RefPtr<Inspector::Protocol::Network::WebSocketRequest> request)
@@ -663,7 +697,7 @@ void NetworkFrontendDispatcher::webSocketWillSendHandshakeRequest(const Inspecto
     paramsObject->setObject(ASCIILiteral("request"), request);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketHandshakeResponseReceived(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, RefPtr<Inspector::Protocol::Network::WebSocketResponse> response)
@@ -676,7 +710,7 @@ void NetworkFrontendDispatcher::webSocketHandshakeResponseReceived(const Inspect
     paramsObject->setObject(ASCIILiteral("response"), response);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketCreated(const Inspector::Protocol::Network::RequestId& requestId, const String& url)
@@ -688,7 +722,7 @@ void NetworkFrontendDispatcher::webSocketCreated(const Inspector::Protocol::Netw
     paramsObject->setString(ASCIILiteral("url"), url);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketClosed(const Inspector::Protocol::Network::RequestId& requestId, double timestamp)
@@ -700,7 +734,7 @@ void NetworkFrontendDispatcher::webSocketClosed(const Inspector::Protocol::Netwo
     paramsObject->setDouble(ASCIILiteral("timestamp"), timestamp);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketFrameReceived(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, RefPtr<Inspector::Protocol::Network::WebSocketFrame> response)
@@ -713,7 +747,7 @@ void NetworkFrontendDispatcher::webSocketFrameReceived(const Inspector::Protocol
     paramsObject->setObject(ASCIILiteral("response"), response);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketFrameError(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, const String& errorMessage)
@@ -726,7 +760,7 @@ void NetworkFrontendDispatcher::webSocketFrameError(const Inspector::Protocol::N
     paramsObject->setString(ASCIILiteral("errorMessage"), errorMessage);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void NetworkFrontendDispatcher::webSocketFrameSent(const Inspector::Protocol::Network::RequestId& requestId, double timestamp, RefPtr<Inspector::Protocol::Network::WebSocketFrame> response)
@@ -739,7 +773,7 @@ void NetworkFrontendDispatcher::webSocketFrameSent(const Inspector::Protocol::Ne
     paramsObject->setObject(ASCIILiteral("response"), response);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::domContentEventFired(double timestamp)
@@ -750,7 +784,7 @@ void PageFrontendDispatcher::domContentEventFired(double timestamp)
     paramsObject->setDouble(ASCIILiteral("timestamp"), timestamp);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::loadEventFired(double timestamp)
@@ -761,7 +795,7 @@ void PageFrontendDispatcher::loadEventFired(double timestamp)
     paramsObject->setDouble(ASCIILiteral("timestamp"), timestamp);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameNavigated(RefPtr<Inspector::Protocol::Page::Frame> frame)
@@ -772,7 +806,7 @@ void PageFrontendDispatcher::frameNavigated(RefPtr<Inspector::Protocol::Page::Fr
     paramsObject->setObject(ASCIILiteral("frame"), frame);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameDetached(const Inspector::Protocol::Network::FrameId& frameId)
@@ -783,7 +817,7 @@ void PageFrontendDispatcher::frameDetached(const Inspector::Protocol::Network::F
     paramsObject->setString(ASCIILiteral("frameId"), frameId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameStartedLoading(const Inspector::Protocol::Network::FrameId& frameId)
@@ -794,7 +828,7 @@ void PageFrontendDispatcher::frameStartedLoading(const Inspector::Protocol::Netw
     paramsObject->setString(ASCIILiteral("frameId"), frameId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameStoppedLoading(const Inspector::Protocol::Network::FrameId& frameId)
@@ -805,7 +839,7 @@ void PageFrontendDispatcher::frameStoppedLoading(const Inspector::Protocol::Netw
     paramsObject->setString(ASCIILiteral("frameId"), frameId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameScheduledNavigation(const Inspector::Protocol::Network::FrameId& frameId, double delay)
@@ -817,7 +851,7 @@ void PageFrontendDispatcher::frameScheduledNavigation(const Inspector::Protocol:
     paramsObject->setDouble(ASCIILiteral("delay"), delay);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::frameClearedScheduledNavigation(const Inspector::Protocol::Network::FrameId& frameId)
@@ -828,7 +862,7 @@ void PageFrontendDispatcher::frameClearedScheduledNavigation(const Inspector::Pr
     paramsObject->setString(ASCIILiteral("frameId"), frameId);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::javascriptDialogOpening(const String& message)
@@ -839,7 +873,7 @@ void PageFrontendDispatcher::javascriptDialogOpening(const String& message)
     paramsObject->setString(ASCIILiteral("message"), message);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::javascriptDialogClosed()
@@ -847,7 +881,7 @@ void PageFrontendDispatcher::javascriptDialogClosed()
     Ref<InspectorObject> jsonMessage = InspectorObject::create();
     jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Page.javascriptDialogClosed"));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void PageFrontendDispatcher::scriptsEnabled(bool isEnabled)
@@ -858,7 +892,7 @@ void PageFrontendDispatcher::scriptsEnabled(bool isEnabled)
     paramsObject->setBoolean(ASCIILiteral("isEnabled"), isEnabled);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void RuntimeFrontendDispatcher::executionContextCreated(RefPtr<Inspector::Protocol::Runtime::ExecutionContextDescription> context)
@@ -869,7 +903,41 @@ void RuntimeFrontendDispatcher::executionContextCreated(RefPtr<Inspector::Protoc
     paramsObject->setObject(ASCIILiteral("context"), context);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void ScriptProfilerFrontendDispatcher::trackingStart(double timestamp)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("ScriptProfiler.trackingStart"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    paramsObject->setDouble(ASCIILiteral("timestamp"), timestamp);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void ScriptProfilerFrontendDispatcher::trackingUpdate(RefPtr<Inspector::Protocol::ScriptProfiler::Event> event)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("ScriptProfiler.trackingUpdate"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    paramsObject->setObject(ASCIILiteral("event"), event);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
+}
+
+void ScriptProfilerFrontendDispatcher::trackingComplete(RefPtr<Inspector::Protocol::Array<Inspector::InspectorValue>> profiles)
+{
+    Ref<InspectorObject> jsonMessage = InspectorObject::create();
+    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("ScriptProfiler.trackingComplete"));
+    Ref<InspectorObject> paramsObject = InspectorObject::create();
+    if (profiles)
+        paramsObject->setArray(ASCIILiteral("profiles"), profiles);
+    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
+
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void TimelineFrontendDispatcher::eventRecorded(RefPtr<Inspector::Protocol::Timeline::TimelineEvent> record)
@@ -880,7 +948,7 @@ void TimelineFrontendDispatcher::eventRecorded(RefPtr<Inspector::Protocol::Timel
     paramsObject->setObject(ASCIILiteral("record"), record);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void TimelineFrontendDispatcher::recordingStarted(double startTime)
@@ -891,7 +959,7 @@ void TimelineFrontendDispatcher::recordingStarted(double startTime)
     paramsObject->setDouble(ASCIILiteral("startTime"), startTime);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 void TimelineFrontendDispatcher::recordingStopped(double endTime)
@@ -902,51 +970,7 @@ void TimelineFrontendDispatcher::recordingStopped(double endTime)
     paramsObject->setDouble(ASCIILiteral("endTime"), endTime);
     jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
 
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
-}
-
-void WorkerFrontendDispatcher::workerCreated(int workerId, const String& url, bool inspectorConnected)
-{
-    Ref<InspectorObject> jsonMessage = InspectorObject::create();
-    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Worker.workerCreated"));
-    Ref<InspectorObject> paramsObject = InspectorObject::create();
-    paramsObject->setInteger(ASCIILiteral("workerId"), workerId);
-    paramsObject->setString(ASCIILiteral("url"), url);
-    paramsObject->setBoolean(ASCIILiteral("inspectorConnected"), inspectorConnected);
-    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
-
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
-}
-
-void WorkerFrontendDispatcher::workerTerminated(int workerId)
-{
-    Ref<InspectorObject> jsonMessage = InspectorObject::create();
-    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Worker.workerTerminated"));
-    Ref<InspectorObject> paramsObject = InspectorObject::create();
-    paramsObject->setInteger(ASCIILiteral("workerId"), workerId);
-    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
-
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
-}
-
-void WorkerFrontendDispatcher::dispatchMessageFromWorker(int workerId, RefPtr<Inspector::InspectorObject> message)
-{
-    Ref<InspectorObject> jsonMessage = InspectorObject::create();
-    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Worker.dispatchMessageFromWorker"));
-    Ref<InspectorObject> paramsObject = InspectorObject::create();
-    paramsObject->setInteger(ASCIILiteral("workerId"), workerId);
-    paramsObject->setObject(ASCIILiteral("message"), message);
-    jsonMessage->setObject(ASCIILiteral("params"), WTF::move(paramsObject));
-
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
-}
-
-void WorkerFrontendDispatcher::disconnectedFromWorker()
-{
-    Ref<InspectorObject> jsonMessage = InspectorObject::create();
-    jsonMessage->setString(ASCIILiteral("method"), ASCIILiteral("Worker.disconnectedFromWorker"));
-
-    m_frontendChannel->sendMessageToFrontend(jsonMessage->toJSONString());
+    m_frontendRouter.sendEvent(jsonMessage->toJSONString());
 }
 
 } // namespace Inspector

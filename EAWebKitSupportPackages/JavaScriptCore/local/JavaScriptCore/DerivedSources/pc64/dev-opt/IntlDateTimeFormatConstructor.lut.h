@@ -1,6 +1,4 @@
-// Automatically generated from /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/runtime/IntlDateTimeFormatConstructor.cpp using /cygdrive/c/EAOS/EAOS/EAWebKit/DL/EAWebKit/dev/EAWebKitSupportPackages/JavaScriptCore/local/JavaScriptCore/create_hash_table. DO NOT EDIT!
-
-#include "JSCBuiltins.h"
+// Automatically generated from C:/Webkit2016/WebKit/Source/JavaScriptCore/runtime/IntlDateTimeFormatConstructor.cpp using C:/Webkit2016/WebKit/Source/JavaScriptCore/create_hash_table. DO NOT EDIT!
 
 #include "Lookup.h"
 
@@ -11,15 +9,11 @@ static const struct CompactHashIndex dateTimeFormatConstructorTableIndex[2] = {
     { 0, -1 },
 };
 
-
 static const struct HashTableValue dateTimeFormatConstructorTableValues[1] = {
- #if JSC_BUILTIN_EXISTS(DATETIMEFORMATCONSTRUCTORSUPPORTEDLOCALESOF)
-   { "supportedLocalesOf", ((DontEnum|Function) & ~Function) | Builtin, NoIntrinsic, (intptr_t)static_cast<BuiltinGenerator>(dateTimeFormatConstructorSupportedLocalesOfCodeGenerator), (intptr_t)1 },
- #else
-   { "supportedLocalesOf", DontEnum|Function, NoIntrinsic, (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatConstructorFuncSupportedLocalesOf), (intptr_t)(1) },
- #endif
+   { "supportedLocalesOf", DontEnum|Function, NoIntrinsic, { (intptr_t)static_cast<NativeFunction>(IntlDateTimeFormatConstructorFuncSupportedLocalesOf), (intptr_t)(1) } },
 };
 
-JS_EXPORT_PRIVATE extern const struct HashTable dateTimeFormatConstructorTable =
-    { 1, 1, false, dateTimeFormatConstructorTableValues, 0, dateTimeFormatConstructorTableIndex };
-} // namespace
+static const struct HashTable dateTimeFormatConstructorTable =
+    { 1, 1, false, dateTimeFormatConstructorTableValues, dateTimeFormatConstructorTableIndex };
+
+} // namespace JSC
