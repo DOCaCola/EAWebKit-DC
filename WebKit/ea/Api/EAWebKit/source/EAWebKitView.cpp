@@ -1355,27 +1355,29 @@ void View::GetCustomCursorDataBuffer(const char*& bufferData, unsigned int& buff
 
 // Constructors for the metrics callback system
 ViewProcessInfo::ViewProcessInfo(void)
-: mpView(0),
-mProcessType(kVProcessTypeNone),
-mProcessStatus(kVProcessStatusNone),
-mStartTime(0.0),
-mIntermediateTime(0.0),
-mURI(0),
-mSize(0),
-mJobId(0)
+	: mpView(nullptr)
+	, mpUserData(nullptr)
+	,  mProcessType(kVProcessTypeNone)
+	, mProcessStatus(kVProcessStatusNone)
+	, mStartTime(0.0)
+	, mIntermediateTime(0.0)
+	, mURI(nullptr)
+	, mSize(0)
+	, mJobId(0)
 {
-    // Do nothing.
+	// Do nothing.
 }
 
 ViewProcessInfo::ViewProcessInfo(VProcessType type,VProcessStatus status, View* pView)
-: mpView(pView),
-mProcessType(type),
-mProcessStatus(status),
-mStartTime(0.0),
-mIntermediateTime(0.0),
-mURI(0),
-mSize(0),
-mJobId(0)
+	: mpView(pView)
+	, mpUserData(nullptr)
+	, mProcessType(type)
+	, mProcessStatus(status)
+	, mStartTime(0.0)
+	, mIntermediateTime(0.0)
+	, mURI(nullptr)
+	, mSize(0)
+	, mJobId(0)
 {
 	// Do nothing.
 }

@@ -141,7 +141,10 @@ public:
 
 class WebHitTestResultPrivate {
 public:
-	WebHitTestResultPrivate() : isContentEditable(false), isContentSelected(false), isScrollBar(false) {}
+	WebHitTestResultPrivate() : isContentEditable(false), isContentSelected(false), isScrollBar(false), frame(nullptr)
+	{
+	}
+
 	WebHitTestResultPrivate(const WebCore::HitTestResult &hitTest);
 
 	bool isContentEditable;
