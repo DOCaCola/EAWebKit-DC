@@ -39,7 +39,13 @@
 #include <PageGroup.h>
 #include <PlatformCookieJar.h>
 #include <WebPage.h>
+#include <WebResourceLoadScheduler.h>
 #include <wtf/MathExtras.h>
+
+#include "DocumentLoader.h"
+#include "PingHandle.h"
+#include "ResourceHandle.h"
+#include "SubresourceLoader.h"
 
 using namespace WebCore;
 
@@ -67,7 +73,7 @@ CookiesStrategy* PlatformStrategiesEA::createCookiesStrategy()
 
 LoaderStrategy* PlatformStrategiesEA::createLoaderStrategy()
 {
-    return nullptr;
+    return new WebResourceLoadScheduler;
 }
 
 PasteboardStrategy* PlatformStrategiesEA::createPasteboardStrategy()
@@ -170,6 +176,57 @@ void PlatformStrategiesEA::getPluginInfo(const WebCore::Page* page, Vector<WebCo
 void PlatformStrategiesEA::getWebVisiblePluginInfo(const Page* page, Vector<PluginInfo>& plugins)
 {
 	getPluginInfo(page, plugins);
+}
+
+// LoaderStrategy
+
+void PlatformStrategiesEA::scheduleLoad(ResourceLoader* resourceLoader)
+{
+
+}
+
+RefPtr<WebCore::SubresourceLoader> PlatformStrategiesEA::loadResource(Frame* frame, CachedResource* resource, const ResourceRequest& request, const ResourceLoaderOptions& options)
+{
+	return SubresourceLoader::create(frame, resource, request, options);
+}
+
+void PlatformStrategiesEA::loadResourceSynchronously(NetworkingContext* context, unsigned long,
+                                                     const ResourceRequest& request,
+                                                     StoredCredentials storedCredentials, ClientCredentialPolicy,
+                                                     ResourceError& error, ResourceResponse& response,
+                                                     Vector<char>& data)
+{
+    WebCore::ResourceHandle::loadResourceSynchronously(context, request, storedCredentials, error, response, data);
+}
+
+void PlatformStrategiesEA::remove(WebCore::ResourceLoader*)
+{
+}
+
+void PlatformStrategiesEA::setDefersLoading(WebCore::ResourceLoader*, bool)
+{
+}
+
+void PlatformStrategiesEA::crossOriginRedirectReceived(WebCore::ResourceLoader*, const WebCore::URL& redirectURL)
+{
+}
+
+void PlatformStrategiesEA::servePendingRequests(WebCore::ResourceLoadPriority minimumPriority)
+{
+}
+
+void PlatformStrategiesEA::suspendPendingRequests()
+{
+}
+
+void PlatformStrategiesEA::resumePendingRequests()
+{
+}
+
+void PlatformStrategiesEA::createPingHandle(NetworkingContext* networkingContext, ResourceRequest& request, bool shouldUseCredentialStorage)
+{
+        // PingHandle manages its own lifetime, deleting itself when its purpose has been fulfilled.
+    new PingHandle(networkingContext, request, shouldUseCredentialStorage, PingHandle::UsesAsyncCallbacks::No);
 }
 
 namespace WebCore

@@ -38,7 +38,7 @@ namespace WebCore {
 class PasteboardStrategy;
 }
 
-class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy, private WebCore::PluginStrategy {
+class PlatformStrategiesEA : public WebCore::PlatformStrategies, private WebCore::CookiesStrategy, private WebCore::PluginStrategy, private WebCore::LoaderStrategy {
 public:
     static void initialize();
 
@@ -64,6 +64,21 @@ private:
     virtual void refreshPlugins() override;
     virtual void getPluginInfo(const WebCore::Page*, Vector<WebCore::PluginInfo>&) override;
 	virtual void getWebVisiblePluginInfo(const WebCore::Page*, Vector<WebCore::PluginInfo>&) override;
+    void scheduleLoad(WebCore::ResourceLoader* resourceLoader);
+
+    // WebCore::LoaderStrategy
+    virtual RefPtr<WebCore::SubresourceLoader> loadResource(WebCore::Frame*, WebCore::CachedResource*, const WebCore::ResourceRequest&, const WebCore::ResourceLoaderOptions&) override;
+    virtual void loadResourceSynchronously(WebCore::NetworkingContext*, unsigned long identifier, const WebCore::ResourceRequest&, WebCore::StoredCredentials, WebCore::ClientCredentialPolicy, WebCore::ResourceError&, WebCore::ResourceResponse&, Vector<char>& data) override;
+
+    virtual void remove(WebCore::ResourceLoader*) override;
+    virtual void setDefersLoading(WebCore::ResourceLoader*, bool) override;
+    virtual void crossOriginRedirectReceived(WebCore::ResourceLoader*, const WebCore::URL& redirectURL) override;
+
+    virtual void servePendingRequests(WebCore::ResourceLoadPriority minimumPriority = WebCore::ResourceLoadPriority::VeryLow) override;
+    virtual void suspendPendingRequests() override;
+    virtual void resumePendingRequests() override;
+
+    virtual void createPingHandle(WebCore::NetworkingContext*, WebCore::ResourceRequest&, bool shouldUseCredentialStorage) override;
 };
 
 #endif // PlatformStrategiesEA_h

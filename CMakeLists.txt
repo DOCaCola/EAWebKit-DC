@@ -840,6 +840,7 @@ list(APPEND EAWEBKIT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNSNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XMLNames.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WebCore/DerivedSources/XPathGrammar.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WebKit/WebCoreSupport/WebResourceLoadScheduler.cpp
 	)
 
 
@@ -1035,6 +1036,7 @@ target_include_directories(EAWebKit PRIVATE
 	"WebCore/xml"
 	"WebCore/xml/parser"
 	"WebCore/DerivedSources"
+	"WebKit/WebCoreSupport"
 	)
 
 target_link_libraries(EAWebKit PUBLIC JavaScriptCore EAText cairo SQLite libjpeg libxml2 DirtySDK)

@@ -25,7 +25,9 @@
 
 #include "config.h"
 #include "BinarySwitch.h"
+//+EAWKDC Change
 #include <random>
+//-EAWKDC Change
 
 #if ENABLE(JIT)
 
@@ -194,7 +196,9 @@ void BinarySwitch::build(unsigned start, bool hardStart, unsigned end)
         for (unsigned i = 0; i < size; ++i)
             localCaseIndices.append(start + i);
         
+		//+EAWKDC Change
         std::shuffle(localCaseIndices.begin(), localCaseIndices.end(), std::default_random_engine(m_weakRandom.getUint32()));		
+		//-EAWKDC Change
 		
         for (unsigned i = 0; i < size - 1; ++i) {
             append(BranchCode(NotEqualToPush, localCaseIndices[i]));
